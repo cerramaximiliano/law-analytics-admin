@@ -45,14 +45,11 @@ import {
 	ManagerHistoryResponse,
 	ManagerAlertsResponse,
 } from "api/managerConfig";
+import { labelCortoDeFuero } from "utils/fueros";
 
 // Nombres de los fueros
-const FUERO_LABELS: Record<string, string> = {
-	civil: "Civil",
-	ss: "Seguridad Social",
-	trabajo: "Trabajo",
-	comercial: "Comercial",
-};
+// Las etiquetas salen del catálogo compartido, que cubre las 28 jurisdicciones
+// en vez de la media docena que enumeraba este mapa.
 
 // Nombres de los dias
 const DAY_LABELS: Record<number, string> = {
@@ -375,7 +372,7 @@ const ManagerConfigPanel: React.FC = () => {
 										<TableBody>
 											{Object.entries(status.workers).map(([fuero, count]) => (
 												<TableRow key={fuero}>
-													<TableCell>{FUERO_LABELS[fuero] || fuero}</TableCell>
+													<TableCell>{labelCortoDeFuero(fuero)}</TableCell>
 													<TableCell align="center">
 														<Chip label={count} size="small" color={count > 0 ? "primary" : "default"} />
 													</TableCell>

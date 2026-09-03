@@ -23,25 +23,34 @@ export interface Fuero {
 	grupo: GrupoFuero;
 	/** Si hoy hay workers de scraping barriéndolo. */
 	conScraping: boolean;
+	/** Etiqueta abreviada, para tablas y barras donde el nombre completo no entra. */
+	corto?: string;
 }
 
 export const FUEROS: Fuero[] = [
 	// Cámaras nacionales y federales con sede en CABA
 	{ value: "CIV", label: "Civil", num: 1, grupo: "Cámaras nacionales", conScraping: true },
 	{ value: "CNT", label: "Trabajo", num: 7, grupo: "Cámaras nacionales", conScraping: true },
-	{ value: "CSS", label: "Seguridad Social", num: 5, grupo: "Cámaras nacionales", conScraping: true },
+	{ value: "CSS", label: "Seguridad Social", num: 5, grupo: "Cámaras nacionales", conScraping: true, corto: "Seg. Social" },
 	{ value: "COM", label: "Comercial", num: 10, grupo: "Cámaras nacionales", conScraping: true },
-	{ value: "CCC", label: "Criminal y Correccional", num: 9, grupo: "Cámaras nacionales", conScraping: false },
+	{ value: "CCC", label: "Criminal y Correccional", num: 9, grupo: "Cámaras nacionales", conScraping: false, corto: "Crim. y Correc." },
 	{ value: "CPE", label: "Penal Económico", num: 6, grupo: "Cámaras nacionales", conScraping: false },
 	{ value: "CNE", label: "Electoral", num: 4, grupo: "Cámaras nacionales", conScraping: false },
 	{ value: "CSJ", label: "Corte Suprema", num: 0, grupo: "Cámaras nacionales", conScraping: false },
 
-	{ value: "CCF", label: "Civil y Comercial Federal", num: 3, grupo: "Cámaras federales", conScraping: true },
-	{ value: "CAF", label: "Contencioso Adm. Federal", num: 2, grupo: "Cámaras federales", conScraping: true },
-	{ value: "CFP", label: "Criminal y Correccional Federal", num: 8, grupo: "Cámaras federales", conScraping: false },
+	{ value: "CCF", label: "Civil y Comercial Federal", num: 3, grupo: "Cámaras federales", conScraping: true, corto: "Civ. y Com. Fed." },
+	{ value: "CAF", label: "Contencioso Adm. Federal", num: 2, grupo: "Cámaras federales", conScraping: true, corto: "Cont. Adm. Fed." },
+	{
+		value: "CFP",
+		label: "Criminal y Correccional Federal",
+		num: 8,
+		grupo: "Cámaras federales",
+		conScraping: false,
+		corto: "Crim. y Correc. Fed.",
+	},
 
-	{ value: "CPF", label: "Casación Penal Federal", num: 11, grupo: "Casación penal", conScraping: false },
-	{ value: "CPN", label: "Casación Penal Nacional", num: 12, grupo: "Casación penal", conScraping: false },
+	{ value: "CPF", label: "Casación Penal Federal", num: 11, grupo: "Casación penal", conScraping: false, corto: "Casación Fed." },
+	{ value: "CPN", label: "Casación Penal Nacional", num: 12, grupo: "Casación penal", conScraping: false, corto: "Casación Nac." },
 
 	// Los 15 distritos federales del interior, abiertos el 2026-09-02
 	{ value: "FLP", label: "La Plata", num: 18, grupo: "Justicia federal del interior", conScraping: true },
@@ -74,6 +83,25 @@ export const GRUPOS: GrupoFuero[] = ["Cámaras nacionales", "Cámaras federales"
 const PORAF = new Map(FUEROS.map((f) => [f.value, f]));
 
 export const labelDeFuero = (code: string): string => PORAF.get(code)?.label ?? code;
+
+/** Nombre corto para tablas y barras; cae al largo si no hay abreviatura. */
+export const labelCortoDeFuero = (code: string): string => {
+	const f = PORAF.get(code);
+	return f?.corto ?? f?.label ?? code;
+};
+
+/**
+ * Clave de la paleta de MUI por fuero. Los componentes viejos usaban un mapa a
+ * mano con cuatro entradas; se deriva del código para que las 28 jurisdicciones
+ * tengan color estable sin mantener una lista.
+ */
+const PALETA = ["primary", "success", "warning", "error", "info", "secondary"] as const;
+export type PaletaFuero = (typeof PALETA)[number];
+export const paletaDeFuero = (code: string): PaletaFuero => {
+	let h = 0;
+	for (let i = 0; i < code.length; i++) h = (h * 31 + code.charCodeAt(i)) % PALETA.length;
+	return PALETA[h];
+};
 export const grupoDeFuero = (code: string): GrupoFuero | undefined => PORAF.get(code)?.grupo;
 
 /**

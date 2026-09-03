@@ -15,6 +15,7 @@ import {
 } from "@mui/material";
 import { Refresh } from "iconsax-react";
 import CausasPjnService from "api/causasPjn";
+import { labelCortoDeFuero } from "utils/fueros";
 
 /**
  * Estado de la cola del retry worker.
@@ -32,14 +33,8 @@ type Estado = {
 	updatedAt: string;
 };
 
-const FUERO_LABELS: Record<string, string> = {
-	CIV: "Civil",
-	COM: "Comercial",
-	CSS: "Seguridad Social",
-	CNT: "Trabajo",
-	CCF: "Civil y Com. Federal",
-	CAF: "Contencioso Adm. Federal",
-};
+// Las etiquetas salen del catálogo compartido, que cubre las 28 jurisdicciones
+// en vez de la media docena que enumeraba este mapa.
 
 const RetryQueuePanel: React.FC = () => {
 	const [data, setData] = useState<Estado | null>(null);
@@ -159,7 +154,7 @@ const RetryQueuePanel: React.FC = () => {
 									<Box key={fuero}>
 										<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.5 }}>
 											<Typography variant="body2">
-												<b>{fuero}</b> — {FUERO_LABELS[fuero] || fuero}
+												<b>{fuero}</b> — {labelCortoDeFuero(fuero)}
 											</Typography>
 											<Stack direction="row" spacing={1}>
 												<Chip

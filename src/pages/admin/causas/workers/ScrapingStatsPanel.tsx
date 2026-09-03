@@ -29,6 +29,7 @@ import { Refresh2, TickCircle, CloseCircle, DocumentText, Activity, Calendar } f
 import { useSnackbar } from "notistack";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from "recharts";
 import { ScrapingStatsService, StatsTotals, FueroBreakdown, HourBreakdown, DayBreakdown } from "api/scrapingStats";
+import { labelCortoDeFuero } from "utils/fueros";
 
 // ====== Helpers ======
 
@@ -95,12 +96,8 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, subtitle, icon, color
 
 // ====== FueroTable ======
 
-const FUERO_LABELS: Record<string, string> = {
-	CIV: "Civil",
-	CSS: "Seg. Social",
-	CNT: "Trabajo",
-	COM: "Comercial",
-};
+// Las etiquetas salen del catálogo compartido: el mapa que había acá tenía
+// cuatro fueros y los demás se mostraban con su código.
 
 interface FueroTableProps {
 	byFuero: FueroBreakdown;
@@ -134,7 +131,7 @@ const FueroTable: React.FC<FueroTableProps> = ({ byFuero }) => {
 					{fueros.map(([fuero, stats]) => (
 						<TableRow key={fuero} hover>
 							<TableCell>
-								<Chip label={FUERO_LABELS[fuero] || fuero} size="small" variant="outlined" sx={{ fontWeight: 600 }} />
+								<Chip label={labelCortoDeFuero(fuero)} size="small" variant="outlined" sx={{ fontWeight: 600 }} />
 							</TableCell>
 							<TableCell align="right">
 								<Typography variant="body2" color="success.main">

@@ -19,20 +19,11 @@ import {
 import { Refresh2, FolderOpen, DocumentText, Book1, Clock, InfoCircle } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { ScrapingManagerService, FueroStats, FueroStat } from "api/scrapingManager";
+import { labelCortoDeFuero, paletaDeFuero } from "utils/fueros";
 
-const FUERO_LABELS: Record<string, string> = {
-	CIV: "Civil",
-	CSS: "Seg. Social",
-	CNT: "Trabajo",
-	COM: "Comercial",
-};
-
-const FUERO_COLORS: Record<string, string> = {
-	CIV: "primary",
-	CSS: "warning",
-	CNT: "error",
-	COM: "success",
-};
+// Etiquetas y colores salen del catálogo compartido. Los mapas que había acá
+// tenían cuatro fueros, así que las jurisdicciones nuevas aparecían con su
+// código crudo y sin color asignado.
 
 function formatNumber(n: number): string {
 	return n.toLocaleString("es-AR");
@@ -245,7 +236,7 @@ const FueroStatsPanel: React.FC = () => {
 									</Box>
 							  ))
 							: fueroEntries.map(([fuero, data]: [string, FueroStat]) => {
-									const colorKey = FUERO_COLORS[fuero] || "primary";
+									const colorKey = paletaDeFuero(fuero);
 									const colorValue =
 										colorKey === "primary"
 											? theme.palette.primary.main
@@ -271,7 +262,7 @@ const FueroStatsPanel: React.FC = () => {
 														}}
 													/>
 													<Typography variant="body2" color="text.secondary">
-														{FUERO_LABELS[fuero] || fuero}
+														{labelCortoDeFuero(fuero)}
 													</Typography>
 												</Stack>
 												<Typography variant="body2" fontWeight={500}>
