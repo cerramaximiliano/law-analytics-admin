@@ -27,38 +27,14 @@ import {
 	MenuItem,
 	Button,
 } from "@mui/material";
-import {
-	Chart,
-	Activity,
-	Refresh2,
-	TrendUp,
-	TrendDown,
-	Calendar,
-	Timer,
-	TickCircle,
-	CloseCircle,
-	ArrowSwapHorizontal,
-} from "iconsax-react";
+import { Chart, Activity, Refresh2, TrendUp, TrendDown, TickCircle, CloseCircle, ArrowSwapHorizontal } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs, { nowInTimezone, formatInTimezone } from "utils/dayjs-config";
 import type { Dayjs } from "dayjs";
-import {
-	AreaChart,
-	Area,
-	XAxis,
-	YAxis,
-	CartesianGrid,
-	Tooltip as RechartsTooltip,
-	ResponsiveContainer,
-	Legend,
-	ComposedChart,
-	Line,
-	Bar,
-	BarChart,
-} from "recharts";
+import { Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend, ComposedChart, Line } from "recharts";
 import { WorkersService, WorkerDailySummaryData, WorkerDailySummaryChartResponse, WorkerDailySummaryCompareResponse } from "api/workers";
 
 // Stat Card Component

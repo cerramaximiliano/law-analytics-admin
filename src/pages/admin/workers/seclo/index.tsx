@@ -27,7 +27,7 @@ import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import { fetchTrabajoConfig, updateTrabajoConfig, triggerWorkerRun } from "store/reducers/seclo";
 import { useDispatch } from "store";
-import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
+import { BRAND_BLUE } from "themes/dashboardTokens";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 

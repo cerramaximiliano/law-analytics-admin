@@ -4,7 +4,6 @@ import {
 	Box,
 	Button,
 	Card,
-	CardContent,
 	Chip,
 	CircularProgress,
 	Dialog,
@@ -23,10 +22,9 @@ import {
 	TableRow,
 	TextField,
 	Typography,
-	alpha,
 	useTheme,
 } from "@mui/material";
-import { Refresh, TickCircle, CloseCircle, Warning2, Clock, Timer1 } from "iconsax-react";
+import { Refresh, TickCircle, CloseCircle } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { CausasUpdateService, CausasUpdateRun, CausaDetail } from "api/causasUpdate";
 
@@ -249,12 +247,7 @@ const CausasUpdateHistoryTab: React.FC = () => {
 			{/* Detail Dialog */}
 			{/* Abre apenas se pide el detalle, no cuando llega: antes el clic no
 			    producía nada visible hasta que respondía el servidor. */}
-			<Dialog
-				open={!!selectedRun || detailLoading}
-				onClose={() => !detailLoading && setSelectedRun(null)}
-				maxWidth="md"
-				fullWidth
-			>
+			<Dialog open={!!selectedRun || detailLoading} onClose={() => !detailLoading && setSelectedRun(null)} maxWidth="md" fullWidth>
 				{detailLoading && !selectedRun && (
 					<DialogContent>
 						<Stack alignItems="center" sx={{ py: 6 }}>

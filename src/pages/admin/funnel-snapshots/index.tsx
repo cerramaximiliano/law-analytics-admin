@@ -24,7 +24,7 @@ import {
 } from "@mui/material";
 import { Refresh, ArrowDown2, Calendar, Chart, InfoCircle } from "iconsax-react";
 import MainCard from "components/MainCard";
-import FunnelSnapshotsService, { FunnelSnapshot, FunnelBreakdownRow } from "api/funnelSnapshots";
+import FunnelSnapshotsService, { FunnelSnapshot } from "api/funnelSnapshots";
 import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER, headerBorder } from "themes/dashboardTokens";
 
 // ==============================|| HELPERS ||============================== //
@@ -79,8 +79,8 @@ const FunnelCard: React.FC<FunnelCardProps> = ({ snapshot, loading }) => {
 		return (
 			<MainCard>
 				<Alert severity="info">
-					Sin snapshots todavía. El cron diario corre a las 8 AM AR — esperá al primer run o ejecutalo manualmente
-					con <code>npm run fetch</code> en <code>/var/www/la-ads</code>.
+					Sin snapshots todavía. El cron diario corre a las 8 AM AR — esperá al primer run o ejecutalo manualmente con{" "}
+					<code>npm run fetch</code> en <code>/var/www/la-ads</code>.
 				</Alert>
 			</MainCard>
 		);
@@ -147,10 +147,10 @@ const FunnelCard: React.FC<FunnelCardProps> = ({ snapshot, loading }) => {
 								const completionColor = isLast
 									? theme.palette.text.secondary
 									: (step.completionRate ?? 0) > 0.5
-										? LIVE_GREEN
-										: (step.completionRate ?? 0) > 0.2
-											? STALE_AMBER
-											: theme.palette.error.main;
+									? LIVE_GREEN
+									: (step.completionRate ?? 0) > 0.2
+									? STALE_AMBER
+									: theme.palette.error.main;
 								return (
 									<TableRow key={key} hover>
 										<TableCell>
@@ -164,10 +164,7 @@ const FunnelCard: React.FC<FunnelCardProps> = ({ snapshot, loading }) => {
 											</Typography>
 										</TableCell>
 										<TableCell align="right">
-											<Typography
-												variant="body2"
-												sx={{ fontVariantNumeric: "tabular-nums", color: completionColor, fontWeight: 600 }}
-											>
+											<Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums", color: completionColor, fontWeight: 600 }}>
 												{isLast ? "—" : fmtPercent(step.completionRate)}
 											</Typography>
 										</TableCell>
@@ -240,9 +237,7 @@ const FunnelCard: React.FC<FunnelCardProps> = ({ snapshot, loading }) => {
 														const value = row[stepName];
 														return (
 															<TableCell key={sk} align="right">
-																<Typography variant="body2">
-																	{typeof value === "number" ? value.toLocaleString("es-AR") : "—"}
-																</Typography>
+																<Typography variant="body2">{typeof value === "number" ? value.toLocaleString("es-AR") : "—"}</Typography>
 															</TableCell>
 														);
 													})}
@@ -312,8 +307,8 @@ const FunnelSnapshotsPage: React.FC = () => {
 						Funnel snapshots
 					</Typography>
 					<Typography variant="body2" color="text.secondary">
-						Último snapshot persistido por el cron diario de <code>la-ads</code> (a las 8 AM AR). Los datos vienen
-						de la colección <code>funnelSnapshots</code>, no de queries en vivo a GA4.
+						Último snapshot persistido por el cron diario de <code>la-ads</code> (a las 8 AM AR). Los datos vienen de la colección{" "}
+						<code>funnelSnapshots</code>, no de queries en vivo a GA4.
 					</Typography>
 				</Box>
 				<Tooltip title="Recargar">
@@ -358,8 +353,8 @@ const FunnelSnapshotsPage: React.FC = () => {
 					}}
 				>
 					<Typography variant="caption" color="text.secondary">
-						Esta vista muestra el snapshot más reciente. Para evolución temporal o snapshots históricos, usar
-						el endpoint <code>/api/funnel-snapshots/trend</code> o <code>/api/funnel-snapshots</code>.
+						Esta vista muestra el snapshot más reciente. Para evolución temporal o snapshots históricos, usar el endpoint{" "}
+						<code>/api/funnel-snapshots/trend</code> o <code>/api/funnel-snapshots</code>.
 					</Typography>
 				</Box>
 			)}

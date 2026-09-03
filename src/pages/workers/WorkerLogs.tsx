@@ -33,7 +33,6 @@ import {
 	DialogTitle,
 	DialogContent,
 	DialogActions,
-	LinearProgress,
 	Alert,
 	Collapse,
 } from "@mui/material";
@@ -72,7 +71,6 @@ import WorkerLogsService, {
 	SearchLogsParams,
 	SearchLogsResponse,
 	LogLevel,
-	DetailedLogEntry,
 	ErrorBreakdownResponse,
 } from "api/workerLogs";
 import {

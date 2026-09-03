@@ -66,12 +66,7 @@ import {
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import CopyButton from "components/CopyButton";
-import SupportContactsService, {
-	SupportContact,
-	SupportContactFilters,
-	UpdateSupportContactData,
-	SupportContactReply,
-} from "api/supportContacts";
+import SupportContactsService, { SupportContact, SupportContactFilters, UpdateSupportContactData } from "api/supportContacts";
 
 // Status configuration
 const STATUS_CONFIG: Record<string, { color: "warning" | "info" | "success" | "default"; label: string; icon: React.ReactNode }> = {

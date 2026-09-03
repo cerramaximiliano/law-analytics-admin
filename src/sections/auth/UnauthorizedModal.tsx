@@ -15,7 +15,6 @@ import {
 	OutlinedInput,
 	FormHelperText,
 	InputAdornment,
-	Divider,
 	CircularProgress,
 } from "@mui/material";
 import { Eye, EyeSlash } from "iconsax-react";

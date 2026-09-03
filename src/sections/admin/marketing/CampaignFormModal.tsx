@@ -8,7 +8,6 @@ import {
 	Alert,
 	Box,
 	Button,
-	Checkbox,
 	Chip,
 	Dialog,
 	DialogActions,
@@ -749,8 +748,8 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 									))}
 								</Select>
 								<FormHelperText>
-									Define qué código completa {"{{descuento.*}}"} y {"{{tablaPrecios}}"} en los emails. Obligatoria para activar campañas cuyos
-									templates usan contenido de descuento.
+									Define qué código completa {"{{descuento.*}}"} y {"{{tablaPrecios}}"} en los emails. Obligatoria para activar campañas
+									cuyos templates usan contenido de descuento.
 								</FormHelperText>
 							</FormControl>
 							{(() => {
@@ -991,7 +990,9 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 						{formik.values.type !== "onetime" && (
 							<Grid item xs={12}>
 								<FormControlLabel
-									control={<Switch checked={formik.values.isPermanent} onChange={handlePermanentToggle} name="isPermanent" color="primary" />}
+									control={
+										<Switch checked={formik.values.isPermanent} onChange={handlePermanentToggle} name="isPermanent" color="primary" />
+									}
 									label="Campaña permanente (sin fecha de finalización)"
 								/>
 							</Grid>
@@ -1036,8 +1037,8 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 									{formik.values.unlinkSegment ? (
 										<Alert severity="warning">
 											Al guardar, el segmento quedará <strong>desvinculado</strong> de la campaña y la sincronización automática se
-											desactivará. Los contactos ya enrolados no se eliminan — podés quitarlos después desde «Gestionar contactos» sin
-											que vuelvan a agregarse.
+											desactivará. Los contactos ya enrolados no se eliminan — podés quitarlos después desde «Gestionar contactos» sin que
+											vuelvan a agregarse.
 										</Alert>
 									) : (
 										<>
@@ -1059,8 +1060,8 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 											</FormHelperText>
 											{!formik.values.syncWithSegment && (
 												<Alert severity="info" sx={{ mt: 1 }}>
-													La sincronización está deshabilitada. Esto es útil para campañas duplicadas donde quieres controlar
-													manualmente los contactos.
+													La sincronización está deshabilitada. Esto es útil para campañas duplicadas donde quieres controlar manualmente
+													los contactos.
 												</Alert>
 											)}
 										</>

@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 
 // material-ui
 import {
-	Box,
 	Button,
 	Chip,
 	CircularProgress,
@@ -45,7 +44,21 @@ import {
 	Emblema,
 } from "api/efemeridesService";
 
-const MESES = ["", "enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+const MESES = [
+	"",
+	"enero",
+	"febrero",
+	"marzo",
+	"abril",
+	"mayo",
+	"junio",
+	"julio",
+	"agosto",
+	"septiembre",
+	"octubre",
+	"noviembre",
+	"diciembre",
+];
 
 const vacia: EfemerideInput = { mes: 1, dia: 1, titulo: "", contexto: "", mensajes: [], cierre: "", emblema: null, activo: true };
 
@@ -111,14 +124,7 @@ const EditorEfemeride = ({
 					/>
 					<Grid container spacing={2}>
 						<Grid item xs={6}>
-							<TextField
-								select
-								label="Mes"
-								size="small"
-								fullWidth
-								value={form.mes}
-								onChange={(e) => set("mes", Number(e.target.value))}
-							>
+							<TextField select label="Mes" size="small" fullWidth value={form.mes} onChange={(e) => set("mes", Number(e.target.value))}>
 								{MESES.slice(1).map((m, i) => (
 									<MenuItem key={i + 1} value={i + 1}>
 										{m}
@@ -251,7 +257,11 @@ const Efemerides = () => {
 				</Stack>
 			}
 			secondary={
-				<Button variant="contained" startIcon={<Add size={18} />} onClick={() => setEditor({ abierto: true, inicial: vacia, esNueva: true })}>
+				<Button
+					variant="contained"
+					startIcon={<Add size={18} />}
+					onClick={() => setEditor({ abierto: true, inicial: vacia, esNueva: true })}
+				>
 					Nueva
 				</Button>
 			}
@@ -289,13 +299,7 @@ const Efemerides = () => {
 									<TableCell>{ef.titulo}</TableCell>
 									<TableCell align="center">
 										{ef.emblema ? (
-											<Chip
-												size="small"
-												icon={<Flag size={14} />}
-												label={ef.emblema}
-												variant="outlined"
-												color="info"
-											/>
+											<Chip size="small" icon={<Flag size={14} />} label={ef.emblema} variant="outlined" color="info" />
 										) : (
 											<Typography variant="caption" color="text.secondary">
 												—

@@ -64,9 +64,6 @@ import {
 	PieChart,
 	Pie,
 	Cell,
-	FunnelChart,
-	Funnel,
-	LabelList,
 } from "recharts";
 import MainCard from "components/MainCard";
 import GA4AnalyticsService from "api/ga4Analytics";

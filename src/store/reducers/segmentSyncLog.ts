@@ -1,10 +1,5 @@
 import mktAxios from "utils/mktAxios";
-import {
-	SegmentSyncLog,
-	SegmentSyncLogPaginatedResponse,
-	SegmentSyncLogExecutionDetail,
-	SegmentSyncLogStatsResponse,
-} from "types/segment-sync-log";
+import { SegmentSyncLogPaginatedResponse, SegmentSyncLogExecutionDetail, SegmentSyncLogStatsResponse } from "types/segment-sync-log";
 
 // Segment Sync Log API Service
 export const SegmentSyncLogService = {

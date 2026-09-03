@@ -33,7 +33,7 @@ import {
 import EnhancedTablePagination from "components/EnhancedTablePagination";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
-import { CausasEjeService, CausaEje, CausasEjeResponse } from "api/causasEje";
+import { CausasEjeService, CausaEje } from "api/causasEje";
 import {
 	Refresh,
 	SearchNormal1,
@@ -43,7 +43,6 @@ import {
 	ArrowDown2,
 	ArrowUp2,
 	TickCircle,
-	Warning2,
 	Layer,
 	DocumentText,
 } from "iconsax-react";

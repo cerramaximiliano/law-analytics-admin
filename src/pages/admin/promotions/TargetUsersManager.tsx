@@ -8,8 +8,6 @@ import {
 	DialogActions,
 	DialogContent,
 	DialogTitle,
-	Divider,
-	Grid,
 	IconButton,
 	InputAdornment,
 	Paper,

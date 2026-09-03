@@ -23,8 +23,6 @@ import {
 	FormControlLabel,
 	FormGroup,
 	Collapse,
-	Tooltip,
-	IconButton,
 	Divider,
 	MenuItem,
 	Select,
@@ -1223,8 +1221,12 @@ pm2 save`}
 															{entry.status === "ERROR" && <Chip label="ERROR" color="error" size="small" />}
 														</TableCell>
 														<TableCell sx={{ fontVariantNumeric: "tabular-nums" }}>{formatDuration(entry.duration_ms)}</TableCell>
-														<TableCell sx={{ fontVariantNumeric: "tabular-nums" }}>{entry.summary?.totalJurisdiccionesMEV ?? "-"}</TableCell>
-														<TableCell sx={{ fontVariantNumeric: "tabular-nums" }}>{entry.summary?.totalJurisdiccionesJSON ?? "-"}</TableCell>
+														<TableCell sx={{ fontVariantNumeric: "tabular-nums" }}>
+															{entry.summary?.totalJurisdiccionesMEV ?? "-"}
+														</TableCell>
+														<TableCell sx={{ fontVariantNumeric: "tabular-nums" }}>
+															{entry.summary?.totalJurisdiccionesJSON ?? "-"}
+														</TableCell>
 														<TableCell sx={{ fontVariantNumeric: "tabular-nums" }}>
 															{(entry.summary?.jurisdiccionesFaltantes || 0) + (entry.summary?.organismosFaltantes || 0) || "-"}
 														</TableCell>
@@ -1311,7 +1313,11 @@ pm2 save`}
 								<Typography variant="body2" color="text.secondary">
 									Activos
 								</Typography>
-								<Typography variant="h5" color="success.main" sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.01em" }}>
+								<Typography
+									variant="h5"
+									color="success.main"
+									sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.01em" }}
+								>
 									{navStats.activos || 0}
 								</Typography>
 							</Grid>
@@ -1319,7 +1325,11 @@ pm2 save`}
 								<Typography variant="body2" color="text.secondary">
 									Inactivos
 								</Typography>
-								<Typography variant="h5" color="text.disabled" sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.01em" }}>
+								<Typography
+									variant="h5"
+									color="text.disabled"
+									sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.01em" }}
+								>
 									{navStats.inactivos || 0}
 								</Typography>
 							</Grid>

@@ -17,7 +17,6 @@ import {
 	Chip,
 	Alert,
 	Paper,
-	Divider,
 	Tooltip,
 	CircularProgress,
 	Tabs,

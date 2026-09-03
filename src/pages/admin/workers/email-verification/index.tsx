@@ -18,7 +18,6 @@ import {
 	Chip,
 	LinearProgress,
 	Collapse,
-	Divider,
 	Dialog,
 	DialogTitle,
 	DialogContent,

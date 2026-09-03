@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import {
 	Box,
-	Button,
 	Chip,
 	FormControl,
 	IconButton,
@@ -166,7 +165,14 @@ export default function DocumentsTab() {
 					/>
 					<FormControl size="small" sx={{ minWidth: 140 }}>
 						<InputLabel>pdfStatus</InputLabel>
-						<Select value={pdfStatus} label="pdfStatus" onChange={(e) => { setPdfStatus(e.target.value); setPage(0); }}>
+						<Select
+							value={pdfStatus}
+							label="pdfStatus"
+							onChange={(e) => {
+								setPdfStatus(e.target.value);
+								setPage(0);
+							}}
+						>
 							<MenuItem value="">— todos —</MenuItem>
 							{PDF_STATUSES.map((s) => (
 								<MenuItem key={s} value={s}>
@@ -177,7 +183,14 @@ export default function DocumentsTab() {
 					</FormControl>
 					<FormControl size="small" sx={{ minWidth: 140 }}>
 						<InputLabel>sectionMix</InputLabel>
-						<Select value={sectionMix} label="sectionMix" onChange={(e) => { setSectionMix(e.target.value); setPage(0); }}>
+						<Select
+							value={sectionMix}
+							label="sectionMix"
+							onChange={(e) => {
+								setSectionMix(e.target.value);
+								setPage(0);
+							}}
+						>
 							<MenuItem value="">— todos —</MenuItem>
 							{SECTION_MIXES.map((s) => (
 								<MenuItem key={s} value={s}>
@@ -188,7 +201,14 @@ export default function DocumentsTab() {
 					</FormControl>
 					<FormControl size="small" sx={{ minWidth: 180 }}>
 						<InputLabel>categoría</InputLabel>
-						<Select value={category} label="categoría" onChange={(e) => { setCategory(e.target.value); setPage(0); }}>
+						<Select
+							value={category}
+							label="categoría"
+							onChange={(e) => {
+								setCategory(e.target.value);
+								setPage(0);
+							}}
+						>
 							<MenuItem value="">— todas —</MenuItem>
 							{CATEGORIES.map((c) => (
 								<MenuItem key={c} value={c}>
@@ -215,7 +235,14 @@ export default function DocumentsTab() {
 						</Select>
 					</FormControl>
 					<Stack direction="row" alignItems="center" spacing={0.5}>
-						<Switch size="small" checked={hasData} onChange={(e) => { setHasData(e.target.checked); setPage(0); }} />
+						<Switch
+							size="small"
+							checked={hasData}
+							onChange={(e) => {
+								setHasData(e.target.checked);
+								setPage(0);
+							}}
+						/>
 						<Typography variant="caption">Solo con datos útiles</Typography>
 					</Stack>
 					<Box sx={{ flex: 1 }} />
@@ -283,7 +310,7 @@ export default function DocumentsTab() {
 											<Skeleton variant="text" height={28} />
 										</TableCell>
 									</TableRow>
-								))
+							  ))
 							: docs.map((d) => {
 									const useful = d.sectionMix ? USEFUL_MIXES.has(d.sectionMix) : false;
 									return (
@@ -332,9 +359,7 @@ export default function DocumentsTab() {
 														sx={{
 															fontFamily: "monospace",
 															fontWeight: 600,
-															bgcolor: useful
-																? alpha(theme.palette.success.main, 0.15)
-																: alpha(theme.palette.grey[500], 0.1),
+															bgcolor: useful ? alpha(theme.palette.success.main, 0.15) : alpha(theme.palette.grey[500], 0.1),
 															color: useful ? theme.palette.success.main : theme.palette.text.secondary,
 														}}
 													/>
@@ -354,13 +379,11 @@ export default function DocumentsTab() {
 														r === "mixto"
 															? theme.palette.warning.main
 															: r === "autonomo"
-																? theme.palette.info.main
-																: theme.palette.success.main;
+															? theme.palette.info.main
+															: theme.palette.success.main;
 													const tooltipText = d.extracted?.regimenSource
 														? `Fuente: ${d.extracted.regimenSource}` +
-															(d.extracted.regimenConfidence != null
-																? ` · confianza ${d.extracted.regimenConfidence}`
-																: "")
+														  (d.extracted.regimenConfidence != null ? ` · confianza ${d.extracted.regimenConfidence}` : "")
 														: "";
 													return (
 														<Tooltip title={tooltipText} placement="top" arrow>
@@ -384,11 +407,7 @@ export default function DocumentsTab() {
 													{truncate(d.extracted?.persona, 24) || "—"}
 												</Typography>
 												{d.extracted?.expediente && (
-													<Typography
-														variant="caption"
-														color="text.secondary"
-														sx={{ fontFamily: "monospace", fontSize: "0.65rem" }}
-													>
+													<Typography variant="caption" color="text.secondary" sx={{ fontFamily: "monospace", fontSize: "0.65rem" }}>
 														{d.extracted.expediente}
 													</Typography>
 												)}
@@ -407,10 +426,7 @@ export default function DocumentsTab() {
 														</IconButton>
 													</Tooltip>
 													<Tooltip title="Abrir PDF en PJN">
-														<IconButton
-															size="small"
-															onClick={() => window.open(d.url, "_blank", "noopener,noreferrer")}
-														>
+														<IconButton size="small" onClick={() => window.open(d.url, "_blank", "noopener,noreferrer")}>
 															<ExportSquare size={16} />
 														</IconButton>
 													</Tooltip>
@@ -418,7 +434,7 @@ export default function DocumentsTab() {
 											</TableCell>
 										</TableRow>
 									);
-								})}
+							  })}
 						{!loading && docs.length === 0 && (
 							<TableRow>
 								<TableCell colSpan={8} align="center">

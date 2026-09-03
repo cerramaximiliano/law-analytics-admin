@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Box, Card, CardContent, Grid, Typography, Stack, Chip, Alert, Skeleton, Button, useTheme, alpha } from "@mui/material";
-import { Refresh, TickCircle, CloseCircle, Timer1, Warning2 } from "iconsax-react";
+import { Refresh, TickCircle, CloseCircle, Timer1 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { ScrapingManagerService, ManagerState, WorkerStateInfo } from "api/scrapingManager";
 import { BRAND_BLUE, LIVE_GREEN, LIVE_PULSE_KEYFRAMES } from "themes/dashboardTokens";

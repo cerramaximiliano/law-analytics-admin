@@ -27,7 +27,6 @@ import {
 	useTheme,
 } from "@mui/material";
 import {
-	Book1,
 	SearchNormal1,
 	Refresh,
 	Briefcase,
@@ -35,7 +34,6 @@ import {
 	DocumentText1,
 	TickCircle,
 	CloseCircle,
-	ArrowRight,
 	Chart,
 	Warning2,
 	CommandSquare,

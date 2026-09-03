@@ -33,7 +33,7 @@ import {
 import EnhancedTablePagination from "components/EnhancedTablePagination";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
-import { CausasPjMendozaService, CausaPjMendoza, CausasPjMendozaResponse } from "api/causasPjMendoza";
+import { CausasPjMendozaService, CausaPjMendoza } from "api/causasPjMendoza";
 import { BRAND_BLUE } from "themes/dashboardTokens";
 import {
 	Refresh,
@@ -44,7 +44,6 @@ import {
 	ArrowDown2,
 	ArrowUp2,
 	TickCircle,
-	Warning2,
 	Layer,
 	DocumentText,
 } from "iconsax-react";
@@ -359,7 +358,9 @@ const CarpetasPivotsPjMendoza = () => {
 			const response = await CausasPjMendozaService.resolvePivot(confirmDialog.pivotId, confirmDialog.causaId);
 			if (response.success) {
 				const d = response.data || ({} as any);
-				const resumen = `${d.foldersMoved ?? 0} carpeta(s) vinculada(s)${d.foldersSkipped ? ` · ${d.foldersSkipped} ya resuelta(s) por el usuario (no se pisan)` : ""}${d.foldersRemaining ? ` · ${d.foldersRemaining} siguen pendientes en el pivote` : " · pivote resuelto"}`;
+				const resumen = `${d.foldersMoved ?? 0} carpeta(s) vinculada(s)${
+					d.foldersSkipped ? ` · ${d.foldersSkipped} ya resuelta(s) por el usuario (no se pisan)` : ""
+				}${d.foldersRemaining ? ` · ${d.foldersRemaining} siguen pendientes en el pivote` : " · pivote resuelto"}`;
 				enqueueSnackbar(`Resuelto: ${resumen}`, {
 					variant: "success",
 					anchorOrigin: { vertical: "bottom", horizontal: "right" },
@@ -646,7 +647,8 @@ const CarpetasPivotsPjMendoza = () => {
 						</Box>
 					)}
 					<Alert severity="warning" sx={{ mt: 2 }}>
-						Se vincularán a esta causa solo las carpetas que todavía están esperando selección sobre este pivote; las que el usuario ya resolvió no se modifican. Las demás candidatas quedan como causas (no se eliminan).
+						Se vincularán a esta causa solo las carpetas que todavía están esperando selección sobre este pivote; las que el usuario ya
+						resolvió no se modifican. Las demás candidatas quedan como causas (no se eliminan).
 					</Alert>
 				</DialogContent>
 				<DialogActions>

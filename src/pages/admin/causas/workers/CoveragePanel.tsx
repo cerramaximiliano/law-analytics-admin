@@ -37,8 +37,7 @@ import {
 import { Refresh, AddCircle, TickCircle, Warning2, SearchNormal1, Flash, CloseCircle, ArrowDown2, ArrowUp2, Ranking } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { WorkersService, ScrapingCoverageData, CoverageGap, WorkerConfig, RealCoverageData, WorkerEstado } from "api/workers";
-import { BRAND_BLUE, navActiveBg } from "themes/dashboardTokens";
-import { alpha } from "@mui/material/styles";
+import { BRAND_BLUE } from "themes/dashboardTokens";
 import CreateConfigModal from "./CreateConfigModal";
 import { FUERO_OPTIONS as CATALOGO_FUEROS } from "utils/fueros";
 

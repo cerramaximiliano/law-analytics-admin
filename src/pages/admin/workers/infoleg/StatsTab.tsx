@@ -4,7 +4,6 @@ import {
 	Card,
 	CardContent,
 	Chip,
-	CircularProgress,
 	Grid,
 	Skeleton,
 	Stack,

@@ -27,7 +27,6 @@ import {
 	useTheme,
 } from "@mui/material";
 import {
-	Book1,
 	SearchNormal1,
 	Refresh,
 	Briefcase,
@@ -35,7 +34,6 @@ import {
 	DocumentText1,
 	TickCircle,
 	CloseCircle,
-	ArrowRight,
 	Chart,
 	Warning2,
 	CommandSquare,
@@ -850,7 +848,8 @@ const DocumentationTabs = () => {
 									<Typography variant="subtitle2">Worker de Verificación</Typography>
 								</Stack>
 								<Typography variant="body2" color="text.secondary">
-									Verifica que los expedientes existan en PJ Salta. Maneja 3 escenarios: no encontrado, único resultado, múltiples resultados.
+									Verifica que los expedientes existan en PJ Salta. Maneja 3 escenarios: no encontrado, único resultado, múltiples
+									resultados.
 								</Typography>
 							</Box>
 							<Divider />
@@ -886,8 +885,8 @@ const DocumentationTabs = () => {
 					</Typography>
 
 					<Alert severity="info" sx={{ mb: 2 }}>
-						<strong>Valores de isValid:</strong> <code>null</code> = pendiente, <code>true</code> = existe en PJ Salta, <code>false</code> = no
-						existe
+						<strong>Valores de isValid:</strong> <code>null</code> = pendiente, <code>true</code> = existe en PJ Salta, <code>false</code> =
+						no existe
 					</Alert>
 
 					{/* Diagrama Principal de los 3 Escenarios */}
@@ -1710,8 +1709,8 @@ const DocumentationTabs = () => {
 					</Typography>
 
 					<Alert severity="info">
-						El sistema trackea todos los cambios de estado en la vinculación de causas PJ Salta, permitiendo auditar el ciclo de vida completo de
-						cada asociación.
+						El sistema trackea todos los cambios de estado en la vinculación de causas PJ Salta, permitiendo auditar el ciclo de vida
+						completo de cada asociación.
 					</Alert>
 
 					<Box>

@@ -34,7 +34,6 @@ import {
 	CausasPjCatamarcaService,
 	MovimientoPjCatamarca,
 	IntervinientePjCatamarca,
-	CausaRelacionada,
 	UpdateHistoryEntry,
 } from "api/causasPjCatamarca";
 import { CloseCircle, CloseSquare, TickCircle, ArrowDown2, ArrowUp2, Copy, Edit, Save2, Lock1, Repeat } from "iconsax-react";

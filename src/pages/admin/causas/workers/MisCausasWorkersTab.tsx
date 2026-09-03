@@ -12,7 +12,6 @@ import {
 	Chip,
 	Collapse,
 	IconButton,
-	Tooltip,
 	Divider,
 	Checkbox,
 	FormControlLabel,

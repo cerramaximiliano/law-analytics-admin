@@ -26,7 +26,6 @@ import {
 	DialogContent,
 	DialogActions,
 	Checkbox,
-	Tooltip,
 	Menu,
 	ListItemIcon,
 	ListItemText,
@@ -50,11 +49,8 @@ import {
 	Archive,
 	ArchiveSlash,
 	Flag,
-	Tag,
 	Calendar,
-	MessageText,
 	TaskSquare,
-	Filter,
 	Refresh,
 } from "iconsax-react";
 import MainCard from "components/MainCard";
@@ -68,9 +64,7 @@ import {
 	TaskFilterOptions,
 	CreateTaskRequest,
 	STATUS_LABELS,
-	STATUS_COLORS,
 	PRIORITY_LABELS,
-	PRIORITY_COLORS,
 	CATEGORY_LABELS,
 } from "types/admin-task";
 import dayjs from "dayjs";

@@ -6,18 +6,7 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs, { Dayjs } from "dayjs";
 import "dayjs/locale/es";
-import {
-	LineChart,
-	Line,
-	XAxis,
-	YAxis,
-	CartesianGrid,
-	Tooltip as RechartsTooltip,
-	ResponsiveContainer,
-	Legend,
-	Area,
-	AreaChart,
-} from "recharts";
+import { XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend, Area, AreaChart } from "recharts";
 import adminAxios from "utils/adminAxios";
 import { BRAND_BLUE } from "themes/dashboardTokens";
 
@@ -95,7 +84,11 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon, color, loading 
 					{icon}
 				</Box>
 				<Box>
-					<Typography variant="caption" color="textSecondary" sx={{ letterSpacing: 0.3, textTransform: "uppercase", display: "block", mb: 0.25 }}>
+					<Typography
+						variant="caption"
+						color="textSecondary"
+						sx={{ letterSpacing: 0.3, textTransform: "uppercase", display: "block", mb: 0.25 }}
+					>
 						{title}
 					</Typography>
 					{loading ? (

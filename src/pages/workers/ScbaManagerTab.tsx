@@ -37,20 +37,7 @@ import {
 	FormControl,
 	InputLabel,
 } from "@mui/material";
-import {
-	Setting2,
-	InfoCircle,
-	TickCircle,
-	CloseCircle,
-	Refresh,
-	Warning2,
-	Timer1,
-	People,
-	Chart,
-	Notification,
-	ArrowUp2,
-	ArrowDown2,
-} from "iconsax-react";
+import { Setting2, InfoCircle, TickCircle, CloseCircle, Refresh, Warning2, Timer1, People, Chart, Notification } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { BRAND_BLUE, headerBorder, LIVE_GREEN, LIVE_PULSE_KEYFRAMES } from "themes/dashboardTokens";
 import ScbaWorkersFlow from "pages/admin/flujos/ScbaWorkersFlow";
@@ -677,7 +664,10 @@ const ScbaManagerTab: React.FC = () => {
 											size="small"
 											type="number"
 											label="Rechazos para deshabilitar"
-											value={getVal("credentialPolicy", { rejectionConfirmations: 2, rejectionMinSpacingMinutes: 5 })?.rejectionConfirmations ?? 2}
+											value={
+												getVal("credentialPolicy", { rejectionConfirmations: 2, rejectionMinSpacingMinutes: 5 })?.rejectionConfirmations ??
+												2
+											}
 											onChange={(e) =>
 												updateField("credentialPolicy", {
 													...getVal("credentialPolicy", { rejectionConfirmations: 2, rejectionMinSpacingMinutes: 5 }),
@@ -693,7 +683,10 @@ const ScbaManagerTab: React.FC = () => {
 											size="small"
 											type="number"
 											label="Separación mínima (min)"
-											value={getVal("credentialPolicy", { rejectionConfirmations: 2, rejectionMinSpacingMinutes: 5 })?.rejectionMinSpacingMinutes ?? 5}
+											value={
+												getVal("credentialPolicy", { rejectionConfirmations: 2, rejectionMinSpacingMinutes: 5 })
+													?.rejectionMinSpacingMinutes ?? 5
+											}
 											onChange={(e) =>
 												updateField("credentialPolicy", {
 													...getVal("credentialPolicy", { rejectionConfirmations: 2, rejectionMinSpacingMinutes: 5 }),
@@ -706,9 +699,11 @@ const ScbaManagerTab: React.FC = () => {
 									<Grid item xs={12} sm={6}>
 										<Typography variant="caption" color="text.secondary">
 											Una credencial <strong>establecida</strong> (ya verificada) recién se deshabilita y se emailea al usuario tras{" "}
-											{getVal("credentialPolicy", { rejectionConfirmations: 2, rejectionMinSpacingMinutes: 5 })?.rejectionConfirmations ?? 2}{" "}
+											{getVal("credentialPolicy", { rejectionConfirmations: 2, rejectionMinSpacingMinutes: 5 })?.rejectionConfirmations ??
+												2}{" "}
 											rechazo(s) explícito(s) del portal ("Datos inválidos") separados por al menos{" "}
-											{getVal("credentialPolicy", { rejectionConfirmations: 2, rejectionMinSpacingMinutes: 5 })?.rejectionMinSpacingMinutes ?? 5}{" "}
+											{getVal("credentialPolicy", { rejectionConfirmations: 2, rejectionMinSpacingMinutes: 5 })
+												?.rejectionMinSpacingMinutes ?? 5}{" "}
 											min — protege contra falsos positivos (tipeo parcial del bot, glitch del portal). Un login exitoso resetea el
 											contador. Las credenciales <strong>nuevas</strong> disparan al primer rechazo (feedback inmediato al vincular). 1 =
 											comportamiento histórico.

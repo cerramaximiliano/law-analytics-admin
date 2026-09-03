@@ -4,7 +4,6 @@ import {
 	AccordionDetails,
 	AccordionSummary,
 	Alert,
-	Box,
 	Button,
 	Chip,
 	Divider,

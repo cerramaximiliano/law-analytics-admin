@@ -46,27 +46,12 @@ import {
 } from "@mui/material";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
-import {
-	Refresh,
-	Edit,
-	CloseCircle,
-	TickCircle,
-	DocumentText,
-	Calendar,
-	Chart,
-	Add,
-	ArrowDown2,
-	ArrowUp2,
-	Warning2,
-	Trash,
-	Link1,
-} from "iconsax-react";
+import { Refresh, Edit, DocumentText, Calendar, Chart, Add, ArrowDown2, ArrowUp2, Warning2, Trash, Link1 } from "iconsax-react";
 import {
 	getListado,
 	getStats,
 	getCoverage,
 	getYears,
-	getMissing,
 	updateById,
 	create,
 	toggleEstado,

@@ -30,16 +30,22 @@ import {
 	Tabs,
 	Tab,
 } from "@mui/material";
-import { CloseCircle, Chart, Sms, TickCircle, CloseCircle as CloseIcon, Warning2, Mouse, UserRemove, Code1, Copy, People, LogoutCurve } from "iconsax-react";
-import { CampaignService } from "store/reducers/campaign";
 import {
-	Campaign,
-	CampaignSendStatsSummary,
-	EmailBreakdown,
-	DailyBreakdown,
-	StepBreakdownItem,
-	CampaignAudienceStats,
-} from "types/campaign";
+	CloseCircle,
+	Chart,
+	Sms,
+	TickCircle,
+	CloseCircle as CloseIcon,
+	Warning2,
+	Mouse,
+	UserRemove,
+	Code1,
+	Copy,
+	People,
+	LogoutCurve,
+} from "iconsax-react";
+import { CampaignService } from "store/reducers/campaign";
+import { Campaign, CampaignSendStatsSummary, EmailBreakdown, DailyBreakdown, CampaignAudienceStats } from "types/campaign";
 import { ArrowDown2, ArrowUp2 } from "iconsax-react";
 
 interface CampaignSendStatsModalProps {
@@ -809,7 +815,15 @@ const AudienceTab: React.FC<AudienceTabProps> = ({ loading, error, data, onRefre
 
 	if (error) {
 		return (
-			<Alert severity="error" sx={{ my: 2 }} action={<Button color="inherit" size="small" onClick={onRefresh}>Reintentar</Button>}>
+			<Alert
+				severity="error"
+				sx={{ my: 2 }}
+				action={
+					<Button color="inherit" size="small" onClick={onRefresh}>
+						Reintentar
+					</Button>
+				}
+			>
 				{error}
 			</Alert>
 		);
@@ -824,7 +838,19 @@ const AudienceTab: React.FC<AudienceTabProps> = ({ loading, error, data, onRefre
 	}
 
 	// Tarjeta para los 4 contadores principales
-	const HeadlineCard = ({ title, value, subtitle, icon, color }: { title: string; value: number; subtitle?: string; icon: React.ReactNode; color: string }) => (
+	const HeadlineCard = ({
+		title,
+		value,
+		subtitle,
+		icon,
+		color,
+	}: {
+		title: string;
+		value: number;
+		subtitle?: string;
+		icon: React.ReactNode;
+		color: string;
+	}) => (
 		<Box
 			sx={{
 				p: 2,
@@ -836,11 +862,17 @@ const AudienceTab: React.FC<AudienceTabProps> = ({ loading, error, data, onRefre
 		>
 			<Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
 				<Box sx={{ color, mr: 1 }}>{icon}</Box>
-				<Typography variant="body2" color="textSecondary">{title}</Typography>
+				<Typography variant="body2" color="textSecondary">
+					{title}
+				</Typography>
 			</Box>
-			<Typography variant="h4" sx={{ color }}>{fmt(value)}</Typography>
+			<Typography variant="h4" sx={{ color }}>
+				{fmt(value)}
+			</Typography>
 			{subtitle && (
-				<Typography variant="caption" color="textSecondary">{subtitle}</Typography>
+				<Typography variant="caption" color="textSecondary">
+					{subtitle}
+				</Typography>
 			)}
 		</Box>
 	);
@@ -852,7 +884,9 @@ const AudienceTab: React.FC<AudienceTabProps> = ({ loading, error, data, onRefre
 		<Grid container spacing={3} sx={{ mt: 0 }}>
 			{/* Tarjetas principales */}
 			<Grid item xs={12}>
-				<Typography variant="subtitle1" fontWeight="bold" gutterBottom>Audiencia</Typography>
+				<Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+					Audiencia
+				</Typography>
 				<Divider sx={{ mb: 2 }} />
 				<Grid container spacing={2}>
 					<Grid item xs={6} md={3}>
@@ -901,7 +935,9 @@ const AudienceTab: React.FC<AudienceTabProps> = ({ loading, error, data, onRefre
 
 			{/* Embudo por etapa */}
 			<Grid item xs={12}>
-				<Typography variant="subtitle1" fontWeight="bold" gutterBottom>Embudo por etapa</Typography>
+				<Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+					Embudo por etapa
+				</Typography>
 				<Divider sx={{ mb: 2 }} />
 				<TableContainer component={Paper} variant="outlined">
 					<Table size="small">
@@ -921,7 +957,9 @@ const AudienceTab: React.FC<AudienceTabProps> = ({ loading, error, data, onRefre
 										<Chip label={s.step + 1} size="small" color="primary" variant="outlined" sx={{ minWidth: 32 }} />
 									</TableCell>
 									<TableCell>
-										<Typography variant="body2" fontWeight="medium">{s.name}</Typography>
+										<Typography variant="body2" fontWeight="medium">
+											{s.name}
+										</Typography>
 										{s.subject && (
 											<Typography variant="caption" color="textSecondary">
 												{s.subject.length > 50 ? `${s.subject.substring(0, 50)}…` : s.subject}
@@ -955,7 +993,9 @@ const AudienceTab: React.FC<AudienceTabProps> = ({ loading, error, data, onRefre
 
 			{/* Exclusiones por etapa con razón */}
 			<Grid item xs={12} md={7}>
-				<Typography variant="subtitle1" fontWeight="bold" gutterBottom>Exclusiones por etapa</Typography>
+				<Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+					Exclusiones por etapa
+				</Typography>
 				<Divider sx={{ mb: 2 }} />
 				{data.exclusionsByStep.length === 0 ? (
 					<Alert severity="info">No hay contactos excluidos.</Alert>
@@ -1000,7 +1040,9 @@ const AudienceTab: React.FC<AudienceTabProps> = ({ loading, error, data, onRefre
 
 			{/* Completados con razón */}
 			<Grid item xs={12} md={5}>
-				<Typography variant="subtitle1" fontWeight="bold" gutterBottom>Completados</Typography>
+				<Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+					Completados
+				</Typography>
 				<Divider sx={{ mb: 2 }} />
 				<TableContainer component={Paper} variant="outlined">
 					<Table size="small">

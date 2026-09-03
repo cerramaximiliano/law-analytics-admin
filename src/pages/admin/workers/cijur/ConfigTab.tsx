@@ -3,19 +3,7 @@
 // sin reiniciar. El cron es la excepción — node-cron lo lee al arrancar.
 
 import { useState } from "react";
-import {
-	Alert,
-	Button,
-	Chip,
-	Divider,
-	FormControlLabel,
-	MenuItem,
-	Paper,
-	Stack,
-	Switch,
-	TextField,
-	Typography,
-} from "@mui/material";
+import { Alert, Button, Chip, Divider, FormControlLabel, Paper, Stack, Switch, TextField, Typography } from "@mui/material";
 import { CijurWorkerConfig, setCijurEnabled, updateCijurNotification, updateCijurScraping } from "api/cijur";
 import { Ayuda } from "./EstadoTab";
 
@@ -138,9 +126,7 @@ export default function ConfigTab({ config, onChange }: { config: CijurWorkerCon
 					</Stack>
 
 					<FormControlLabel
-						control={
-							<Switch checked={s.descargarPdf !== false} onChange={(e) => setForm({ ...form, descargarPdf: e.target.checked })} />
-						}
+						control={<Switch checked={s.descargarPdf !== false} onChange={(e) => setForm({ ...form, descargarPdf: e.target.checked })} />}
 						label={
 							<Typography variant="body2">
 								Descargar y extraer el texto del PDF

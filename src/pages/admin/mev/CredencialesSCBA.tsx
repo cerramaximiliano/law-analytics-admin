@@ -39,8 +39,6 @@ import {
 	Refresh,
 	SearchNormal1,
 	CloseCircle,
-	Copy,
-	DocumentDownload,
 	TickCircle,
 	Trash,
 	ToggleOnCircle,

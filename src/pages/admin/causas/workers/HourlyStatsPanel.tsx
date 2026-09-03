@@ -25,20 +25,7 @@ import {
 } from "@mui/material";
 import { Clock, Activity, Refresh2, ArrowUp, ArrowDown, Chart, Timer } from "iconsax-react";
 import { useSnackbar } from "notistack";
-import {
-	BarChart,
-	Bar,
-	XAxis,
-	YAxis,
-	CartesianGrid,
-	Tooltip as RechartsTooltip,
-	ResponsiveContainer,
-	Legend,
-	AreaChart,
-	Area,
-	ComposedChart,
-	Line,
-} from "recharts";
+import { Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend, ComposedChart, Line } from "recharts";
 import dayjs, { todayInTimezone, currentHourInTimezone, formatInTimezone } from "utils/dayjs-config";
 import {
 	WorkersService,

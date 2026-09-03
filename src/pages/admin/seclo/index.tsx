@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Box, Tab, Tabs, Typography, Grid, Card, CardContent, Skeleton } from "@mui/material";
 import { alpha } from "@mui/material/styles";
-import { People, DocumentText, TickCircle, CloseCircle, Clock, Warning2 } from "iconsax-react";
+import { People, DocumentText, TickCircle, CloseCircle, Clock } from "iconsax-react";
 import { useDispatch, useSelector } from "store";
 import { fetchSecloStats } from "store/reducers/seclo";
 import SolicitudesTab from "./SolicitudesTab";

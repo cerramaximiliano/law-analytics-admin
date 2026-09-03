@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Stack, Tab, Tabs, Typography, useTheme, alpha, Chip } from "@mui/material";
+import { Box, Stack, Tab, Tabs, Typography, useTheme, alpha } from "@mui/material";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 import { useTabParam } from "hooks/useTabParam";
 

@@ -62,8 +62,6 @@ import {
 	WorkersService,
 	WorkerStatsTodayResponse,
 	WorkerStatsRangeResponse,
-	WorkerStatsByDateResponse,
-	WorkerDailyStats,
 	WorkerDailyStatsError,
 	WorkerAlertsResponse,
 	WorkerAvailableDate,

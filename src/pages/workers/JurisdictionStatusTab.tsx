@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
-	Box,
 	Card,
 	CardContent,
 	Grid,
@@ -121,10 +120,7 @@ export default function JurisdictionStatusTab() {
 							>
 								Total jurisdicciones
 							</Typography>
-							<Typography
-								variant="h3"
-								sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600, mt: 0.5 }}
-							>
+							<Typography variant="h3" sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600, mt: 0.5 }}>
 								{summary?.total ?? 0}
 							</Typography>
 						</CardContent>

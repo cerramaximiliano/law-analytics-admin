@@ -29,14 +29,7 @@ import {
 	FormControlLabel,
 	CircularProgress,
 } from "@mui/material";
-import {
-	CausaPjSalta,
-	CausasPjSaltaService,
-	MovimientoPjSalta,
-	IntervinientePjSalta,
-	CausaRelacionada,
-	UpdateHistoryEntry,
-} from "api/causasPjSalta";
+import { CausaPjSalta, CausasPjSaltaService, MovimientoPjSalta, IntervinientePjSalta, UpdateHistoryEntry } from "api/causasPjSalta";
 import { CloseCircle, CloseSquare, TickCircle, ArrowDown2, ArrowUp2, Copy, Edit, Save2, Lock1, Repeat } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { BRAND_BLUE, STALE_AMBER } from "themes/dashboardTokens";

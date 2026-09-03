@@ -29,7 +29,7 @@ import {
 	FormControl,
 	InputLabel,
 } from "@mui/material";
-import { Refresh, SearchNormal1, Eye, People, Crown1, TickCircle, Warning2, Archive, Trash } from "iconsax-react";
+import { Refresh, SearchNormal1, Eye, People, Crown1, TickCircle, Warning2 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import CopyButton from "components/CopyButton";

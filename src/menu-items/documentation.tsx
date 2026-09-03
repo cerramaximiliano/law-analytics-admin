@@ -1,5 +1,5 @@
 // assets
-import { Book1, DocumentText1 } from "iconsax-react";
+import { DocumentText1 } from "iconsax-react";
 
 // type
 import { NavItemType } from "types/menu";

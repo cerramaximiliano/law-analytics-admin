@@ -34,7 +34,6 @@ import {
 	CausasPjMendozaService,
 	MovimientoPjMendoza,
 	IntervinientePjMendoza,
-	CausaRelacionada,
 	UpdateHistoryEntry,
 } from "api/causasPjMendoza";
 import { CloseCircle, CloseSquare, TickCircle, ArrowDown2, ArrowUp2, Copy, Edit, Save2, Lock1, Repeat } from "iconsax-react";

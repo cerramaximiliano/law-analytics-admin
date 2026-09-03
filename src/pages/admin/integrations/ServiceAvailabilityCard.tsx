@@ -14,7 +14,7 @@ import {
 	alpha,
 	useTheme,
 } from "@mui/material";
-import { CloseCircle, InfoCircle, TickCircle } from "iconsax-react";
+import { CloseCircle, InfoCircle } from "iconsax-react";
 import { BRAND_BLUE, LIVE_GREEN, LIVE_PULSE_KEYFRAMES } from "themes/dashboardTokens";
 
 export type ReleaseStage = "beta" | "stable";

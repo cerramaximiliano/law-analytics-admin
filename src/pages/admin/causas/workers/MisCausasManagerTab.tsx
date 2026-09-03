@@ -1,20 +1,5 @@
 import React, { useState } from "react";
-import {
-	Box,
-	Card,
-	CardContent,
-	Grid,
-	Typography,
-	Switch,
-	TextField,
-	Button,
-	Stack,
-	Chip,
-	Alert,
-	Divider,
-	useTheme,
-	alpha,
-} from "@mui/material";
+import { Box, Card, CardContent, Grid, Typography, Switch, TextField, Button, Stack, Chip, Alert, useTheme, alpha } from "@mui/material";
 import { TickCircle, CloseCircle, Timer, Setting2 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { ScrapingManagerConfig, ScrapingManagerService } from "api/scrapingManager";
