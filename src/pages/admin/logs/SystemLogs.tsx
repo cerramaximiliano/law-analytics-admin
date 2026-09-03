@@ -169,7 +169,11 @@ const SystemLogs = () => {
 	const [services, setServices] = useState<ServiceInfo[]>([]);
 	const [loading, setLoading] = useState(false);
 	const [page, setPage] = useState(0);
-	const [rowsPerPage, setRowsPerPage] = useState(100);
+	// 10 por página: los logs se leen de a poco y en orden, no se escanean en
+	// bloque. Una página de 100 obligaba a scrollear la vista entera para llegar
+	// al control de paginado, y el export —que trae 2000/5000 con los filtros
+	// puestos— ya cubre el caso de querer mucho de una.
+	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [total, setTotal] = useState(0);
 
 	// ── Modal AI ────────────────────────────────────────────────────────────
@@ -235,6 +239,20 @@ const SystemLogs = () => {
 	useEffect(() => {
 		fetchServices();
 	}, [fetchServices]);
+
+	// Al cambiar un filtro hay que volver a la primera página: si no, una
+	// búsqueda que devuelve menos resultados que la página en la que estabas
+	// muestra una tabla vacía sin explicar por qué. Con 100 por página casi no
+	// se notaba —rara vez pasabas de la primera—; con 10 pasa seguido.
+	//
+	// Va como ajuste durante el render y no en un useEffect: un efecto correría
+	// DESPUÉS del de fetch, que ya habría pedido la página vieja con el filtro
+	// nuevo. Así React re-renderiza antes de commitear y sale un solo request.
+	const [filtrosPrevios, setFiltrosPrevios] = useState(currentFilters);
+	if (filtrosPrevios !== currentFilters) {
+		setFiltrosPrevios(currentFilters);
+		setPage(0);
+	}
 
 	useEffect(() => {
 		fetchLogs();
@@ -603,7 +621,7 @@ const SystemLogs = () => {
 					setRowsPerPage(parseInt(e.target.value, 10));
 					setPage(0);
 				}}
-				rowsPerPageOptions={[50, 100, 200, 500]}
+				rowsPerPageOptions={[10, 25, 50, 100, 200, 500]}
 				labelRowsPerPage="Por página:"
 				labelDisplayedRows={({ from: f, to: t, count }) => `${f}–${t} de ${count.toLocaleString()}`}
 			/>
