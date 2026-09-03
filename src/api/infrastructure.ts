@@ -62,6 +62,8 @@ export interface InfraBox {
 	hostname: string | null;
 	logHost: string | null;
 	critical?: boolean;
+	/** Base de datos que hospeda, para el link cruzado con /admin/infrastructure/databases. */
+	databaseKey?: string | null;
 	retired?: boolean;
 	hasFailover?: boolean;
 	sshHint?: string;

@@ -26,6 +26,7 @@ import {
 import { Data, Cpu, Danger, InfoCircle, Timer1 } from "iconsax-react";
 import MainCard from "components/MainCard";
 import { InfraBox, InfraProcess } from "api/infrastructure";
+import CrossLinkChip from "components/admin/CrossLinkChip";
 import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER, headerBorder } from "themes/dashboardTokens";
 
 interface Props {
@@ -207,7 +208,14 @@ const BoxPanel = ({ box, children }: Props) => {
 								</Typography>
 							)}
 						</Box>
-						<Stack spacing={0.5} alignItems="flex-end">
+						<Stack spacing={0.75} alignItems="flex-end">
+							{box.databaseKey && (
+								<CrossLinkChip
+									to={`/admin/infrastructure/databases?db=${box.databaseKey}`}
+									label="Ver la base de datos"
+									title="Ir al detalle de la base que corre en este box: volumen, espacio libre y colecciones"
+								/>
+							)}
 							<Chip
 								size="small"
 								label={
