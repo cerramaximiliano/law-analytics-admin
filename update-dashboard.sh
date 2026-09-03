@@ -82,12 +82,21 @@ if [ "$IS_REMOTE" = true ]; then
 	echo 'Código actualizado'
 else
 	# Ejecutando desde local
+	# El fetch NO se silencia: si falla —sin credenciales, sin red— el
+	# `git reset --hard origin/main` que sigue resetea a un origin/main viejo y el
+	# deploy continúa como si nada, publicando código que no es el de HEAD. Pasó
+	# el 2026-09-02 con el pjn-api del hub.
 	REMOTE_STATE=$(ssh -n -i "${SSH_KEY}" "${SERVER_USER}@${SERVER_IP}" "
+		set -e
 		cd ${REMOTE_PATH}
-		git fetch origin >/dev/null 2>&1
+		git fetch origin || { echo 'FETCH_FALLIDO'; exit 1; }
 		git reset --hard origin/main >/dev/null
 		echo \"\$(git rev-parse HEAD) \$(cat build/.built-commit 2>/dev/null || echo none)\"
-	")
+	") || { echo -e "${RED}✗ No se pudo actualizar el código en el servidor${NC}"; exit 1; }
+	if echo "$REMOTE_STATE" | grep -q FETCH_FALLIDO; then
+		echo -e "${RED}✗ git fetch falló en el servidor: el build usaría código viejo${NC}"
+		exit 1
+	fi
 	AFTER=$(echo "$REMOTE_STATE" | tail -1 | awk '{print $1}')
 	BUILT=$(echo "$REMOTE_STATE" | tail -1 | awk '{print $2}')
 	echo 'Código actualizado'
@@ -149,15 +158,23 @@ else
 				find build/assets -type f -mtime +7 -delete 2>/dev/null || true
 			fi
 			rm -rf build.old
+			# Sello del commit que produjo este build. Viaja dentro de build/, así el
+			# swap atómico lo mueve junto con los assets que describe. Va DENTRO de
+			# la rama de éxito: escribirlo siempre hacía que un build fallido se
+			# reportara como exitoso y bloqueara los reintentos.
+			echo "${AFTER}" > build/.built-commit
+			echo 'Build completado'
 		else
 			# Si el build con outDir falla (ej. incompatibilidad), fallback directo
 			rm -rf build.new
-			npm run build
+			if npm run build; then
+				echo "${AFTER}" > build/.built-commit
+				echo 'Build completado (fallback sin outDir)'
+			else
+				echo -e "${RED}✗ El build falló — el sitio sigue con el bundle anterior${NC}"
+				exit 1
+			fi
 		fi
-		# Sello del commit que produjo este build. Viaja dentro de build/, así el
-		# swap atómico lo mueve junto con los assets que describe.
-		echo "${AFTER}" > build/.built-commit
-		echo 'Build completado'
 	else
 		# Ejecutando desde local
 		ssh -n -i "${SSH_KEY}" "${SERVER_USER}@${SERVER_IP}" "
@@ -175,13 +192,24 @@ else
 					find build/assets -type f -mtime +7 -delete 2>/dev/null || true
 				fi
 				rm -rf build.old
+				# El sello se escribe SOLO si el build salió bien, y dentro de la
+				# rama de éxito. Estaba después del if/else, así que se escribía
+				# incluso cuando el build fallaba: el deploy reportaba éxito con un
+				# bundle viejo y las corridas siguientes se negaban a recompilar
+				# porque "no hay cambios". Mordió dos veces el 2026-09-02/03.
+				echo '${AFTER}' > build/.built-commit
+				echo 'Build completado'
 			else
 				rm -rf build.new
-				npm run build
+				if npm run build; then
+					echo '${AFTER}' > build/.built-commit
+					echo 'Build completado (fallback sin outDir)'
+				else
+					echo 'BUILD_FALLIDO'
+					exit 1
+				fi
 			fi
-			echo '${AFTER}' > build/.built-commit
-			echo 'Build completado'
-		"
+		" || { echo -e "${RED}✗ El build falló en el servidor — el sitio sigue con el bundle anterior${NC}"; exit 1; }
 	fi
 	echo -e "${GREEN}✓ Aplicación recompilada${NC}"
 fi
