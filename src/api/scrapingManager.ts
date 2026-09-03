@@ -235,7 +235,7 @@ export interface FueroStats {
 	inexistentesTotal?: number;
 	fueros: Record<string, FueroStat>;
 	updatedAt: string;
-	/** Sentencias actualmente indexadas en Pinecone (embeddingStatus=completed en MongoDB) */
+	/** Sentencias actualmente indexadas en Qdrant (embeddingStatus=completed en MongoDB) */
 	sentenciasActivas?: { total: number; byFuero: Record<string, number> };
 }
 

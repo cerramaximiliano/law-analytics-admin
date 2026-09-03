@@ -57,6 +57,7 @@ import {
 	Map1,
 	Chart2,
 	Data,
+	Category2,
 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { WorkersService, WorkerConfig } from "api/workers";
@@ -66,6 +67,7 @@ import TemporaryWorkersModal from "./TemporaryWorkersModal";
 import ScrapingManagerPanel from "./ScrapingManagerPanel";
 import RangeHistoryPanel from "./RangeHistoryPanel";
 import FueroStatsPanel from "./FueroStatsPanel";
+import FueroDetallePanel from "./FueroDetallePanel";
 // La vista de cobertura pasó a ser una matriz fuero × año: con 21 fueros en
 // producción, el panel anterior —que obligaba a elegir uno y pedía un año por
 // request— no daba una foto del conjunto. CoveragePanel sigue en el repo
@@ -93,16 +95,21 @@ const SUB_TABS = ["configuraciones", "pm2", "historial", "cobertura", "estadisti
 // hoy, ayer, este mes) y el STOCK (qué hay acumulado en el corpus). Apiladas
 // obligaban a scrollear toda la primera para llegar a la segunda. Se separan en
 // sub-tabs propios, con su parámetro en la URL para que sean enlazables.
-const STATS_TABS = ["produccion", "corpus"] as const;
+const STATS_TABS = ["produccion", "corpus", "fueros"] as const;
 
 // Al cambiar de sección principal se limpia el sub-tab de estadísticas: si no,
 // queda ?stats=corpus colgado en la URL de Configuraciones o Cobertura, donde
 // no significa nada.
 const SUB_TAB_RESETS = ["stats"] as const;
 
+// Corpus quedó con cuatro secciones apiladas —totales, tres gráficos, la tabla
+// de cobertura y el detalle de los 21 fueros— y había que scrollear todo para
+// llegar al final. Son dos preguntas distintas y ahora son dos pestañas: qué
+// hay y cuánto costó barrerlo, contra cómo se reparte entre fueros.
 const STATS_TAB_DEFS: SubTabDef[] = [
 	{ label: "Producción", icon: <Chart2 size={18} />, hint: "Qué se barrió: totales del día, por hora y por fuero" },
-	{ label: "Corpus", icon: <Data size={18} />, hint: "Qué hay acumulado: causas, sentencias y escritos por fuero" },
+	{ label: "Corpus", icon: <Data size={18} />, hint: "Qué hay acumulado y cuánto costó barrerlo" },
+	{ label: "Por fuero", icon: <Category2 size={18} />, hint: "El reparto fuero por fuero: causas, indexadas y escritos" },
 ];
 
 const TAB_DEFS: SubTabDef[] = [
@@ -609,6 +616,7 @@ const ScrapingWorker = () => {
 							<Box sx={{ p: { xs: 2, md: 3 } }}>
 								{statsTab === 0 && <ScrapingStatsPanel />}
 								{statsTab === 1 && <FueroStatsPanel />}
+								{statsTab === 2 && <FueroDetallePanel />}
 							</Box>
 						</Box>
 					)}

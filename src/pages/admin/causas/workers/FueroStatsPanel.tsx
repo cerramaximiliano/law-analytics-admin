@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React from "react";
 import {
 	Box,
 	Typography,
@@ -9,12 +9,11 @@ import {
 	Chip,
 	IconButton,
 	Tooltip,
-	LinearProgress,
 	Skeleton,
 	Alert,
 	useTheme,
+	useMediaQuery,
 	alpha,
-	Divider,
 	Table,
 	TableBody,
 	TableCell,
@@ -24,25 +23,12 @@ import {
 } from "@mui/material";
 import { Refresh2, FolderOpen, DocumentText, Book1, Clock, InfoCircle } from "iconsax-react";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Legend, ResponsiveContainer, Tooltip as RechartsTooltip } from "recharts";
-import { useSnackbar } from "notistack";
-import { ScrapingManagerService, FueroStats, FueroStat } from "api/scrapingManager";
 import { labelCortoDeFuero, paletaDeFuero } from "utils/fueros";
+import { useFueroStats, formatNumber, formatCompact, formatTimeAgo } from "./useFueroStats";
 
 // Etiquetas y colores salen del catálogo compartido. Los mapas que había acá
 // tenían cuatro fueros, así que las jurisdicciones nuevas aparecían con su
 // código crudo y sin color asignado.
-
-function formatNumber(n: number): string {
-	return n.toLocaleString("es-AR");
-}
-
-function formatTimeAgo(dateStr: string): string {
-	const diff = Date.now() - new Date(dateStr).getTime();
-	if (diff < 60000) return "Hace segundos";
-	if (diff < 3600000) return `Hace ${Math.floor(diff / 60000)} min`;
-	if (diff < 86400000) return `Hace ${Math.floor(diff / 3600000)} h`;
-	return `Hace ${Math.floor(diff / 86400000)} d`;
-}
 
 const SummaryCard: React.FC<{
 	icon: React.ReactNode;
@@ -53,7 +39,6 @@ const SummaryCard: React.FC<{
 	color: string;
 	loading: boolean;
 }> = ({ icon, label, value, subtitle, tooltip, color, loading }) => {
-	const theme = useTheme();
 	return (
 		<Card variant="outlined" sx={{ borderRadius: 2 }}>
 			<CardContent sx={{ pb: "16px !important" }}>
@@ -107,67 +92,9 @@ const SummaryCard: React.FC<{
 
 const FueroStatsPanel: React.FC = () => {
 	const theme = useTheme();
-	const { enqueueSnackbar } = useSnackbar();
-	const [stats, setStats] = useState<FueroStats | null>(null);
-	const [loading, setLoading] = useState(true);
-	const [error, setError] = useState<string | null>(null);
-
-	const fetchStats = useCallback(
-		async (showLoading = true) => {
-			if (showLoading) setLoading(true);
-			setError(null);
-			try {
-				const res = await ScrapingManagerService.getFueroStats();
-				if (res.success) {
-					setStats(res.data);
-				}
-			} catch (err: any) {
-				const msg = err.response?.data?.message || "Error al cargar estadísticas por fuero";
-				setError(msg);
-				if (showLoading) {
-					enqueueSnackbar(msg, { variant: "error", anchorOrigin: { vertical: "bottom", horizontal: "right" } });
-				}
-			} finally {
-				if (showLoading) setLoading(false);
-			}
-		},
-		[enqueueSnackbar],
-	);
-
-	useEffect(() => {
-		fetchStats();
-	}, [fetchStats]);
-
-	const fueroEntries = stats ? Object.entries(stats.fueros) : [];
-	const totalSentenciasHistorico = fueroEntries.reduce((acc, [, s]) => acc + s.sentencias.count, 0);
-	const totalSentenciasActivas = stats?.sentenciasActivas?.total ?? null;
-	const totalEscritos = fueroEntries.reduce((acc, [, s]) => acc + s.escritos.count, 0);
-
-	// Universo por fuero. Solo los que tienen documentos: los fueros cableados
-	// pero nunca barridos aportarían filas en cero que no dicen nada.
-	const universo = fueroEntries
-		.map(([code, s]) => ({
-			code,
-			docs: s.causas.docs ?? 0,
-			validas: s.causas.count ?? 0,
-			verificadas: s.causas.verificadas ?? 0,
-			sinVerificar: s.causas.sinVerificar ?? 0,
-			inexistentes: s.causas.inexistentes ?? 0,
-			rendimiento: s.causas.rendimiento ?? 0,
-		}))
-		.filter((f) => f.docs > 0)
-		.sort((a, b) => b.docs - a.docs);
-
-	const tot = universo.reduce(
-		(a, f) => ({
-			docs: a.docs + f.docs,
-			validas: a.validas + f.validas,
-			verificadas: a.verificadas + f.verificadas,
-			sinVerificar: a.sinVerificar + f.sinVerificar,
-			inexistentes: a.inexistentes + f.inexistentes,
-		}),
-		{ docs: 0, validas: 0, verificadas: 0, sinVerificar: 0, inexistentes: 0 },
-	);
+	const esMobile = useMediaQuery(theme.breakpoints.down("md"));
+	const { stats, loading, error, setError, fetchStats, totalSentenciasHistorico, totalSentenciasActivas, totalEscritos, universo, tot } =
+		useFueroStats();
 
 	// La composición es lo que más sorprende del corpus: la mitad de los
 	// documentos son números que no existen en el portal.
@@ -177,9 +104,35 @@ const FueroStatsPanel: React.FC = () => {
 		{ name: "Inexistentes", value: tot.inexistentes, color: theme.palette.grey[400] },
 	].filter((x) => x.value > 0);
 
-	const porFuero = universo
+	// Un donut con los 21 fueros que tienen causas dejaba gajos de un grado y
+	// una leyenda de 21 entradas metida en 32px: ilegible en desktop e inservible
+	// en mobile. Son barras horizontales, como el gráfico de rendimiento de al
+	// lado, y se cortan en los 8 más grandes. El resto se suma en "otros" —el
+	// total sigue cerrando, y el detalle fuero por fuero está en la tabla de
+	// abajo, que es donde uno va a buscar un fuero puntual.
+	const PORFUERO_TOP = 8;
+	const porFueroOrdenado = universo
 		.filter((f) => f.validas > 0)
-		.map((f) => ({ name: f.code, value: f.validas, color: theme.palette[paletaDeFuero(f.code)].main }));
+		.map((f) => ({ name: f.code, value: f.validas, color: theme.palette[paletaDeFuero(f.code)].main }))
+		.sort((a, b) => b.value - a.value);
+	const porFueroResto = porFueroOrdenado.slice(PORFUERO_TOP);
+	const porFuero = [
+		...porFueroOrdenado.slice(0, PORFUERO_TOP),
+		...(porFueroResto.length
+			? [
+					{
+						name: "otros",
+						value: porFueroResto.reduce((a, f) => a + f.value, 0),
+						color: theme.palette.grey[400],
+					},
+			  ]
+			: []),
+	];
+	// Nueve barras a 190px dan 21px cada una y los labels del eje se pisan. En
+	// mobile el gráfico ocupa el ancho completo y hay lugar de sobra para dar
+	// aire vertical; en desktop comparte fila con otros dos y tiene que respetar
+	// la altura común.
+	const porFueroAlto = esMobile ? Math.max(190, porFuero.length * 26 + 30) : 190;
 
 	const rendimiento = universo
 		.filter((f) => f.docs > 500)
@@ -197,7 +150,7 @@ const FueroStatsPanel: React.FC = () => {
 						Distribución por fuero
 					</Typography>
 					<Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-						Causas válidas, sentencias y escritos procesados por fuero judicial
+						Qué hay en el corpus y cuánto costó barrerlo
 					</Typography>
 				</Box>
 				<Stack direction="row" alignItems="center" spacing={1}>
@@ -238,10 +191,10 @@ const FueroStatsPanel: React.FC = () => {
 				<Grid item xs={12} sm={3}>
 					<SummaryCard
 						icon={<DocumentText size={22} />}
-						label="Indexadas en Pinecone"
+						label="Indexadas en Qdrant"
 						value={totalSentenciasActivas !== null ? formatNumber(totalSentenciasActivas) : "-"}
 						subtitle="Stock actual de vectores activos"
-						tooltip="Sentencias con embeddingStatus=completed en MongoDB. Representa el corpus efectivamente disponible para búsqueda semántica en Pinecone ahora mismo."
+						tooltip="Sentencias con embeddingStatus=completed en MongoDB. Representa el corpus efectivamente disponible para búsqueda semántica en Qdrant (colección 'sentencias') ahora mismo."
 						color={theme.palette.success.main}
 						loading={loading}
 					/>
@@ -315,17 +268,24 @@ const FueroStatsPanel: React.FC = () => {
 						<Grid item xs={12} md={4}>
 							<Typography variant="caption" color="text.secondary" display="block" mb={0.5}>
 								Causas válidas por fuero
+								{porFueroResto.length > 0 && (
+									<Typography component="span" variant="caption" color="text.disabled">
+										{" "}
+										· top {PORFUERO_TOP}
+									</Typography>
+								)}
 							</Typography>
-							<ResponsiveContainer width="100%" height={190}>
-								<PieChart>
-									<Pie data={porFuero} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={45} outerRadius={72} paddingAngle={2}>
+							<ResponsiveContainer width="100%" height={porFueroAlto}>
+								<BarChart data={porFuero} layout="vertical" margin={{ left: 8, right: 32 }}>
+									<XAxis type="number" tick={{ fontSize: 10 }} tickFormatter={formatCompact} />
+									<YAxis type="category" dataKey="name" width={44} tick={{ fontSize: 10 }} />
+									<RechartsTooltip formatter={(v: number) => [formatNumber(v), "causas válidas"]} />
+									<Bar dataKey="value" radius={[0, 4, 4, 0]}>
 										{porFuero.map((e) => (
 											<Cell key={e.name} fill={e.color} />
 										))}
-									</Pie>
-									<RechartsTooltip formatter={(v: number, n: string) => [formatNumber(v), n]} />
-									<Legend verticalAlign="bottom" height={32} iconSize={9} formatter={(v) => <span style={{ fontSize: 11 }}>{v}</span>} />
-								</PieChart>
+									</Bar>
+								</BarChart>
 							</ResponsiveContainer>
 						</Grid>
 
@@ -416,116 +376,6 @@ const FueroStatsPanel: React.FC = () => {
 							</TableBody>
 						</Table>
 					</TableContainer>
-				</CardContent>
-			</Card>
-
-			{/* Per-fuero breakdown */}
-			<Card variant="outlined" sx={{ borderRadius: 2 }}>
-				<CardContent>
-					<Typography variant="subtitle1" fontWeight={600} gutterBottom>
-						Detalle por fuero
-					</Typography>
-					<Divider sx={{ mb: 2 }} />
-
-					<Stack spacing={3}>
-						{loading
-							? [1, 2, 3, 4].map((i) => (
-									<Box key={i}>
-										<Skeleton width={120} height={20} sx={{ mb: 1 }} />
-										<Skeleton height={10} sx={{ borderRadius: 1 }} />
-									</Box>
-							  ))
-							: fueroEntries.map(([fuero, data]: [string, FueroStat]) => {
-									const colorKey = paletaDeFuero(fuero);
-									const colorValue =
-										colorKey === "primary"
-											? theme.palette.primary.main
-											: colorKey === "warning"
-											? theme.palette.warning.main
-											: colorKey === "error"
-											? theme.palette.error.main
-											: theme.palette.success.main;
-
-									return (
-										<Box key={fuero}>
-											<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.75 }}>
-												<Stack direction="row" spacing={1} alignItems="center">
-													<Chip
-														label={fuero}
-														size="small"
-														sx={{
-															bgcolor: alpha(colorValue, 0.1),
-															color: colorValue,
-															fontWeight: 600,
-															fontSize: "0.7rem",
-															height: 22,
-														}}
-													/>
-													<Typography variant="body2" color="text.secondary">
-														{labelCortoDeFuero(fuero)}
-													</Typography>
-												</Stack>
-												<Typography variant="body2" fontWeight={500}>
-													{formatNumber(data.causas.count)} causas ({data.causas.pct}%)
-												</Typography>
-											</Stack>
-
-											<LinearProgress
-												variant="determinate"
-												value={data.causas.pct}
-												sx={{
-													height: 8,
-													borderRadius: 4,
-													bgcolor: alpha(colorValue, 0.1),
-													"& .MuiLinearProgress-bar": { bgcolor: colorValue, borderRadius: 4 },
-													mb: 1.5,
-												}}
-											/>
-
-											<Grid container spacing={2}>
-												<Grid item xs={12} sm={4}>
-													<Stack direction="row" spacing={0.75} alignItems="center">
-														<DocumentText size={14} color={theme.palette.success.main} />
-														<Typography variant="caption" color="text.secondary">
-															Indexadas (Pinecone):
-														</Typography>
-														<Typography variant="caption" fontWeight={600} color={theme.palette.success.main}>
-															{formatNumber(stats?.sentenciasActivas?.byFuero?.[fuero] ?? 0)}
-														</Typography>
-													</Stack>
-												</Grid>
-												<Grid item xs={12} sm={4}>
-													<Stack direction="row" spacing={0.75} alignItems="center">
-														<DocumentText size={14} color={theme.palette.warning.main} />
-														<Typography variant="caption" color="text.secondary">
-															Worker (histórico):
-														</Typography>
-														<Typography variant="caption" fontWeight={600} color={theme.palette.warning.main}>
-															{formatNumber(data.sentencias.count)}
-														</Typography>
-													</Stack>
-												</Grid>
-												<Grid item xs={12} sm={4}>
-													<Stack direction="row" spacing={0.75} alignItems="center">
-														<Book1 size={14} color={theme.palette.info.main} />
-														<Typography variant="caption" color="text.secondary">
-															Escritos:
-														</Typography>
-														<Typography variant="caption" fontWeight={600}>
-															{formatNumber(data.escritos.count)}
-														</Typography>
-														{stats && data.causas.count > 0 && (
-															<Typography variant="caption" color="text.secondary">
-																({((data.escritos.count / data.causas.count) * 100).toFixed(1)}%)
-															</Typography>
-														)}
-													</Stack>
-												</Grid>
-											</Grid>
-										</Box>
-									);
-							  })}
-					</Stack>
 				</CardContent>
 			</Card>
 		</Stack>
