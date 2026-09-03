@@ -20,14 +20,12 @@ import {
 	TablePagination,
 	TableSortLabel,
 	Tooltip,
-	Grid,
-	Card,
-	CardContent,
 } from "@mui/material";
 import { Refresh2 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { WorkersService, ScrapingHistory } from "api/workers";
 import { FUERO_OPTIONS as CATALOGO_FUEROS } from "utils/fueros";
+import StatStrip from "components/admin/StatStrip";
 
 // Los fueros salen del catálogo compartido: esta lista estaba congelada en
 // los seis originales y no mostraba los 22 que se cablearon después.
@@ -152,63 +150,23 @@ const RangeHistoryPanel: React.FC = () => {
 		setPage(1);
 	};
 
-	const handleFueroFilter = (fuero: string) => {
-		setFueroFilter((prev) => (prev === fuero ? "" : fuero));
-		setPage(1);
-	};
-
 	const totalCount = Object.values(fueroCounts).reduce((a, b) => a + b, 0);
 
 	return (
 		<Box>
-			{/* Summary cards */}
-			<Grid container spacing={1.5} sx={{ mb: 2 }}>
-				<Grid item xs={6} sm={2.4}>
-					<Card
-						variant="outlined"
-						sx={{
-							cursor: "pointer",
-							borderColor: !fueroFilter ? "primary.main" : "divider",
-							bgcolor: !fueroFilter ? "primary.50" : "transparent",
-						}}
-						onClick={() => {
-							setFueroFilter("");
-							setPage(1);
-						}}
-					>
-						<CardContent sx={{ py: 1, "&:last-child": { pb: 1 } }}>
-							<Typography variant="caption" color="text.secondary">
-								Todos
-							</Typography>
-							<Typography variant="h4" sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}>
-								{totalCount}
-							</Typography>
-						</CardContent>
-					</Card>
-				</Grid>
-				{FUERO_OPTIONS.map((f) => (
-					<Grid item xs={6} sm={2.4} key={f.value}>
-						<Card
-							variant="outlined"
-							sx={{
-								cursor: "pointer",
-								borderColor: fueroFilter === f.value ? "primary.main" : "divider",
-								bgcolor: fueroFilter === f.value ? "primary.50" : "transparent",
-							}}
-							onClick={() => handleFueroFilter(f.value)}
-						>
-							<CardContent sx={{ py: 1, "&:last-child": { pb: 1 } }}>
-								<Typography variant="caption" color="text.secondary">
-									{f.label}
-								</Typography>
-								<Typography variant="h4" sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}>
-									{fueroCounts[f.value] || 0}
-								</Typography>
-							</CardContent>
-						</Card>
-					</Grid>
-				))}
-			</Grid>
+			{/* Contadores por fuero: una sola fila navegable, no una grilla de 30 */}
+			<Box sx={{ mb: 2 }}>
+				<StatStrip
+					items={FUERO_OPTIONS.map((f) => ({ value: f.value, label: f.label, count: fueroCounts[f.value] || 0 }))}
+					selected={fueroFilter}
+					onSelect={(v) => {
+						setFueroFilter(v);
+						setPage(1);
+					}}
+					allCount={totalCount}
+					ariaLabel="Filtrar el historial por fuero"
+				/>
+			</Box>
 
 			{/* Filters */}
 			<Paper variant="outlined" sx={{ p: 1.5, mb: 2 }}>
