@@ -2,7 +2,16 @@
 // scraping-manager-state y configuracion-scraping viven en el replica set rs0 (los escribe el scraping-manager de worker_01). La copia de Atlas quedó congelada en la migración de agosto 2026.
 // scraping-manager vive en ATLAS (lo escribe pjn-mis-causas en worker_02) —
 // NO usar workersAxios (/cache → rs0): ahí la colección no existe (500).
-import { pjnAtlasAxios as workersAxios } from "utils/workersAxios";
+// Dos bases, y no es lo mismo cuál se usa:
+//   atlasAxios → api.lawanalytics.app          (pjn/api contra Atlas)
+//   rs0Axios   → api.lawanalytics.app/cache    (pjn/cache-api contra el rs0)
+// La configuración del manager solo existe en Atlas; las estadísticas de causas
+// las escribe el scraping-manager en el rs0. Antes este archivo importaba
+// `pjnAtlasAxios as workersAxios`: el alias hacía leer `workersAxios.get(...)` y
+// suponer que iba al rs0, y así `fuero-stats` estuvo sirviendo desde Atlas una
+// copia congelada el 2026-08-15 —de cuando el manager todavía espejaba el doc—.
+// Se nombran por su destino para que el call site diga a qué base va.
+import { pjnAtlasAxios as atlasAxios, default as rs0Axios } from "utils/workersAxios";
 
 // ====== Interfaces ======
 
@@ -127,7 +136,7 @@ export interface ApiResponse<T> {
 export class ScrapingManagerService {
 	static async getConfig(): Promise<ApiResponse<ScrapingManagerConfig>> {
 		try {
-			const response = await workersAxios.get("/api/scraping-manager");
+			const response = await atlasAxios.get("/api/scraping-manager");
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
@@ -136,7 +145,7 @@ export class ScrapingManagerService {
 
 	static async updateConfig(config: ScrapingManagerConfig): Promise<ApiResponse<ScrapingManagerConfig>> {
 		try {
-			const response = await workersAxios.put("/api/scraping-manager", config);
+			const response = await atlasAxios.put("/api/scraping-manager", config);
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
@@ -147,7 +156,7 @@ export class ScrapingManagerService {
 		data: Partial<GlobalConfig> & { manager?: Partial<ManagerSettings> },
 	): Promise<ApiResponse<ScrapingManagerConfig>> {
 		try {
-			const response = await workersAxios.patch("/api/scraping-manager/global", data);
+			const response = await atlasAxios.patch("/api/scraping-manager/global", data);
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
@@ -156,7 +165,7 @@ export class ScrapingManagerService {
 
 	static async updateWorker(workerName: string, data: Partial<WorkerConfig>): Promise<ApiResponse<WorkerConfig>> {
 		try {
-			const response = await workersAxios.patch(`/api/scraping-manager/workers/${workerName}`, data);
+			const response = await atlasAxios.patch(`/api/scraping-manager/workers/${workerName}`, data);
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
@@ -165,7 +174,7 @@ export class ScrapingManagerService {
 
 	static async getManagerState(): Promise<ApiResponse<ManagerState>> {
 		try {
-			const response = await workersAxios.get("/api/scraping-manager/state");
+			const response = await atlasAxios.get("/api/scraping-manager/state");
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
@@ -174,7 +183,9 @@ export class ScrapingManagerService {
 
 	static async getFueroStats(): Promise<ApiResponse<FueroStats>> {
 		try {
-			const response = await workersAxios.get("/api/scraping-manager/fuero-stats");
+			// Va al rs0: es donde el scraping-manager escribe `fuero-causa-stats`
+			// cada ~2 minutos. La copia de Atlas quedó sin actualizarse.
+			const response = await rs0Axios.get("/api/scraping-manager/fuero-stats");
 			return response.data;
 		} catch (error) {
 			throw this.handleError(error);
