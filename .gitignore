@@ -34,3 +34,5 @@ yarn-error.log*
 .vite
 bundle-stats.html
 .claude
+# Candado del deploy (update-dashboard.sh)
+.deploy.lock
