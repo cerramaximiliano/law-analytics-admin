@@ -1,8 +1,28 @@
 import { useEffect, useState, useCallback } from "react";
 import {
-	Box, Grid, Stack, Typography, Chip, Paper, Skeleton, Button, IconButton, Tooltip, alpha,
-	FormControl, InputLabel, Select, MenuItem, Collapse, Dialog, DialogTitle, DialogContent,
-	DialogActions, TextField, useTheme,
+	Box,
+	Grid,
+	Stack,
+	Typography,
+	Chip,
+	Paper,
+	Skeleton,
+	Button,
+	IconButton,
+	Tooltip,
+	alpha,
+	FormControl,
+	InputLabel,
+	Select,
+	MenuItem,
+	Collapse,
+	Checkbox,
+	Dialog,
+	DialogTitle,
+	DialogContent,
+	DialogActions,
+	TextField,
+	useTheme,
 } from "@mui/material";
 import { ArrowDown2, ArrowRight2, Refresh, TickCircle, VolumeSlash, Danger, Clock } from "iconsax-react";
 import { useSnackbar } from "notistack";
@@ -51,6 +71,13 @@ const IncidentsPage = () => {
 	const [incluirResueltos, setIncluirResueltos] = useState(false);
 	const [abierto, setAbierto] = useState<string | null>(null);
 	const [ackTarget, setAckTarget] = useState<Incident | null>(null);
+	// Selección para acciones en lote. Se guarda por id y no por índice: la
+	// lista se recarga sola y los índices dejarían de apuntar a lo mismo.
+	const [seleccion, setSeleccion] = useState<Set<string>>(new Set());
+	// `true` cuando el diálogo de silenciar actúa sobre la selección y no sobre
+	// un incidente puntual.
+	const [ackEsLote, setAckEsLote] = useState(false);
+	const [enLote, setEnLote] = useState(false);
 	const [ackDays, setAckDays] = useState(7);
 	const [ackReason, setAckReason] = useState("");
 
@@ -72,6 +99,13 @@ const IncidentsPage = () => {
 		}
 	}, [severity, source, incluirResueltos, enqueueSnackbar]);
 
+	// Al cambiar un filtro la selección se descarta. Si no, quedaban elegidos
+	// incidentes que ya no están en pantalla y una acción en lote los tocaba
+	// sin que nadie los viera — exactamente lo que el diseño por ids evita.
+	useEffect(() => {
+		setSeleccion(new Set());
+	}, [severity, source, incluirResueltos]);
+
 	useEffect(() => {
 		cargar();
 	}, [cargar]);
@@ -83,20 +117,64 @@ const IncidentsPage = () => {
 	};
 	const ageColor = (d: number) => (d >= 30 ? theme.palette.error.main : d >= 7 ? STALE_AMBER : theme.palette.text.secondary);
 
+	// Un solo diálogo para el caso puntual y para el lote: el motivo obligatorio
+	// y la cantidad de días son los mismos, y duplicarlo sólo abriría la puerta
+	// a que uno de los dos pida menos que el otro.
 	const silenciar = async () => {
-		if (!ackTarget) return;
+		if (!ackTarget && !ackEsLote) return;
 		if (!ackReason.trim()) {
-			enqueueSnackbar("El motivo es obligatorio: sin él, dentro de un mes no vas a saber si lo silenciaste o lo ignoraste", { variant: "warning" });
+			enqueueSnackbar("El motivo es obligatorio: sin él, dentro de un mes no vas a saber si lo silenciaste o lo ignoraste", {
+				variant: "warning",
+			});
 			return;
 		}
 		try {
-			await IncidentsService.ack(ackTarget._id, ackDays, ackReason.trim());
-			enqueueSnackbar(`Silenciado ${ackDays} días`, { variant: "success" });
+			if (ackEsLote) {
+				const res = await IncidentsService.ackMany(idsSeleccionados, ackDays, ackReason.trim());
+				enqueueSnackbar(`${res.data.modificados} incidente(s) silenciados ${ackDays} días`, { variant: "success" });
+				setSeleccion(new Set());
+			} else {
+				await IncidentsService.ack(ackTarget!._id, ackDays, ackReason.trim());
+				enqueueSnackbar(`Silenciado ${ackDays} días`, { variant: "success" });
+			}
 			setAckTarget(null);
+			setAckEsLote(false);
 			setAckReason("");
 			cargar();
 		} catch (err: any) {
 			enqueueSnackbar(err?.response?.data?.error || "No se pudo silenciar", { variant: "error" });
+		}
+	};
+
+	// Sólo lo que sigue abierto: seleccionar un resuelto no habilita ninguna
+	// acción que tenga sentido.
+	const seleccionables = items.filter((i) => i.effectiveStatus !== "resolved");
+	const idsSeleccionados = [...seleccion];
+
+	const alternar = (id: string) =>
+		setSeleccion((prev) => {
+			const n = new Set(prev);
+			if (n.has(id)) n.delete(id);
+			else n.add(id);
+			return n;
+		});
+
+	const alternarTodos = () =>
+		setSeleccion((prev) => (prev.size === seleccionables.length ? new Set() : new Set(seleccionables.map((i) => i._id))));
+
+	const resolverLote = async () => {
+		setEnLote(true);
+		try {
+			const res = await IncidentsService.resolveMany(idsSeleccionados);
+			enqueueSnackbar(`${res.data.modificados} incidente(s) resueltos. Si la condición sigue, la próxima corrida los reabre.`, {
+				variant: "success",
+			});
+			setSeleccion(new Set());
+			cargar();
+		} catch (err: any) {
+			enqueueSnackbar(err?.response?.data?.error || "No se pudieron resolver", { variant: "error" });
+		} finally {
+			setEnLote(false);
 		}
 	};
 
@@ -124,29 +202,45 @@ const IncidentsPage = () => {
 							Incidentes del ecosistema
 						</Typography>
 						<Typography variant="body2" color="text.secondary">
-							Todo lo que las reglas detectaron y sigue sin resolverse. Un incidente lo cierra la misma regla que lo abrió;
-							cerrarlo a mano no tapa nada — si la condición persiste, vuelve.
+							Todo lo que las reglas detectaron y sigue sin resolverse. Un incidente lo cierra la misma regla que lo abrió; cerrarlo a mano
+							no tapa nada — si la condición persiste, vuelve.
 						</Typography>
 						{!loading && (
 							<Stack direction="row" spacing={3} sx={{ mt: 1.5 }} flexWrap="wrap" useFlexGap>
 								<Stack direction="row" spacing={0.75} alignItems="baseline">
-									<Typography variant="h4" fontWeight={700} sx={{ fontVariantNumeric: "tabular-nums" }}>{abiertos.length}</Typography>
-									<Typography variant="caption" color="text.secondary">abiertos</Typography>
+									<Typography variant="h4" fontWeight={700} sx={{ fontVariantNumeric: "tabular-nums" }}>
+										{abiertos.length}
+									</Typography>
+									<Typography variant="caption" color="text.secondary">
+										abiertos
+									</Typography>
 								</Stack>
 								{graves > 0 && (
 									<Stack direction="row" spacing={0.75} alignItems="baseline">
-										<Typography variant="h4" fontWeight={700} color="error.main" sx={{ fontVariantNumeric: "tabular-nums" }}>{graves}</Typography>
-										<Typography variant="caption" color="text.secondary">graves</Typography>
+										<Typography variant="h4" fontWeight={700} color="error.main" sx={{ fontVariantNumeric: "tabular-nums" }}>
+											{graves}
+										</Typography>
+										<Typography variant="caption" color="text.secondary">
+											graves
+										</Typography>
 									</Stack>
 								)}
 								<Stack direction="row" spacing={0.75} alignItems="baseline">
-									<Typography variant="h4" fontWeight={700} sx={{ color: ageColor(masViejo), fontVariantNumeric: "tabular-nums" }}>{masViejo}</Typography>
-									<Typography variant="caption" color="text.secondary">{masViejo === 1 ? "día el más viejo" : "días el más viejo"}</Typography>
+									<Typography variant="h4" fontWeight={700} sx={{ color: ageColor(masViejo), fontVariantNumeric: "tabular-nums" }}>
+										{masViejo}
+									</Typography>
+									<Typography variant="caption" color="text.secondary">
+										{masViejo === 1 ? "día el más viejo" : "días el más viejo"}
+									</Typography>
 								</Stack>
 								{silenciados > 0 && (
 									<Stack direction="row" spacing={0.75} alignItems="baseline">
-										<Typography variant="h4" fontWeight={700} color="text.disabled" sx={{ fontVariantNumeric: "tabular-nums" }}>{silenciados}</Typography>
-										<Typography variant="caption" color="text.secondary">silenciados</Typography>
+										<Typography variant="h4" fontWeight={700} color="text.disabled" sx={{ fontVariantNumeric: "tabular-nums" }}>
+											{silenciados}
+										</Typography>
+										<Typography variant="caption" color="text.secondary">
+											silenciados
+										</Typography>
 									</Stack>
 								)}
 							</Stack>
@@ -189,13 +283,83 @@ const IncidentsPage = () => {
 			{loading && [1, 2, 3].map((k) => <Skeleton key={k} variant="rectangular" height={64} sx={{ mb: 1, borderRadius: 1 }} />)}
 
 			{!loading && items.length === 0 && (
-				<Paper elevation={0} sx={{ p: 3, textAlign: "center", border: `1px solid ${alpha(LIVE_GREEN, 0.35)}`, bgcolor: alpha(LIVE_GREEN, isDark ? 0.08 : 0.05), borderRadius: 2 }}>
+				<Paper
+					elevation={0}
+					sx={{
+						p: 3,
+						textAlign: "center",
+						border: `1px solid ${alpha(LIVE_GREEN, 0.35)}`,
+						bgcolor: alpha(LIVE_GREEN, isDark ? 0.08 : 0.05),
+						borderRadius: 2,
+					}}
+				>
 					<TickCircle size={28} color={LIVE_GREEN} variant="Bold" />
-					<Typography variant="h5" sx={{ mt: 1 }}>Sin incidentes</Typography>
+					<Typography variant="h5" sx={{ mt: 1 }}>
+						Sin incidentes
+					</Typography>
 					<Typography variant="body2" color="text.secondary">
 						Ninguna de las tres fuentes reportó problemas con los filtros actuales.
 					</Typography>
 				</Paper>
+			)}
+
+			{/* Barra de acciones en lote. Aparece sólo con algo elegido: vacía sería
+			    una fila de botones apagados ocupando lugar en la vista que más se
+			    mira. Dice cuántos y sobre qué, porque una acción que toca 55
+			    incidentes tiene que decir 55 antes de que la aprietes. */}
+			{!loading && seleccionables.length > 0 && (
+				<Stack
+					direction="row"
+					spacing={1}
+					alignItems="center"
+					flexWrap="wrap"
+					useFlexGap
+					sx={{
+						mb: 1.5,
+						px: 1.5,
+						py: 1,
+						borderRadius: 1.5,
+						border: `1px solid ${seleccion.size > 0 ? alpha(theme.palette.primary.main, 0.4) : theme.palette.divider}`,
+						bgcolor: seleccion.size > 0 ? alpha(theme.palette.primary.main, isDark ? 0.1 : 0.05) : "transparent",
+					}}
+				>
+					<Checkbox
+						size="small"
+						checked={seleccion.size > 0 && seleccion.size === seleccionables.length}
+						indeterminate={seleccion.size > 0 && seleccion.size < seleccionables.length}
+						onChange={alternarTodos}
+						inputProps={{ "aria-label": "Seleccionar todos los incidentes abiertos" }}
+						sx={{ p: 0.25 }}
+					/>
+					<Typography variant="body2" color={seleccion.size > 0 ? "text.primary" : "text.secondary"}>
+						{seleccion.size > 0
+							? `${seleccion.size} de ${seleccionables.length} seleccionados`
+							: `Seleccionar para actuar sobre varios (${seleccionables.length} abiertos)`}
+					</Typography>
+					<Box sx={{ flexGrow: 1 }} />
+					{seleccion.size > 0 && (
+						<>
+							<Button size="small" variant="text" sx={{ textTransform: "none" }} onClick={() => setSeleccion(new Set())}>
+								Quitar la selección
+							</Button>
+							<Button
+								size="small"
+								variant="outlined"
+								sx={{ textTransform: "none" }}
+								disabled={enLote}
+								onClick={() => {
+									setAckEsLote(true);
+									setAckReason("");
+								}}
+							>
+								Silenciar
+							</Button>
+							<Button size="small" variant="contained" sx={{ textTransform: "none" }} disabled={enLote} onClick={resolverLote}>
+								Resolver
+							</Button>
+						</>
+					)}
+				</Stack>
 			)}
 
 			{!loading &&
@@ -215,15 +379,43 @@ const IncidentsPage = () => {
 								borderLeft: `3px solid ${resuelto ? theme.palette.text.disabled : severityColor(i.severity)}`,
 							}}
 						>
-							<Stack direction="row" spacing={1.5} alignItems="center" sx={{ px: 2, py: 1.25, cursor: "pointer" }} onClick={() => setAbierto(esta ? null : i._id)}>
+							<Stack
+								direction="row"
+								spacing={1.5}
+								alignItems="center"
+								sx={{ px: 2, py: 1.25, cursor: "pointer" }}
+								onClick={() => setAbierto(esta ? null : i._id)}
+							>
+								{/* Los resueltos no llevan casilla: no hay acción en lote que
+								    tenga sentido sobre ellos. stopPropagation para que marcar
+								    no despliegue también el detalle. */}
+								{!resuelto && (
+									<Checkbox
+										size="small"
+										checked={seleccion.has(i._id)}
+										onClick={(e) => e.stopPropagation()}
+										onChange={() => alternar(i._id)}
+										inputProps={{ "aria-label": `Seleccionar ${i.title}` }}
+										sx={{ p: 0.25 }}
+									/>
+								)}
 								{esta ? <ArrowDown2 size={16} /> : <ArrowRight2 size={16} />}
 								<Chip
 									label={SEVERITY_LABEL[i.severity]}
 									size="small"
-									sx={{ height: 20, fontSize: 11, fontWeight: 600, flexShrink: 0, color: severityColor(i.severity), bgcolor: alpha(severityColor(i.severity), 0.12) }}
+									sx={{
+										height: 20,
+										fontSize: 11,
+										fontWeight: 600,
+										flexShrink: 0,
+										color: severityColor(i.severity),
+										bgcolor: alpha(severityColor(i.severity), 0.12),
+									}}
 								/>
 								<Box sx={{ flexGrow: 1, minWidth: 0 }}>
-									<Typography variant="body2" fontWeight={600} noWrap>{i.title}</Typography>
+									<Typography variant="body2" fontWeight={600} noWrap>
+										{i.title}
+									</Typography>
 									<Typography variant="caption" color="text.secondary" noWrap>
 										{SOURCE_LABEL[i.source] || i.source}
 										{i.host ? ` · ${i.host}` : ""}
@@ -242,15 +434,27 @@ const IncidentsPage = () => {
 							<Collapse in={esta}>
 								<Box sx={{ px: 2, pb: 2, pt: 0.5, bgcolor: alpha(theme.palette.text.primary, isDark ? 0.03 : 0.02) }}>
 									{i.detail && (
-										<Typography variant="body2" sx={{ mb: 1.5 }}>{i.detail}</Typography>
+										<Typography variant="body2" sx={{ mb: 1.5 }}>
+											{i.detail}
+										</Typography>
 									)}
 
 									{i.aiTriage?.summary && (
 										<Box sx={{ mb: 1.5, pl: 1.5, borderLeft: `2px solid ${theme.palette.primary.main}` }}>
-											<Typography variant="caption" color="primary" fontWeight={700}>Triage</Typography>
+											<Typography variant="caption" color="primary" fontWeight={700}>
+												Triage
+											</Typography>
 											<Typography variant="body2">{i.aiTriage.summary}</Typography>
-											{i.aiTriage.rootCause && <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>{i.aiTriage.rootCause}</Typography>}
-											{i.aiTriage.nextStep && <Typography variant="body2" sx={{ mt: 0.5, fontWeight: 600 }}>▸ {i.aiTriage.nextStep}</Typography>}
+											{i.aiTriage.rootCause && (
+												<Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+													{i.aiTriage.rootCause}
+												</Typography>
+											)}
+											{i.aiTriage.nextStep && (
+												<Typography variant="body2" sx={{ mt: 0.5, fontWeight: 600 }}>
+													▸ {i.aiTriage.nextStep}
+												</Typography>
+											)}
 										</Box>
 									)}
 
@@ -264,8 +468,12 @@ const IncidentsPage = () => {
 											["Runbook", i.runbook || "—"],
 										].map(([k, v]) => (
 											<Box key={k as string}>
-												<Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>{k}</Typography>
-												<Typography variant="caption" fontFamily="monospace">{v}</Typography>
+												<Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+													{k}
+												</Typography>
+												<Typography variant="caption" fontFamily="monospace">
+													{v}
+												</Typography>
 											</Box>
 										))}
 									</Stack>
@@ -278,10 +486,25 @@ const IncidentsPage = () => {
 
 									{!resuelto && (
 										<Stack direction="row" spacing={1}>
-											<Button size="small" variant="outlined" startIcon={<VolumeSlash size={16} />} onClick={() => { setAckTarget(i); setAckDays(7); setAckReason(""); }}>
+											<Button
+												size="small"
+												variant="outlined"
+												startIcon={<VolumeSlash size={16} />}
+												onClick={() => {
+													setAckTarget(i);
+													setAckDays(7);
+													setAckReason("");
+												}}
+											>
 												Silenciar
 											</Button>
-											<Button size="small" variant="outlined" color="success" startIcon={<TickCircle size={16} />} onClick={() => resolver(i)}>
+											<Button
+												size="small"
+												variant="outlined"
+												color="success"
+												startIcon={<TickCircle size={16} />}
+												onClick={() => resolver(i)}
+											>
 												Marcar resuelto
 											</Button>
 										</Stack>
@@ -292,16 +515,24 @@ const IncidentsPage = () => {
 					);
 				})}
 
-			<Dialog open={Boolean(ackTarget)} onClose={() => setAckTarget(null)} maxWidth="sm" fullWidth>
+			<Dialog
+				open={Boolean(ackTarget) || ackEsLote}
+				onClose={() => {
+					setAckTarget(null);
+					setAckEsLote(false);
+				}}
+				maxWidth="sm"
+				fullWidth
+			>
 				<DialogTitle>
 					<Stack direction="row" spacing={1} alignItems="center">
 						<Danger size={20} color={STALE_AMBER} variant="Bold" />
-						<span>Silenciar incidente</span>
+						<span>{ackEsLote ? `Silenciar ${idsSeleccionados.length} incidentes` : "Silenciar incidente"}</span>
 					</Stack>
 				</DialogTitle>
 				<DialogContent>
 					<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-						{ackTarget?.title}
+						{ackEsLote ? `Se van a silenciar los ${idsSeleccionados.length} incidentes seleccionados.` : ackTarget?.title}
 					</Typography>
 					<Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 2 }}>
 						Sigue existiendo y sigue envejeciendo: sólo deja de reclamar atención hasta la fecha elegida.
@@ -311,7 +542,9 @@ const IncidentsPage = () => {
 							<InputLabel>Por cuánto tiempo</InputLabel>
 							<Select value={ackDays} label="Por cuánto tiempo" onChange={(e) => setAckDays(Number(e.target.value))}>
 								{[1, 7, 30, 90].map((d) => (
-									<MenuItem key={d} value={d}>{d} día{d !== 1 ? "s" : ""}</MenuItem>
+									<MenuItem key={d} value={d}>
+										{d} día{d !== 1 ? "s" : ""}
+									</MenuItem>
 								))}
 							</Select>
 						</FormControl>
@@ -328,8 +561,17 @@ const IncidentsPage = () => {
 					</Stack>
 				</DialogContent>
 				<DialogActions>
-					<Button onClick={() => setAckTarget(null)}>Cancelar</Button>
-					<Button variant="contained" onClick={silenciar} disabled={!ackReason.trim()}>Silenciar</Button>
+					<Button
+						onClick={() => {
+							setAckTarget(null);
+							setAckEsLote(false);
+						}}
+					>
+						Cancelar
+					</Button>
+					<Button variant="contained" onClick={silenciar} disabled={!ackReason.trim()}>
+						Silenciar
+					</Button>
 				</DialogActions>
 			</Dialog>
 		</MainCard>

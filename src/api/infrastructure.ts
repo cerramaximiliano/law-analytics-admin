@@ -18,6 +18,10 @@ export interface InfraProcess {
 	memoryMb: number | null;
 	uptimeMs: number | null;
 	repo: string | null;
+	/** Proyecto de GitHub del repo dueño. `null` cuando no tiene repo publicado
+	 *  (infoleg y la-mcp-server se deployan sin git; `infra` agrupa módulos de
+	 *  PM2 y binarios de terceros). Lo resuelve el admin-api. */
+	github: { name: string; url: string } | null;
 	role: string | null;
 	cron: boolean;
 	/** "failover" marca al proceso que sostiene el respaldo en la nube. */

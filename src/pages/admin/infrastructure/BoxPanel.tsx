@@ -30,10 +30,11 @@ import {
 	alpha,
 	useTheme,
 } from "@mui/material";
-import { Data, Cpu, Danger, InfoCircle, Timer1, SearchNormal1, CloseCircle, ExportSquare, ArrowDown } from "iconsax-react";
+import { Data, Cpu, Danger, InfoCircle, Timer1, SearchNormal1, CloseCircle, ExportSquare, ArrowDown, Setting4 } from "iconsax-react";
+import { Link as RouterLink } from "react-router-dom";
 import MainCard from "components/MainCard";
 import { InfraBox, InfraProcess } from "api/infrastructure";
-import { githubRepo } from "utils/githubRepos";
+import { panelDeWorker } from "./panelesDeWorker";
 import CrossLinkChip from "components/admin/CrossLinkChip";
 import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER, headerBorder } from "themes/dashboardTokens";
 
@@ -108,10 +109,35 @@ const UsageBar = ({ label, percent, detail }: { label: string; percent: number |
 	);
 };
 
+/**
+ * Las alertas del monitor llegan a veces como texto plano y a veces como un
+ * string que ES JSON: `{"level":"WARNING","type":"HIGH_CPU","message":"Load
+ * average 2.49 supera umbral de 1.8 (2 cores)"}`. El render hacía
+ * `typeof a === "string" ? a : JSON.stringify(a)`, así que el segundo caso
+ * salía crudo con llaves y comillas. Se intenta parsear y se muestra el
+ * mensaje; si no es JSON, se muestra tal cual, que es lo correcto para el
+ * primer caso.
+ */
+function textoDeAlerta(a: unknown): string {
+	if (typeof a !== "string") {
+		const o = a as { message?: string } | null;
+		return o?.message || JSON.stringify(a);
+	}
+	const t = a.trim();
+	if (!t.startsWith("{")) return a;
+	try {
+		const o = JSON.parse(t);
+		return o?.message || a;
+	} catch {
+		return a;
+	}
+}
+
 const ProcessRow = ({ p, resaltada, refFila }: { p: InfraProcess; resaltada?: boolean; refFila?: React.Ref<HTMLTableRowElement> }) => {
 	const theme = useTheme();
 	const color = STATUS_COLORS[p.status] || "#94A3B8";
-	const gh = githubRepo(p.repo);
+	const gh = p.github;
+	const panel = panelDeWorker(p.name, p.repo);
 	return (
 		<TableRow
 			ref={refFila}
@@ -139,6 +165,22 @@ const ProcessRow = ({ p, resaltada, refFila }: { p: InfraProcess; resaltada?: bo
 					{p.cron && (
 						<Tooltip title="Corre por cron: estar detenido entre corridas es lo normal">
 							<Chip size="small" icon={<Timer1 size={11} />} label="cron" variant="outlined" sx={{ height: 18, fontSize: "0.62rem" }} />
+						</Tooltip>
+					)}
+					{/* De "dónde corre" a "cómo se configura": el cuarto lado del
+					    triángulo Datos ↔ Worker ↔ Flujo. Sólo aparece donde hay un
+					    panel real — un link al panel equivocado es peor que ninguno. */}
+					{panel && (
+						<Tooltip title={panel.hint}>
+							<IconButton
+								component={RouterLink}
+								to={panel.to}
+								size="small"
+								aria-label={panel.hint}
+								sx={{ width: 20, height: 20, color: "text.disabled", "&:hover": { color: BRAND_BLUE } }}
+							>
+								<Setting4 size={13} />
+							</IconButton>
 						</Tooltip>
 					)}
 					{p.foreign && <Chip size="small" label="ajeno" variant="outlined" sx={{ height: 18, fontSize: "0.62rem" }} />}
@@ -414,7 +456,7 @@ const BoxPanel = ({ box, children, highlightRepo, onClearHighlight }: Props) => 
 								<Stack key={i} direction="row" spacing={1} alignItems="center">
 									<Danger size={14} color={theme.palette.warning.main} />
 									<Typography variant="caption" color="warning.main">
-										{typeof a === "string" ? a : JSON.stringify(a)}
+										{textoDeAlerta(a)}
 									</Typography>
 								</Stack>
 							))}

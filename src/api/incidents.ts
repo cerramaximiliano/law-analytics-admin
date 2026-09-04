@@ -54,6 +54,12 @@ export interface Incident extends IncidentSummaryRow {
 	meta?: Record<string, any>;
 }
 
+export interface BulkResult {
+	pedidos: number;
+	modificados: number;
+	hasta?: string;
+}
+
 // Registro central de incidentes del ecosistema. Lo pueblan la auditoría de
 // cobertura de logs y los health reports IA; cada fuente reporta su estado
 // completo y los incidentes que dejan de aparecer se cierran solos.
@@ -83,6 +89,20 @@ class IncidentsService {
 
 	static async resolve(id: string): Promise<{ success: boolean; data: Incident }> {
 		const response = await adminAxios.post(`/api/incidents/${id}/resolve`, {});
+		return response.data;
+	}
+
+	/**
+	 * Acciones en lote. Mandan los ids que el usuario efectivamente vio
+	 * seleccionados, no un filtro: el backend rechaza más de 500 por llamada.
+	 */
+	static async ackMany(ids: string[], days: number, reason: string): Promise<{ success: boolean; data: BulkResult }> {
+		const response = await adminAxios.post("/api/incidents/bulk/ack", { ids, days, reason });
+		return response.data;
+	}
+
+	static async resolveMany(ids: string[]): Promise<{ success: boolean; data: BulkResult }> {
+		const response = await adminAxios.post("/api/incidents/bulk/resolve", { ids });
 		return response.data;
 	}
 }
