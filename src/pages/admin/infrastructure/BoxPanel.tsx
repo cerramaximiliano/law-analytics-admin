@@ -5,14 +5,16 @@
 // salen del catálogo del admin-api. Un proceso que corre pero nadie catalogó se
 // muestra igual, marcado — esconderlo sería el punto ciego que esta vista tiene
 // que cerrar.
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
 	Box,
 	Chip,
 	Button,
+	ButtonBase,
 	Divider,
 	IconButton,
 	InputAdornment,
+	Link,
 	LinearProgress,
 	Paper,
 	Stack,
@@ -28,9 +30,10 @@ import {
 	alpha,
 	useTheme,
 } from "@mui/material";
-import { Data, Cpu, Danger, InfoCircle, Timer1, SearchNormal1, CloseCircle } from "iconsax-react";
+import { Data, Cpu, Danger, InfoCircle, Timer1, SearchNormal1, CloseCircle, ExportSquare, ArrowDown } from "iconsax-react";
 import MainCard from "components/MainCard";
 import { InfraBox, InfraProcess } from "api/infrastructure";
+import { githubRepo } from "utils/githubRepos";
 import CrossLinkChip from "components/admin/CrossLinkChip";
 import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER, headerBorder } from "themes/dashboardTokens";
 
@@ -39,6 +42,8 @@ interface Props {
 	children?: React.ReactNode;
 	/** Repo que trajo al usuario acá desde el buscador: sus procesos se marcan. */
 	highlightRepo?: string | null;
+	/** Quita el resaltado. Sin esto la selección quedaba pegada hasta cambiar de box. */
+	onClearHighlight?: () => void;
 }
 
 // Debajo de esto la tabla entra de un vistazo y el buscador estorba más de lo
@@ -103,11 +108,13 @@ const UsageBar = ({ label, percent, detail }: { label: string; percent: number |
 	);
 };
 
-const ProcessRow = ({ p, resaltada }: { p: InfraProcess; resaltada?: boolean }) => {
+const ProcessRow = ({ p, resaltada, refFila }: { p: InfraProcess; resaltada?: boolean; refFila?: React.Ref<HTMLTableRowElement> }) => {
 	const theme = useTheme();
 	const color = STATUS_COLORS[p.status] || "#94A3B8";
+	const gh = githubRepo(p.repo);
 	return (
 		<TableRow
+			ref={refFila}
 			hover
 			sx={{
 				opacity: p.foreign ? 0.55 : 1,
@@ -152,6 +159,28 @@ const ProcessRow = ({ p, resaltada }: { p: InfraProcess; resaltada?: boolean }) 
 					{p.repo || "—"}
 				</Typography>
 			</TableCell>
+			<TableCell sx={{ whiteSpace: "nowrap" }}>
+				{/* No todo lo que corre tiene repo publicado: infoleg y la-mcp-server
+				    se deployan sin git, y el módulo de PM2 y Hydra son de terceros.
+				    Decir "—" es más honesto que inventar un link roto. */}
+				{gh ? (
+					<Link
+						href={gh.url}
+						target="_blank"
+						rel="noopener noreferrer"
+						variant="caption"
+						underline="hover"
+						sx={{ display: "inline-flex", alignItems: "center", gap: 0.4, fontFamily: "monospace" }}
+					>
+						{gh.name}
+						<ExportSquare size={11} />
+					</Link>
+				) : (
+					<Typography variant="caption" color="text.disabled">
+						—
+					</Typography>
+				)}
+			</TableCell>
 			<TableCell sx={{ minWidth: 260 }}>
 				<Typography variant="caption" color={p.role ? "text.primary" : "text.secondary"}>
 					{p.role || "Sin descripción en el catálogo"}
@@ -189,9 +218,13 @@ const ProcessRow = ({ p, resaltada }: { p: InfraProcess; resaltada?: boolean }) 
 	);
 };
 
-const BoxPanel = ({ box, children, highlightRepo }: Props) => {
+const BoxPanel = ({ box, children, highlightRepo, onClearHighlight }: Props) => {
 	const resaltados = highlightRepo ? box.processes.filter((p) => p.repo === highlightRepo).length : 0;
 	const [filtro, setFiltro] = useState("");
+	// Con 100 procesos, "marcados los 5 de saij-workers" no dice DÓNDE están: el
+	// banner es visible pero las filas pueden caer ochenta más abajo. Este ref
+	// apunta a la primera para poder saltar hasta ella.
+	const primeraMarcada = useRef<HTMLTableRowElement | null>(null);
 
 	// El filtro aparece solo donde hace falta. worker_01 declara 32 procesos y
 	// worker-cloud-02 29 —ahí buscar a ojo cuesta—, pero los boxes de datos
@@ -465,19 +498,43 @@ const BoxPanel = ({ box, children, highlightRepo }: Props) => {
 								alignItems="center"
 								sx={{
 									mb: 1.5,
-									px: 1.25,
-									py: 0.75,
 									borderRadius: 1,
 									bgcolor: alpha(BRAND_BLUE, 0.07),
 									borderLeft: `3px solid ${BRAND_BLUE}`,
 								}}
 							>
-								<Typography variant="caption" color="text.secondary">
-									{resaltados === 1 ? "Marcado el proceso de" : `Marcados los ${resaltados} procesos de`}
-								</Typography>
-								<Typography variant="caption" sx={{ fontFamily: "monospace", fontWeight: 700, color: BRAND_BLUE }}>
-									{highlightRepo}
-								</Typography>
+								<ButtonBase
+									onClick={() => primeraMarcada.current?.scrollIntoView({ behavior: "smooth", block: "center" })}
+									sx={{
+										flexGrow: 1,
+										justifyContent: "flex-start",
+										gap: 1,
+										px: 1.25,
+										py: 0.75,
+										borderRadius: 1,
+										"&:hover": { bgcolor: alpha(BRAND_BLUE, 0.07) },
+									}}
+								>
+									<Typography variant="caption" color="text.secondary">
+										{resaltados === 1 ? "Marcado el proceso de" : `Marcados los ${resaltados} procesos de`}
+									</Typography>
+									<Typography variant="caption" sx={{ fontFamily: "monospace", fontWeight: 700, color: BRAND_BLUE }}>
+										{highlightRepo}
+									</Typography>
+									<ArrowDown size={13} color={BRAND_BLUE} />
+									<Typography variant="caption" sx={{ color: BRAND_BLUE }}>
+										Ir
+									</Typography>
+								</ButtonBase>
+								{/* Sin esta X la selección quedaba pegada: filtrabas otra cosa
+								    y las filas seguían marcadas por una búsqueda vieja. */}
+								{onClearHighlight && (
+									<Tooltip title="Quitar la selección">
+										<IconButton size="small" onClick={onClearHighlight} aria-label="Quitar la selección" sx={{ mr: 0.5 }}>
+											<CloseCircle size={15} />
+										</IconButton>
+									</Tooltip>
+								)}
 							</Stack>
 						)}
 
@@ -494,6 +551,7 @@ const BoxPanel = ({ box, children, highlightRepo }: Props) => {
 										<TableCell>Proceso</TableCell>
 										<TableCell>Estado</TableCell>
 										<TableCell>Repo</TableCell>
+										<TableCell>GitHub</TableCell>
 										<TableCell>Función</TableCell>
 										<TableCell align="right">↺</TableCell>
 										<TableCell align="right">RAM</TableCell>
@@ -502,12 +560,17 @@ const BoxPanel = ({ box, children, highlightRepo }: Props) => {
 									</TableRow>
 								</TableHead>
 								<TableBody>
-									{procesosVisibles.map((p) => (
-										<ProcessRow key={p.name} p={p} resaltada={!!highlightRepo && p.repo === highlightRepo} />
-									))}
+									{procesosVisibles.map((p, idx) => {
+										const resaltada = !!highlightRepo && p.repo === highlightRepo;
+										// El ref va en la PRIMERA marcada de lo que se ve, no de
+										// la lista completa: con un filtro puesto, saltar a una
+										// fila que el filtro ocultó no llevaría a ningún lado.
+										const esLaPrimera = resaltada && procesosVisibles.findIndex((q) => q.repo === highlightRepo) === idx;
+										return <ProcessRow key={p.name} p={p} resaltada={resaltada} refFila={esLaPrimera ? primeraMarcada : undefined} />;
+									})}
 									{procesosVisibles.length === 0 && (
 										<TableRow>
-											<TableCell colSpan={8} sx={{ borderBottom: "none" }}>
+											<TableCell colSpan={9} sx={{ borderBottom: "none" }}>
 												<Stack alignItems="center" spacing={1} sx={{ py: 3 }}>
 													<Typography variant="body2" color="text.secondary">
 														Ningún proceso de este box coincide con «{filtro}»

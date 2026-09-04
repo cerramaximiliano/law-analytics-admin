@@ -215,6 +215,17 @@ const InfrastructurePage = () => {
 
 	// Box y repo se escriben juntos, no con setActiveTab: ese limpia `repo` por
 	// diseño, y encadenar las dos actualizaciones lo borraría al instante.
+	const limpiarRepo = useCallback(() => {
+		setSearchParams(
+			(prev) => {
+				const sp = new URLSearchParams(prev);
+				sp.delete("repo");
+				return sp;
+			},
+			{ replace: true },
+		);
+	}, [setSearchParams]);
+
 	const irAlRepo = useCallback(
 		({ repo, boxKey }: RepoHit) => {
 			setSearchParams(
@@ -393,7 +404,7 @@ const InfrastructurePage = () => {
 								)}
 							</Stack>
 						) : (
-							<BoxPanel key={current.key} box={current} highlightRepo={repoResaltado}>
+							<BoxPanel key={current.key} box={current} highlightRepo={repoResaltado} onClearHighlight={limpiarRepo}>
 								{current.hasFailover ? <FailoverPanel /> : null}
 							</BoxPanel>
 						)}
