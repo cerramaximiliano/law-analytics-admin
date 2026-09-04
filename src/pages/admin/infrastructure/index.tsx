@@ -28,13 +28,19 @@ import {
 } from "@mui/material";
 import { Cloud, Cpu, Data, Refresh, Warning2 } from "iconsax-react";
 import MainCard from "components/MainCard";
+import { useSearchParams } from "react-router-dom";
 import { useTabParam } from "hooks/useTabParam";
+import RepoSearch, { RepoHit } from "./RepoSearch";
 import InfrastructureService, { InfraBox } from "api/infrastructure";
 import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER, headerBorder, navHoverBg } from "themes/dashboardTokens";
 import BoxPanel from "./BoxPanel";
 import FailoverPanel from "./FailoverPanel";
 
 // Orden de los grupos en la vista general: primero lo que sostiene al resto.
+// Al cambiar de pestaña a mano se limpia el repo resaltado: llegaste al box
+// por tu cuenta, no desde un resultado de búsqueda.
+const BOX_RESETS = ["repo"] as const;
+
 const GROUP_ORDER = ["Núcleo", "Datos", "Cloud", "Workers"];
 
 const GROUP_ICON: Record<string, React.ReactNode> = {
@@ -199,7 +205,30 @@ const InfrastructurePage = () => {
 	// las claves conocidas y se recalcula sólo si el inventario cambia.
 	const tabValues = useMemo(() => ["general", ...data.map((b) => b.key)], [data]);
 
-	const [activeTab, setActiveTab] = useTabParam("box", tabValues.length > 1 ? tabValues : ["general"]);
+	const [activeTab, setActiveTab] = useTabParam("box", tabValues.length > 1 ? tabValues : ["general"], { resets: BOX_RESETS });
+
+	// El repo resaltado viaja en la URL para que el resultado sea compartible:
+	// "/admin/infrastructure?box=worker_01&repo=pjn-escritos-worker" abre el box
+	// con sus procesos marcados.
+	const [searchParams, setSearchParams] = useSearchParams();
+	const repoResaltado = searchParams.get("repo");
+
+	// Box y repo se escriben juntos, no con setActiveTab: ese limpia `repo` por
+	// diseño, y encadenar las dos actualizaciones lo borraría al instante.
+	const irAlRepo = useCallback(
+		({ repo, boxKey }: RepoHit) => {
+			setSearchParams(
+				(prev) => {
+					const sp = new URLSearchParams(prev);
+					sp.set("box", boxKey);
+					sp.set("repo", repo);
+					return sp;
+				},
+				{ replace: true },
+			);
+		},
+		[setSearchParams],
+	);
 
 	const fetchData = useCallback(async (force = false) => {
 		setLoading(true);
@@ -324,6 +353,8 @@ const InfrastructurePage = () => {
 					<Box sx={{ p: { xs: 1.5, sm: 2.5 } }}>
 						{activeTab === "general" || !current ? (
 							<Stack spacing={3}>
+								{data.length > 0 && <RepoSearch boxes={data} onPick={irAlRepo} />}
+
 								<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 									<Chip size="small" variant="outlined" label={`${data.length} servidores`} />
 									<Chip size="small" variant="outlined" label={`${totals.online} de ${totals.observed} procesos online`} />
@@ -362,7 +393,9 @@ const InfrastructurePage = () => {
 								)}
 							</Stack>
 						) : (
-							<BoxPanel box={current}>{current.hasFailover ? <FailoverPanel /> : null}</BoxPanel>
+							<BoxPanel box={current} highlightRepo={repoResaltado}>
+								{current.hasFailover ? <FailoverPanel /> : null}
+							</BoxPanel>
 						)}
 					</Box>
 				</Paper>

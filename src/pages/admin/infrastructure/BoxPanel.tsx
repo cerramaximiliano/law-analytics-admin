@@ -32,6 +32,8 @@ import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER, headerBorder } from "themes/dashbo
 interface Props {
 	box: InfraBox;
 	children?: React.ReactNode;
+	/** Repo que trajo al usuario acá desde el buscador: sus procesos se marcan. */
+	highlightRepo?: string | null;
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -92,11 +94,23 @@ const UsageBar = ({ label, percent, detail }: { label: string; percent: number |
 	);
 };
 
-const ProcessRow = ({ p }: { p: InfraProcess }) => {
+const ProcessRow = ({ p, resaltada }: { p: InfraProcess; resaltada?: boolean }) => {
 	const theme = useTheme();
 	const color = STATUS_COLORS[p.status] || "#94A3B8";
 	return (
-		<TableRow hover sx={{ opacity: p.foreign ? 0.55 : 1 }}>
+		<TableRow
+			hover
+			sx={{
+				opacity: p.foreign ? 0.55 : 1,
+				// Un filete a la izquierda en vez de teñir la fila entera: la tabla
+				// ya usa color para el estado del proceso, y pintarle el fondo
+				// competiría con esa señal justo en las filas que interesan.
+				...(resaltada && {
+					bgcolor: alpha(BRAND_BLUE, 0.07),
+					"& td:first-of-type": { boxShadow: `inset 3px 0 0 ${BRAND_BLUE}` },
+				}),
+			}}
+		>
 			<TableCell sx={{ whiteSpace: "nowrap" }}>
 				<Stack direction="row" spacing={1} alignItems="center">
 					<Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: color, flexShrink: 0 }} />
@@ -166,7 +180,8 @@ const ProcessRow = ({ p }: { p: InfraProcess }) => {
 	);
 };
 
-const BoxPanel = ({ box, children }: Props) => {
+const BoxPanel = ({ box, children, highlightRepo }: Props) => {
+	const resaltados = highlightRepo ? box.processes.filter((p) => p.repo === highlightRepo).length : 0;
 	const theme = useTheme();
 	const isDark = theme.palette.mode === "dark";
 	const live = box.live;
@@ -378,6 +393,31 @@ const BoxPanel = ({ box, children }: Props) => {
 					</Typography>
 				) : (
 					<>
+						{/* Sin este aviso, las filas marcadas aparecen resaltadas sin
+						    motivo visible para quien llegó por un link compartido. */}
+						{resaltados > 0 && (
+							<Stack
+								direction="row"
+								spacing={1}
+								alignItems="center"
+								sx={{
+									mb: 1.5,
+									px: 1.25,
+									py: 0.75,
+									borderRadius: 1,
+									bgcolor: alpha(BRAND_BLUE, 0.07),
+									borderLeft: `3px solid ${BRAND_BLUE}`,
+								}}
+							>
+								<Typography variant="caption" color="text.secondary">
+									{resaltados === 1 ? "Marcado el proceso de" : `Marcados los ${resaltados} procesos de`}
+								</Typography>
+								<Typography variant="caption" sx={{ fontFamily: "monospace", fontWeight: 700, color: BRAND_BLUE }}>
+									{highlightRepo}
+								</Typography>
+							</Stack>
+						)}
+
 						{!live.reachable && box.agent === "logs" && (
 							<Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1.5 }}>
 								Lista del catálogo, no en vivo: este box no corre el agente de monitoreo. El estado real de cada proceso se infiere de la
@@ -400,7 +440,7 @@ const BoxPanel = ({ box, children }: Props) => {
 								</TableHead>
 								<TableBody>
 									{box.processes.map((p) => (
-										<ProcessRow key={p.name} p={p} />
+										<ProcessRow key={p.name} p={p} resaltada={!!highlightRepo && p.repo === highlightRepo} />
 									))}
 								</TableBody>
 							</Table>
