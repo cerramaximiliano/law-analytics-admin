@@ -479,7 +479,10 @@ const IncidentsWidget = () => {
 							justifyContent: "flex-end",
 						}}
 					>
-						<Button size="small" variant="text" onClick={() => navigate("/admin/incidentes")}>
+						{/* El tema global capitaliza cada palabra de los botones
+						    (typography.button). En etiquetas de una palabra no se
+						    nota; acá dejaba "Abrir El Panel De Incidentes". */}
+						<Button size="small" variant="text" sx={{ textTransform: "none" }} onClick={() => navigate("/admin/incidentes")}>
 							Abrir el panel de incidentes
 						</Button>
 					</Box>

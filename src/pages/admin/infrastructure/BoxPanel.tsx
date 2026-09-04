@@ -512,7 +512,9 @@ const BoxPanel = ({ box, children, highlightRepo }: Props) => {
 													<Typography variant="body2" color="text.secondary">
 														Ningún proceso de este box coincide con «{filtro}»
 													</Typography>
-													<Button size="small" variant="text" onClick={() => setFiltro("")}>
+													{/* textTransform: el tema capitaliza cada palabra y
+													    dejaba "Limpiar El Filtro". */}
+													<Button size="small" variant="text" sx={{ textTransform: "none" }} onClick={() => setFiltro("")}>
 														Limpiar el filtro
 													</Button>
 												</Stack>
