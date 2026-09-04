@@ -62,3 +62,41 @@ export function useTabIndexParam(param: string, slugs: readonly string[], option
 
 	return [index < 0 ? 0 : index, setIndex];
 }
+
+/**
+ * Filtro de texto libre sincronizado con la query string.
+ *
+ * `useTabParam` no sirve para esto: exige una lista cerrada de valores válidos
+ * y cae al primero ante cualquier otro, que es exactamente lo que no se quiere
+ * en un campo donde el usuario escribe lo que se le ocurra.
+ *
+ * El parámetro se BORRA de la URL cuando el valor queda vacío, en vez de
+ * quedar como `?service=`. Con seis filtros, dejarlos todos colgados produce
+ * una URL ilegible que además no se puede leer de un vistazo para saber qué
+ * está filtrado.
+ *
+ * Siempre reemplaza la entrada del historial: tipear en un campo genera un
+ * valor por tecla, y con `push` el botón "atrás" tendría que recorrer letra
+ * por letra lo que alguien escribió.
+ */
+export function useQueryParam(param: string, defaultValue = ""): [string, (next: string) => void] {
+	const [searchParams, setSearchParams] = useSearchParams();
+	const value = searchParams.get(param) ?? defaultValue;
+
+	const setValue = useCallback(
+		(next: string) => {
+			setSearchParams(
+				(prev) => {
+					const sp = new URLSearchParams(prev);
+					if (next) sp.set(param, next);
+					else sp.delete(param);
+					return sp;
+				},
+				{ replace: true },
+			);
+		},
+		[param, setSearchParams],
+	);
+
+	return [value, setValue];
+}

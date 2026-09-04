@@ -133,7 +133,56 @@ function textoDeAlerta(a: unknown): string {
 	}
 }
 
-const ProcessRow = ({ p, resaltada, refFila }: { p: InfraProcess; resaltada?: boolean; refFila?: React.Ref<HTMLTableRowElement> }) => {
+/**
+ * El link de una fila a sus logs.
+ *
+ * El contador de la columna "Logs 24 h" no es una estimación: sale de agrupar
+ * la colección `Log` por (host, service) sobre las últimas 24 h, que es la
+ * misma que sirve /admin/logs. Así que el número tiene filas concretas detrás
+ * y hacer click debería mostrarlas — mismo origen, misma ventana, sin agregar.
+ *
+ * Tres cosas que hay que traducir para que el link no caiga en el vacío:
+ *
+ * - El servicio en los logs NO es el nombre del proceso. El shipper lo deriva
+ *   del archivo de log, que convierte `/` y `_` en `-`: el proceso
+ *   `worker_SAIJ_0` es `worker-SAIJ-0` ahí. Misma regla que logServiceName()
+ *   en el admin-api.
+ * - El host tampoco es el del box, es `logHost`: worker_01 loguea como
+ *   `local-worker-01`.
+ * - La ventana tiene que ser de 24 h. Sin acotarla, apretás "260 err" y ves el
+ *   histórico entero; que lo que aparece no coincida con lo que clickeaste es
+ *   chico pero corroe la confianza en el resto de los links.
+ *
+ * El nivel va como "error,fatal" —lista que el backend entiende— porque el
+ * contador suma los dos: con un solo nivel el link mostraría de menos.
+ */
+function linkALogs(processName: string, logHost: string | null, soloErrores: boolean): string {
+	const service = processName.replace(/[/_]/g, "-");
+	// datetime-local espera hora LOCAL sin zona: toISOString() daría UTC y
+	// correría la ventana tres horas.
+	const desde = new Date(Date.now() - 24 * 3600 * 1000);
+	const pad = (n: number) => String(n).padStart(2, "0");
+	const from = `${desde.getFullYear()}-${pad(desde.getMonth() + 1)}-${pad(desde.getDate())}T${pad(desde.getHours())}:${pad(
+		desde.getMinutes(),
+	)}`;
+
+	const sp = new URLSearchParams({ service, from });
+	if (logHost) sp.set("host", logHost);
+	if (soloErrores) sp.set("level", "error,fatal");
+	return `/admin/logs?${sp.toString()}`;
+}
+
+const ProcessRow = ({
+	p,
+	resaltada,
+	refFila,
+	logHost,
+}: {
+	p: InfraProcess;
+	resaltada?: boolean;
+	refFila?: React.Ref<HTMLTableRowElement>;
+	logHost: string | null;
+}) => {
 	const theme = useTheme();
 	const color = STATUS_COLORS[p.status] || "#94A3B8";
 	const gh = p.github;
@@ -245,10 +294,22 @@ const ProcessRow = ({ p, resaltada, refFila }: { p: InfraProcess; resaltada?: bo
 			</TableCell>
 			<TableCell align="right" sx={{ fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}>
 				{p.logs ? (
-					<Tooltip title={`${p.logs.count} líneas en 24 h · último ${formatSince(p.logs.lastSeen)}`}>
-						<Typography variant="caption" color={p.logs.errors > 0 ? "error.main" : "text.secondary"}>
+					<Tooltip
+						title={
+							p.logs.errors > 0
+								? `Ver los ${p.logs.errors} errores de las últimas 24 h · ${p.logs.count} líneas en total`
+								: `Ver las ${p.logs.count} líneas de las últimas 24 h · último ${formatSince(p.logs.lastSeen)}`
+						}
+					>
+						<Link
+							component={RouterLink}
+							to={linkALogs(p.name, logHost, p.logs.errors > 0)}
+							variant="caption"
+							underline="hover"
+							color={p.logs.errors > 0 ? "error.main" : "text.secondary"}
+						>
 							{p.logs.errors > 0 ? `${p.logs.errors} err` : formatSince(p.logs.lastSeen)}
-						</Typography>
+						</Link>
 					</Tooltip>
 				) : (
 					<Typography variant="caption" color="text.secondary">
@@ -608,7 +669,15 @@ const BoxPanel = ({ box, children, highlightRepo, onClearHighlight }: Props) => 
 										// la lista completa: con un filtro puesto, saltar a una
 										// fila que el filtro ocultó no llevaría a ningún lado.
 										const esLaPrimera = resaltada && procesosVisibles.findIndex((q) => q.repo === highlightRepo) === idx;
-										return <ProcessRow key={p.name} p={p} resaltada={resaltada} refFila={esLaPrimera ? primeraMarcada : undefined} />;
+										return (
+											<ProcessRow
+												key={p.name}
+												p={p}
+												resaltada={resaltada}
+												refFila={esLaPrimera ? primeraMarcada : undefined}
+												logHost={box.logHost}
+											/>
+										);
 									})}
 									{procesosVisibles.length === 0 && (
 										<TableRow>

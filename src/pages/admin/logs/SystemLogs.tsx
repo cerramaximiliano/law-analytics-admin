@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { useQueryParam } from "hooks/useTabParam";
 import {
 	Autocomplete,
 	Box,
@@ -45,7 +46,12 @@ const LEVEL_COLORS: Record<string, "default" | "primary" | "secondary" | "error"
 	unknown: "default",
 };
 
-const LEVEL_OPTIONS = ["", "info", "warn", "error", "fatal", "debug", "trace", "unknown"];
+// "error,fatal" es un valor real que el backend entiende como lista, no un
+// truco de la UI: es el filtro que corresponde a "mostrame todo lo que salió
+// mal", y el que usa el drill-down desde la tabla de procesos.
+const LEVEL_OPTIONS = ["", "error,fatal", "info", "warn", "error", "fatal", "debug", "trace", "unknown"];
+
+const LEVEL_LABEL: Record<string, string> = { "": "Todos", "error,fatal": "error + fatal" };
 
 function LogRow({ log }: { log: LogEntry }) {
 	const [expanded, setExpanded] = useState(false);
@@ -157,12 +163,21 @@ const SystemLogs = () => {
 	const theme = useTheme();
 
 	// ── Filters ─────────────────────────────────────────────────────────────
-	const [service, setService] = useState("");
-	const [host, setHost] = useState("");
-	const [level, setLevel] = useState("");
-	const [search, setSearch] = useState("");
-	const [from, setFrom] = useState("");
-	const [to, setTo] = useState("");
+	// Los filtros viven en la URL: la vista pasa a ser enlazable, que es lo que
+	// habilita que la tabla de procesos de /admin/infrastructure pueda mandarte
+	// acá ya filtrado por el servicio y el host de la fila que clickeaste.
+	// `page` se queda en estado local a propósito: un link compartido tiene que
+	// abrir en la primera página, no en la que estaba quien lo mandó.
+	const [service, setService] = useQueryParam("service");
+	const [host, setHost] = useQueryParam("host");
+	const [level, setLevel] = useQueryParam("level");
+	const [search, setSearch] = useQueryParam("q");
+	// El campo de búsqueda escribe en un estado local y recién después de una
+	// pausa vuelca a la URL. Sin esto cada tecla disparaba un request Y una
+	// escritura de historial: escribir "sentencias" eran diez de cada uno.
+	const [searchDraft, setSearchDraft] = useState(search);
+	const [from, setFrom] = useQueryParam("from");
+	const [to, setTo] = useQueryParam("to");
 
 	// ── Data ────────────────────────────────────────────────────────────────
 	const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -353,6 +368,20 @@ const SystemLogs = () => {
 		}
 	};
 
+	// Mantiene el input en sincronía cuando el valor llega de afuera: un link
+	// con ?q=..., el botón de limpiar, o el back del navegador.
+	useEffect(() => {
+		setSearchDraft(search);
+	}, [search]);
+
+	// 400 ms: alcanza para no pegarle a la API por tecla y no se siente lento.
+	useEffect(() => {
+		if (searchDraft === search) return;
+		const t = setTimeout(() => setSearch(searchDraft), 400);
+		return () => clearTimeout(t);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [searchDraft]);
+
 	const handleClearFilters = () => {
 		setService("");
 		setHost("");
@@ -503,7 +532,7 @@ const SystemLogs = () => {
 							>
 								{LEVEL_OPTIONS.map((lv) => (
 									<MenuItem key={lv} value={lv}>
-										{lv || "Todos"}
+										{LEVEL_LABEL[lv] || lv}
 									</MenuItem>
 								))}
 							</Select>
@@ -542,12 +571,14 @@ const SystemLogs = () => {
 							label="Buscar en mensaje"
 							size="small"
 							fullWidth
-							value={search}
-							onChange={(e) => setSearch(e.target.value)}
+							value={searchDraft}
+							onChange={(e) => setSearchDraft(e.target.value)}
 							onKeyDown={(e) => {
+								// Enter no espera el debounce: si alguien lo aprieta ya
+								// terminó de escribir y quiere el resultado ahora.
 								if (e.key === "Enter") {
+									setSearch(searchDraft);
 									setPage(0);
-									fetchLogs();
 								}
 							}}
 							InputProps={{

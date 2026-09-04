@@ -18,7 +18,10 @@ dist
 !.env.example
 
 # Logs
-logs/
+# Anclada a la raíz: sin la barra inicial también matchea
+# src/pages/admin/logs/, y los archivos nuevos de esa vista quedaban
+# fuera del repo sin que nadie se enterara.
+/logs/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
