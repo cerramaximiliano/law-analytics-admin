@@ -5,10 +5,14 @@
 // salen del catálogo del admin-api. Un proceso que corre pero nadie catalogó se
 // muestra igual, marcado — esconderlo sería el punto ciego que esta vista tiene
 // que cerrar.
+import { useMemo, useState } from "react";
 import {
 	Box,
 	Chip,
+	Button,
 	Divider,
+	IconButton,
+	InputAdornment,
 	LinearProgress,
 	Paper,
 	Stack,
@@ -18,12 +22,13 @@ import {
 	TableContainer,
 	TableHead,
 	TableRow,
+	TextField,
 	Tooltip,
 	Typography,
 	alpha,
 	useTheme,
 } from "@mui/material";
-import { Data, Cpu, Danger, InfoCircle, Timer1 } from "iconsax-react";
+import { Data, Cpu, Danger, InfoCircle, Timer1, SearchNormal1, CloseCircle } from "iconsax-react";
 import MainCard from "components/MainCard";
 import { InfraBox, InfraProcess } from "api/infrastructure";
 import CrossLinkChip from "components/admin/CrossLinkChip";
@@ -35,6 +40,10 @@ interface Props {
 	/** Repo que trajo al usuario acá desde el buscador: sus procesos se marcan. */
 	highlightRepo?: string | null;
 }
+
+// Debajo de esto la tabla entra de un vistazo y el buscador estorba más de lo
+// que ayuda. Los boxes de datos declaran 5 procesos; worker_01, 32.
+const UMBRAL_FILTRO = 8;
 
 const STATUS_COLORS: Record<string, string> = {
 	online: LIVE_GREEN,
@@ -182,6 +191,26 @@ const ProcessRow = ({ p, resaltada }: { p: InfraProcess; resaltada?: boolean }) 
 
 const BoxPanel = ({ box, children, highlightRepo }: Props) => {
 	const resaltados = highlightRepo ? box.processes.filter((p) => p.repo === highlightRepo).length : 0;
+	const [filtro, setFiltro] = useState("");
+
+	// El filtro aparece solo donde hace falta. worker_01 declara 32 procesos y
+	// worker-cloud-02 29 —ahí buscar a ojo cuesta—, pero los boxes de datos
+	// tienen 5: un campo de búsqueda sobre cinco filas es ruido, no ayuda.
+	const conFiltro = box.processes.length >= UMBRAL_FILTRO;
+
+	// Se busca por nombre, repo, rol y estado. El rol entra porque muchas veces
+	// uno recuerda qué HACE el proceso ("captcha", "notificaciones") y no cómo
+	// se llama.
+	const procesosVisibles = useMemo(() => {
+		// `conFiltro` también manda acá: si el campo no está a la vista no puede
+		// haber un filtro activo que el usuario no pueda ver ni limpiar.
+		const terminos = conFiltro ? filtro.toLowerCase().split(/\s+/).filter(Boolean) : [];
+		if (!terminos.length) return box.processes;
+		return box.processes.filter((p) => {
+			const heno = `${p.name} ${p.repo ?? ""} ${p.role ?? ""} ${p.status}`.toLowerCase();
+			return terminos.every((t) => heno.includes(t));
+		});
+	}, [box.processes, filtro, conFiltro]);
 	const theme = useTheme();
 	const isDark = theme.palette.mode === "dark";
 	const live = box.live;
@@ -382,7 +411,41 @@ const BoxPanel = ({ box, children, highlightRepo }: Props) => {
 								<Chip size="small" label={`${box.processSummary.foreign} ajenos`} variant="outlined" />
 							</Tooltip>
 						)}
+						{/* Con el filtro puesto los chips de arriba siguen contando el
+						    total del box, que es lo correcto; este dice cuánto se ve. */}
+						{conFiltro && filtro && (
+							<Chip
+								size="small"
+								label={`${procesosVisibles.length} de ${box.processes.length}`}
+								sx={{ height: 20, fontSize: "0.65rem", bgcolor: alpha(BRAND_BLUE, 0.12), color: BRAND_BLUE, fontWeight: 600 }}
+							/>
+						)}
 					</Stack>
+				}
+				secondary={
+					conFiltro ? (
+						<TextField
+							size="small"
+							value={filtro}
+							onChange={(e) => setFiltro(e.target.value)}
+							placeholder="Filtrar procesos…"
+							sx={{ width: { xs: "100%", sm: 240 } }}
+							InputProps={{
+								startAdornment: (
+									<InputAdornment position="start">
+										<SearchNormal1 size={15} color={theme.palette.text.secondary} />
+									</InputAdornment>
+								),
+								endAdornment: filtro ? (
+									<InputAdornment position="end">
+										<IconButton size="small" onClick={() => setFiltro("")} aria-label="Limpiar el filtro" sx={{ mr: -0.5 }}>
+											<CloseCircle size={15} />
+										</IconButton>
+									</InputAdornment>
+								) : null,
+							}}
+						/>
+					) : undefined
 				}
 			>
 				{box.processes.length === 0 ? (
@@ -439,9 +502,23 @@ const BoxPanel = ({ box, children, highlightRepo }: Props) => {
 									</TableRow>
 								</TableHead>
 								<TableBody>
-									{box.processes.map((p) => (
+									{procesosVisibles.map((p) => (
 										<ProcessRow key={p.name} p={p} resaltada={!!highlightRepo && p.repo === highlightRepo} />
 									))}
+									{procesosVisibles.length === 0 && (
+										<TableRow>
+											<TableCell colSpan={8} sx={{ borderBottom: "none" }}>
+												<Stack alignItems="center" spacing={1} sx={{ py: 3 }}>
+													<Typography variant="body2" color="text.secondary">
+														Ningún proceso de este box coincide con «{filtro}»
+													</Typography>
+													<Button size="small" variant="text" onClick={() => setFiltro("")}>
+														Limpiar el filtro
+													</Button>
+												</Stack>
+											</TableCell>
+										</TableRow>
+									)}
 								</TableBody>
 							</Table>
 						</TableContainer>

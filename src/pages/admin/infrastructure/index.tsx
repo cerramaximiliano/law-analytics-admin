@@ -393,7 +393,7 @@ const InfrastructurePage = () => {
 								)}
 							</Stack>
 						) : (
-							<BoxPanel box={current} highlightRepo={repoResaltado}>
+							<BoxPanel key={current.key} box={current} highlightRepo={repoResaltado}>
 								{current.hasFailover ? <FailoverPanel /> : null}
 							</BoxPanel>
 						)}
