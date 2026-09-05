@@ -247,7 +247,7 @@ export interface ScbaCredentialListItem {
 export interface ScbaAdminAlert {
 	_id: string;
 	key: string;
-	type: "credential_stuck" | "credential_disabled" | "transient_streak" | "causas_drop" | "login_degraded" | string;
+	type: "credential_stuck" | "credential_disabled" | "rejection_pending" | "transient_streak" | "causas_drop" | "login_degraded" | string;
 	credentialId: string | null;
 	userEmail: string | null;
 	message: string;

@@ -1142,6 +1142,7 @@ const CredencialesSCBA = () => {
 											const typeLabels: Record<string, string> = {
 												credential_stuck: "Sin sync (loop)",
 												credential_disabled: "Deshabilitada",
+												rejection_pending: "Rechazos acumulándose (aún habilitada)",
 												transient_streak: "Racha de errores",
 												causas_drop: "Caída de causas",
 												login_degraded: "Login degradado",
