@@ -322,7 +322,9 @@ export type UserViewList =
 	| "invalid"
 	| "ok"
 	| "ok_cred_error"
-	| "cred_status";
+	| "cred_status"
+	// Desvinculada (previousSyncSource sin flag de fuente): carátula + ícono ámbar
+	| "unlinked";
 
 export interface CausaUserViewEntry {
 	user: { id: string | null; email: string | null; name: string | null };
@@ -344,12 +346,17 @@ export interface CausaUserViewEntry {
 		pjsalta?: boolean;
 		pjcatamarca?: boolean;
 		pjmendoza?: boolean;
+		previousSyncSource?: string | null;
 		mevCredentialStatus?: string | null;
+		mevCredentialError?: string | null;
+		mevCredentialCheckedAt?: string | null;
+		navigationCode?: string | null;
 		causaVerified?: boolean;
 		causaIsValid?: boolean;
 		causaIsPrivate?: boolean;
 		causaCredentialCovered?: boolean;
 		causaAssociationStatus?: string;
+		causaAssociationError?: string | null;
 		listRemoved?: boolean;
 		listRemovedSource?: string | null;
 		listRemovedAt?: string | null;
@@ -380,8 +387,8 @@ export interface CausaUserViewEntry {
 	}>;
 	view: {
 		list: UserViewList;
-		expanded: { label: string; accent: "red" | "amber" | "green"; badge: string };
-		detail: { chip: { label: string; accent: "red" | "amber" | "green"; badge: string }; gate: UserViewGate };
+		expanded: { label: string; accent: "red" | "amber" | "green"; badge: string | null };
+		detail: { chip: { label: string; accent: "red" | "amber" | "green"; badge: string | null }; gate: UserViewGate };
 		hiddenFromList: boolean;
 		inAttentionTable: boolean;
 		contentBlocked: boolean;
@@ -414,6 +421,9 @@ export interface CausaUserViewData {
 
 export interface UserViewStatsCombo {
 	key: {
+		// false = desvinculada de esta jurisdicción (flag apagado, previousSyncSource = jurisdicción)
+		hasFlag?: boolean;
+		previousSyncSource?: string | null;
 		source: string | null;
 		archived: boolean;
 		causaVerified: boolean | null;

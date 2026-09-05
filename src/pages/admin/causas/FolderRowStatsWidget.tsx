@@ -68,6 +68,7 @@ const ROW_LABEL: Record<string, string> = {
 	revoked: "Acceso restringido",
 	list_removed: "Ya no en la lista",
 	cred_status: "Credencial MEV requerida/inválida",
+	unlinked: "Desvinculada",
 	plain: "Sin indicador",
 	hidden_archived: "Archivada (no aparece)",
 };
@@ -96,6 +97,7 @@ const ROW_TONE: Record<string, Tone> = {
 	pending_selection: "warn",
 	cred_status: "warn",
 	list_removed: "warn",
+	unlinked: "warn",
 	failed: "bad",
 	invalid: "bad",
 	reserved: "bad",

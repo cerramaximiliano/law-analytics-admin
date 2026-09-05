@@ -56,6 +56,7 @@ const ROW_LABEL: Record<string, string> = {
 	revoked: "Acceso restringido (candado ámbar)",
 	list_removed: "Ya no en la lista (warning ámbar)",
 	cred_status: "Credencial MEV requerida/inválida (chip ámbar)",
+	unlinked: "Desvinculada (warning ámbar)",
 	plain: "Sin indicador",
 	invisible: "INVISIBLE — en ninguna tabla",
 	hidden_archived: "No aparece — archivada",
@@ -237,8 +238,8 @@ export default function UserViewGuide() {
 					<Stack spacing={0.25}>
 						<Typography variant="h5">Guía: la lista de carpetas del usuario — {jurLabel}</Typography>
 						<Typography variant="caption" color="text.secondary">
-							Todas las filas posibles del listado PJN (según los estados que escriben pjn-workers, el hub y pjn-mis-causas) y cómo se
-							distribuyen hoy en la base.
+							{guide.caption ||
+								`Todas las filas posibles del listado ${jurLabel} (según los estados que escriben los workers y el hub) y cómo se distribuyen hoy en la base.`}
 						</Typography>
 					</Stack>
 				}
@@ -255,7 +256,7 @@ export default function UserViewGuide() {
 								<Chip size="small" label={g.row} sx={{ fontFamily: "monospace" }} />
 								<Typography sx={{ fontWeight: 700, fontSize: "0.95rem" }}>{g.title}</Typography>
 								<Typography variant="caption" color="text.secondary">
-									{g.cases.length} forma{g.cases.length > 1 ? "s" : ""} de llegar
+									{g.cases.length === 0 ? "sin productor" : `${g.cases.length} forma${g.cases.length > 1 ? "s" : ""} de llegar`}
 								</Typography>
 							</Stack>
 							<Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.8rem", mb: 1.25 }}>
@@ -325,7 +326,7 @@ export default function UserViewGuide() {
 							<Typography variant="h5">Distribución real</Typography>
 							<Typography variant="caption" color="text.secondary">
 								{data
-									? `${data.total} carpetas PJN · ${data.combos.length} combinaciones de campos · ${flaggedTotal} con anomalía de visualización`
+									? `${data.total} carpetas ${jurLabel} · ${data.combos.length} combinaciones de campos · ${flaggedTotal} con anomalía de visualización`
 									: "—"}
 							</Typography>
 						</Stack>

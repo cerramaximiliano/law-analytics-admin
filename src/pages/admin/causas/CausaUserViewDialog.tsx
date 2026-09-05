@@ -91,7 +91,38 @@ export const LIST_TOOLTIPS: Record<string, string> = {
 	ok: "Causa vinculada a PJN",
 	ok_cred_error: "PJN — Sincronización pausada: tus credenciales fueron rechazadas. Actualizalas desde Perfil → Cuentas Judiciales.",
 	cred_status: "Credencial MEV: cargala/actualizala en tu perfil → Integraciones → MEV.",
+	unlinked: "Desvinculada de MEV — conserva todos sus datos pero ya no se sincroniza. Hacé clic para volver a vincularla desde la carpeta.",
 };
+
+const JURISDICTION_LABEL: Record<string, string> = {
+	pjn: "PJN",
+	mev: "MEV",
+	eje: "EJE",
+	scba: "SCBA",
+	pjsalta: "PJ Salta",
+	pjcatamarca: "PJ Catamarca",
+	pjmendoza: "PJ Mendoza",
+};
+// folders.tsx / FolderView.tsx:39 / details.tsx:125: desvinculadas que se re-vinculan por número desde la carpeta
+const RELINKABLE_SOURCES = ["eje", "mev", "pjsalta", "pjcatamarca", "pjmendoza"];
+
+export function folderJurisdiction(folder: CausaUserViewEntry["folder"]): string | null {
+	return (Object.keys(JURISDICTION_LABEL) as Array<keyof typeof folder>).find((k) => folder[k] === true) ?? null;
+}
+
+/** Tooltip del ícono de la lista, con la jurisdicción real del folder (folders.tsx). */
+export function listTooltip(list: string, folder: CausaUserViewEntry["folder"]): string {
+	const jur = folderJurisdiction(folder);
+	if (list === "ok") return `Causa vinculada a ${JURISDICTION_LABEL[jur || "pjn"]}`;
+	if (list === "unlinked") {
+		const src = folder.previousSyncSource || "";
+		const name = JURISDICTION_LABEL[src] || src.toUpperCase();
+		return RELINKABLE_SOURCES.includes(src)
+			? `Desvinculada de ${name} — conserva todos sus datos pero ya no se sincroniza. Hacé clic para volver a vincularla desde la carpeta.`
+			: `Sincronización pausada (era ${name}) — conserva el histórico pero no recibe actualizaciones. Para reanudar, vinculá tu cuenta desde Perfil → Cuentas Judiciales.`;
+	}
+	return LIST_TOOLTIPS[list] || "";
+}
 
 const MEV_CRED_LABEL: Record<string, string> = {
 	missing: "Credencial requerida",
@@ -125,6 +156,8 @@ export function ListRowReplica({ entry }: { entry: CausaUserViewEntry }) {
 			case "ok_cred_error":
 				return <Warning2 size={16} variant="Bold" color={STALE_AMBER} />;
 			case "cred_status":
+				return <Warning2 size={16} variant="Bold" color={STALE_AMBER} />;
+			case "unlinked":
 				return <Warning2 size={16} variant="Bold" color={STALE_AMBER} />;
 			default:
 				return null;
@@ -179,7 +212,7 @@ export function ListRowReplica({ entry }: { entry: CausaUserViewEntry }) {
 			<Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1} sx={{ minWidth: 0 }}>
 				<Box sx={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{left}</Box>
 				{right && (
-					<Tooltip title={LIST_TOOLTIPS[view.list] || ""}>
+					<Tooltip title={listTooltip(view.list, folder)}>
 						<Box sx={{ display: "inline-flex", width: 18, height: 18, alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
 							{right}
 						</Box>
@@ -237,6 +270,8 @@ const BADGE_META: Record<string, { icon: JSX.Element; tooltip: string }> = {
 	pending: { icon: <InfoCircle size={14} variant="Bold" color={STALE_AMBER} />, tooltip: "Pendiente de verificación" },
 	valid: { icon: <TickCircle size={14} variant="Bold" color={LIVE_GREEN} />, tooltip: "Causa válida" },
 	invalid: { icon: <CloseCircle size={14} variant="Bold" color={RED} />, tooltip: "Causa inválida" },
+	// pending_selection / unlinked: la pill entera cambia (ámbar + Warning2), sin badge superpuesto
+	pending_selection: { icon: <Warning2 size={14} variant="Bulk" color={STALE_AMBER} />, tooltip: "Seleccionar expediente" },
 };
 
 export function BindingPill({
@@ -248,7 +283,7 @@ export function BindingPill({
 }: {
 	label: string;
 	accent: string;
-	badge?: string;
+	badge?: string | null;
 	tooltip?: string;
 	warnIcon?: boolean;
 }) {
