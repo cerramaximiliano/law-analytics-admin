@@ -611,7 +611,7 @@ export const MEV_GROUPS: GuideGroup[] = [
 				producer:
 					"mev-workers utils/folder-updater.js:99 updateAssociatedFolders(isValid=true) → causaVerified/causaIsValid/assoc='success' + services/user-credential-notifier.js:179 mevCredentialStatus='valid'",
 				fields: "source=auto · verified=true · isValid=true · assoc=success · mevCred=valid",
-				entry: entry({ ...mevBase }, {}),
+				entry: entry({ ...mevBase }, mevView("ok", "valid", null)),
 			},
 			{
 				key: "mev.ok.pending_cred",
@@ -619,7 +619,7 @@ export const MEV_GROUPS: GuideGroup[] = [
 				producer:
 					"folder-updater.js:99 corrió y el notifier no (dedup: la credencial ya fue notificada 'valid' por otra causa, user-credential-notifier.js:190) — o link/asociación a una causa ya verificada (hub folderController.js:4380-4400: copia verified/isValid de la causa y escribe mevCred='pending')",
 				fields: "source=auto · verified=true · isValid=true · assoc=success · mevCred=pending",
-				entry: entry({ ...mevBase, mevCredentialStatus: "pending" }, {}),
+				entry: entry({ ...mevBase, mevCredentialStatus: "pending" }, mevView("ok", "valid", null)),
 				warn: "Transitorio normal: la lista ignora 'pending' y muestra OK. Queda así hasta que el update cluster loguee con la credencial del usuario y el notifier lo confirme.",
 			},
 			{
@@ -627,7 +627,7 @@ export const MEV_GROUPS: GuideGroup[] = [
 				title: "Credencial deshabilitada por el usuario (toggle)",
 				producer: "hub mevCredentialsController.js:546 toggleCredentials: solo MevCredentials.enabled — NO escribe folders",
 				fields: "source=auto · verified=true · isValid=true · assoc=success · mevCred=valid",
-				entry: entry({ ...mevBase }, {}),
+				entry: entry({ ...mevBase }, mevView("ok", "valid", null)),
 				warn: "Ningún indicador en la lista: el usuario apagó el seguimiento y la carpeta se ve sincronizada.",
 			},
 			{
@@ -636,7 +636,7 @@ export const MEV_GROUPS: GuideGroup[] = [
 				producer:
 					"hub subscriptionService.js archiveFoldersByIds / unarchiveFoldersByIds (política 2026-09-05): archivar NO desvincula ni pausa la causa; al desarchivar vuelve tal cual",
 				fields: "source=auto · archived=false · verified=true · isValid=true · assoc=success",
-				entry: entry({ ...mevBase }, {}),
+				entry: entry({ ...mevBase }, mevView("ok", "valid", null)),
 			},
 		],
 	},
@@ -938,10 +938,7 @@ export const MEV_GROUPS: GuideGroup[] = [
 				producer:
 					"hub subscriptionService.js:2708 archiveFoldersByIds — política 2026-09-05: NO desvincula ni pausa; la carpeta sigue en causa.folderIds y se actualiza para estar al día al desarchivar",
 				fields: "source=auto · archived=true · resto sin cambios",
-				entry: entry(
-					{ ...mevBase, archived: true },
-					{ hiddenFromList: true, detail: { chip: { label: "Vinculado con MEV", accent: "green", badge: "valid" }, gate: "archived" } },
-				),
+				entry: entry({ ...mevBase, archived: true }, mevView("ok", "valid", "archived", { hiddenFromList: true })),
 			},
 			{
 				key: "mev.archived.downgrade",
@@ -949,10 +946,7 @@ export const MEV_GROUPS: GuideGroup[] = [
 				producer:
 					"hub subscriptionService.js archiveFolders (las más viejas por updatedAt) — mismo efecto: no desasocia, el worker sigue escribiendo el folder",
 				fields: "source=auto · archived=true",
-				entry: entry(
-					{ ...mevBase, archived: true },
-					{ hiddenFromList: true, detail: { chip: { label: "Vinculado con MEV", accent: "green", badge: "valid" }, gate: "archived" } },
-				),
+				entry: entry({ ...mevBase, archived: true }, mevView("ok", "valid", "archived", { hiddenFromList: true })),
 				warn: "La mayoría de las carpetas MEV están archivadas; el scraping sigue consumiendo la credencial del usuario sobre carpetas que no ve (decisión explícita: al desarchivar debe estar al día).",
 			},
 		],

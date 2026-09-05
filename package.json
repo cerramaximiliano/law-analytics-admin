@@ -6,6 +6,7 @@
 	"author": "Law Analytics Team",
 	"scripts": {
 		"dev": "vite",
+		"export:user-view-guide": "esbuild scripts/export-user-view-guide.ts --bundle --platform=node --format=cjs --tsconfig=tsconfig.json --log-level=warning --define:import.meta.env={} --outfile=node_modules/.cache/export-user-view-guide.cjs && node node_modules/.cache/export-user-view-guide.cjs",
 		"start": "vite",
 		"build": "tsc -p tsconfig.build.json && vite build",
 		"build:fast": "vite build",
