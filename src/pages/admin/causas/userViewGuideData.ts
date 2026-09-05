@@ -584,11 +584,11 @@ const mevView = (list: UserViewList, badge: string | null, gate: UserViewGate, e
 
 // M2 (resuelto 2026-09-05): pill/chip ámbar "MEV — <problema>" con link al perfil, sin badge de verificación.
 const mevCredView = (label: string, gate: UserViewGate, extra: V = {}): V => ({
-list: "cred_status",
-expanded: { label: `MEV — ${label}`, accent: "amber", badge: "cred_status" },
-detail: { chip: { label: `MEV — ${label}`, accent: "amber", badge: "cred_status" }, gate },
-inAttentionTable: false,
-...extra,
+	list: "cred_status",
+	expanded: { label: `MEV — ${label}`, accent: "amber", badge: "cred_status" },
+	detail: { chip: { label: `MEV — ${label}`, accent: "amber", badge: "cred_status" }, gate },
+	inAttentionTable: false,
+	...extra,
 });
 
 const mevUnlinkedView = (): V => ({
@@ -657,7 +657,8 @@ export const MEV_GROUPS: GuideGroup[] = [
 			{
 				key: "mev.cred.missing_pending",
 				title: "Sin credencial (missing) y nunca verificada",
-				producer: "Igual que arriba pero sobre un alta que el verify cluster salteó por falta de credencial (update-worker.js:290-350 / verify equivalente)",
+				producer:
+					"Igual que arriba pero sobre un alta que el verify cluster salteó por falta de credencial (update-worker.js:290-350 / verify equivalente)",
 				fields: "source=auto · verified=false · isValid=null · assoc=pending · mevCred=missing",
 				entry: entry(
 					{ ...mevBase, causaVerified: false, causaIsValid: undefined, causaAssociationStatus: "pending", mevCredentialStatus: "missing" },
@@ -671,7 +672,10 @@ export const MEV_GROUPS: GuideGroup[] = [
 				producer:
 					"mev-workers user-credential-notifier.js:169-182 notifyCredentialResult (isExpired) → mevCredentialStatus='expired' + causaVerified=true, causaIsValid=false (sin tocar assoc, a propósito)",
 				fields: "source=auto · verified=true · isValid=false · assoc=success|pending · mevCred=expired",
-				entry: entry({ ...mevBase, causaVerified: true, causaIsValid: false, mevCredentialStatus: "expired" }, mevCredView("Contraseña expirada", null)),
+				entry: entry(
+					{ ...mevBase, causaVerified: true, causaIsValid: false, mevCredentialStatus: "expired" },
+					mevCredView("Contraseña expirada", null),
+				),
 			},
 			{
 				key: "mev.cred.disabled",
@@ -679,7 +683,10 @@ export const MEV_GROUPS: GuideGroup[] = [
 				producer:
 					"mev-workers verify-worker.js:1172 / update-worker.js:594: failResult.disabled tras 5 fallos → notifyCredentialResult → mevCredentialStatus='disabled' + verified=true, isValid=false",
 				fields: "source=auto · verified=true · isValid=false · mevCred=disabled",
-				entry: entry({ ...mevBase, causaVerified: true, causaIsValid: false, mevCredentialStatus: "disabled" }, mevCredView("Credencial desactivada", null)),
+				entry: entry(
+					{ ...mevBase, causaVerified: true, causaIsValid: false, mevCredentialStatus: "disabled" },
+					mevCredView("Credencial desactivada", null),
+				),
 			},
 			{
 				key: "mev.cred.invalid",
@@ -687,7 +694,10 @@ export const MEV_GROUPS: GuideGroup[] = [
 				producer:
 					"user-credential-notifier.js:159 newStatus='invalid' solo si !success && !isExpired && !disabled, pero el debounce (verify-worker.js:1169: definitive = isExpiration || disabled) nunca lo deja pasar",
 				fields: "source=auto · verified=true · isValid=false · mevCred=invalid",
-				entry: entry({ ...mevBase, causaVerified: true, causaIsValid: false, mevCredentialStatus: "invalid" }, mevCredView("Credencial inválida", null)),
+				entry: entry(
+					{ ...mevBase, causaVerified: true, causaIsValid: false, mevCredentialStatus: "invalid" },
+					mevCredView("Credencial inválida", null),
+				),
 				warn: "El front, el reset del hub y los emails contemplan 'invalid', pero un usuario con contraseña mal cargada ve 5 ciclos de “Pendiente” y salta directo a 'disabled'.",
 			},
 		],
@@ -768,7 +778,13 @@ export const MEV_GROUPS: GuideGroup[] = [
 					"hub causaService.js:641 storePendingCausasInFolder: pendingCausaIds, pendingCausaType='MEV', assoc='pending_selection' (no toca verified/isValid ni mevCredentialStatus)",
 				fields: "source=auto · assoc=pending_selection · pendingCausaIds=[…] · mevCred=null",
 				entry: entry(
-					{ ...mevBase, causaVerified: false, causaIsValid: undefined, causaAssociationStatus: "pending_selection", mevCredentialStatus: null },
+					{
+						...mevBase,
+						causaVerified: false,
+						causaIsValid: undefined,
+						causaAssociationStatus: "pending_selection",
+						mevCredentialStatus: null,
+					},
 					{
 						list: "pending_selection",
 						expanded: { label: "Seleccionar expediente", accent: "amber", badge: "pending_selection" },
@@ -792,7 +808,13 @@ export const MEV_GROUPS: GuideGroup[] = [
 					"mev-workers verify-worker.js:942 (“La consulta No arroja resultados”) → expediente verified=true,isValid=false → folder-updater.js:45 assoc='failed', folderName='Causa inválida o no accesible'",
 				fields: "source=auto · verified=true · isValid=false · assoc=failed · mevCred=valid|pending",
 				entry: entry(
-					{ ...mevBase, folderName: "Causa inválida o no accesible", causaVerified: true, causaIsValid: false, causaAssociationStatus: "failed" },
+					{
+						...mevBase,
+						folderName: "Causa inválida o no accesible",
+						causaVerified: true,
+						causaIsValid: false,
+						causaAssociationStatus: "failed",
+					},
 					mevView("failed", "invalid", "failed"),
 				),
 			},
@@ -814,7 +836,14 @@ export const MEV_GROUPS: GuideGroup[] = [
 				producer: "hub folderController.js:2395: assoc='failed', causaAssociationError, sin causaId; mevCredentialStatus='pending' (:2400)",
 				fields: "source=auto · causaId=null · assoc=failed · mevCred=pending",
 				entry: entry(
-					{ ...mevBase, causaVerified: false, causaIsValid: undefined, causaAssociationStatus: "failed", causaId: null, mevCredentialStatus: "pending" },
+					{
+						...mevBase,
+						causaVerified: false,
+						causaIsValid: undefined,
+						causaAssociationStatus: "failed",
+						causaId: null,
+						mevCredentialStatus: "pending",
+					},
 					mevView("failed", "pending", "failed"),
 				),
 				warn: "El reintento del usuario pone 'pending' y espera un worker que nunca la tomará (no hay causaId).",
@@ -843,9 +872,16 @@ export const MEV_GROUPS: GuideGroup[] = [
 				title: "Vinculada por número a una causa ya verificada como inválida",
 				producer:
 					"hub folderController.js:4380-4410 rama MEV de link: la causa existente tiene verified=true,isValid=false → assoc='success' (no 'failed'), folderName=INVALID_FOLDER_NAME, mevCred='pending'",
-				fields: "source=auto · verified=true · isValid=false · assoc=success · mevCred=pending · folderName='Causa inválida o no accesible'",
+				fields:
+					"source=auto · verified=true · isValid=false · assoc=success · mevCred=pending · folderName='Causa inválida o no accesible'",
 				entry: entry(
-					{ ...mevBase, folderName: "Causa inválida o no accesible", causaVerified: true, causaIsValid: false, mevCredentialStatus: "pending" },
+					{
+						...mevBase,
+						folderName: "Causa inválida o no accesible",
+						causaVerified: true,
+						causaIsValid: false,
+						mevCredentialStatus: "pending",
+					},
 					mevView("invalid", "invalid", "invalid"),
 				),
 				warn: "Único productor de esta fila con credencial sana: el worker siempre acopla isValid=false ⇒ 'failed' (folder-updater.js:45).",
@@ -863,7 +899,8 @@ export const MEV_GROUPS: GuideGroup[] = [
 				title: "Desvinculada por el usuario desde el detalle",
 				producer:
 					"hub folderController.js:5804 unlinkFolderFromCausa + services/folderUnlinkService.js:137 camposDeDesvinculacion: source='manual', assoc='unlinked', causaVerified=false, previousSyncSource='mev', mev=false; $unset causaId/causaType/causaIsValid/listRemoved*/mevCredential*/navigationCode. mev-api desasocia (folderIds/userCausaIds/userUpdatesEnabled) y pausa la causa si queda sin carpetas.",
-				fields: "source=manual · mev=false · previousSyncSource=mev · assoc=unlinked · verified=false · causaId=(ausente) · mevCred=(ausente)",
+				fields:
+					"source=manual · mev=false · previousSyncSource=mev · assoc=unlinked · verified=false · causaId=(ausente) · mevCred=(ausente)",
 				entry: entry(
 					{
 						...mevBase,
@@ -892,7 +929,8 @@ export const MEV_GROUPS: GuideGroup[] = [
 	{
 		row: "hidden_archived",
 		title: "No aparece — archivada",
-		whatUserSees: "No está en la lista principal (solo en “Archivadas”). Detalle: gate archivada gana sobre cualquier otro. La causa sigue vinculada y actualizándose.",
+		whatUserSees:
+			"No está en la lista principal (solo en “Archivadas”). Detalle: gate archivada gana sobre cualquier otro. La causa sigue vinculada y actualizándose.",
 		cases: [
 			{
 				key: "mev.archived.user",
@@ -908,7 +946,8 @@ export const MEV_GROUPS: GuideGroup[] = [
 			{
 				key: "mev.archived.downgrade",
 				title: "Archivada por baja de plan",
-				producer: "hub subscriptionService.js archiveFolders (las más viejas por updatedAt) — mismo efecto: no desasocia, el worker sigue escribiendo el folder",
+				producer:
+					"hub subscriptionService.js archiveFolders (las más viejas por updatedAt) — mismo efecto: no desasocia, el worker sigue escribiendo el folder",
 				fields: "source=auto · archived=true",
 				entry: entry(
 					{ ...mevBase, archived: true },
@@ -926,16 +965,18 @@ export const MEV_FINDINGS: GuideFinding[] = [
 		severity: "baja",
 		title: "[RESUELTO 2026-09-05] “Asociación fallida” tapaba el estado de credencial",
 		detail:
-		"folder-updater.js acopla isValid=false ⇒ assoc='failed'. Ahora la lista (folders.tsx) salta la rama 'failed' cuando mevCredentialStatus ∈ invalid/expired/disabled (helper utils/mevCredential.ts isMevCredLoginFailure) y muestra el chip ámbar de credencial; esas carpetas van a la tabla principal, no cuentan como inválidas y conservan sus acciones. Con 'missing' sigue ganando 'failed' (diagnóstico previo a quitar la credencial). Espejo en admin-api computeListRowAny.",
-		where: "law-analytics-front utils/mevCredential.ts · folders.tsx (rama failed + filtros de tablas + isErrorFolder) · admin-api pjnCredentialsController.js computeListRowAny",
+			"folder-updater.js acopla isValid=false ⇒ assoc='failed'. Ahora la lista (folders.tsx) salta la rama 'failed' cuando mevCredentialStatus ∈ invalid/expired/disabled (helper utils/mevCredential.ts isMevCredLoginFailure) y muestra el chip ámbar de credencial; esas carpetas van a la tabla principal, no cuentan como inválidas y conservan sus acciones. Con 'missing' sigue ganando 'failed' (diagnóstico previo a quitar la credencial). Espejo en admin-api computeListRowAny.",
+		where:
+			"law-analytics-front utils/mevCredential.ts · folders.tsx (rama failed + filtros de tablas + isErrorFolder) · admin-api pjnCredentialsController.js computeListRowAny",
 	},
 	{
 		id: "M2",
 		severity: "baja",
 		title: "[RESUELTO 2026-09-05] “Causa inválida” en fila expandida y detalle cuando el problema era la credencial",
 		detail:
-		"notifyCredentialResult sigue escribiendo causaVerified=true,causaIsValid=false ante fallo de login, pero FolderView y details ahora leen mevCredentialStatus: pill/chip ámbar “MEV — Contraseña expirada / Credencial desactivada / Credencial inválida / Credencial requerida” (Warning2, click → Perfil → MEV, sin badge de verificación), y el gate del detalle no bloquea con 'failed'/'invalid' cuando el login falló (queda 'pending' solo si nunca se verificó). Espejo en admin-api computeUserView.",
-		where: "law-analytics-front FolderView.tsx (rama mev) · details.tsx (renderJudicialLink + verificationGate) · admin-api computeUserView",
+			"notifyCredentialResult sigue escribiendo causaVerified=true,causaIsValid=false ante fallo de login, pero FolderView y details ahora leen mevCredentialStatus: pill/chip ámbar “MEV — Contraseña expirada / Credencial desactivada / Credencial inválida / Credencial requerida” (Warning2, click → Perfil → MEV, sin badge de verificación), y el gate del detalle no bloquea con 'failed'/'invalid' cuando el login falló (queda 'pending' solo si nunca se verificó). Espejo en admin-api computeUserView.",
+		where:
+			"law-analytics-front FolderView.tsx (rama mev) · details.tsx (renderJudicialLink + verificationGate) · admin-api computeUserView",
 	},
 	{
 		id: "M3",
@@ -1010,8 +1051,25 @@ export const MEV_FINDINGS: GuideFinding[] = [
 		severity: "baja",
 		title: "[RESUELTO 2026-09-05] Detalle sin aviso para 'missing' con causa verificada",
 		detail:
-		"Una carpeta OK cuyo usuario borró la credencial queda con verified=true/isValid=true/mevCred='missing'. Sigue sin gate (a propósito: los datos ya sincronizados se ven), pero desde M2 el pill de la fila expandida y el chip del detalle son ámbar “MEV — Credencial requerida” con link al perfil, en vez del verde “Vinculado con MEV”.",
+			"Una carpeta OK cuyo usuario borró la credencial queda con verified=true/isValid=true/mevCred='missing'. Sigue sin gate (a propósito: los datos ya sincronizados se ven), pero desde M2 el pill de la fila expandida y el chip del detalle son ámbar “MEV — Credencial requerida” con link al perfil, en vez del verde “Vinculado con MEV”.",
 		where: "mev-workers update-worker.js:290-350 · details.tsx:814",
+	},
+	{
+		id: "M13",
+		severity: "media",
+		title: "[RESUELTO 2026-09-05] Actividad decía “pendiente de primera sincronización” con la causa ya sincronizada",
+		detail:
+			"getMovementsByFolderId setea causaLastSyncDate por fuente (PJN/SCBA/EJE/IOL) pero la rama MEV no lo hacía → FolderSyncStatus mostraba “Expediente MEV … pendiente de primera sincronización” aunque causas-mev tuviera movimientos. Ahora resolveMevLastSyncDate lee causas-mev (verified + movimientos ⇒ lastUpdate; si no, null) y la línea dice “sincronizado hace …”.",
+		where: "law-analytics-server movementController.js resolveMevLastSyncDate (hub d781101) · front FolderSyncStatus.tsx",
+	},
+	{
+		id: "M14",
+		severity: "baja",
+		title: "[RESUELTO 2026-09-05] “Actualizar credencial” MEV no prellenaba el usuario",
+		detail:
+			"A diferencia de SCBA/PJN, el form de re-link MEV abría con usuario vacío y editable: el usuario podía cambiarlo y dejar la credencial con identificador incorrecto. getCredentialsStatus ahora expone username (descifrado) solo de la credencial de cuenta —la contraseña nunca viaja— y MevAccountConnect lo prellena bloqueado con helper text; la card muestra “Usuario … · con esta credencial consultamos …”.",
+		where:
+			"law-analytics-server mevCredentialsController.js getCredentialsStatus (hub f20b76f) · front api/mevCredentials.ts + MevAccountConnect.tsx (7b0cf09c)",
 	},
 ];
 
