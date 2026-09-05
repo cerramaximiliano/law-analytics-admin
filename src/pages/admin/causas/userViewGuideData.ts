@@ -644,7 +644,7 @@ export const MEV_GROUPS: GuideGroup[] = [
 		row: "cred_status",
 		title: "Credencial MEV requerida / expirada / desactivada — chip ámbar",
 		whatUserSees:
-			"En la lista el chip ámbar clickeable (“Credencial requerida” / “Credencial inválida” / “Contraseña expirada” / “Credencial desactivada”) REEMPLAZA a la carátula y lleva a Perfil → Integraciones → MEV. Desde 2026-09-05 (M1/M2) gana sobre “Asociación fallida” cuando el login falló (invalid/expired/disabled), la fila expandida y el detalle muestran la pill ámbar “MEV — <problema>” con link al perfil, y el detalle no se bloquea con “Causa inválida”: la carpeta queda en la tabla principal con los datos ya sincronizados. Con 'missing' el orden anterior se mantiene (failed gana: el diagnóstico es previo a quitar la credencial).",
+			"En la lista, debajo de la carátula, el chip ámbar clickeable (“Credencial requerida” / “Credencial inválida” / “Contraseña expirada” / “Credencial desactivada”) lleva a Perfil → Integraciones → MEV (desde 2026-09-05 ya no reemplaza la carátula, M11). Desde 2026-09-05 (M1/M2) gana sobre “Asociación fallida” cuando el login falló (invalid/expired/disabled), la fila expandida y el detalle muestran la pill ámbar “MEV — <problema>” con link al perfil, y el detalle no se bloquea con “Causa inválida”: la carpeta queda en la tabla principal con los datos ya sincronizados. Con 'missing' el orden anterior se mantiene (failed gana: el diagnóstico es previo a quitar la credencial).",
 		cases: [
 			{
 				key: "mev.cred.missing",
@@ -1000,10 +1000,10 @@ export const MEV_FINDINGS: GuideFinding[] = [
 	{
 		id: "M11",
 		severity: "baja",
-		title: "El chip de credencial reemplaza la carátula en la lista",
+		title: "[RESUELTO 2026-09-05] El chip de credencial reemplazaba la carátula en la lista",
 		detail:
-			"Con mevCredentialStatus en missing/invalid/expired/disabled la celda Carátula muestra solo el chip (“Credencial requerida”), sin el nombre de la carpeta: el usuario no sabe cuál es sin expandir.",
-		where: "law-analytics-front folders.tsx:3199",
+			"La celda Carátula ahora muestra el nombre de la carpeta (o “Buscaste …” si el nombre es el placeholder “Causa inválida o no accesible”) y debajo el chip ámbar clickeable, como la rama de asociación fallida.",
+		where: "law-analytics-front folders.tsx (rama mevCredIssue) · utils/mevCredential.ts INVALID_FOLDER_NAME",
 	},
 	{
 		id: "M12",

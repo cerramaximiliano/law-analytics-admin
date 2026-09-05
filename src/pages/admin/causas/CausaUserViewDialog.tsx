@@ -174,8 +174,20 @@ export function ListRowReplica({ entry }: { entry: CausaUserViewEntry }) {
 			case "invalid":
 				return <MiniChip color={RED} text="Causa inválida" />;
 			case "cred_status":
+				// M11 (2026-09-05): carátula arriba, chip ámbar abajo — el chip ya no reemplaza el nombre
 				return (
-					<MiniChip color={STALE_AMBER} text={MEV_CRED_LABEL[folder.mevCredentialStatus || ""] || "Credencial requerida"} dot={false} />
+					<Stack spacing={0.375} sx={{ minWidth: 0, flex: 1 }}>
+						{folder.folderName && folder.folderName !== "Causa inválida o no accesible" ? (
+							<span>{formatFolderName(folder.folderName, 50)}</span>
+						) : folder.searchTerm ? (
+							<Typography noWrap sx={{ fontSize: "0.66rem", color: "text.secondary", lineHeight: 1.3 }}>
+								Buscaste {folder.searchTerm}
+							</Typography>
+						) : null}
+						<Box sx={{ alignSelf: "flex-start" }}>
+							<MiniChip color={STALE_AMBER} text={MEV_CRED_LABEL[folder.mevCredentialStatus || ""] || "Credencial requerida"} dot={false} />
+						</Box>
+					</Stack>
 				);
 			default:
 				return name;

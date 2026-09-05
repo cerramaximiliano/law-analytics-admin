@@ -357,6 +357,7 @@ export interface CausaUserViewEntry {
 		causaCredentialCovered?: boolean;
 		causaAssociationStatus?: string;
 		causaAssociationError?: string | null;
+		searchTerm?: string | null;
 		listRemoved?: boolean;
 		listRemovedSource?: string | null;
 		listRemovedAt?: string | null;
