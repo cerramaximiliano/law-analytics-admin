@@ -17,7 +17,7 @@ import {
 	useTheme,
 } from "@mui/material";
 import { Archive, Clock, CloseCircle, ExportSquare, InfoCircle, Lock1, Refresh, SearchNormal1, TickCircle, Warning2 } from "iconsax-react";
-import dayjs from "dayjs";
+import dayjs from "utils/dayjs-config";
 import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER } from "themes/dashboardTokens";
 import pjnCredentialsService, { CausaUserViewData, CausaUserViewEntry, UserViewGate } from "api/pjnCredentials";
 
@@ -193,7 +193,9 @@ export function ListRowReplica({ entry }: { entry: CausaUserViewEntry }) {
 				return name;
 		}
 	})();
-	const lastMov = folder.lastMovementDate ? dayjs(folder.lastMovementDate) : null;
+	// Igual que folders.tsx del front: la fecha del último movimiento se formatea en UTC
+	// para que 2026-09-01T00:00Z no se dibuje como 31/08 en ART.
+	const lastMov = folder.lastMovementDate ? dayjs.utc(folder.lastMovementDate) : null;
 	const isToday = !!lastMov && lastMov.format("YYYY-MM-DD") === dayjs().format("YYYY-MM-DD");
 	const statusDot =
 		folder.status === "Nueva"
@@ -942,7 +944,7 @@ export default function CausaUserViewDialog({ open, onClose, collection = null, 
 						<Typography variant="h6" sx={{ fontFamily: "monospace" }}>
 							Vista del usuario
 							{c
-								? ` — ${c.fuero} ${c.number}/${c.year}${c.incidente ? "/" + c.incidente : ""}`
+								? ` — ${[c.fuero, `${c.number}/${c.year}${c.incidente ? "/" + c.incidente : ""}`].filter(Boolean).join(" ")}`
 								: data && !loading
 								? " — carpeta sin causa asociada"
 								: ""}
