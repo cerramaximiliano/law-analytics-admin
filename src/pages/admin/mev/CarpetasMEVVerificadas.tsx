@@ -51,6 +51,7 @@ import {
 	TickCircle,
 	CloseSquare,
 	Timer,
+	LockSlash,
 	Repeat,
 } from "iconsax-react";
 import CausaDetalleModal from "../causas/CausaDetalleModal";
@@ -608,7 +609,17 @@ const CarpetasMEVVerificadas = () => {
 													sx={{ height: 24, "& .MuiChip-label": { px: 1 } }}
 												/>
 											</Tooltip>
-											<Tooltip title="Total elegibles para actualización (actualizables, verificadas, source app). Suma de actualizadas + pendientes + con errores">
+											{(eligibilityStats.noCredential ?? 0) > 0 && (
+												<Tooltip title="Sin credencial: elegibles cuyo usuario no tiene credencial MEV habilitada. Los workers las omiten, no cuentan como pendientes ni en la cobertura">
+													<Chip
+														icon={<LockSlash size={14} />}
+														label={`${(eligibilityStats.noCredential ?? 0).toLocaleString()} sin credencial`}
+														size="small"
+														sx={{ height: 24, "& .MuiChip-label": { px: 1 } }}
+													/>
+												</Tooltip>
+											)}
+											<Tooltip title="Total elegibles para actualización (actualizables, verificadas, source app). Suma de actualizadas + pendientes + con errores + sin credencial">
 												<Chip
 													label={`${eligibilityStats.eligible.toLocaleString()} elegibles`}
 													size="small"
@@ -649,6 +660,7 @@ const CarpetasMEVVerificadas = () => {
 								<MenuItem value="actualizados">Actualizados hoy</MenuItem>
 								<MenuItem value="pendientes">Pendientes</MenuItem>
 								<MenuItem value="errores">Con errores/cooldown</MenuItem>
+								<MenuItem value="sinCredencial">Sin credencial de usuario</MenuItem>
 							</Select>
 						</FormControl>
 					</Stack>

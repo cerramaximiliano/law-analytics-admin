@@ -28,6 +28,10 @@ export interface UpdateStatsMEV {
 export interface EligibilityStatsMEV {
 	total: number;
 	eligible: number;
+	/** Elegibles cuyo usuario tiene credencial MEV habilitada (las únicas que los workers pueden procesar) */
+	eligibleCovered?: number;
+	/** Elegibles sin credencial de usuario: los workers las omiten, no cuentan como pendientes */
+	noCredential?: number;
 	eligibleUpdated: number;
 	eligiblePending: number;
 	eligibleWithErrors: number;

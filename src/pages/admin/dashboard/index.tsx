@@ -61,7 +61,7 @@ import pjnCredentialsService, { MisCausasCoverage, HealthAnomaly } from "api/pjn
 import scbaCausasService, { ScbaUpdateCoverage } from "api/scbaCausas";
 import { ManagerConfigService, PjnSiteStatus } from "api/managerConfig";
 import LinearProgress from "@mui/material/LinearProgress";
-import { Warning2 } from "iconsax-react";
+import { Warning2, LockSlash } from "iconsax-react";
 import { getTasasStatus, TasasStatus } from "utils/tasasService";
 import { getStats as getDatosPrevisionales, Stats as DatosPrevsStats } from "utils/datosPrevsionalesService";
 import GroupsService from "api/groups";
@@ -2176,6 +2176,19 @@ const AdminDashboard = () => {
 											</Box>
 										</Grid>
 									</Grid>
+									{(mevEligibilityStats.noCredential ?? 0) > 0 && (
+										<Tooltip
+											arrow
+											title="Elegibles cuyo usuario no tiene credencial MEV habilitada. Los workers las omiten (no se puede entrar al portal sin credencial), así que no cuentan como pendientes ni en la cobertura."
+										>
+											<Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 0.5, mt: 1.5, cursor: "help" }}>
+												<LockSlash size={13} color={COLORS.neutral.main} />
+												<Typography variant="caption" color="text.secondary">
+													<strong>{(mevEligibilityStats.noCredential ?? 0).toLocaleString()}</strong> sin credencial (no actualizables)
+												</Typography>
+											</Box>
+										</Tooltip>
+									)}
 								</>
 							) : (
 								<Typography variant="body2" color="text.secondary" textAlign="center">
