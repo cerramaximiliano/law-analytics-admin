@@ -270,7 +270,7 @@ const BADGE_META: Record<string, { icon: JSX.Element; tooltip: string }> = {
 	pending: { icon: <InfoCircle size={14} variant="Bold" color={STALE_AMBER} />, tooltip: "Pendiente de verificación" },
 	valid: { icon: <TickCircle size={14} variant="Bold" color={LIVE_GREEN} />, tooltip: "Causa válida" },
 	invalid: { icon: <CloseCircle size={14} variant="Bold" color={RED} />, tooltip: "Causa inválida" },
-	// pending_selection / unlinked: la pill entera cambia (ámbar + Warning2), sin badge superpuesto
+	// pending_selection / unlinked / cred_status: la pill entera cambia (ámbar + Warning2), sin badge superpuesto
 	pending_selection: { icon: <Warning2 size={14} variant="Bulk" color={STALE_AMBER} />, tooltip: "Seleccionar expediente" },
 };
 
@@ -523,7 +523,9 @@ export function EntryPanel({ entry }: { entry: CausaUserViewEntry }) {
 	const chipAccent = accentHex(view.detail.chip.accent);
 	const expAccent = accentHex(view.expanded.accent);
 	const chipTooltip =
-		view.detail.chip.label === "PJN — Causa reservada"
+		view.detail.chip.badge === "cred_status"
+			? `${LIST_TOOLTIPS.cred_status} Hacé clic para ir a tu perfil.`
+			: view.detail.chip.label === "PJN — Causa reservada"
 			? "Esta causa fue marcada como reservada — el tribunal restringió la consulta web pública. El sistema sigue verificando si vuelve a estar accesible."
 			: view.detail.chip.label === "PJN — Reservada (con acceso)"
 			? "Causa reservada por el tribunal — accedés a sus movimientos a través de tu credencial PJN vinculada."
@@ -582,7 +584,13 @@ export function EntryPanel({ entry }: { entry: CausaUserViewEntry }) {
 							badge={view.expanded.badge}
 							warnIcon={view.expanded.accent !== "green"}
 							tooltip={
-								view.expanded.accent === "red" ? LIST_TOOLTIPS.reserved : view.expanded.accent === "amber" ? LIST_TOOLTIPS.list_removed : ""
+								view.expanded.badge === "cred_status"
+									? LIST_TOOLTIPS.cred_status
+									: view.expanded.accent === "red"
+									? LIST_TOOLTIPS.reserved
+									: view.expanded.accent === "amber"
+									? LIST_TOOLTIPS.list_removed
+									: ""
 							}
 						/>
 					</Stack>
