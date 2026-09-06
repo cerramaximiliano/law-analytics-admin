@@ -501,7 +501,7 @@ export const PJN_FINDINGS: GuideFinding[] = [
 		severity: "media",
 		title: "[RESUELTO 2026-09-06, F5] Reverificación del usuario casi nunca llega al worker",
 		detail:
-			"Era: reverifyFolder reseteaba la causa solo si mongoose.models[causaType] existía, y verify-worker tomaba solo causas source='app' sin carátula ni movimientos. Fix: el hub resetea verified:false/isValid:null (+errorCount/lastError/isError, strict:false) y setea reverifyRequestedAt; verify-worker toma también causas app/cache con reverifyRequestedAt, saltea el guard “ya tiene datos válidos” y limpia el flag al procesarlas. El re-scrape reemplaza el array movimiento (no duplica).",
+			"Era: reverifyFolder reseteaba la causa solo si mongoose.models[causaType] existía, y verify-worker tomaba solo causas source='app' sin carátula ni movimientos. Fix: el hub resetea verified:false/isValid:null (+errorCount/lastError/isError, strict:false) y setea reverifyRequestedAt; verify-worker toma también causas app/cache con reverifyRequestedAt, saltea el guard “ya tiene datos válidos” y limpia el flag al procesarlas. El re-scrape reemplaza el array movimiento (no duplica). Verificado end-to-end el 2026-09-06 (ver F13): log ‘Reverificación manual solicitada por el usuario — se omite el guard de datos válidos’ en pjn-verify/civil y reverifyRequestedAt limpiado tras procesar.",
 		where: "law-analytics-server folderController.js (reverifyFolder) · pjn-workers verify-worker.js (reverifyFilter + esReverify)",
 	},
 	{
@@ -559,6 +559,14 @@ export const PJN_FINDINGS: GuideFinding[] = [
 		detail:
 			"Era: el folder volvía a pjn-login con previousSyncSource='pjn' residual y overwrite=true pisaba el nombre puesto durante el keep. Fix: el re-link limpia previousSyncSource (set strict:false, el schema local no lo declara), causaAssociationError y listRemoved*, y solo defaultea overwrite=true si estaba vacío. Pendiente: migración one-shot de los folders pjn-login con previousSyncSource='pjn' residual (requiere consentimiento).",
 		where: "pjn-mis-causas causa-sync-service.js (bloque re-link)",
+	},
+	{
+		id: "F13",
+		severity: "media",
+		title: "[RESUELTO 2026-09-06, F13] El detalle perdía el estado in-flight del reintento y siempre ofrecía 2 reintentos",
+		detail:
+			"Era: GET /api/folders/:id tenía un select() explícito sin verificationAttempts ni lastReverifyRequestedAt. Tras 'Verificar ahora' el primer poll (10 s) traía el folder sin esos campos → inFlight=false, el auto-refresh se apagaba y el detalle quedaba en 'Pendiente' aunque el worker ya hubiera fallado; attempts volvía a 0 y el CTA decía 'Tenés 2 reintentos' hasta que el hub respondía 409 REVERIFY_LIMIT_REACHED. Fix: el select incluye ambos campos. Verificado end-to-end el 2026-09-06 con carpeta de test 999999/2026 (CIV): reintento 1 → worker re-toma en <2 min y falla; con el fix, 'Reintento 1/2 · queda 1 intento' → reintento 2 → polling vivo hasta 'Reintentos agotados (2/2)' sin intervención.",
+		where: "law-analytics-server folderController.js (getFoldersById .select) · front PendingVerificationView.tsx (inFlight/attempts)",
 	},
 ];
 
