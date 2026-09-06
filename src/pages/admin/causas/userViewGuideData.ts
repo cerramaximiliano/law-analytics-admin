@@ -509,8 +509,8 @@ export const PJN_FINDINGS: GuideFinding[] = [
 		severity: "media",
 		title: "[RESUELTO 2026-09-06, F6] Estados fuera del enum / no contemplados por el front",
 		detail:
-			"Era: unlink keep escribía causaAssociationStatus=null con el driver crudo. Fix: executeKeepMode escribe los mismos campos que folderUnlinkService (status 'unlinked', previousSyncSource 'pjn', $unset causaIsValid/causaAssociationError/listRemoved*). Pendiente: migración one-shot de los folders históricos con status null (requiere consentimiento) y el mismo bug en scbaCredentialsController.js:268.",
-		where: "law-analytics-server pjnCredentialsController.js (executeKeepMode)",
+			"Era: unlink keep escribía causaAssociationStatus=null con el driver crudo. Fix: executeKeepMode escribe los mismos campos que folderUnlinkService (status 'unlinked', previousSyncSource 'pjn', $unset causaIsValid/causaAssociationError/listRemoved*). Migración one-shot corrida el 2026-09-06 (0 folders con status null). El mismo bug en scbaCredentialsController.js (executeScbaKeepMode) se corrigió el 2026-09-06 con los mismos campos.",
+		where: "law-analytics-server pjnCredentialsController.js · scbaCredentialsController.js (executeKeepMode)",
 	},
 	{
 		id: "F7",
@@ -991,9 +991,10 @@ export const MEV_FINDINGS: GuideFinding[] = [
 	{
 		id: "M3",
 		severity: "media",
-		title: "mevCredentialStatus='invalid' inalcanzable",
-		detail: "El debounce solo deja pasar expiración o disabled. Contraseña mal cargada → 5 ciclos “Pendiente” → 'disabled'.",
-		where: "mev-workers verify-worker.js:1169 · update-worker.js:594",
+		title: "[RESUELTO 2026-09-06] mevCredentialStatus='invalid' inalcanzable",
+		detail:
+			"Era: el debounce solo dejaba pasar expiración o disabled; contraseña mal cargada → ~7 h de “Pendiente” (back-off 30 min→6 h) hasta el auto-disable. Fix: reportCredentialFailure devuelve likelyInvalid (credencial nunca verificada + ≥2 rechazos explícitos con ≥5 min de racha) y los workers lo tratan como fallo definitivo → 'invalid' + email, sin deshabilitar ni martillar el portal. El hub además sondea el login antes de guardar (rechazo = no se guarda) y limpia firstExplicitRejectionAt al re-guardar.",
+		where: "mev-workers credentials-resolver.js (reportCredentialFailure) · verify-worker.js · update-worker.js · hub mevCredentialsController.js (saveCredentials)",
 	},
 	{
 		id: "M4",
@@ -1006,23 +1007,25 @@ export const MEV_FINDINGS: GuideFinding[] = [
 	{
 		id: "M5",
 		severity: "media",
-		title: "mev-api caído = “verifique los datos” sin salida",
-		detail: "assoc='failed' sin causaId; reverify pone 'pending' y espera un worker que nunca la tomará; consume verificationAttempts.",
-		where: "law-analytics-server folderController.js:2395 · :5288",
+		title: "[RESUELTO 2026-09-06] mev-api caído = “verifique los datos” sin salida",
+		detail:
+			"Era: assoc='failed' sin causaId y el reverify no tenía nada que reverificar. Fix: services/mevAssociateService.js — POST a mev-api con timeout 15 s y, ante error de disponibilidad (sin respuesta o 5xx), fallback local que escribe causas-mev con la misma forma que associateFolder (causa nueva verified:false o $addToSet de la carpeta); la carpeta queda 'pending' con causaId y el verify-worker la toma. Un 4xx de mev-api (incluido el 409 recuperable) se propaga igual. El reverify sin causaId ya devolvía 400 SIN_CAUSA_QUE_VERIFICAR sin consumir intentos.",
+		where: "law-analytics-server services/mevAssociateService.js · folderController.js (createFolder / linkFolderToCausa rama MEV)",
 	},
 	{
 		id: "M6",
 		severity: "media",
-		title: "deleteCredentials pisa 'expired'/'disabled' con 'missing'",
-		detail: "No filtra por estado previo (markCredentialMissing sí) → se pierde el diagnóstico en el copy.",
-		where: "law-analytics-server mevCredentialsController.js:435-441",
+		title: "[RESUELTO 2026-09-06] deleteCredentials pisa 'expired'/'disabled' con 'missing'",
+		detail:
+			"El updateMany ahora solo pisa mevCredentialStatus null/pending/valid (mismo criterio que markCredentialMissing en mev-workers); invalid/expired/disabled conservan su diagnóstico. El conteo del email sigue contando todas las carpetas no cubiertas.",
+		where: "law-analytics-server mevCredentialsController.js (deleteCredentials)",
 	},
 	{
 		id: "M7",
 		severity: "baja",
-		title: "Rama “Ya no en la lista” MEV es código muerto",
+		title: "[ACEPTADO 2026-09-06] Rama “Ya no en la lista” MEV es código muerto",
 		detail:
-			"source='mev-login' y listRemovedSource='mev' están en el enum y en el front pero ningún productor los escribe (no existe Mis Causas MEV). previousSyncSource='mev' SÍ se escribe desde 2026-09-05 (unlink).",
+			"source='mev-login' y listRemovedSource='mev' están en el enum y en el front pero ningún productor los escribe (no existe Mis Causas MEV). previousSyncSource='mev' SÍ se escribe desde 2026-09-05 (unlink). Decisión: se deja como está — quitar los valores del enum y del front no aporta nada al usuario y rompería la simetría con PJN si algún día hay un listado MEV autenticado. No hay que documentar ese estado en los flujos MEV.",
 		where: "Folder.js:323,337 · folders.tsx:3142 · details.tsx:491",
 	},
 	{
@@ -1036,9 +1039,10 @@ export const MEV_FINDINGS: GuideFinding[] = [
 	{
 		id: "M9",
 		severity: "baja",
-		title: "Cancelar selección deja mevCredentialStatus residual",
-		detail: "clearPendingCausas no limpia mevCredentialStatus/mevCredentialId/mevCredentialError en la carpeta que vuelve a manual.",
-		where: "law-analytics-server causaService.js:941-975",
+		title: "[RESUELTO 2026-09-06] Cancelar selección deja mevCredentialStatus residual",
+		detail:
+			"clearPendingCausasFromFolder ahora hace $unset de mevCredentialStatus/mevCredentialId/mevCredentialError/mevCredentialCheckedAt al devolver la carpeta a manual.",
+		where: "law-analytics-server causaService.js (clearPendingCausasFromFolder)",
 	},
 	{
 		id: "M10",
