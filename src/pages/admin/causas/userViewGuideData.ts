@@ -531,9 +531,9 @@ export const PJN_FINDINGS: GuideFinding[] = [
 	{
 		id: "F9",
 		severity: "media",
-		title: "[PARCIAL 2026-09-06, F9] Sin estado intermedio cuando la causa deja de ser accesible",
+		title: "[CERRADO 2026-09-06, F9] Sin estado intermedio cuando la causa deja de ser accesible",
 		detail:
-			"Resuelto el ping-pong público↔privado: el paso 2 del privacy-checker (resetToPublic) ya no vuelve la causa a pública ni manda el email “restored” por accessFailureCount bajo (el pool del app-update-worker excluye isPrivate:true, así que ese conteo no era evidencia); ahora solo limpia causaIsPrivate/causaPrivateDetectedAt/causaCredentialCovered de los folders cuando la causa YA es pública. Queda abierto como decisión de producto el estado intermedio visible entre el primer fallo y el umbral del checker (cron 3AM/3PM).",
+			"Resuelto el ping-pong público↔privado: el paso 2 del privacy-checker (resetToPublic) ya no vuelve la causa a pública ni manda el email “restored” por accessFailureCount bajo (el pool del app-update-worker excluye isPrivate:true, así que ese conteo no era evidencia); ahora solo limpia causaIsPrivate/causaPrivateDetectedAt/causaCredentialCovered de los folders cuando la causa YA es pública. Decisión de producto (2026-09-06): NO mostrar estado intermedio entre el primer fallo y el umbral del checker (cron 3AM/3PM) — el PJN falla de forma transitoria con frecuencia y un chip que aparece y desaparece genera más consultas que valor; el usuario se entera cuando hay evidencia real.",
 		where: "pjn-workers pjn-privacy-checker-worker.js (resetToPublic) · app-update-worker.js:241/325 (pool excluye privadas)",
 	},
 	{
