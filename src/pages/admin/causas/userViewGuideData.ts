@@ -568,6 +568,14 @@ export const PJN_FINDINGS: GuideFinding[] = [
 			"Era: GET /api/folders/:id tenía un select() explícito sin verificationAttempts ni lastReverifyRequestedAt. Tras 'Verificar ahora' el primer poll (10 s) traía el folder sin esos campos → inFlight=false, el auto-refresh se apagaba y el detalle quedaba en 'Pendiente' aunque el worker ya hubiera fallado; attempts volvía a 0 y el CTA decía 'Tenés 2 reintentos' hasta que el hub respondía 409 REVERIFY_LIMIT_REACHED. Fix: el select incluye ambos campos. Verificado end-to-end el 2026-09-06 con carpeta de test 999999/2026 (CIV): reintento 1 → worker re-toma en <2 min y falla; con el fix, 'Reintento 1/2 · queda 1 intento' → reintento 2 → polling vivo hasta 'Reintentos agotados (2/2)' sin intervención.",
 		where: "law-analytics-server folderController.js (getFoldersById .select) · front PendingVerificationView.tsx (inFlight/attempts)",
 	},
+	{
+		id: "F14",
+		severity: "baja",
+		title: "[RESUELTO 2026-09-06, F14] Credencial PJN rechazada: la lista avisaba, la fila expandida y el detalle decían 'Vinculado con PJN'",
+		detail:
+			"Era: solo folders.tsx consultaba usePjnCredentialError (punto ámbar + tooltip 'PJN — Sincronización pausada'); FolderView.tsx y details.tsx usaban getPjnBindingState sin esa señal y mostraban el pill verde 'Vinculado con PJN'. Para SCBA las tres vistas ya leían useScbaCredentialError y para MEV el estado viaja en el folder (mevCredentialStatus). Fix: getPjnBindingState(folder, { credError }) devuelve el nuevo estado cred_error (solo source pjn-login, después de todos los estados propios de la carpeta, antes de ok) con label 'PJN — Sincronización pausada', copy único y pill ámbar que lleva a Perfil → Cuentas Judiciales; la lista usa el mismo copy. No bloquea el detalle: la causa pública sigue actualizándose por scraping, lo pausado es la sync de Mis Causas. Verificado con juancamino713 (cred error CREDENTIAL_INVALID desde 2026-06-20, 5 carpetas pjn-login).",
+		where: "law-analytics-front src/utils/pjnBindingState.ts · folders.tsx · FolderView.tsx · details.tsx · hooks/usePjnCredentialError.ts",
+	},
 ];
 
 // =====================================================================
