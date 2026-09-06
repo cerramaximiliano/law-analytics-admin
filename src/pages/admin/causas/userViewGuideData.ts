@@ -499,66 +499,66 @@ export const PJN_FINDINGS: GuideFinding[] = [
 	{
 		id: "F5",
 		severity: "media",
-		title: "Reverificación del usuario casi nunca llega al worker",
+		title: "[RESUELTO 2026-09-06, F5] Reverificación del usuario casi nunca llega al worker",
 		detail:
-			"reverifyFolder resetea la causa solo si mongoose.models[causaType] existe (4 de 28 fueros), y verify-worker toma solo causas source='app' sin carátula ni movimientos. La carpeta queda pendiente para siempre, gastando 1 de 2 intentos que nunca se resetean.",
-		where: "law-analytics-server folderController.js:5218-5340 · pjn-workers verify-worker.js:284-303",
+			"Era: reverifyFolder reseteaba la causa solo si mongoose.models[causaType] existía, y verify-worker tomaba solo causas source='app' sin carátula ni movimientos. Fix: el hub resetea verified:false/isValid:null (+errorCount/lastError/isError, strict:false) y setea reverifyRequestedAt; verify-worker toma también causas app/cache con reverifyRequestedAt, saltea el guard “ya tiene datos válidos” y limpia el flag al procesarlas. El re-scrape reemplaza el array movimiento (no duplica).",
+		where: "law-analytics-server folderController.js (reverifyFolder) · pjn-workers verify-worker.js (reverifyFilter + esReverify)",
 	},
 	{
 		id: "F6",
 		severity: "media",
-		title: "Estados fuera del enum / no contemplados por el front",
+		title: "[RESUELTO 2026-09-06, F6] Estados fuera del enum / no contemplados por el front",
 		detail:
-			"Unlink keep escribe causaAssociationStatus=null con el driver crudo; not_attempted es default del schema. Ninguno tiene branch en el front: caen en “pendiente” con un refresh que no hace nada.",
-		where: "law-analytics-server pjnCredentialsController.js:217-232 · folderController.js:655 · causaService.js:940",
+			"Era: unlink keep escribía causaAssociationStatus=null con el driver crudo. Fix: executeKeepMode escribe los mismos campos que folderUnlinkService (status 'unlinked', previousSyncSource 'pjn', $unset causaIsValid/causaAssociationError/listRemoved*). Pendiente: migración one-shot de los folders históricos con status null (requiere consentimiento) y el mismo bug en scbaCredentialsController.js:268.",
+		where: "law-analytics-server pjnCredentialsController.js (executeKeepMode)",
 	},
 	{
 		id: "F7",
 		severity: "media",
-		title: "Status 'success' hardcodeado con causa inválida o no verificada",
+		title: "[RESUELTO 2026-09-06, F7] Status 'success' hardcodeado con causa inválida o no verificada",
 		detail:
-			"Alta por BD local/caché y sync de Mis Causas hardcodean assoc='success' (y el sync causaVerified=true) sin mirar verified/isValid de la causa. Combos (false,null,'success') y (true,false,'success') existen en la base.",
-		where: "law-analytics-server folderController.js:2489,2585,4474,4578 · pjn-mis-causas causa-sync-service.js:947-950",
+			"Era: alta por BD local/caché y sync de Mis Causas hardcodeaban assoc='success' sin mirar verified/isValid. Fix: helper pjnAssociationStatusFromCausa() en el hub (verified ? (isValid===false ? 'failed' : 'success') : 'pending') aplicado en createFolder/link; en pjn-mis-causas los folders nuevos y relinkeados derivan causaVerified/causaAssociationStatus de la causa real.",
+		where: "law-analytics-server folderController.js (pjnAssociationStatusFromCausa) · pjn-mis-causas causa-sync-service.js",
 	},
 	{
 		id: "F8",
 		severity: "media",
-		title: "Handoff a privada deja el folder congelado en pendiente",
+		title: "[RESUELTO 2026-09-06, F8] Handoff a privada deja el folder congelado en pendiente",
 		detail:
-			"Cuando el portal público rechaza una causa con credencial vinculada, verify-worker marca la causa privada pero no toca el folder; solo se promueve para usuarios cubiertos. Terceros quedan pendientes indefinidamente.",
-		where: "pjn-workers verify-worker.js:976-991 · pjn-mis-causas private-causas-update-worker.js:2052",
+			"Era: al rechazar el portal público una causa con credencial vinculada, verify-worker marcaba la causa privada pero no tocaba los folders. Fix: el handoff hace updateMany sobre los folders source≠pjn-login (causaVerified:true, causaIsPrivate:true, causaPrivateDetectedAt, status 'success'). La cobertura (causaCredentialCovered) la fija reconcileFolderCoverage de pjn-mis-causas al inicio de cada corrida privada — ventana transitoria en la que el no cubierto ve el chip “reservada” sin el 403.",
+		where: "pjn-workers verify-worker.js (bloque handoff) · pjn-mis-causas scripts/reconcile-has-active-credential.js",
 	},
 	{
 		id: "F9",
 		severity: "media",
-		title: "Sin estado intermedio cuando la causa deja de ser accesible",
+		title: "[PARCIAL 2026-09-06, F9] Sin estado intermedio cuando la causa deja de ser accesible",
 		detail:
-			"app-update-worker solo incrementa accessFailureCount; hasta que el privacy-checker cruce el umbral (cron 3AM/3PM) el folder se ve OK y verified. Además accessFailureCount es por folder pero causa.isPrivate es global: los demás usuarios de la misma causa no se marcan.",
-		where: "pjn-workers app-update-worker.js:1815 · pjn-privacy-checker-worker.js:312",
+			"Resuelto el ping-pong público↔privado: el paso 2 del privacy-checker (resetToPublic) ya no vuelve la causa a pública ni manda el email “restored” por accessFailureCount bajo (el pool del app-update-worker excluye isPrivate:true, así que ese conteo no era evidencia); ahora solo limpia causaIsPrivate/causaPrivateDetectedAt/causaCredentialCovered de los folders cuando la causa YA es pública. Queda abierto como decisión de producto el estado intermedio visible entre el primer fallo y el umbral del checker (cron 3AM/3PM).",
+		where: "pjn-workers pjn-privacy-checker-worker.js (resetToPublic) · app-update-worker.js:241/325 (pool excluye privadas)",
 	},
 	{
 		id: "F10",
 		severity: "baja",
-		title: "Mensajes distintos para el mismo estado",
+		title: "[RESUELTO 2026-09-06, F10] Mensajes distintos para el mismo estado",
 		detail:
-			"failed+verified: la lista dice “Asociación fallida”, la fila expandida “Causa inválida” y el detalle gate failed. reservada cubierta: lista roja “reservada”, detalle verde “con acceso”.",
-		where: "law-analytics-front folders.tsx:2860 vs FolderView.tsx:356-393 vs details.tsx:439-462",
+			"Era: failed+verified se veía “Asociación fallida” en la lista, “Causa inválida” en la fila expandida y gate failed en el detalle; reservada cubierta roja en la lista y verde en el detalle. Fix: util src/utils/pjnBindingState.ts (getPjnBindingState: revoked > reserved_covered > reserved > pending_selection > list_removed > failed > pending > ok) con labels y tooltips únicos, consumido por folders.tsx, FolderView.tsx y details.tsx. failed también contempla verified:true + isValid:false aunque el status no diga failed.",
+		where: "law-analytics-front src/utils/pjnBindingState.ts · folders.tsx · FolderView.tsx · details.tsx",
 	},
 	{
 		id: "F11",
 		severity: "baja",
-		title: "scrapingProgress y metadata son globales por causa, no por usuario",
+		title: "[RESUELTO 2026-09-06, F11] scrapingProgress y metadata son globales por causa, no por usuario",
 		detail:
-			"updateFoldersScrapingProgress/updateAssociatedFolders hacen updateMany({causaId}) sobre todos los folders de la causa: el spinner del scrape de una credencial aparece en la lista de otro usuario, y overwrite pisa nombres de todos.",
-		where: "pjn-mis-causas private-causas-update-worker.js:1356,1425",
+			"Era: updateFoldersScrapingProgress hacía updateMany({causaId}) sobre todos los folders de la causa. Fix: acepta un scope y el worker privado escribe el progreso solo en los folders source:'pjn-login' del userId dueño de la credencial que sincroniza. updateAssociatedFolders/overwrite de metadata sigue global (decisión pendiente).",
+		where: "pjn-mis-causas private-causas-update-worker.js (updateFoldersScrapingProgress + setFoldersProgress)",
 	},
 	{
 		id: "F12",
 		severity: "baja",
-		title: "Re-link tras keep no limpia previousSyncSource y fuerza overwrite",
+		title: "[RESUELTO 2026-09-06, F12] Re-link tras keep no limpia previousSyncSource y fuerza overwrite",
 		detail:
-			"El folder vuelve a pjn-login con previousSyncSource='pjn' residual (bloquea “Vincular con Poder Judicial”) y overwrite=true pisa el nombre que el usuario haya puesto durante el keep.",
-		where: "pjn-mis-causas causa-sync-service.js:838-848",
+			"Era: el folder volvía a pjn-login con previousSyncSource='pjn' residual y overwrite=true pisaba el nombre puesto durante el keep. Fix: el re-link limpia previousSyncSource (set strict:false, el schema local no lo declara), causaAssociationError y listRemoved*, y solo defaultea overwrite=true si estaba vacío. Pendiente: migración one-shot de los folders pjn-login con previousSyncSource='pjn' residual (requiere consentimiento).",
+		where: "pjn-mis-causas causa-sync-service.js (bloque re-link)",
 	},
 ];
 
