@@ -69,7 +69,7 @@ import {
 import HourlyStatsPanel from "./HourlyStatsPanel";
 import DailySummaryPanel from "./DailySummaryPanel";
 import ZeroMovementsProtectionPanel from "./ZeroMovementsProtectionPanel";
-import CapacityStatsWidget from "../../dashboard/CapacityStatsWidget";
+import TandasCapacityPanel from "./TandasCapacityPanel";
 import { FUERO_CODES, labelDeFuero } from "utils/fueros";
 
 // Fueros disponibles: del catálogo compartido, que además de los 11 que había
@@ -1159,9 +1159,9 @@ const WorkerStatistics: React.FC = () => {
 					<DailySummaryPanel workerType={workerTypeFilter} />
 				</TabPanel>
 
-				{/* Tab: Capacidad (capacity stats simulator) */}
+				{/* Tab: Capacidad (tandas reales del app-update + KPIs y alertas) */}
 				<TabPanel value={activeTab} index={3}>
-					<CapacityStatsWidget />
+					<TandasCapacityPanel />
 				</TabPanel>
 
 				{/* Tab: Anti-eliminación (causas con SCRAPING_ERROR_ZERO_MOVEMENTS) */}

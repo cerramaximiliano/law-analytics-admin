@@ -1008,7 +1008,10 @@ export class WorkersService {
 	 * de 150 ms. Por eso la vista los pide en paralelo y dibuja cada fila
 	 * cuando llega, en vez de esperar a todos.
 	 */
-	static async getCoverageMatrix(fuero: string, opts?: { desde?: number; hasta?: number; maxRange?: number }): Promise<CoverageMatrixResponse> {
+	static async getCoverageMatrix(
+		fuero: string,
+		opts?: { desde?: number; hasta?: number; maxRange?: number },
+	): Promise<CoverageMatrixResponse> {
 		try {
 			const response = await workersAxios.get(`/api/configuracion-scraping-history/coverage-matrix/fuero/${fuero}`, {
 				params: { maxRange: opts?.maxRange ?? 150000, desde: opts?.desde, hasta: opts?.hasta },
@@ -1347,6 +1350,40 @@ export class WorkersService {
 		}
 	}
 
+	// ========================================
+	// Tandas del app-update (AppUpdateTanda)
+	// ========================================
+
+	/** Tandas del día (ART). */
+	static async getTandasToday(date?: string): Promise<TandasTodayResponse> {
+		try {
+			const response = await pjnAxios.get("/api/workers/tandas/today", { params: date ? { date } : {} });
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	/** Últimas N tandas (opcionalmente de un fuero / sólo de apertura). */
+	static async getTandasLast(params?: { n?: number; fuero?: string; soloApertura?: boolean }): Promise<TandasLastResponse> {
+		try {
+			const response = await pjnAxios.get("/api/workers/tandas/last", { params });
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	/** Capacidad real de la flota de app-update (config + pool + tandas + alertas). */
+	static async getTandasCapacity(): Promise<TandasCapacityResponse> {
+		try {
+			const response = await pjnAxios.get("/api/workers/tandas/capacity");
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
 	// Manejo de errores
 	static handleError(error: any): Error {
 		// Si es un error de axios, re-lanzarlo tal cual para que el interceptor pueda manejarlo
@@ -1574,4 +1611,138 @@ export class ScrapingWorkerManagerService {
 		const response = await workersAxios.put(`/api/scraping-worker-manager/workers/fuero/${fuero}/stop-all`);
 		return response.data;
 	}
+}
+
+// ========================================
+// Tipos: tandas del app-update
+// ========================================
+
+export interface TandaResumen {
+	duracionMs: number | null;
+	duracionMin: number | null;
+	segPorDocPromedio: number | null;
+	segPorDocP50: number | null;
+	segPorDocP90: number | null;
+	docsPorMin: number | null;
+	tasaExito: number | null;
+	loadPromedio: number | null;
+	loadMax: number | null;
+	procesos: number;
+	procesosAyuda: number;
+	docsAyuda: number;
+	esDeApertura: boolean;
+	umbralCubierto: boolean | null;
+}
+
+export interface TandaProceso {
+	esAyuda: boolean;
+	modoPropio: string;
+	docs: number;
+	ok: number;
+	fallidos: number;
+	tiempoMs: number;
+}
+
+export interface AppUpdateTanda {
+	_id: string;
+	fuero: string;
+	fueroCode: string;
+	date: string;
+	numero: number;
+	estado: "abierta" | "cerrada";
+	inicio: string;
+	ultimoDocAt?: string;
+	fin?: string;
+	duracionMs?: number;
+	motivoCierre?: "sin_elegibles" | "gap" | "cierre_horario" | "manual";
+	pool: number;
+	elegiblesAlInicio: number;
+	umbralHoras?: number;
+	procesados: number;
+	ok: number;
+	fallidos: number;
+	omitidos: number;
+	movimientosFound: number;
+	porProceso?: Record<string, TandaProceso>;
+	errores?: Record<string, number>;
+	resumen: TandaResumen;
+}
+
+export interface TandaAlerta {
+	nivel: "info" | "warning" | "error";
+	codigo: string;
+	mensaje: string;
+}
+
+export interface TandaFueroKpis {
+	umbralHoras: number | null;
+	rondasPorDia: number | null;
+	demandaDiaria: number | null;
+	capacidadDiariaPropia: number;
+	utilizacionPropiaPct: number | null;
+	poolMaxPropio: number | null;
+	duracionSinAyudaMin: number | null;
+	duracionVsUmbralPct: number | null;
+	duracionSinAyudaVsUmbralPct: number | null;
+	segPorDoc: number;
+	baselineSegPorDoc: number;
+	segPorDocVsBaseline: number;
+	ayudaPct: number | null;
+}
+
+export interface TandaFueroCapacity {
+	fuero: string;
+	fueroCode: string;
+	config: { workerId: string; umbralHoras: number | null; batchSize?: number; updateProgress?: any } | null;
+	procesosPropios: number;
+	pool: number;
+	elegiblesAhora: number;
+	enProceso: number;
+	tandasHoy: number;
+	procesadosHoy: number;
+	tandaApertura: AppUpdateTanda | null;
+	ultimaTanda: AppUpdateTanda | null;
+	abierta: AppUpdateTanda | null;
+	kpis: TandaFueroKpis;
+	alertas: TandaAlerta[];
+}
+
+export interface TandasCapacityData {
+	generadoEn: string;
+	hoy: string;
+	config: {
+		maxWorkers: number | null;
+		minWorkers: number | null;
+		workStartHour: number;
+		workEndHour: number;
+		horasLaborales: number;
+		workDays: number[] | null;
+		procesosFlota: number;
+	};
+	flota: {
+		poolTotal: number;
+		demandaDiaria: number;
+		capacidadDiaria: number;
+		utilizacionPct: number | null;
+		segPorDocFlota: number;
+		docsPorMinFlota: number;
+		alertas: TandaAlerta[];
+	};
+	fueros: TandaFueroCapacity[];
+	umbralesAlerta: Record<string, number>;
+}
+
+export interface TandasTodayResponse {
+	success: boolean;
+	data: { date: string; tandas: AppUpdateTanda[] };
+}
+
+export interface TandasLastResponse {
+	success: boolean;
+	data: AppUpdateTanda[];
+}
+
+export interface TandasCapacityResponse {
+	success: boolean;
+	data: TandasCapacityData;
 }
