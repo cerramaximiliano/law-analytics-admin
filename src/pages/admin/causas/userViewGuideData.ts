@@ -1456,19 +1456,21 @@ export const SCBA_GROUPS: GuideGroup[] = [
 			},
 			{
 				key: "scba.ok.toggle_off",
-				title: "Credencial deshabilitada por el admin (toggle)",
+				title: "Credencial pausada por el administrador (toggle en admin)",
 				producer:
-					"admin-api PATCH /api/scba-credentials/:id/toggle {enabled:false} → propagateTrackingToCausasAndFolders(false) → causaUpdateEnabled=false en las carpetas del usuario. La ruta de usuario del hub existe (idempotente desde S17) pero el front no tiene UI para llamarla",
-				fields: "source=scba-login · causaUpdateEnabled=false · cred.enabled=false · cred.syncStatus≠error",
+					"admin-api PATCH /api/scba-credentials/:id/toggle {enabled:false} (S23): enabled=false, disabledReason='admin', disabledByAdminAt + propagateTracking(false) → causaUpdateEnabled=false en las carpetas y update=false en las causas del usuario. El hub deriva statusReason='disabled_by_admin'; POST / y POST /sync responden 403/400 DISABLED_BY_ADMIN hasta que el admin la re-habilite (queda pending para el próximo ciclo)",
+				fields: "source=scba-login · causaUpdateEnabled=false · cred.enabled=false · cred.disabledReason=admin",
 				entry: entry(
 					{ ...scbaBase },
 					{
-						expanded: scbaPill("Vinculado con SCBA", "green", "valid"),
-						detail: { chip: scbaPill("Vinculado con SCBA", "green", "valid"), gate: null },
+						list: "ok_cred_error",
+						expanded: scbaPill("SCBA — Sincronización pausada", "amber", "valid"),
+						detail: { chip: scbaPill("SCBA — Sincronización pausada", "amber", "valid"), gate: null },
+						credError: { code: "DISABLED_BY_ADMIN", message: "…pausada por el administrador de Law Analytics. Contactá a soporte…" },
 					},
 					[{ ...credOk[0], credentialEnabled: false }],
 				),
-				warn: "Invisible para el usuario: el front no lee causaUpdateEnabled y GET /api/scba-credentials oculta la cred deshabilitada “limpia” (enabled=false sin error), así que Integraciones dice “No conectado” y la carpeta sigue con tilde. Abierto, baja (S23).",
+				warn: "Integraciones muestra “Sincronización pausada” + aviso de soporte, sin “Actualizar contraseña” ni re-sync; las carpetas llevan el warning ámbar con el mismo copy. El admin confirma en un diálogo que explica el efecto.",
 			},
 		],
 	},
@@ -1805,17 +1807,18 @@ export const SCBA_FINDINGS: GuideFinding[] = [
 	{
 		id: "S23",
 		severity: "baja",
-		title: "Credencial deshabilitada por el admin es invisible para el usuario",
+		title: R("2026-09-07", "Credencial deshabilitada por el admin era invisible para el usuario"),
 		detail:
-			"El toggle sólo existe en admin-api (el front no tiene UI para la ruta de usuario). propagateTracking(false) apaga causaUpdateEnabled pero el front no lo lee y GET /api/scba-credentials oculta la cred deshabilitada sin error → carpetas con tilde e Integraciones “No conectado”. Abierto, baja: decidir si mostrar “Sincronización pausada por el administrador” (statusReason nuevo) o dejarlo como herramienta interna.",
-		where: "hub getCredentialsStatus · front scbaBindingState.ts",
+			"Antes el toggle sólo tocaba `enabled`: el usuario veía tilde en las carpetas e Integraciones “No conectado”, y cargar la contraseña re-habilitaba en silencio. Ahora: disabledReason='admin' + disabledByAdminAt + propagateTracking; statusReason 'disabled_by_admin'; GET /api/scba-credentials la devuelve; POST / → 403 y POST /sync → 400 DISABLED_BY_ADMIN; la card muestra “Sincronización pausada” + “contactá a soporte” sin form ni re-sync; carpetas con warning ámbar y el mismo copy; el update-worker omite credenciales enabled=false; el admin confirma en un diálogo que explica el efecto. Re-habilitar limpia la marca y deja la cred pending.",
+		where:
+			"hub models/ScbaCredentials.js · scbaCredentialStatusService.js · scbaCredentialsController.js · admin-api toggleCredential · front scbaBindingState.ts / ScbaAccountConnect.tsx · admin CredencialesSCBA.tsx · scba-workers update-worker.ts",
 	},
 	{
 		id: "S24",
 		severity: "baja",
-		title: "Archivada por límite de plan sin archivedAt/archivedBy",
+		title: R("2026-09-07", "Archivada por límite de plan sin marca de motivo"),
 		detail:
-			"folder-service crea la carpeta con archived=true y nada más: indistinguible de un archivado manual. Abierto, baja: setear archivedAt y un marcador (archivedBy es ObjectId de User; haría falta un campo archivedReason o similar).",
+			"folder-service crea la carpeta con archived=true, archivedAt=now y archivedReason='plan_limit' (campo nuevo en Folder, enum ['plan_limit', null]); archivedBy queda para archivados manuales. Las carpetas anteriores al fix no tienen la marca.",
 		where: "scba-workers folder-service.ts · hub models/Folder.js",
 	},
 ];

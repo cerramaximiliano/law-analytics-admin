@@ -9,6 +9,8 @@ export interface ScbaCredential {
 	userPhone?: string;
 	usernameMasked: string;
 	enabled: boolean;
+	/** 'admin' = pausada desde este panel (S23); 'user_inactive' = reconciler del manager. */
+	disabledReason?: "admin" | "user_inactive" | null;
 	verified: boolean;
 	verifiedAt: string | null;
 	isExpired: boolean;

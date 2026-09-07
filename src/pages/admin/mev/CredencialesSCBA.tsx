@@ -277,6 +277,11 @@ const CredencialesSCBA = () => {
 		credential: null,
 	});
 	const [createDialog, setCreateDialog] = useState(false);
+	// S23: deshabilitar es una pausa visible para el usuario → confirmar antes.
+	const [pauseDialog, setPauseDialog] = useState<{ open: boolean; credential: ScbaCredential | null }>({
+		open: false,
+		credential: null,
+	});
 	// Causas excluidas del sync (carpetas SCBA eliminadas por el usuario, S4)
 	const [excludedDialog, setExcludedDialog] = useState<{
 		open: boolean;
@@ -450,15 +455,25 @@ const CredencialesSCBA = () => {
 	};
 
 	const handleToggleEnabled = async (credential: ScbaCredential) => {
+		if (credential.enabled) {
+			setPauseDialog({ open: true, credential });
+			return;
+		}
+		await applyToggle(credential, true);
+	};
+
+	const applyToggle = async (credential: ScbaCredential, enabled: boolean) => {
 		try {
-			const response = await scbaCredentialsService.toggleCredential(credential._id, !credential.enabled);
+			const response = await scbaCredentialsService.toggleCredential(credential._id, enabled);
 			if (response.success) {
-				enqueueSnackbar(response.message, { variant: "success" });
+				enqueueSnackbar(response.message, { variant: enabled ? "success" : "warning" });
 				fetchCredentials();
 				fetchStats();
 			}
 		} catch (error) {
 			enqueueSnackbar("Error al actualizar credencial", { variant: "error" });
+		} finally {
+			setPauseDialog({ open: false, credential: null });
 		}
 	};
 
@@ -818,7 +833,23 @@ const CredencialesSCBA = () => {
 														{cred.enabled ? (
 															<TickCircle size={20} color={theme.palette.success.main} variant="Bold" />
 														) : (
-															<CloseCircle size={20} color={theme.palette.warning.main} variant="Bold" />
+															<Tooltip
+																title={
+																	cred.disabledReason === "admin"
+																		? "Pausada por el administrador: el usuario ve el aviso y debe contactar a soporte"
+																		: cred.disabledReason === "user_inactive"
+																		? "Pausada por el reconciler (usuario inactivo)"
+																		: "Deshabilitada"
+																}
+															>
+																<span style={{ display: "inline-flex" }}>
+																	<CloseCircle
+																		size={20}
+																		color={cred.disabledReason === "admin" ? theme.palette.error.main : theme.palette.warning.main}
+																		variant="Bold"
+																	/>
+																</span>
+															</Tooltip>
 														)}
 													</TableCell>
 													<TableCell align="right">
@@ -864,7 +895,7 @@ const CredencialesSCBA = () => {
 																	</IconButton>
 																</Tooltip>
 															)}
-															<Tooltip title={cred.enabled ? "Deshabilitar" : "Habilitar"}>
+															<Tooltip title={cred.enabled ? "Pausar sincronización (el usuario verá el aviso)" : "Habilitar"}>
 																<IconButton
 																	size="small"
 																	onClick={() => handleToggleEnabled(cred)}
@@ -1314,6 +1345,43 @@ const CredencialesSCBA = () => {
 					<Button onClick={() => setDeleteDialog({ open: false, credential: null })}>Cancelar</Button>
 					<Button onClick={handleDelete} color="error" variant="contained">
 						Eliminar
+					</Button>
+				</DialogActions>
+			</Dialog>
+
+			{/* S23: confirmación antes de pausar una credencial desde el admin */}
+			<Dialog open={pauseDialog.open} onClose={() => setPauseDialog({ open: false, credential: null })}>
+				<DialogTitle>Pausar la sincronización SCBA</DialogTitle>
+				<DialogContent>
+					<DialogContentText>
+						Vas a deshabilitar la credencial de <strong>{pauseDialog.credential?.userName}</strong> ({pauseDialog.credential?.userEmail}).
+						<br />
+						<br />
+						Qué pasa:
+					</DialogContentText>
+					<Box component="ul" sx={{ mt: 1, pl: 2 }}>
+						<li>
+							<Typography variant="body2">
+								Los workers dejan de sincronizar sus causas SCBA (update=false, carpetas sin seguimiento).
+							</Typography>
+						</li>
+						<li>
+							<Typography variant="body2">
+								El usuario ve “Sincronización pausada por el administrador — contactá a soporte” en Integraciones y un warning ámbar en cada
+								carpeta SCBA.
+							</Typography>
+						</li>
+						<li>
+							<Typography variant="body2">
+								No puede reactivarla solo: cargar la contraseña o re-sincronizar devuelve DISABLED_BY_ADMIN. Sólo se reactiva desde acá.
+							</Typography>
+						</li>
+					</Box>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => setPauseDialog({ open: false, credential: null })}>Cancelar</Button>
+					<Button onClick={() => pauseDialog.credential && applyToggle(pauseDialog.credential, false)} color="error" variant="contained">
+						Pausar
 					</Button>
 				</DialogActions>
 			</Dialog>
