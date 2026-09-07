@@ -45,6 +45,7 @@ import Switch from "./Switch";
 import Tab from "./Tab";
 import TableBody from "./TableBody";
 import TableCell from "./TableCell";
+import TableContainer from "./TableContainer";
 import TableFooter from "./TableFooter";
 import TableHead from "./TableHead";
 import TablePagination from "./TablePagination";
@@ -99,9 +100,10 @@ export default function ComponentsOverrides(theme: Theme) {
 		Tab(theme),
 		TableBody(theme),
 		TableCell(theme),
+		TableContainer(theme),
 		TableFooter(theme),
 		TableHead(theme),
-		TablePagination(),
+		TablePagination(theme),
 		TableRow(),
 		Tabs(),
 		ToggleButton(theme),

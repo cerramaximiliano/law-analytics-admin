@@ -123,56 +123,58 @@ const LinkedCausasRow = ({
 								No se encontraron causas vinculadas
 							</Alert>
 						) : (
-							<Table size="small" sx={{ mt: 1 }}>
-								<TableHead>
-									<TableRow>
-										<TableCell>CUIJ</TableCell>
-										<TableCell>Expediente</TableCell>
-										<TableCell>Carátula</TableCell>
-										<TableCell>Estado</TableCell>
-										<TableCell>Fecha Inicio</TableCell>
-										<TableCell align="center">Acción</TableCell>
-									</TableRow>
-								</TableHead>
-								<TableBody>
-									{linkedCausas.map((causa) => (
-										<TableRow key={getId(causa._id)} hover>
-											<TableCell>
-												<Typography variant="caption" sx={{ fontFamily: "monospace" }}>
-													{causa.cuij}
-												</Typography>
-											</TableCell>
-											<TableCell>
-												<Typography variant="body2" fontWeight="bold">
-													{causa.numero}/{causa.anio}
-												</Typography>
-											</TableCell>
-											<TableCell sx={{ maxWidth: 300 }}>
-												<Typography variant="body2" sx={{ wordWrap: "break-word", whiteSpace: "normal" }}>
-													{causa.caratula || "Sin carátula"}
-												</Typography>
-											</TableCell>
-											<TableCell>
-												<Chip label={causa.estado || "N/A"} size="small" variant="outlined" />
-											</TableCell>
-											<TableCell>
-												<Typography variant="caption">{formatDate(causa.fechaInicio)}</Typography>
-											</TableCell>
-											<TableCell align="center">
-												<Button
-													size="small"
-													variant="contained"
-													color="primary"
-													startIcon={<TickCircle size={16} />}
-													onClick={() => onSelectCausa(getId(pivot._id), getId(causa._id), causa)}
-												>
-													Seleccionar
-												</Button>
-											</TableCell>
+							<TableContainer>
+								<Table size="small" sx={{ mt: 1 }}>
+									<TableHead>
+										<TableRow>
+											<TableCell>CUIJ</TableCell>
+											<TableCell>Expediente</TableCell>
+											<TableCell>Carátula</TableCell>
+											<TableCell>Estado</TableCell>
+											<TableCell>Fecha Inicio</TableCell>
+											<TableCell align="center">Acción</TableCell>
 										</TableRow>
-									))}
-								</TableBody>
-							</Table>
+									</TableHead>
+									<TableBody>
+										{linkedCausas.map((causa) => (
+											<TableRow key={getId(causa._id)} hover>
+												<TableCell>
+													<Typography variant="caption" sx={{ fontFamily: "monospace" }}>
+														{causa.cuij}
+													</Typography>
+												</TableCell>
+												<TableCell>
+													<Typography variant="body2" fontWeight="bold">
+														{causa.numero}/{causa.anio}
+													</Typography>
+												</TableCell>
+												<TableCell sx={{ maxWidth: 300 }}>
+													<Typography variant="body2" sx={{ wordWrap: "break-word", whiteSpace: "normal" }}>
+														{causa.caratula || "Sin carátula"}
+													</Typography>
+												</TableCell>
+												<TableCell>
+													<Chip label={causa.estado || "N/A"} size="small" variant="outlined" />
+												</TableCell>
+												<TableCell>
+													<Typography variant="caption">{formatDate(causa.fechaInicio)}</Typography>
+												</TableCell>
+												<TableCell align="center">
+													<Button
+														size="small"
+														variant="contained"
+														color="primary"
+														startIcon={<TickCircle size={16} />}
+														onClick={() => onSelectCausa(getId(pivot._id), getId(causa._id), causa)}
+													>
+														Seleccionar
+													</Button>
+												</TableCell>
+											</TableRow>
+										))}
+									</TableBody>
+								</Table>
+							</TableContainer>
 						)}
 					</Box>
 				</Collapse>

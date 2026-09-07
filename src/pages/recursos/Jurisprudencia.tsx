@@ -581,112 +581,114 @@ const Jurisprudencia = () => {
 								</Box>
 							) : (
 								<>
-									<Table>
-										<TableHead>
-											<TableRow>
-												<TableCell>
-													<Box display="flex" alignItems="center" gap={1}>
-														Código Cita
-														<IconButton size="small" onClick={() => handleSort("codigoCita")}>
-															{sortBy === "codigoCita" && sortOrder === "asc" ? <ArrowUp size={16} /> : <ArrowDown size={16} />}
-														</IconButton>
-													</Box>
-												</TableCell>
-												<TableCell>Título</TableCell>
-												<TableCell>
-													<Box display="flex" alignItems="center" gap={1}>
-														Fecha Publicación
-														<IconButton size="small" onClick={() => handleSort("fechaPublicacion")}>
-															{sortBy === "fechaPublicacion" && sortOrder === "asc" ? <ArrowUp size={16} /> : <ArrowDown size={16} />}
-														</IconButton>
-													</Box>
-												</TableCell>
-												<TableCell>Tribunal</TableCell>
-												<TableCell align="center">Documento</TableCell>
-												<TableCell align="center">Acciones</TableCell>
-											</TableRow>
-										</TableHead>
-										<TableBody>
-											{fallos.map((fallo) => (
-												<TableRow key={fallo._id} hover>
+									<TableContainer>
+										<Table>
+											<TableHead>
+												<TableRow>
 													<TableCell>
-														<Typography variant="body2" fontWeight={600} sx={{ fontVariantNumeric: "tabular-nums" }}>
-															{fallo.codigoCita}
-														</Typography>
-														<Typography variant="caption" color="text.secondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
-															ID: {fallo.elDialId}
-														</Typography>
+														<Box display="flex" alignItems="center" gap={1}>
+															Código Cita
+															<IconButton size="small" onClick={() => handleSort("codigoCita")}>
+																{sortBy === "codigoCita" && sortOrder === "asc" ? <ArrowUp size={16} /> : <ArrowDown size={16} />}
+															</IconButton>
+														</Box>
 													</TableCell>
+													<TableCell>Título</TableCell>
 													<TableCell>
-														<Typography
-															variant="body2"
-															sx={{
-																maxWidth: 400,
-																overflow: "hidden",
-																textOverflow: "ellipsis",
-																whiteSpace: "nowrap",
-															}}
-														>
-															{fallo.tituloCorto || "-"}
-														</Typography>
+														<Box display="flex" alignItems="center" gap={1}>
+															Fecha Publicación
+															<IconButton size="small" onClick={() => handleSort("fechaPublicacion")}>
+																{sortBy === "fechaPublicacion" && sortOrder === "asc" ? <ArrowUp size={16} /> : <ArrowDown size={16} />}
+															</IconButton>
+														</Box>
 													</TableCell>
-													<TableCell>{formatDate(fallo.fechaPublicacion)}</TableCell>
-													<TableCell>
-														<Typography variant="body2">{fallo.tribunal.nombre}</Typography>
-														{fallo.tribunal.sala && (
-															<Typography variant="caption" color="text.secondary">
-																Sala: {fallo.tribunal.sala}
-															</Typography>
-														)}
-													</TableCell>
-													<TableCell align="center">
-														{fallo.urlPdf ? (
-															<Tooltip title="Abrir documento">
-																<IconButton
-																	size="small"
-																	color="primary"
-																	component="a"
-																	href={fallo.urlPdf}
-																	target="_blank"
-																	rel="noopener noreferrer"
-																>
-																	<DocumentText size={20} />
-																</IconButton>
-															</Tooltip>
-														) : (
-															<Typography variant="caption" color="text.secondary">
-																-
-															</Typography>
-														)}
-													</TableCell>
-													<TableCell align="center">
-														<Stack direction="row" spacing={0.5} justifyContent="center">
-															<Tooltip title="Ver detalles">
-																<IconButton size="small" color="success" onClick={() => handleOpenDetallesModal(fallo)}>
-																	<Eye size={18} />
-																</IconButton>
-															</Tooltip>
-															<Tooltip title="Editar">
-																<IconButton size="small" color="primary" onClick={() => handleOpenEditModal(fallo)}>
-																	<Edit size={18} />
-																</IconButton>
-															</Tooltip>
-															<Tooltip title="Comentarios">
-																<IconButton size="small" color="info" onClick={() => handleOpenComentariosModal(fallo)}>
-																	<MessageText size={18} />
-																</IconButton>
-															</Tooltip>
-															<Tooltip title="Eliminar">
-																<IconButton size="small" color="error" onClick={() => handleOpenDeleteDialog(fallo._id)}>
-																	<Trash size={18} />
-																</IconButton>
-															</Tooltip>
-														</Stack>
-													</TableCell>
+													<TableCell>Tribunal</TableCell>
+													<TableCell align="center">Documento</TableCell>
+													<TableCell align="center">Acciones</TableCell>
 												</TableRow>
-											))}
-										</TableBody>
-									</Table>
+											</TableHead>
+											<TableBody>
+												{fallos.map((fallo) => (
+													<TableRow key={fallo._id} hover>
+														<TableCell>
+															<Typography variant="body2" fontWeight={600} sx={{ fontVariantNumeric: "tabular-nums" }}>
+																{fallo.codigoCita}
+															</Typography>
+															<Typography variant="caption" color="text.secondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
+																ID: {fallo.elDialId}
+															</Typography>
+														</TableCell>
+														<TableCell>
+															<Typography
+																variant="body2"
+																sx={{
+																	maxWidth: 400,
+																	overflow: "hidden",
+																	textOverflow: "ellipsis",
+																	whiteSpace: "nowrap",
+																}}
+															>
+																{fallo.tituloCorto || "-"}
+															</Typography>
+														</TableCell>
+														<TableCell>{formatDate(fallo.fechaPublicacion)}</TableCell>
+														<TableCell>
+															<Typography variant="body2">{fallo.tribunal.nombre}</Typography>
+															{fallo.tribunal.sala && (
+																<Typography variant="caption" color="text.secondary">
+																	Sala: {fallo.tribunal.sala}
+																</Typography>
+															)}
+														</TableCell>
+														<TableCell align="center">
+															{fallo.urlPdf ? (
+																<Tooltip title="Abrir documento">
+																	<IconButton
+																		size="small"
+																		color="primary"
+																		component="a"
+																		href={fallo.urlPdf}
+																		target="_blank"
+																		rel="noopener noreferrer"
+																	>
+																		<DocumentText size={20} />
+																	</IconButton>
+																</Tooltip>
+															) : (
+																<Typography variant="caption" color="text.secondary">
+																	-
+																</Typography>
+															)}
+														</TableCell>
+														<TableCell align="center">
+															<Stack direction="row" spacing={0.5} justifyContent="center">
+																<Tooltip title="Ver detalles">
+																	<IconButton size="small" color="success" onClick={() => handleOpenDetallesModal(fallo)}>
+																		<Eye size={18} />
+																	</IconButton>
+																</Tooltip>
+																<Tooltip title="Editar">
+																	<IconButton size="small" color="primary" onClick={() => handleOpenEditModal(fallo)}>
+																		<Edit size={18} />
+																	</IconButton>
+																</Tooltip>
+																<Tooltip title="Comentarios">
+																	<IconButton size="small" color="info" onClick={() => handleOpenComentariosModal(fallo)}>
+																		<MessageText size={18} />
+																	</IconButton>
+																</Tooltip>
+																<Tooltip title="Eliminar">
+																	<IconButton size="small" color="error" onClick={() => handleOpenDeleteDialog(fallo._id)}>
+																		<Trash size={18} />
+																	</IconButton>
+																</Tooltip>
+															</Stack>
+														</TableCell>
+													</TableRow>
+												))}
+											</TableBody>
+										</Table>
+									</TableContainer>
 									<TablePagination
 										component="div"
 										count={totalCount}

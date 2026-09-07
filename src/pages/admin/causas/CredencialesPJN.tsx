@@ -3366,66 +3366,68 @@ const CredencialesPJN = () => {
 									<Typography color="text.secondary">Sin carpetas pjn-login</Typography>
 								</Box>
 							) : (
-								<Table size="small" stickyHeader>
-									<TableHead>
-										<TableRow>
-											<TableCell>Nombre</TableCell>
-											<TableCell>Materia</TableCell>
-											<TableCell>Expediente</TableCell>
-											<TableCell>Tipo</TableCell>
-											<TableCell align="center">Estado</TableCell>
-											<TableCell align="center">Archivado</TableCell>
-											<TableCell>Creado</TableCell>
-										</TableRow>
-									</TableHead>
-									<TableBody>
-										{detailDialog.folders.map((f: any) => (
-											<TableRow key={f._id} hover>
-												<TableCell sx={{ maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-													<Tooltip title={f.folderName}>
-														<span>{f.folderName}</span>
-													</Tooltip>
-												</TableCell>
-												<TableCell sx={{ maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-													<Tooltip title={f.materia}>
-														<span>{f.materia || "-"}</span>
-													</Tooltip>
-												</TableCell>
-												<TableCell>
-													<Typography variant="body2" fontFamily="monospace">
-														{f.judFolder?.numberJudFolder || "-"}
-													</Typography>
-												</TableCell>
-												<TableCell>
-													<Chip label={f.causaType || "-"} size="small" variant="outlined" />
-												</TableCell>
-												<TableCell align="center">
-													<Chip
-														label={f.causaAssociationStatus || "-"}
-														size="small"
-														color={
-															f.causaAssociationStatus === "success"
-																? "success"
-																: f.causaAssociationStatus === "pending"
-																? "warning"
-																: "default"
-														}
-													/>
-												</TableCell>
-												<TableCell align="center">
-													{f.archived ? (
-														<TickCircle size={16} color={theme.palette.warning.main} />
-													) : (
-														<CloseCircle size={16} color={theme.palette.grey[400]} />
-													)}
-												</TableCell>
-												<TableCell>
-													<Typography variant="caption">{formatDate(f.createdAt)}</Typography>
-												</TableCell>
+								<TableContainer>
+									<Table size="small" stickyHeader>
+										<TableHead>
+											<TableRow>
+												<TableCell>Nombre</TableCell>
+												<TableCell>Materia</TableCell>
+												<TableCell>Expediente</TableCell>
+												<TableCell>Tipo</TableCell>
+												<TableCell align="center">Estado</TableCell>
+												<TableCell align="center">Archivado</TableCell>
+												<TableCell>Creado</TableCell>
 											</TableRow>
-										))}
-									</TableBody>
-								</Table>
+										</TableHead>
+										<TableBody>
+											{detailDialog.folders.map((f: any) => (
+												<TableRow key={f._id} hover>
+													<TableCell sx={{ maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+														<Tooltip title={f.folderName}>
+															<span>{f.folderName}</span>
+														</Tooltip>
+													</TableCell>
+													<TableCell sx={{ maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+														<Tooltip title={f.materia}>
+															<span>{f.materia || "-"}</span>
+														</Tooltip>
+													</TableCell>
+													<TableCell>
+														<Typography variant="body2" fontFamily="monospace">
+															{f.judFolder?.numberJudFolder || "-"}
+														</Typography>
+													</TableCell>
+													<TableCell>
+														<Chip label={f.causaType || "-"} size="small" variant="outlined" />
+													</TableCell>
+													<TableCell align="center">
+														<Chip
+															label={f.causaAssociationStatus || "-"}
+															size="small"
+															color={
+																f.causaAssociationStatus === "success"
+																	? "success"
+																	: f.causaAssociationStatus === "pending"
+																	? "warning"
+																	: "default"
+															}
+														/>
+													</TableCell>
+													<TableCell align="center">
+														{f.archived ? (
+															<TickCircle size={16} color={theme.palette.warning.main} />
+														) : (
+															<CloseCircle size={16} color={theme.palette.grey[400]} />
+														)}
+													</TableCell>
+													<TableCell>
+														<Typography variant="caption">{formatDate(f.createdAt)}</Typography>
+													</TableCell>
+												</TableRow>
+											))}
+										</TableBody>
+									</Table>
+								</TableContainer>
 							)}
 						</Box>
 					)}
@@ -3442,56 +3444,58 @@ const CredencialesPJN = () => {
 									<Typography color="text.secondary">Sin causas sincronizadas</Typography>
 								</Box>
 							) : (
-								<Table size="small" stickyHeader>
-									<TableHead>
-										<TableRow>
-											<TableCell>Expediente</TableCell>
-											<TableCell>Fuero</TableCell>
-											<TableCell>Carátula</TableCell>
-											<TableCell>Objeto</TableCell>
-											<TableCell align="center">Source</TableCell>
-											<TableCell align="right">Movimientos</TableCell>
-											<TableCell>Último mov.</TableCell>
-										</TableRow>
-									</TableHead>
-									<TableBody>
-										{detailDialog.causas.map((c) => (
-											<TableRow key={c._id} hover>
-												<TableCell>
-													<Typography variant="body2" fontFamily="monospace">
-														{c.number}/{c.year}
-														{c.incidente ? `/${c.incidente}` : ""}
-													</Typography>
-												</TableCell>
-												<TableCell>
-													<Chip label={c.fuero} size="small" variant="outlined" />
-												</TableCell>
-												<TableCell sx={{ maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-													<Tooltip title={c.caratula}>
-														<span>{c.caratula}</span>
-													</Tooltip>
-												</TableCell>
-												<TableCell sx={{ maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-													<Tooltip title={c.objeto}>
-														<span>{c.objeto || "-"}</span>
-													</Tooltip>
-												</TableCell>
-												<TableCell align="center">
-													<Chip
-														label={c.source}
-														size="small"
-														color={c.source === "pjn-login" ? "primary" : "default"}
-														variant={c.source === "pjn-login" ? "filled" : "outlined"}
-													/>
-												</TableCell>
-												<TableCell align="right">{c.movimientosCount ?? "-"}</TableCell>
-												<TableCell>
-													<Typography variant="caption">{c.fechaUltimoMovimiento ? formatDate(c.fechaUltimoMovimiento) : "-"}</Typography>
-												</TableCell>
+								<TableContainer>
+									<Table size="small" stickyHeader>
+										<TableHead>
+											<TableRow>
+												<TableCell>Expediente</TableCell>
+												<TableCell>Fuero</TableCell>
+												<TableCell>Carátula</TableCell>
+												<TableCell>Objeto</TableCell>
+												<TableCell align="center">Source</TableCell>
+												<TableCell align="right">Movimientos</TableCell>
+												<TableCell>Último mov.</TableCell>
 											</TableRow>
-										))}
-									</TableBody>
-								</Table>
+										</TableHead>
+										<TableBody>
+											{detailDialog.causas.map((c) => (
+												<TableRow key={c._id} hover>
+													<TableCell>
+														<Typography variant="body2" fontFamily="monospace">
+															{c.number}/{c.year}
+															{c.incidente ? `/${c.incidente}` : ""}
+														</Typography>
+													</TableCell>
+													<TableCell>
+														<Chip label={c.fuero} size="small" variant="outlined" />
+													</TableCell>
+													<TableCell sx={{ maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+														<Tooltip title={c.caratula}>
+															<span>{c.caratula}</span>
+														</Tooltip>
+													</TableCell>
+													<TableCell sx={{ maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+														<Tooltip title={c.objeto}>
+															<span>{c.objeto || "-"}</span>
+														</Tooltip>
+													</TableCell>
+													<TableCell align="center">
+														<Chip
+															label={c.source}
+															size="small"
+															color={c.source === "pjn-login" ? "primary" : "default"}
+															variant={c.source === "pjn-login" ? "filled" : "outlined"}
+														/>
+													</TableCell>
+													<TableCell align="right">{c.movimientosCount ?? "-"}</TableCell>
+													<TableCell>
+														<Typography variant="caption">{c.fechaUltimoMovimiento ? formatDate(c.fechaUltimoMovimiento) : "-"}</Typography>
+													</TableCell>
+												</TableRow>
+											))}
+										</TableBody>
+									</Table>
+								</TableContainer>
 							)}
 						</Box>
 					)}

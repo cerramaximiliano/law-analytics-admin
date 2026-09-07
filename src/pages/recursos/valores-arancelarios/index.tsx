@@ -156,30 +156,32 @@ const FilaJurisdiccion = ({ fila, sincronizando, onSync }: FilaProps) => {
 									<CircularProgress size={22} />
 								</Stack>
 							) : (
-								<Table size="small">
-									<TableHead>
-										<TableRow>
-											<TableCell>Período</TableCell>
-											<TableCell align="right">Valor</TableCell>
-											<TableCell>Vigente desde</TableCell>
-											<TableCell>Norma</TableCell>
-											<TableCell>Publicada</TableCell>
-										</TableRow>
-									</TableHead>
-									<TableBody>
-										{serie.map((v) => (
-											<TableRow key={v._id} hover>
-												<TableCell>{v.periodo}</TableCell>
-												<TableCell align="right">{pesos(v.valor)}</TableCell>
-												<TableCell>{fecha(v.vigenciaDesde)}</TableCell>
-												<TableCell>
-													<Typography variant="caption">{v.norma ?? "—"}</Typography>
-												</TableCell>
-												<TableCell>{v.fechaPublicacion ? fecha(v.fechaPublicacion) : "—"}</TableCell>
+								<TableContainer>
+									<Table size="small">
+										<TableHead>
+											<TableRow>
+												<TableCell>Período</TableCell>
+												<TableCell align="right">Valor</TableCell>
+												<TableCell>Vigente desde</TableCell>
+												<TableCell>Norma</TableCell>
+												<TableCell>Publicada</TableCell>
 											</TableRow>
-										))}
-									</TableBody>
-								</Table>
+										</TableHead>
+										<TableBody>
+											{serie.map((v) => (
+												<TableRow key={v._id} hover>
+													<TableCell>{v.periodo}</TableCell>
+													<TableCell align="right">{pesos(v.valor)}</TableCell>
+													<TableCell>{fecha(v.vigenciaDesde)}</TableCell>
+													<TableCell>
+														<Typography variant="caption">{v.norma ?? "—"}</Typography>
+													</TableCell>
+													<TableCell>{v.fechaPublicacion ? fecha(v.fechaPublicacion) : "—"}</TableCell>
+												</TableRow>
+											))}
+										</TableBody>
+									</Table>
+								</TableContainer>
 							)}
 						</Box>
 					</Collapse>

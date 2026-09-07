@@ -15,6 +15,7 @@ import {
 	Table,
 	TableBody,
 	TableCell,
+	TableContainer,
 	TableHead,
 	TableRow,
 	Tab,
@@ -427,97 +428,99 @@ export default function UserViewGuide() {
 								Combinaciones reales de campos → fila que ve el usuario
 							</Typography>
 							<Box sx={{ overflowX: "auto" }}>
-								<Table size="small">
-									<TableHead>
-										<TableRow>
-											<TableCell sx={{ width: 36 }} />
-											<TableCell>Fila que ve el usuario</TableCell>
-											<TableCell>Detalle</TableCell>
-											<TableCell align="right">Carpetas</TableCell>
-											<TableCell align="right">%</TableCell>
-											<TableCell align="right">Usuarios</TableCell>
-											<TableCell>Anomalías</TableCell>
-											<TableCell align="center">Ver</TableCell>
-										</TableRow>
-									</TableHead>
-									<TableBody>
-										{combos.map((c, i) => {
-											const rowKey = c.view.hiddenFromList ? "hidden_archived" : c.view.list;
-											const gate = c.view.detail.gate || "none";
-											const open = !!expanded[i];
-											return (
-												<Fragment key={i}>
-													<TableRow hover sx={{ "& td": { borderBottom: open ? "none" : undefined } }}>
-														<TableCell>
-															<IconButton size="small" onClick={() => setExpanded((p) => ({ ...p, [i]: !open }))}>
-																{open ? <ArrowUp2 size={14} /> : <ArrowDown2 size={14} />}
-															</IconButton>
-														</TableCell>
-														<TableCell sx={{ minWidth: 340 }}>
-															<Box sx={{ opacity: c.view.hiddenFromList ? 0.45 : 1 }}>
-																<ListRowReplica entry={comboToEntry(c)} />
-															</Box>
-															<Typography variant="caption" color="text.secondary">
-																{ROW_LABEL[rowKey] || rowKey}
-															</Typography>
-														</TableCell>
-														<TableCell>
-															<Chip
-																size="small"
-																variant="outlined"
-																color={gate === "none" ? "default" : "warning"}
-																label={GATE_LABEL[gate] || gate}
-															/>
-														</TableCell>
-														<TableCell align="right" sx={{ fontVariantNumeric: "tabular-nums" }}>
-															{c.n}
-														</TableCell>
-														<TableCell align="right" sx={{ fontVariantNumeric: "tabular-nums" }}>
-															{c.pct}%
-														</TableCell>
-														<TableCell align="right">{c.users}</TableCell>
-														<TableCell sx={{ maxWidth: 360 }}>
-															{c.flags.length === 0 ? (
-																<Typography variant="caption" color="text.disabled">
-																	—
-																</Typography>
-															) : (
-																<Stack spacing={0.25}>
-																	{c.flags.map((f) => (
-																		<Stack key={f} direction="row" spacing={0.5} alignItems="flex-start">
-																			<Warning2 size={12} variant="Bold" color={STALE_AMBER} style={{ flexShrink: 0, marginTop: 2 }} />
-																			<Typography variant="caption" sx={{ lineHeight: 1.3 }}>
-																				{f}
-																			</Typography>
-																		</Stack>
-																	))}
-																</Stack>
-															)}
-														</TableCell>
-														<TableCell align="center">
-															{c.sampleFolderId && (
-																<Tooltip title="Abrir vista del usuario de una carpeta de ejemplo con esta combinación">
-																	<IconButton size="small" onClick={() => setViewFolderId(c.sampleFolderId)}>
-																		<UserSquare size={16} />
-																	</IconButton>
-																</Tooltip>
-															)}
-														</TableCell>
-													</TableRow>
-													<TableRow>
-														<TableCell colSpan={8} sx={{ py: 0, borderBottom: open ? undefined : "none" }}>
-															<Collapse in={open} unmountOnExit>
-																<Box sx={{ py: 1 }}>
-																	<ComboTuple k={c.key} />
+								<TableContainer>
+									<Table size="small">
+										<TableHead>
+											<TableRow>
+												<TableCell sx={{ width: 36 }} />
+												<TableCell>Fila que ve el usuario</TableCell>
+												<TableCell>Detalle</TableCell>
+												<TableCell align="right">Carpetas</TableCell>
+												<TableCell align="right">%</TableCell>
+												<TableCell align="right">Usuarios</TableCell>
+												<TableCell>Anomalías</TableCell>
+												<TableCell align="center">Ver</TableCell>
+											</TableRow>
+										</TableHead>
+										<TableBody>
+											{combos.map((c, i) => {
+												const rowKey = c.view.hiddenFromList ? "hidden_archived" : c.view.list;
+												const gate = c.view.detail.gate || "none";
+												const open = !!expanded[i];
+												return (
+													<Fragment key={i}>
+														<TableRow hover sx={{ "& td": { borderBottom: open ? "none" : undefined } }}>
+															<TableCell>
+																<IconButton size="small" onClick={() => setExpanded((p) => ({ ...p, [i]: !open }))}>
+																	{open ? <ArrowUp2 size={14} /> : <ArrowDown2 size={14} />}
+																</IconButton>
+															</TableCell>
+															<TableCell sx={{ minWidth: 340 }}>
+																<Box sx={{ opacity: c.view.hiddenFromList ? 0.45 : 1 }}>
+																	<ListRowReplica entry={comboToEntry(c)} />
 																</Box>
-															</Collapse>
-														</TableCell>
-													</TableRow>
-												</Fragment>
-											);
-										})}
-									</TableBody>
-								</Table>
+																<Typography variant="caption" color="text.secondary">
+																	{ROW_LABEL[rowKey] || rowKey}
+																</Typography>
+															</TableCell>
+															<TableCell>
+																<Chip
+																	size="small"
+																	variant="outlined"
+																	color={gate === "none" ? "default" : "warning"}
+																	label={GATE_LABEL[gate] || gate}
+																/>
+															</TableCell>
+															<TableCell align="right" sx={{ fontVariantNumeric: "tabular-nums" }}>
+																{c.n}
+															</TableCell>
+															<TableCell align="right" sx={{ fontVariantNumeric: "tabular-nums" }}>
+																{c.pct}%
+															</TableCell>
+															<TableCell align="right">{c.users}</TableCell>
+															<TableCell sx={{ maxWidth: 360 }}>
+																{c.flags.length === 0 ? (
+																	<Typography variant="caption" color="text.disabled">
+																		—
+																	</Typography>
+																) : (
+																	<Stack spacing={0.25}>
+																		{c.flags.map((f) => (
+																			<Stack key={f} direction="row" spacing={0.5} alignItems="flex-start">
+																				<Warning2 size={12} variant="Bold" color={STALE_AMBER} style={{ flexShrink: 0, marginTop: 2 }} />
+																				<Typography variant="caption" sx={{ lineHeight: 1.3 }}>
+																					{f}
+																				</Typography>
+																			</Stack>
+																		))}
+																	</Stack>
+																)}
+															</TableCell>
+															<TableCell align="center">
+																{c.sampleFolderId && (
+																	<Tooltip title="Abrir vista del usuario de una carpeta de ejemplo con esta combinación">
+																		<IconButton size="small" onClick={() => setViewFolderId(c.sampleFolderId)}>
+																			<UserSquare size={16} />
+																		</IconButton>
+																	</Tooltip>
+																)}
+															</TableCell>
+														</TableRow>
+														<TableRow>
+															<TableCell colSpan={8} sx={{ py: 0, borderBottom: open ? undefined : "none" }}>
+																<Collapse in={open} unmountOnExit>
+																	<Box sx={{ py: 1 }}>
+																		<ComboTuple k={c.key} />
+																	</Box>
+																</Collapse>
+															</TableCell>
+														</TableRow>
+													</Fragment>
+												);
+											})}
+										</TableBody>
+									</Table>
+								</TableContainer>
 							</Box>
 						</Box>
 					</Stack>

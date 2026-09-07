@@ -517,46 +517,48 @@ const ContactDetailModal: React.FC<ContactDetailModalProps> = ({ open, onClose, 
 									</Box>
 									<Divider sx={{ mb: 2 }} />
 									<Box sx={{ mb: 3 }}>
-										<Table size="small">
-											<TableHead>
-												<TableRow>
-													<TableCell width={40} />
-													<TableCell>ID Campaña</TableCell>
-													<TableCell>Estado</TableCell>
-													<TableCell>Paso Actual</TableCell>
-													<TableCell>Fecha de Ingreso</TableCell>
-													<TableCell align="center">Acciones</TableCell>
-												</TableRow>
-											</TableHead>
-											<TableBody>
-												{[...Array(2)].map((_, index) => (
-													<TableRow key={index}>
-														<TableCell>
-															<Skeleton variant="circular" width={24} height={24} />
-														</TableCell>
-														<TableCell>
-															<Skeleton variant="text" width={100} />
-														</TableCell>
-														<TableCell>
-															<Skeleton variant="rectangular" width={60} height={22} sx={{ borderRadius: 10 }} />
-														</TableCell>
-														<TableCell>
-															<Skeleton variant="text" width={20} />
-														</TableCell>
-														<TableCell>
-															<Skeleton variant="text" width={120} />
-														</TableCell>
-														<TableCell align="center">
-															<Stack direction="row" spacing={0.5} justifyContent="center">
-																<Skeleton variant="circular" width={32} height={32} />
-																<Skeleton variant="circular" width={32} height={32} />
-																<Skeleton variant="circular" width={32} height={32} />
-															</Stack>
-														</TableCell>
+										<TableContainer>
+											<Table size="small">
+												<TableHead>
+													<TableRow>
+														<TableCell width={40} />
+														<TableCell>ID Campaña</TableCell>
+														<TableCell>Estado</TableCell>
+														<TableCell>Paso Actual</TableCell>
+														<TableCell>Fecha de Ingreso</TableCell>
+														<TableCell align="center">Acciones</TableCell>
 													</TableRow>
-												))}
-											</TableBody>
-										</Table>
+												</TableHead>
+												<TableBody>
+													{[...Array(2)].map((_, index) => (
+														<TableRow key={index}>
+															<TableCell>
+																<Skeleton variant="circular" width={24} height={24} />
+															</TableCell>
+															<TableCell>
+																<Skeleton variant="text" width={100} />
+															</TableCell>
+															<TableCell>
+																<Skeleton variant="rectangular" width={60} height={22} sx={{ borderRadius: 10 }} />
+															</TableCell>
+															<TableCell>
+																<Skeleton variant="text" width={20} />
+															</TableCell>
+															<TableCell>
+																<Skeleton variant="text" width={120} />
+															</TableCell>
+															<TableCell align="center">
+																<Stack direction="row" spacing={0.5} justifyContent="center">
+																	<Skeleton variant="circular" width={32} height={32} />
+																	<Skeleton variant="circular" width={32} height={32} />
+																	<Skeleton variant="circular" width={32} height={32} />
+																</Stack>
+															</TableCell>
+														</TableRow>
+													))}
+												</TableBody>
+											</Table>
+										</TableContainer>
 									</Box>
 								</Grid>
 
@@ -1009,199 +1011,304 @@ const ContactDetailModal: React.FC<ContactDetailModalProps> = ({ open, onClose, 
 											contact.campaigns.length > 0 &&
 											typeof contact.campaigns[0] === "object" ? (
 												<Box sx={{ mb: 3 }}>
-													<Table size="small">
-														<TableHead>
-															<TableRow>
-																<TableCell width={40} />
-																<TableCell>ID Campaña</TableCell>
-																<TableCell>Estado</TableCell>
-																<TableCell>Paso Actual</TableCell>
-																<TableCell>Fecha de Ingreso</TableCell>
-																<TableCell align="center">Acciones</TableCell>
-															</TableRow>
-														</TableHead>
-														<TableBody>
-															{contact.campaigns.map((campaign: any, index: number) => (
-																<React.Fragment key={index}>
-																	<TableRow>
-																		<TableCell>
-																			<Tooltip title={expandedRows.has(campaign.campaignId) ? "Ocultar progreso" : "Ver progreso"}>
-																				<IconButton size="small" onClick={() => handleToggleExpand(campaign.campaignId)}>
-																					{expandedRows.has(campaign.campaignId) ? <ArrowUp2 size={16} /> : <ArrowDown2 size={16} />}
-																				</IconButton>
-																			</Tooltip>
-																		</TableCell>
-																		<TableCell>
-																			<Button
-																				color="primary"
-																				size="small"
-																				onClick={() => {
-																					setSelectedCampaignId(campaign.campaignId);
-																					setCampaignModalOpen(true);
-																				}}
-																			>
-																				{campaign.campaignId.substring(0, 8)}...
-																			</Button>
-																		</TableCell>
-																		<TableCell>
-																			<Box>
-																				<Chip
-																					label={campaign.status}
-																					color={
-																						campaign.status === "active"
-																							? "success"
-																							: campaign.status === "completed"
-																							? "info"
-																							: campaign.status === "paused"
-																							? "warning"
-																							: "default"
-																					}
+													<TableContainer>
+														<Table size="small">
+															<TableHead>
+																<TableRow>
+																	<TableCell width={40} />
+																	<TableCell>ID Campaña</TableCell>
+																	<TableCell>Estado</TableCell>
+																	<TableCell>Paso Actual</TableCell>
+																	<TableCell>Fecha de Ingreso</TableCell>
+																	<TableCell align="center">Acciones</TableCell>
+																</TableRow>
+															</TableHead>
+															<TableBody>
+																{contact.campaigns.map((campaign: any, index: number) => (
+																	<React.Fragment key={index}>
+																		<TableRow>
+																			<TableCell>
+																				<Tooltip title={expandedRows.has(campaign.campaignId) ? "Ocultar progreso" : "Ver progreso"}>
+																					<IconButton size="small" onClick={() => handleToggleExpand(campaign.campaignId)}>
+																						{expandedRows.has(campaign.campaignId) ? <ArrowUp2 size={16} /> : <ArrowDown2 size={16} />}
+																					</IconButton>
+																				</Tooltip>
+																			</TableCell>
+																			<TableCell>
+																				<Button
+																					color="primary"
 																					size="small"
-																					variant="outlined"
-																				/>
-																				{/* Mostrar razón de completado */}
-																				{campaign.status === "completed" && (
-																					<Typography
-																						variant="caption"
+																					onClick={() => {
+																						setSelectedCampaignId(campaign.campaignId);
+																						setCampaignModalOpen(true);
+																					}}
+																				>
+																					{campaign.campaignId.substring(0, 8)}...
+																				</Button>
+																			</TableCell>
+																			<TableCell>
+																				<Box>
+																					<Chip
+																						label={campaign.status}
 																						color={
-																							campaign.completionReason === "finished"
-																								? "success.main"
-																								: campaign.completionReason === "unsubscribed"
-																								? "warning.main"
-																								: campaign.completionReason === "bounced" || campaign.completionReason === "complained"
-																								? "error.main"
-																								: "textSecondary"
+																							campaign.status === "active"
+																								? "success"
+																								: campaign.status === "completed"
+																								? "info"
+																								: campaign.status === "paused"
+																								? "warning"
+																								: "default"
 																						}
-																						display="block"
-																						sx={{ mt: 0.5 }}
-																					>
-																						{campaign.completionReason === "finished"
-																							? `Completado: ${formatDate(campaign.completedAt)}`
-																							: campaign.completionReason === "unsubscribed"
-																							? "Desuscripción"
-																							: campaign.completionReason === "bounced"
-																							? "Email rebotado"
-																							: campaign.completionReason === "complained"
-																							? "Marcado como spam"
-																							: campaign.completionReason === "manual"
-																							? "Completado manualmente"
-																							: campaign.completedAt
-																							? `Completado: ${formatDate(campaign.completedAt)}`
-																							: "Sin información"}
-																					</Typography>
-																				)}
-																			</Box>
-																		</TableCell>
-																		<TableCell>{campaign.currentStep !== undefined ? campaign.currentStep : "-"}</TableCell>
-																		<TableCell>{formatDate(campaign.joinedAt)}</TableCell>
-																		<TableCell align="center">
-																			<Stack direction="row" spacing={0.5} justifyContent="center">
-																				{campaign.status === "active" ? (
-																					<>
-																						<Tooltip title="Resetear campaña al paso inicial">
-																							<IconButton size="small" onClick={() => handleResetCampaign(campaign.campaignId)}>
-																								<Refresh size={18} />
-																							</IconButton>
-																						</Tooltip>
-																						<Tooltip title="Pausar contacto en la campaña">
+																						size="small"
+																						variant="outlined"
+																					/>
+																					{/* Mostrar razón de completado */}
+																					{campaign.status === "completed" && (
+																						<Typography
+																							variant="caption"
+																							color={
+																								campaign.completionReason === "finished"
+																									? "success.main"
+																									: campaign.completionReason === "unsubscribed"
+																									? "warning.main"
+																									: campaign.completionReason === "bounced" || campaign.completionReason === "complained"
+																									? "error.main"
+																									: "textSecondary"
+																							}
+																							display="block"
+																							sx={{ mt: 0.5 }}
+																						>
+																							{campaign.completionReason === "finished"
+																								? `Completado: ${formatDate(campaign.completedAt)}`
+																								: campaign.completionReason === "unsubscribed"
+																								? "Desuscripción"
+																								: campaign.completionReason === "bounced"
+																								? "Email rebotado"
+																								: campaign.completionReason === "complained"
+																								? "Marcado como spam"
+																								: campaign.completionReason === "manual"
+																								? "Completado manualmente"
+																								: campaign.completedAt
+																								? `Completado: ${formatDate(campaign.completedAt)}`
+																								: "Sin información"}
+																						</Typography>
+																					)}
+																				</Box>
+																			</TableCell>
+																			<TableCell>{campaign.currentStep !== undefined ? campaign.currentStep : "-"}</TableCell>
+																			<TableCell>{formatDate(campaign.joinedAt)}</TableCell>
+																			<TableCell align="center">
+																				<Stack direction="row" spacing={0.5} justifyContent="center">
+																					{campaign.status === "active" ? (
+																						<>
+																							<Tooltip title="Resetear campaña al paso inicial">
+																								<IconButton size="small" onClick={() => handleResetCampaign(campaign.campaignId)}>
+																									<Refresh size={18} />
+																								</IconButton>
+																							</Tooltip>
+																							<Tooltip title="Pausar contacto en la campaña">
+																								<IconButton
+																									size="small"
+																									onClick={() => handleActionClick(campaign.campaignId, "pause")}
+																									color="warning"
+																								>
+																									<Pause size={18} />
+																								</IconButton>
+																							</Tooltip>
+																							<Tooltip title="Eliminar contacto de la campaña">
+																								<IconButton
+																									size="small"
+																									onClick={() => handleActionClick(campaign.campaignId, "remove")}
+																									color="error"
+																								>
+																									<Trash size={18} />
+																								</IconButton>
+																							</Tooltip>
+																						</>
+																					) : campaign.status === "paused" && contact?.status === "active" ? (
+																						<Tooltip title="Reactivar contacto en la campaña">
 																							<IconButton
 																								size="small"
-																								onClick={() => handleActionClick(campaign.campaignId, "pause")}
-																								color="warning"
+																								onClick={() => handleActionClick(campaign.campaignId, "resume")}
+																								color="success"
 																							>
-																								<Pause size={18} />
+																								<Play size={18} />
 																							</IconButton>
 																						</Tooltip>
-																						<Tooltip title="Eliminar contacto de la campaña">
+																					) : campaign.status === "completed" && contact?.status === "active" ? (
+																						<Tooltip title="Reactivar campaña completada (reiniciar secuencia de emails)">
 																							<IconButton
 																								size="small"
-																								onClick={() => handleActionClick(campaign.campaignId, "remove")}
-																								color="error"
+																								onClick={() => handleActionClick(campaign.campaignId, "resume")}
+																								color="info"
 																							>
-																								<Trash size={18} />
+																								<Play size={18} />
 																							</IconButton>
 																						</Tooltip>
-																					</>
-																				) : campaign.status === "paused" && contact?.status === "active" ? (
-																					<Tooltip title="Reactivar contacto en la campaña">
-																						<IconButton
-																							size="small"
-																							onClick={() => handleActionClick(campaign.campaignId, "resume")}
-																							color="success"
-																						>
-																							<Play size={18} />
-																						</IconButton>
-																					</Tooltip>
-																				) : campaign.status === "completed" && contact?.status === "active" ? (
-																					<Tooltip title="Reactivar campaña completada (reiniciar secuencia de emails)">
-																						<IconButton
-																							size="small"
-																							onClick={() => handleActionClick(campaign.campaignId, "resume")}
-																							color="info"
-																						>
-																							<Play size={18} />
-																						</IconButton>
-																					</Tooltip>
-																				) : null}
-																			</Stack>
-																		</TableCell>
-																	</TableRow>
-																	<TableRow>
-																		<TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
-																			<Collapse in={expandedRows.has(campaign.campaignId)} timeout="auto" unmountOnExit>
-																				<Box sx={{ margin: 2 }}>
-																					{progressLoading[campaign.campaignId] ? (
-																						<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", py: 2 }}>
-																							<CircularProgress size={24} />
-																						</Box>
-																					) : campaignProgress[campaign.campaignId] ? (
-																						<Grid container spacing={2}>
-																							{/* Header with Campaign Name and Type */}
-																							<Grid item xs={12}>
-																								<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
-																									<Typography variant="subtitle2" fontWeight="bold">
-																										{campaignProgress[campaign.campaignId].campaign.name}
-																									</Typography>
-																									<Chip
-																										label={
-																											campaignProgress[campaign.campaignId].campaign.type === "automated"
-																												? "Automatizada"
-																												: "Manual"
-																										}
-																										size="small"
-																										color={
-																											campaignProgress[campaign.campaignId].campaign.type === "automated"
-																												? "primary"
-																												: "default"
-																										}
-																									/>
-																								</Box>
-																								<Divider />
-																							</Grid>
-
-																							{/* Progress Bar */}
-																							<Grid item xs={12}>
-																								<Box sx={{ mb: 1 }}>
-																									<Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.5 }}>
-																										<Typography variant="body2" color="textSecondary">
-																											Progreso
+																					) : null}
+																				</Stack>
+																			</TableCell>
+																		</TableRow>
+																		<TableRow>
+																			<TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
+																				<Collapse in={expandedRows.has(campaign.campaignId)} timeout="auto" unmountOnExit>
+																					<Box sx={{ margin: 2 }}>
+																						{progressLoading[campaign.campaignId] ? (
+																							<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", py: 2 }}>
+																								<CircularProgress size={24} />
+																							</Box>
+																						) : campaignProgress[campaign.campaignId] ? (
+																							<Grid container spacing={2}>
+																								{/* Header with Campaign Name and Type */}
+																								<Grid item xs={12}>
+																									<Box
+																										sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}
+																									>
+																										<Typography variant="subtitle2" fontWeight="bold">
+																											{campaignProgress[campaign.campaignId].campaign.name}
 																										</Typography>
-																										<Typography variant="body2" fontWeight="medium">
-																											{campaignProgress[campaign.campaignId].progress.currentStep} de{" "}
-																											{campaignProgress[campaign.campaignId].campaign.totalEmails} emails
-																											{campaignProgress[campaign.campaignId].campaign.activeEmails <
-																												campaignProgress[campaign.campaignId].campaign.totalEmails && (
-																												<Typography component="span" variant="caption" color="textSecondary">
-																													{" "}
-																													({campaignProgress[campaign.campaignId].campaign.activeEmails} activos)
-																												</Typography>
-																											)}
-																										</Typography>
+																										<Chip
+																											label={
+																												campaignProgress[campaign.campaignId].campaign.type === "automated"
+																													? "Automatizada"
+																													: "Manual"
+																											}
+																											size="small"
+																											color={
+																												campaignProgress[campaign.campaignId].campaign.type === "automated"
+																													? "primary"
+																													: "default"
+																											}
+																										/>
 																									</Box>
+																									<Divider />
+																								</Grid>
 
-																									{/* Enhanced Progress Bar with Sequence Map */}
-																									{campaignProgress[campaign.campaignId].campaign.sequenceMap ? (
-																										<Box sx={{ position: "relative", mb: 2 }}>
+																								{/* Progress Bar */}
+																								<Grid item xs={12}>
+																									<Box sx={{ mb: 1 }}>
+																										<Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.5 }}>
+																											<Typography variant="body2" color="textSecondary">
+																												Progreso
+																											</Typography>
+																											<Typography variant="body2" fontWeight="medium">
+																												{campaignProgress[campaign.campaignId].progress.currentStep} de{" "}
+																												{campaignProgress[campaign.campaignId].campaign.totalEmails} emails
+																												{campaignProgress[campaign.campaignId].campaign.activeEmails <
+																													campaignProgress[campaign.campaignId].campaign.totalEmails && (
+																													<Typography component="span" variant="caption" color="textSecondary">
+																														{" "}
+																														({campaignProgress[campaign.campaignId].campaign.activeEmails} activos)
+																													</Typography>
+																												)}
+																											</Typography>
+																										</Box>
+
+																										{/* Enhanced Progress Bar with Sequence Map */}
+																										{campaignProgress[campaign.campaignId].campaign.sequenceMap ? (
+																											<Box sx={{ position: "relative", mb: 2 }}>
+																												<LinearProgress
+																													variant="determinate"
+																													value={
+																														(campaignProgress[campaign.campaignId].progress.currentStep /
+																															campaignProgress[campaign.campaignId].campaign.totalEmails) *
+																														100
+																													}
+																													sx={{ height: 8, borderRadius: 1 }}
+																												/>
+
+																												{/* Sequence indicators */}
+																												<Box
+																													sx={{
+																														position: "absolute",
+																														top: 0,
+																														left: 0,
+																														right: 0,
+																														height: "100%",
+																														display: "flex",
+																														alignItems: "center",
+																													}}
+																												>
+																													{campaignProgress[campaign.campaignId].campaign.sequenceMap.map(
+																														(email: any, index: number) => {
+																															const position =
+																																((index + 1) / campaignProgress[campaign.campaignId].campaign.totalEmails) *
+																																100;
+																															return (
+																																<Tooltip
+																																	key={index}
+																																	title={
+																																		<Box>
+																																			<Typography variant="caption" display="block">
+																																				{email.name}
+																																			</Typography>
+																																			<Typography variant="caption" display="block">
+																																				Estado:{" "}
+																																				{email.status === "active"
+																																					? "Activo"
+																																					: email.status === "paused"
+																																					? "Pausado"
+																																					: email.status === "draft"
+																																					? "Borrador"
+																																					: email.status}
+																																			</Typography>
+																																			{email.willBlock && (
+																																				<Typography variant="caption" color="warning.light" display="block">
+																																					⚠️ Bloqueará el progreso
+																																				</Typography>
+																																			)}
+																																		</Box>
+																																	}
+																																>
+																																	<Box
+																																		sx={{
+																																			position: "absolute",
+																																			left: `${position}%`,
+																																			transform: "translateX(-50%)",
+																																			width: 2,
+																																			height: 12,
+																																			bgcolor: email.isActive ? "success.main" : "error.main",
+																																			borderRadius: 1,
+																																			opacity: 0.8,
+																																			cursor: "pointer",
+																																			"&:hover": { opacity: 1, height: 16 },
+																																		}}
+																																	/>
+																																</Tooltip>
+																															);
+																														},
+																													)}
+																												</Box>
+
+																												{/* Blocked indicator */}
+																												{campaignProgress[campaign.campaignId].progress.blockedAt !== null && (
+																													<Tooltip
+																														title={`La campaña se detendrá aquí porque el email #${
+																															campaignProgress[campaign.campaignId].progress.blockedAt + 1
+																														} no está activo`}
+																														placement="top"
+																													>
+																														<Box
+																															sx={{
+																																position: "absolute",
+																																left: `${
+																																	((campaignProgress[campaign.campaignId].progress.blockedAt + 0.5) /
+																																		campaignProgress[campaign.campaignId].campaign.totalEmails) *
+																																	100
+																																}%`,
+																																transform: "translateX(-50%)",
+																																top: -4,
+																																bottom: -4,
+																																width: 2,
+																																bgcolor: "warning.main",
+																																boxShadow: "0 0 4px rgba(255, 152, 0, 0.5)",
+																																cursor: "help",
+																															}}
+																														/>
+																													</Tooltip>
+																												)}
+																											</Box>
+																										) : (
 																											<LinearProgress
 																												variant="determinate"
 																												value={
@@ -1209,262 +1316,173 @@ const ContactDetailModal: React.FC<ContactDetailModalProps> = ({ open, onClose, 
 																														campaignProgress[campaign.campaignId].campaign.totalEmails) *
 																													100
 																												}
-																												sx={{ height: 8, borderRadius: 1 }}
+																												sx={{ height: 6, borderRadius: 1 }}
 																											/>
+																										)}
 
-																											{/* Sequence indicators */}
-																											<Box
+																										{/* Legend */}
+																										{campaignProgress[campaign.campaignId].campaign.sequenceMap && (
+																											<Box sx={{ display: "flex", gap: 2, mt: 1, flexWrap: "wrap" }}>
+																												<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+																													<Box sx={{ width: 12, height: 4, bgcolor: "success.main", borderRadius: 0.5 }} />
+																													<Typography variant="caption" color="textSecondary">
+																														Activo
+																													</Typography>
+																												</Box>
+																												<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+																													<Box sx={{ width: 12, height: 4, bgcolor: "error.main", borderRadius: 0.5 }} />
+																													<Typography variant="caption" color="textSecondary">
+																														Inactivo
+																													</Typography>
+																												</Box>
+																												{campaignProgress[campaign.campaignId].progress.blockedAt !== null && (
+																													<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+																														<Box
+																															sx={{ width: 2, height: 12, bgcolor: "warning.main", borderRadius: 0.5 }}
+																														/>
+																														<Typography variant="caption" color="textSecondary">
+																															Se detendrá aquí (email #
+																															{campaignProgress[campaign.campaignId].progress.blockedAt + 1} no activo)
+																														</Typography>
+																													</Box>
+																												)}
+																											</Box>
+																										)}
+																									</Box>
+																								</Grid>
+
+																								{/* Compact Info Grid */}
+																								<Grid item xs={12}>
+																									<Box sx={{ display: "flex", flexWrap: "wrap", gap: { xs: 1.5, sm: 2, md: 3 } }}>
+																										<Box>
+																											<Typography variant="caption" color="textSecondary">
+																												Última actividad
+																											</Typography>
+																											<Typography variant="body2">
+																												{campaignProgress[campaign.campaignId].progress.lastStepTime
+																													? formatDate(campaignProgress[campaign.campaignId].progress.lastStepTime)
+																													: "N/A"}
+																											</Typography>
+																										</Box>
+																									</Box>
+																								</Grid>
+
+																								{/* Next Email Info */}
+																								{campaignProgress[campaign.campaignId].progress.nextEmail &&
+																									campaignProgress[campaign.campaignId].progress.status === "active" && (
+																										<Grid item xs={12}>
+																											<Alert
+																												severity={
+																													campaignProgress[campaign.campaignId].progress.nextEmail.isBlocked
+																														? "warning"
+																														: "info"
+																												}
 																												sx={{
-																													position: "absolute",
-																													top: 0,
-																													left: 0,
-																													right: 0,
-																													height: "100%",
-																													display: "flex",
-																													alignItems: "center",
+																													mt: 1,
+																													"& .MuiAlert-message": { width: "100%" },
 																												}}
 																											>
-																												{campaignProgress[campaign.campaignId].campaign.sequenceMap.map(
-																													(email: any, index: number) => {
-																														const position =
-																															((index + 1) / campaignProgress[campaign.campaignId].campaign.totalEmails) *
-																															100;
-																														return (
-																															<Tooltip
-																																key={index}
-																																title={
-																																	<Box>
-																																		<Typography variant="caption" display="block">
-																																			{email.name}
-																																		</Typography>
-																																		<Typography variant="caption" display="block">
-																																			Estado:{" "}
-																																			{email.status === "active"
-																																				? "Activo"
-																																				: email.status === "paused"
-																																				? "Pausado"
-																																				: email.status === "draft"
-																																				? "Borrador"
-																																				: email.status}
-																																		</Typography>
-																																		{email.willBlock && (
-																																			<Typography variant="caption" color="warning.light" display="block">
-																																				⚠️ Bloqueará el progreso
-																																			</Typography>
+																												<Box>
+																													<Typography variant="body2" fontWeight="medium" gutterBottom>
+																														{campaignProgress[campaign.campaignId].progress.nextEmail.isBlocked
+																															? "⚠️ "
+																															: ""}
+																														Próximo Email:{" "}
+																														{campaignProgress[campaign.campaignId].progress.nextEmail.subject}
+																													</Typography>
+
+																													{campaignProgress[campaign.campaignId].progress.nextEmail.isBlocked && (
+																														<Typography
+																															variant="caption"
+																															color="warning.dark"
+																															display="block"
+																															sx={{ mb: 1 }}
+																														>
+																															Este email está en estado "
+																															{campaignProgress[campaign.campaignId].progress.nextEmail.status}" y bloqueará
+																															el progreso de la campaña.
+																														</Typography>
+																													)}
+
+																													<Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, mt: 1 }}>
+																														<Typography variant="caption" color="textSecondary">
+																															Email #
+																															{campaignProgress[campaign.campaignId].progress.nextEmail.sequenceIndex + 1}
+																														</Typography>
+																														{!campaignProgress[campaign.campaignId].progress.nextEmail.isBlocked &&
+																															campaignProgress[campaign.campaignId].progress.nextSendTime && (
+																																<Typography variant="caption">
+																																	• Se enviará el{" "}
+																																	<strong>
+																																		{formatDate(
+																																			campaignProgress[campaign.campaignId].progress.nextSendTime,
 																																		)}
-																																	</Box>
-																																}
-																															>
-																																<Box
-																																	sx={{
-																																		position: "absolute",
-																																		left: `${position}%`,
-																																		transform: "translateX(-50%)",
-																																		width: 2,
-																																		height: 12,
-																																		bgcolor: email.isActive ? "success.main" : "error.main",
-																																		borderRadius: 1,
-																																		opacity: 0.8,
-																																		cursor: "pointer",
-																																		"&:hover": { opacity: 1, height: 16 },
-																																	}}
-																																/>
-																															</Tooltip>
-																														);
-																													},
-																												)}
-																											</Box>
-
-																											{/* Blocked indicator */}
-																											{campaignProgress[campaign.campaignId].progress.blockedAt !== null && (
-																												<Tooltip
-																													title={`La campaña se detendrá aquí porque el email #${
-																														campaignProgress[campaign.campaignId].progress.blockedAt + 1
-																													} no está activo`}
-																													placement="top"
-																												>
-																													<Box
-																														sx={{
-																															position: "absolute",
-																															left: `${
-																																((campaignProgress[campaign.campaignId].progress.blockedAt + 0.5) /
-																																	campaignProgress[campaign.campaignId].campaign.totalEmails) *
-																																100
-																															}%`,
-																															transform: "translateX(-50%)",
-																															top: -4,
-																															bottom: -4,
-																															width: 2,
-																															bgcolor: "warning.main",
-																															boxShadow: "0 0 4px rgba(255, 152, 0, 0.5)",
-																															cursor: "help",
-																														}}
-																													/>
-																												</Tooltip>
-																											)}
-																										</Box>
-																									) : (
-																										<LinearProgress
-																											variant="determinate"
-																											value={
-																												(campaignProgress[campaign.campaignId].progress.currentStep /
-																													campaignProgress[campaign.campaignId].campaign.totalEmails) *
-																												100
-																											}
-																											sx={{ height: 6, borderRadius: 1 }}
-																										/>
-																									)}
-
-																									{/* Legend */}
-																									{campaignProgress[campaign.campaignId].campaign.sequenceMap && (
-																										<Box sx={{ display: "flex", gap: 2, mt: 1, flexWrap: "wrap" }}>
-																											<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-																												<Box sx={{ width: 12, height: 4, bgcolor: "success.main", borderRadius: 0.5 }} />
-																												<Typography variant="caption" color="textSecondary">
-																													Activo
-																												</Typography>
-																											</Box>
-																											<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-																												<Box sx={{ width: 12, height: 4, bgcolor: "error.main", borderRadius: 0.5 }} />
-																												<Typography variant="caption" color="textSecondary">
-																													Inactivo
-																												</Typography>
-																											</Box>
-																											{campaignProgress[campaign.campaignId].progress.blockedAt !== null && (
-																												<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-																													<Box sx={{ width: 2, height: 12, bgcolor: "warning.main", borderRadius: 0.5 }} />
-																													<Typography variant="caption" color="textSecondary">
-																														Se detendrá aquí (email #
-																														{campaignProgress[campaign.campaignId].progress.blockedAt + 1} no activo)
-																													</Typography>
+																																	</strong>
+																																</Typography>
+																															)}
+																														{campaignProgress[campaign.campaignId].progress.nextEmail.conditions &&
+																															campaignProgress[campaign.campaignId].progress.nextEmail.conditions.type ===
+																																"time" &&
+																															campaignProgress[campaign.campaignId].progress.nextEmail.conditions
+																																.timeDelay && (
+																																<Typography variant="caption" color="textSecondary">
+																																	•{" "}
+																																	{
+																																		campaignProgress[campaign.campaignId].progress.nextEmail.conditions
+																																			.timeDelay.value
+																																	}{" "}
+																																	{campaignProgress[campaign.campaignId].progress.nextEmail.conditions
+																																		.timeDelay.unit === "days"
+																																		? "días"
+																																		: campaignProgress[campaign.campaignId].progress.nextEmail.conditions
+																																				.timeDelay.unit === "hours"
+																																		? "horas"
+																																		: campaignProgress[campaign.campaignId].progress.nextEmail.conditions
+																																				.timeDelay.unit}{" "}
+																																	después
+																																</Typography>
+																															)}
+																														{/* Mostrar origen de las restricciones o indicar que no hay */}
+																														<Typography variant="caption" color="textSecondary">
+																															•{" "}
+																															{campaignProgress[campaign.campaignId].progress.nextEmail
+																																.restrictionsSource === "email"
+																																? "Horario: 📧 del email"
+																																: campaignProgress[campaign.campaignId].progress.nextEmail
+																																		.restrictionsSource === "campaign"
+																																? "Horario: 📅 de campaña"
+																																: "🕐 Sin restricción horaria"}
+																														</Typography>
+																													</Box>
 																												</Box>
-																											)}
-																										</Box>
+																											</Alert>
+																										</Grid>
 																									)}
-																								</Box>
-																							</Grid>
 
-																							{/* Compact Info Grid */}
-																							<Grid item xs={12}>
-																								<Box sx={{ display: "flex", flexWrap: "wrap", gap: { xs: 1.5, sm: 2, md: 3 } }}>
-																									<Box>
-																										<Typography variant="caption" color="textSecondary">
-																											Última actividad
-																										</Typography>
-																										<Typography variant="body2">
-																											{campaignProgress[campaign.campaignId].progress.lastStepTime
-																												? formatDate(campaignProgress[campaign.campaignId].progress.lastStepTime)
-																												: "N/A"}
-																										</Typography>
-																									</Box>
-																								</Box>
-																							</Grid>
-
-																							{/* Next Email Info */}
-																							{campaignProgress[campaign.campaignId].progress.nextEmail &&
-																								campaignProgress[campaign.campaignId].progress.status === "active" && (
+																								{/* Completion Info */}
+																								{campaignProgress[campaign.campaignId].progress.completedAt && (
 																									<Grid item xs={12}>
-																										<Alert
-																											severity={
-																												campaignProgress[campaign.campaignId].progress.nextEmail.isBlocked
-																													? "warning"
-																													: "info"
-																											}
-																											sx={{
-																												mt: 1,
-																												"& .MuiAlert-message": { width: "100%" },
-																											}}
-																										>
-																											<Box>
-																												<Typography variant="body2" fontWeight="medium" gutterBottom>
-																													{campaignProgress[campaign.campaignId].progress.nextEmail.isBlocked ? "⚠️ " : ""}
-																													Próximo Email: {campaignProgress[campaign.campaignId].progress.nextEmail.subject}
-																												</Typography>
-
-																												{campaignProgress[campaign.campaignId].progress.nextEmail.isBlocked && (
-																													<Typography variant="caption" color="warning.dark" display="block" sx={{ mb: 1 }}>
-																														Este email está en estado "
-																														{campaignProgress[campaign.campaignId].progress.nextEmail.status}" y bloqueará
-																														el progreso de la campaña.
-																													</Typography>
-																												)}
-
-																												<Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, mt: 1 }}>
-																													<Typography variant="caption" color="textSecondary">
-																														Email #
-																														{campaignProgress[campaign.campaignId].progress.nextEmail.sequenceIndex + 1}
-																													</Typography>
-																													{!campaignProgress[campaign.campaignId].progress.nextEmail.isBlocked &&
-																														campaignProgress[campaign.campaignId].progress.nextSendTime && (
-																															<Typography variant="caption">
-																																• Se enviará el{" "}
-																																<strong>
-																																	{formatDate(campaignProgress[campaign.campaignId].progress.nextSendTime)}
-																																</strong>
-																															</Typography>
-																														)}
-																													{campaignProgress[campaign.campaignId].progress.nextEmail.conditions &&
-																														campaignProgress[campaign.campaignId].progress.nextEmail.conditions.type ===
-																															"time" &&
-																														campaignProgress[campaign.campaignId].progress.nextEmail.conditions
-																															.timeDelay && (
-																															<Typography variant="caption" color="textSecondary">
-																																•{" "}
-																																{
-																																	campaignProgress[campaign.campaignId].progress.nextEmail.conditions
-																																		.timeDelay.value
-																																}{" "}
-																																{campaignProgress[campaign.campaignId].progress.nextEmail.conditions
-																																	.timeDelay.unit === "days"
-																																	? "días"
-																																	: campaignProgress[campaign.campaignId].progress.nextEmail.conditions
-																																			.timeDelay.unit === "hours"
-																																	? "horas"
-																																	: campaignProgress[campaign.campaignId].progress.nextEmail.conditions
-																																			.timeDelay.unit}{" "}
-																																después
-																															</Typography>
-																														)}
-																													{/* Mostrar origen de las restricciones o indicar que no hay */}
-																													<Typography variant="caption" color="textSecondary">
-																														•{" "}
-																														{campaignProgress[campaign.campaignId].progress.nextEmail.restrictionsSource ===
-																														"email"
-																															? "Horario: 📧 del email"
-																															: campaignProgress[campaign.campaignId].progress.nextEmail
-																																	.restrictionsSource === "campaign"
-																															? "Horario: 📅 de campaña"
-																															: "🕐 Sin restricción horaria"}
-																													</Typography>
-																												</Box>
-																											</Box>
+																										<Alert severity="success" sx={{ mt: 1 }}>
+																											Campaña completada el{" "}
+																											{formatDate(campaignProgress[campaign.campaignId].progress.completedAt)}
 																										</Alert>
 																									</Grid>
 																								)}
-
-																							{/* Completion Info */}
-																							{campaignProgress[campaign.campaignId].progress.completedAt && (
-																								<Grid item xs={12}>
-																									<Alert severity="success" sx={{ mt: 1 }}>
-																										Campaña completada el{" "}
-																										{formatDate(campaignProgress[campaign.campaignId].progress.completedAt)}
-																									</Alert>
-																								</Grid>
-																							)}
-																						</Grid>
-																					) : (
-																						<Typography variant="body2" color="textSecondary">
-																							No se pudo cargar el progreso
-																						</Typography>
-																					)}
-																				</Box>
-																			</Collapse>
-																		</TableCell>
-																	</TableRow>
-																</React.Fragment>
-															))}
-														</TableBody>
-													</Table>
+																							</Grid>
+																						) : (
+																							<Typography variant="body2" color="textSecondary">
+																								No se pudo cargar el progreso
+																							</Typography>
+																						)}
+																					</Box>
+																				</Collapse>
+																			</TableCell>
+																		</TableRow>
+																	</React.Fragment>
+																))}
+															</TableBody>
+														</Table>
+													</TableContainer>
 												</Box>
 											) : (
 												<Typography variant="body2" color="textSecondary" sx={{ mb: 3 }}>

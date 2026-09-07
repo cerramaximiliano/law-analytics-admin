@@ -43,10 +43,17 @@ const MainLayout = () => {
 				<Container
 					maxWidth={container ? "xl" : false}
 					sx={{
-						xs: 0,
-						...(container && { px: { xs: 0, md: 2 } }),
+						// Sin gutter lateral en teléfonos: el <main> ya aporta 16px de
+						// aire y el gutter del Container encima le comía 32px más de
+						// ancho a las tablas, que es una columna entera.
+						px: { xs: 0, md: 2 },
 						position: "relative",
+						// dvh donde exista: en iOS la barra del navegador cambia de alto
+						// al scrollear y con vh la página pega un salto en cada gesto.
 						minHeight: "calc(100vh - 110px)",
+						"@supports (min-height: 100dvh)": {
+							minHeight: "calc(100dvh - 110px)",
+						},
 						display: "flex",
 						flexDirection: "column",
 					}}

@@ -11,6 +11,7 @@ import {
 	Table,
 	TableBody,
 	TableCell,
+	TableContainer,
 	TableHead,
 	TableRow,
 	TextField,
@@ -216,57 +217,59 @@ const ExpedientesEditor: React.FC<ExpedientesEditorProps> = ({ contact, onSaved 
 					Este contacto no tiene expedientes registrados.
 				</Typography>
 			) : (
-				<Table size="small">
-					<TableHead>
-						<TableRow>
-							<TableCell>Expediente</TableCell>
-							<TableCell>Colección</TableCell>
-							<TableCell>Origen</TableCell>
-							<TableCell>Causa ID</TableCell>
-							<TableCell align="center">Quitar</TableCell>
-						</TableRow>
-					</TableHead>
-					<TableBody>
-						{rows.map((row, index) => (
-							<TableRow key={row.expediente} hover>
-								<TableCell>
-									<Typography variant="body2" sx={{ fontFamily: "monospace" }}>
-										{row.expediente}
-									</Typography>
-								</TableCell>
-								<TableCell sx={{ minWidth: 190 }}>
-									<TextField
-										select
-										fullWidth
-										size="small"
-										value={row.coleccion}
-										onChange={(e) => handleColeccionChange(index, e.target.value)}
-									>
-										<MenuItem value="">Sin asignar</MenuItem>
-										{COLECCIONES.map((c) => (
-											<MenuItem key={c.value} value={c.value}>
-												{c.label} ({c.value})
-											</MenuItem>
-										))}
-									</TextField>
-								</TableCell>
-								<TableCell>{origenChip(row.origen)}</TableCell>
-								<TableCell>
-									<Typography variant="caption" color="textSecondary" sx={{ fontFamily: "monospace" }}>
-										{row.causaId || "-"}
-									</Typography>
-								</TableCell>
-								<TableCell align="center">
-									<Tooltip title="Quitar de la lista (solo se persisten las filas con colección al guardar)">
-										<IconButton size="small" color="error" onClick={() => handleRemoveRow(index)}>
-											<Trash size={16} />
-										</IconButton>
-									</Tooltip>
-								</TableCell>
+				<TableContainer>
+					<Table size="small">
+						<TableHead>
+							<TableRow>
+								<TableCell>Expediente</TableCell>
+								<TableCell>Colección</TableCell>
+								<TableCell>Origen</TableCell>
+								<TableCell>Causa ID</TableCell>
+								<TableCell align="center">Quitar</TableCell>
 							</TableRow>
-						))}
-					</TableBody>
-				</Table>
+						</TableHead>
+						<TableBody>
+							{rows.map((row, index) => (
+								<TableRow key={row.expediente} hover>
+									<TableCell>
+										<Typography variant="body2" sx={{ fontFamily: "monospace" }}>
+											{row.expediente}
+										</Typography>
+									</TableCell>
+									<TableCell sx={{ minWidth: 190 }}>
+										<TextField
+											select
+											fullWidth
+											size="small"
+											value={row.coleccion}
+											onChange={(e) => handleColeccionChange(index, e.target.value)}
+										>
+											<MenuItem value="">Sin asignar</MenuItem>
+											{COLECCIONES.map((c) => (
+												<MenuItem key={c.value} value={c.value}>
+													{c.label} ({c.value})
+												</MenuItem>
+											))}
+										</TextField>
+									</TableCell>
+									<TableCell>{origenChip(row.origen)}</TableCell>
+									<TableCell>
+										<Typography variant="caption" color="textSecondary" sx={{ fontFamily: "monospace" }}>
+											{row.causaId || "-"}
+										</Typography>
+									</TableCell>
+									<TableCell align="center">
+										<Tooltip title="Quitar de la lista (solo se persisten las filas con colección al guardar)">
+											<IconButton size="small" color="error" onClick={() => handleRemoveRow(index)}>
+												<Trash size={16} />
+											</IconButton>
+										</Tooltip>
+									</TableCell>
+								</TableRow>
+							))}
+						</TableBody>
+					</Table>
+				</TableContainer>
 			)}
 
 			<Divider sx={{ my: 2 }} />

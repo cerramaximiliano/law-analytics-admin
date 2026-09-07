@@ -20,6 +20,7 @@ import {
 	Table,
 	TableBody,
 	TableCell,
+	TableContainer,
 	TableHead,
 	TableRow,
 	TextField,
@@ -124,99 +125,96 @@ export default function FallosTab() {
 			</Stack>
 
 			<Paper variant="outlined" sx={{ borderRadius: 2, overflowX: "auto" }}>
-				<Table size="small">
-					<TableHead>
-						<TableRow>
-							<TableCell>Carátula</TableCell>
-							<TableCell>Tribunal</TableCell>
-							<TableCell>Canal</TableCell>
-							<TableCell align="right">Fecha</TableCell>
-							<TableCell align="right">Texto</TableCell>
-							<TableCell align="center">PDF</TableCell>
-						</TableRow>
-					</TableHead>
-					<TableBody>
-						{cargando && (
+				<TableContainer>
+					<Table size="small">
+						<TableHead>
 							<TableRow>
-								<TableCell colSpan={6} align="center" sx={{ py: 3 }}>
-									<CircularProgress size={22} />
-								</TableCell>
+								<TableCell>Carátula</TableCell>
+								<TableCell>Tribunal</TableCell>
+								<TableCell>Canal</TableCell>
+								<TableCell align="right">Fecha</TableCell>
+								<TableCell align="right">Texto</TableCell>
+								<TableCell align="center">PDF</TableCell>
 							</TableRow>
-						)}
-						{!cargando && items.length === 0 && (
-							<TableRow>
-								<TableCell colSpan={6} align="center" sx={{ py: 3 }}>
-									<Typography variant="body2" color="text.secondary">
-										Sin resultados con estos filtros.
-									</Typography>
-								</TableCell>
-							</TableRow>
-						)}
-						{!cargando &&
-							items.map((f) => {
-								const color = COLOR_CANAL[f.canal] || BRAND_BLUE;
-								return (
-									<TableRow
-										key={f._id}
-										hover
-										sx={{ cursor: "pointer" }}
-										onClick={() => abrirDetalle(f._id)}
-									>
-										<TableCell sx={{ maxWidth: 380 }}>
-											<Typography variant="body2" noWrap title={f.caratula || f.titulo}>
-												{f.caratula || f.titulo || "(sin carátula)"}
-											</Typography>
-											{f.voces && (
-												<Typography variant="caption" color="text.secondary" noWrap sx={{ display: "block" }} title={f.voces}>
-													{f.voces}
+						</TableHead>
+						<TableBody>
+							{cargando && (
+								<TableRow>
+									<TableCell colSpan={6} align="center" sx={{ py: 3 }}>
+										<CircularProgress size={22} />
+									</TableCell>
+								</TableRow>
+							)}
+							{!cargando && items.length === 0 && (
+								<TableRow>
+									<TableCell colSpan={6} align="center" sx={{ py: 3 }}>
+										<Typography variant="body2" color="text.secondary">
+											Sin resultados con estos filtros.
+										</Typography>
+									</TableCell>
+								</TableRow>
+							)}
+							{!cargando &&
+								items.map((f) => {
+									const color = COLOR_CANAL[f.canal] || BRAND_BLUE;
+									return (
+										<TableRow key={f._id} hover sx={{ cursor: "pointer" }} onClick={() => abrirDetalle(f._id)}>
+											<TableCell sx={{ maxWidth: 380 }}>
+												<Typography variant="body2" noWrap title={f.caratula || f.titulo}>
+													{f.caratula || f.titulo || "(sin carátula)"}
 												</Typography>
-											)}
-										</TableCell>
-										<TableCell sx={{ maxWidth: 220 }}>
-											<Typography variant="caption" noWrap title={f.tribunal}>
-												{f.tribunal || "—"}
-											</Typography>
-										</TableCell>
-										<TableCell>
-											<Chip
-												size="small"
-												label={f.canal === "PROVINCIAL" ? "Prov." : "Nac."}
-												sx={{ bgcolor: alpha(color, 0.14), color, fontWeight: 600, height: 20 }}
-											/>
-										</TableCell>
-										<TableCell align="right">
-											<Typography variant="caption">{f.fechaString || fmtFecha(f.publicadoEn)}</Typography>
-										</TableCell>
-										<TableCell align="right">
-											<Typography
-												variant="caption"
-												sx={{
-													color: (f.textoChars || 0) > 1500 ? LIVE_GREEN : STALE_AMBER,
-													fontWeight: 600,
-													fontVariantNumeric: "tabular-nums",
-												}}
-											>
-												{(f.textoChars || 0).toLocaleString("es-AR")}
-											</Typography>
-										</TableCell>
-										<TableCell align="center" onClick={(e) => e.stopPropagation()}>
-											{f.pdfUrl ? (
-												<Tooltip title="Abrir el PDF en CIJur" arrow>
-													<IconButton size="small" component="a" href={f.pdfUrl} target="_blank" rel="noopener">
-														<DocumentText size={16} />
-													</IconButton>
-												</Tooltip>
-											) : (
-												<Typography variant="caption" color="text.disabled">
-													—
+												{f.voces && (
+													<Typography variant="caption" color="text.secondary" noWrap sx={{ display: "block" }} title={f.voces}>
+														{f.voces}
+													</Typography>
+												)}
+											</TableCell>
+											<TableCell sx={{ maxWidth: 220 }}>
+												<Typography variant="caption" noWrap title={f.tribunal}>
+													{f.tribunal || "—"}
 												</Typography>
-											)}
-										</TableCell>
-									</TableRow>
-								);
-							})}
-					</TableBody>
-				</Table>
+											</TableCell>
+											<TableCell>
+												<Chip
+													size="small"
+													label={f.canal === "PROVINCIAL" ? "Prov." : "Nac."}
+													sx={{ bgcolor: alpha(color, 0.14), color, fontWeight: 600, height: 20 }}
+												/>
+											</TableCell>
+											<TableCell align="right">
+												<Typography variant="caption">{f.fechaString || fmtFecha(f.publicadoEn)}</Typography>
+											</TableCell>
+											<TableCell align="right">
+												<Typography
+													variant="caption"
+													sx={{
+														color: (f.textoChars || 0) > 1500 ? LIVE_GREEN : STALE_AMBER,
+														fontWeight: 600,
+														fontVariantNumeric: "tabular-nums",
+													}}
+												>
+													{(f.textoChars || 0).toLocaleString("es-AR")}
+												</Typography>
+											</TableCell>
+											<TableCell align="center" onClick={(e) => e.stopPropagation()}>
+												{f.pdfUrl ? (
+													<Tooltip title="Abrir el PDF en CIJur" arrow>
+														<IconButton size="small" component="a" href={f.pdfUrl} target="_blank" rel="noopener">
+															<DocumentText size={16} />
+														</IconButton>
+													</Tooltip>
+												) : (
+													<Typography variant="caption" color="text.disabled">
+														—
+													</Typography>
+												)}
+											</TableCell>
+										</TableRow>
+									);
+								})}
+						</TableBody>
+					</Table>
+				</TableContainer>
 			</Paper>
 
 			{pages > 1 && (

@@ -25,6 +25,7 @@ import {
 	Table,
 	TableBody,
 	TableCell,
+	TableContainer,
 	TableHead,
 	TableRow,
 	Paper,
@@ -666,112 +667,116 @@ const EditorActionsSection = () => {
 				</Alert>
 			) : (
 				<Paper variant="outlined" sx={{ borderRadius: 1.5, overflow: "hidden", borderColor: headerBorder(theme.palette.mode === "dark") }}>
-					<Table size="small">
-						<TableHead>
-							<TableRow sx={{ bgcolor: alpha(BRAND_BLUE, theme.palette.mode === "dark" ? 0.06 : 0.035) }}>
-								<TableCell sx={{ fontWeight: 600, fontSize: "0.75rem" }}>Etiqueta</TableCell>
-								<TableCell sx={{ fontWeight: 600, fontSize: "0.75rem" }}>Alcance</TableCell>
-								<TableCell sx={{ fontWeight: 600, fontSize: "0.75rem" }}>Visibilidad</TableCell>
-								<TableCell sx={{ fontWeight: 600, fontSize: "0.75rem" }}>Contexto</TableCell>
-								<TableCell sx={{ fontWeight: 600, fontSize: "0.75rem" }} align="center">
-									Orden
-								</TableCell>
-								<TableCell sx={{ fontWeight: 600, fontSize: "0.75rem" }} align="center">
-									Estado
-								</TableCell>
-								<TableCell sx={{ fontWeight: 600, fontSize: "0.75rem" }} align="right">
-									Acciones
-								</TableCell>
-							</TableRow>
-						</TableHead>
-						<TableBody>
-							{displayed.map((action) => (
-								<TableRow key={action._id} hover sx={{ opacity: action.active ? 1 : 0.5, "&:last-child td": { borderBottom: 0 } }}>
-									<TableCell>
-										<Stack spacing={0.25}>
-											<Typography variant="body2" fontWeight={500}>
-												{action.label}
-											</Typography>
-											{action.hint && (
-												<Typography variant="caption" color="text.secondary" noWrap sx={{ maxWidth: 220 }}>
-													{action.hint}
-												</Typography>
-											)}
-											{action.systemPromptOverride && (
-												<Chip
-													label="system prompt custom"
-													size="small"
-													color="warning"
-													variant="outlined"
-													sx={{ width: "fit-content", fontSize: "0.62rem", height: 16 }}
-												/>
-											)}
-											{action.useStyleCorpus && (
-												<Chip
-													label="corpus estilo"
-													size="small"
-													color="secondary"
-													variant="outlined"
-													sx={{ width: "fit-content", fontSize: "0.62rem", height: 16 }}
-												/>
-											)}
-										</Stack>
+					<TableContainer>
+						<Table size="small">
+							<TableHead>
+								<TableRow sx={{ bgcolor: alpha(BRAND_BLUE, theme.palette.mode === "dark" ? 0.06 : 0.035) }}>
+									<TableCell sx={{ fontWeight: 600, fontSize: "0.75rem" }}>Etiqueta</TableCell>
+									<TableCell sx={{ fontWeight: 600, fontSize: "0.75rem" }}>Alcance</TableCell>
+									<TableCell sx={{ fontWeight: 600, fontSize: "0.75rem" }}>Visibilidad</TableCell>
+									<TableCell sx={{ fontWeight: 600, fontSize: "0.75rem" }}>Contexto</TableCell>
+									<TableCell sx={{ fontWeight: 600, fontSize: "0.75rem" }} align="center">
+										Orden
 									</TableCell>
-									<TableCell>
-										<Chip
-											label={SCOPE_LABELS[action.scope]}
-											size="small"
-											color={SCOPE_COLORS[action.scope]}
-											variant="outlined"
-											sx={{ fontSize: "0.7rem", height: 20 }}
-										/>
+									<TableCell sx={{ fontWeight: 600, fontSize: "0.75rem" }} align="center">
+										Estado
 									</TableCell>
-									<TableCell>
-										<Chip
-											label={VISIBILITY_LABELS[action.visibility]}
-											size="small"
-											variant="outlined"
-											sx={{ fontSize: "0.7rem", height: 20 }}
-										/>
-									</TableCell>
-									<TableCell>
-										<Stack direction="row" spacing={0.5} flexWrap="wrap">
-											{action.context.includeDocument && <Chip label="doc" size="small" sx={{ fontSize: "0.6rem", height: 18 }} />}
-											{action.context.requiresSelection && <Chip label="selección" size="small" sx={{ fontSize: "0.6rem", height: 18 }} />}
-										</Stack>
-									</TableCell>
-									<TableCell align="center">
-										<Typography variant="body2" sx={{ fontFamily: "monospace" }}>
-											{action.order}
-										</Typography>
-									</TableCell>
-									<TableCell align="center">
-										<Chip
-											label={action.active ? "Activa" : "Inactiva"}
-											size="small"
-											color={action.active ? "success" : "default"}
-											variant="filled"
-											sx={{ fontSize: "0.68rem", height: 20 }}
-										/>
-									</TableCell>
-									<TableCell align="right">
-										<Stack direction="row" spacing={0.5} justifyContent="flex-end">
-											<Tooltip title="Editar">
-												<IconButton size="small" onClick={() => handleOpenEdit(action)}>
-													<Edit2 size={14} />
-												</IconButton>
-											</Tooltip>
-											<Tooltip title="Eliminar">
-												<IconButton size="small" color="error" onClick={() => setDeleteTarget(action)}>
-													<Trash size={14} />
-												</IconButton>
-											</Tooltip>
-										</Stack>
+									<TableCell sx={{ fontWeight: 600, fontSize: "0.75rem" }} align="right">
+										Acciones
 									</TableCell>
 								</TableRow>
-							))}
-						</TableBody>
-					</Table>
+							</TableHead>
+							<TableBody>
+								{displayed.map((action) => (
+									<TableRow key={action._id} hover sx={{ opacity: action.active ? 1 : 0.5, "&:last-child td": { borderBottom: 0 } }}>
+										<TableCell>
+											<Stack spacing={0.25}>
+												<Typography variant="body2" fontWeight={500}>
+													{action.label}
+												</Typography>
+												{action.hint && (
+													<Typography variant="caption" color="text.secondary" noWrap sx={{ maxWidth: 220 }}>
+														{action.hint}
+													</Typography>
+												)}
+												{action.systemPromptOverride && (
+													<Chip
+														label="system prompt custom"
+														size="small"
+														color="warning"
+														variant="outlined"
+														sx={{ width: "fit-content", fontSize: "0.62rem", height: 16 }}
+													/>
+												)}
+												{action.useStyleCorpus && (
+													<Chip
+														label="corpus estilo"
+														size="small"
+														color="secondary"
+														variant="outlined"
+														sx={{ width: "fit-content", fontSize: "0.62rem", height: 16 }}
+													/>
+												)}
+											</Stack>
+										</TableCell>
+										<TableCell>
+											<Chip
+												label={SCOPE_LABELS[action.scope]}
+												size="small"
+												color={SCOPE_COLORS[action.scope]}
+												variant="outlined"
+												sx={{ fontSize: "0.7rem", height: 20 }}
+											/>
+										</TableCell>
+										<TableCell>
+											<Chip
+												label={VISIBILITY_LABELS[action.visibility]}
+												size="small"
+												variant="outlined"
+												sx={{ fontSize: "0.7rem", height: 20 }}
+											/>
+										</TableCell>
+										<TableCell>
+											<Stack direction="row" spacing={0.5} flexWrap="wrap">
+												{action.context.includeDocument && <Chip label="doc" size="small" sx={{ fontSize: "0.6rem", height: 18 }} />}
+												{action.context.requiresSelection && (
+													<Chip label="selección" size="small" sx={{ fontSize: "0.6rem", height: 18 }} />
+												)}
+											</Stack>
+										</TableCell>
+										<TableCell align="center">
+											<Typography variant="body2" sx={{ fontFamily: "monospace" }}>
+												{action.order}
+											</Typography>
+										</TableCell>
+										<TableCell align="center">
+											<Chip
+												label={action.active ? "Activa" : "Inactiva"}
+												size="small"
+												color={action.active ? "success" : "default"}
+												variant="filled"
+												sx={{ fontSize: "0.68rem", height: 20 }}
+											/>
+										</TableCell>
+										<TableCell align="right">
+											<Stack direction="row" spacing={0.5} justifyContent="flex-end">
+												<Tooltip title="Editar">
+													<IconButton size="small" onClick={() => handleOpenEdit(action)}>
+														<Edit2 size={14} />
+													</IconButton>
+												</Tooltip>
+												<Tooltip title="Eliminar">
+													<IconButton size="small" color="error" onClick={() => setDeleteTarget(action)}>
+														<Trash size={14} />
+													</IconButton>
+												</Tooltip>
+											</Stack>
+										</TableCell>
+									</TableRow>
+								))}
+							</TableBody>
+						</Table>
+					</TableContainer>
 				</Paper>
 			)}
 

@@ -10,6 +10,7 @@ import {
 	Table,
 	TableBody,
 	TableCell,
+	TableContainer,
 	TableHead,
 	TableRow,
 	ToggleButton,
@@ -270,190 +271,200 @@ export default function DailySyncPanel({ days = 14, compact = false }: { days?: 
 					</Stack>
 
 					<Box sx={{ overflowX: "auto" }}>
-						<Table size="small" sx={{ "& td, & th": { fontSize: "0.75rem", py: 0.6, whiteSpace: "nowrap" } }}>
-							<TableHead>
-								<TableRow>
-									<TableCell>Usuario</TableCell>
-									<TableCell>Estado</TableCell>
-									<TableCell align="center">Última corrida</TableCell>
-									<TableCell align="right">Tenía → tiene</TableCell>
-									<TableCell align="right">Δ</TableCell>
-									<TableCell align="right">Nuevas</TableCell>
-									<TableCell align="right">Carpetas</TableCell>
-									<TableCell align="right">Lista</TableCell>
-									{!compact && <TableCell align="center">Escaneo</TableCell>}
-									<TableCell align="right">Carpetas usuario</TableCell>
-									<TableCell align="center">{data.days}d</TableCell>
-								</TableRow>
-							</TableHead>
-							<TableBody>
-								{rows.map((r: DailySyncRow) => {
-									const meta = STATE_META[r.state] || { label: r.state, tone: "neutral" as const };
-									const color = toneColor(meta.tone);
-									return (
-										<TableRow
-											key={r.credentialId}
-											hover
-											sx={{ bgcolor: meta.tone === "bad" ? alpha(theme.palette.error.main, isDark ? 0.08 : 0.04) : undefined }}
-										>
-											<TableCell>
-												<Typography variant="body2" sx={{ fontSize: "0.78rem" }} noWrap>
-													{r.user.email || r.user.id}
-												</Typography>
-												{r.credential.lastErrorCode && (
-													<Typography variant="caption" color="error">
-														{r.credential.lastErrorCode}
-													</Typography>
-												)}
-											</TableCell>
-											<TableCell>
-												<Tooltip title={r.stateReason}>
-													<Chip
-														size="small"
-														label={meta.label}
-														sx={{
-															height: 20,
-															fontSize: "0.66rem",
-															bgcolor: alpha(color, isDark ? 0.18 : 0.1),
-															color,
-															border: `1px solid ${alpha(color, 0.35)}`,
-														}}
-													/>
-												</Tooltip>
-												{r.credential.retries > 0 && (
-													<Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
-														reintentos {r.credential.retries}
-													</Typography>
-												)}
-											</TableCell>
-											<TableCell align="center">
-												<Tooltip
-													title={
-														r.lastRun
-															? `${r.lastRun.status} · ${OUTCOME_LABEL[r.lastRun.outcome || ""] || r.lastRun.outcome || ""} · ${
-																	r.lastRun.triggeredBy || ""
-															  }${r.lastRun.durationMs ? ` · ${Math.round(r.lastRun.durationMs / 1000)}s` : ""}${
-																	r.lastRun.error ? ` · ${r.lastRun.error}` : ""
-															  }`
-															: "sin corridas"
-													}
-												>
-													<span>{fmtTime(r.lastRun?.startedAt)}</span>
-												</Tooltip>
-												{r.lastRun?.outcome && (
-													<Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
-														{OUTCOME_LABEL[r.lastRun.outcome] || r.lastRun.outcome}
-													</Typography>
-												)}
-											</TableCell>
-											<TableCell align="right" sx={{ fontVariantNumeric: "tabular-nums" }}>
-												{r.totals.previous ?? "—"} → <b>{r.totals.current ?? "—"}</b>
-											</TableCell>
-											<TableCell
-												align="right"
-												sx={{
-													fontVariantNumeric: "tabular-nums",
-													color: (r.totals.delta || 0) > 0 ? LIVE_GREEN : (r.totals.delta || 0) < 0 ? STALE_AMBER : "text.secondary",
-													fontWeight: r.totals.delta ? 700 : 400,
-												}}
+						<TableContainer>
+							<Table size="small" sx={{ "& td, & th": { fontSize: "0.75rem", py: 0.6, whiteSpace: "nowrap" } }}>
+								<TableHead>
+									<TableRow>
+										<TableCell>Usuario</TableCell>
+										<TableCell>Estado</TableCell>
+										<TableCell align="center">Última corrida</TableCell>
+										<TableCell align="right">Tenía → tiene</TableCell>
+										<TableCell align="right">Δ</TableCell>
+										<TableCell align="right">Nuevas</TableCell>
+										<TableCell align="right">Carpetas</TableCell>
+										<TableCell align="right">Lista</TableCell>
+										{!compact && <TableCell align="center">Escaneo</TableCell>}
+										<TableCell align="right">Carpetas usuario</TableCell>
+										<TableCell align="center">{data.days}d</TableCell>
+									</TableRow>
+								</TableHead>
+								<TableBody>
+									{rows.map((r: DailySyncRow) => {
+										const meta = STATE_META[r.state] || { label: r.state, tone: "neutral" as const };
+										const color = toneColor(meta.tone);
+										return (
+											<TableRow
+												key={r.credentialId}
+												hover
+												sx={{ bgcolor: meta.tone === "bad" ? alpha(theme.palette.error.main, isDark ? 0.08 : 0.04) : undefined }}
 											>
-												{fmtDelta(r.totals.delta)}
-											</TableCell>
-											<TableCell align="right" sx={{ fontVariantNumeric: "tabular-nums" }}>
-												<Tooltip title={`detectadas en el listado ${r.changes.causasEncontradas} · creadas ${r.changes.causasNuevas}`}>
-													<span>{r.changes.causasNuevas || (r.changes.causasEncontradas ? `${r.changes.causasEncontradas}*` : "—")}</span>
-												</Tooltip>
-											</TableCell>
-											<TableCell align="right" sx={{ fontVariantNumeric: "tabular-nums" }}>
-												<Tooltip
-													title={`creadas ${r.changes.foldersCreados} · archivadas por plan ${r.changes.foldersArchivados} · sin crear por límite ${r.changes.foldersPendientesLimite}`}
-												>
-													<span>
-														{r.changes.foldersCreados || "—"}
-														{r.changes.foldersArchivados ? ` (${r.changes.foldersArchivados} arch.)` : ""}
-														{r.changes.foldersPendientesLimite ? ` · ${r.changes.foldersPendientesLimite} sin crear` : ""}
-													</span>
-												</Tooltip>
-											</TableCell>
-											<TableCell align="right" sx={{ fontVariantNumeric: "tabular-nums" }}>
-												<Tooltip
-													title={`“Ya no en la lista”: marcadas ${r.changes.listRemovedMarked} · limpiadas ${r.changes.listRemovedCleared}`}
-												>
-													<span>
-														{r.changes.listRemovedMarked ? <span style={{ color: STALE_AMBER }}>−{r.changes.listRemovedMarked}</span> : ""}
-														{r.changes.listRemovedMarked && r.changes.listRemovedCleared ? " / " : ""}
-														{r.changes.listRemovedCleared ? <span style={{ color: LIVE_GREEN }}>+{r.changes.listRemovedCleared}</span> : ""}
-														{!r.changes.listRemovedMarked && !r.changes.listRemovedCleared ? "—" : ""}
-													</span>
-												</Tooltip>
-											</TableCell>
-											{!compact && (
-												<TableCell align="center">
-													{r.changes.scanComplete === null ? (
-														<Typography variant="caption" color="text.disabled">
-															—
+												<TableCell>
+													<Typography variant="body2" sx={{ fontSize: "0.78rem" }} noWrap>
+														{r.user.email || r.user.id}
+													</Typography>
+													{r.credential.lastErrorCode && (
+														<Typography variant="caption" color="error">
+															{r.credential.lastErrorCode}
 														</Typography>
-													) : r.changes.scanComplete ? (
-														<Tooltip
-															title={
-																r.reconciliation.portalExpedientes !== null
-																	? `${r.reconciliation.portalExpedientes} expedientes leídos · ${
-																			r.reconciliation.matchedByKey ?? 0
-																	  } match por expediente · ${r.reconciliation.matchedByCaratula ?? 0} por carátula · ${
-																			r.reconciliation.portalWithoutFolder ?? 0
-																	  } en portal sin carpeta`
-																	: "escaneo completo"
-															}
-														>
-															<Chip
-																size="small"
-																label={`completo${r.changes.pagesScanned ? ` · ${r.changes.pagesScanned} pág.` : ""}${
-																	r.reconciliation.matchedByCaratula ? ` · ${r.reconciliation.matchedByCaratula} x carátula` : ""
-																}${r.reconciliation.portalWithoutFolder ? ` · ${r.reconciliation.portalWithoutFolder} sin carpeta` : ""}`}
-																variant="outlined"
-																color={r.reconciliation.portalWithoutFolder ? "warning" : "default"}
-																sx={{ height: 20, fontSize: "0.64rem" }}
-															/>
-														</Tooltip>
-													) : (
-														<Chip size="small" label="incompleto" color="warning" sx={{ height: 20, fontSize: "0.64rem" }} />
 													)}
 												</TableCell>
-											)}
-											<TableCell align="right" sx={{ fontVariantNumeric: "tabular-nums" }}>
-												<Tooltip
-													title={`${r.folders.active} activas · ${r.folders.archived} archivadas · ${r.folders.listRemoved} “ya no en la lista”`}
+												<TableCell>
+													<Tooltip title={r.stateReason}>
+														<Chip
+															size="small"
+															label={meta.label}
+															sx={{
+																height: 20,
+																fontSize: "0.66rem",
+																bgcolor: alpha(color, isDark ? 0.18 : 0.1),
+																color,
+																border: `1px solid ${alpha(color, 0.35)}`,
+															}}
+														/>
+													</Tooltip>
+													{r.credential.retries > 0 && (
+														<Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+															reintentos {r.credential.retries}
+														</Typography>
+													)}
+												</TableCell>
+												<TableCell align="center">
+													<Tooltip
+														title={
+															r.lastRun
+																? `${r.lastRun.status} · ${OUTCOME_LABEL[r.lastRun.outcome || ""] || r.lastRun.outcome || ""} · ${
+																		r.lastRun.triggeredBy || ""
+																  }${r.lastRun.durationMs ? ` · ${Math.round(r.lastRun.durationMs / 1000)}s` : ""}${
+																		r.lastRun.error ? ` · ${r.lastRun.error}` : ""
+																  }`
+																: "sin corridas"
+														}
+													>
+														<span>{fmtTime(r.lastRun?.startedAt)}</span>
+													</Tooltip>
+													{r.lastRun?.outcome && (
+														<Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+															{OUTCOME_LABEL[r.lastRun.outcome] || r.lastRun.outcome}
+														</Typography>
+													)}
+												</TableCell>
+												<TableCell align="right" sx={{ fontVariantNumeric: "tabular-nums" }}>
+													{r.totals.previous ?? "—"} → <b>{r.totals.current ?? "—"}</b>
+												</TableCell>
+												<TableCell
+													align="right"
+													sx={{
+														fontVariantNumeric: "tabular-nums",
+														color: (r.totals.delta || 0) > 0 ? LIVE_GREEN : (r.totals.delta || 0) < 0 ? STALE_AMBER : "text.secondary",
+														fontWeight: r.totals.delta ? 700 : 400,
+													}}
 												>
-													<span>
-														{r.folders.total}
-														{r.folders.archived ? (
-															<span style={{ color: theme.palette.text.secondary }}> ({r.folders.archived} arch.)</span>
+													{fmtDelta(r.totals.delta)}
+												</TableCell>
+												<TableCell align="right" sx={{ fontVariantNumeric: "tabular-nums" }}>
+													<Tooltip title={`detectadas en el listado ${r.changes.causasEncontradas} · creadas ${r.changes.causasNuevas}`}>
+														<span>{r.changes.causasNuevas || (r.changes.causasEncontradas ? `${r.changes.causasEncontradas}*` : "—")}</span>
+													</Tooltip>
+												</TableCell>
+												<TableCell align="right" sx={{ fontVariantNumeric: "tabular-nums" }}>
+													<Tooltip
+														title={`creadas ${r.changes.foldersCreados} · archivadas por plan ${r.changes.foldersArchivados} · sin crear por límite ${r.changes.foldersPendientesLimite}`}
+													>
+														<span>
+															{r.changes.foldersCreados || "—"}
+															{r.changes.foldersArchivados ? ` (${r.changes.foldersArchivados} arch.)` : ""}
+															{r.changes.foldersPendientesLimite ? ` · ${r.changes.foldersPendientesLimite} sin crear` : ""}
+														</span>
+													</Tooltip>
+												</TableCell>
+												<TableCell align="right" sx={{ fontVariantNumeric: "tabular-nums" }}>
+													<Tooltip
+														title={`“Ya no en la lista”: marcadas ${r.changes.listRemovedMarked} · limpiadas ${r.changes.listRemovedCleared}`}
+													>
+														<span>
+															{r.changes.listRemovedMarked ? (
+																<span style={{ color: STALE_AMBER }}>−{r.changes.listRemovedMarked}</span>
+															) : (
+																""
+															)}
+															{r.changes.listRemovedMarked && r.changes.listRemovedCleared ? " / " : ""}
+															{r.changes.listRemovedCleared ? (
+																<span style={{ color: LIVE_GREEN }}>+{r.changes.listRemovedCleared}</span>
+															) : (
+																""
+															)}
+															{!r.changes.listRemovedMarked && !r.changes.listRemovedCleared ? "—" : ""}
+														</span>
+													</Tooltip>
+												</TableCell>
+												{!compact && (
+													<TableCell align="center">
+														{r.changes.scanComplete === null ? (
+															<Typography variant="caption" color="text.disabled">
+																—
+															</Typography>
+														) : r.changes.scanComplete ? (
+															<Tooltip
+																title={
+																	r.reconciliation.portalExpedientes !== null
+																		? `${r.reconciliation.portalExpedientes} expedientes leídos · ${
+																				r.reconciliation.matchedByKey ?? 0
+																		  } match por expediente · ${r.reconciliation.matchedByCaratula ?? 0} por carátula · ${
+																				r.reconciliation.portalWithoutFolder ?? 0
+																		  } en portal sin carpeta`
+																		: "escaneo completo"
+																}
+															>
+																<Chip
+																	size="small"
+																	label={`completo${r.changes.pagesScanned ? ` · ${r.changes.pagesScanned} pág.` : ""}${
+																		r.reconciliation.matchedByCaratula ? ` · ${r.reconciliation.matchedByCaratula} x carátula` : ""
+																	}${r.reconciliation.portalWithoutFolder ? ` · ${r.reconciliation.portalWithoutFolder} sin carpeta` : ""}`}
+																	variant="outlined"
+																	color={r.reconciliation.portalWithoutFolder ? "warning" : "default"}
+																	sx={{ height: 20, fontSize: "0.64rem" }}
+																/>
+															</Tooltip>
 														) : (
-															""
+															<Chip size="small" label="incompleto" color="warning" sx={{ height: 20, fontSize: "0.64rem" }} />
 														)}
-														{r.totals.current !== null && r.folders.total !== r.totals.current ? (
-															<span style={{ color: STALE_AMBER }}> ≠</span>
-														) : null}
-													</span>
-												</Tooltip>
-											</TableCell>
-											<TableCell align="center">
-												<Sparkline series={r.series} />
+													</TableCell>
+												)}
+												<TableCell align="right" sx={{ fontVariantNumeric: "tabular-nums" }}>
+													<Tooltip
+														title={`${r.folders.active} activas · ${r.folders.archived} archivadas · ${r.folders.listRemoved} “ya no en la lista”`}
+													>
+														<span>
+															{r.folders.total}
+															{r.folders.archived ? (
+																<span style={{ color: theme.palette.text.secondary }}> ({r.folders.archived} arch.)</span>
+															) : (
+																""
+															)}
+															{r.totals.current !== null && r.folders.total !== r.totals.current ? (
+																<span style={{ color: STALE_AMBER }}> ≠</span>
+															) : null}
+														</span>
+													</Tooltip>
+												</TableCell>
+												<TableCell align="center">
+													<Sparkline series={r.series} />
+												</TableCell>
+											</TableRow>
+										);
+									})}
+									{rows.length === 0 && (
+										<TableRow>
+											<TableCell colSpan={compact ? 10 : 11}>
+												<Typography variant="body2" color="text.secondary" textAlign="center" sx={{ py: 2 }}>
+													Sin credenciales para el filtro elegido.
+												</Typography>
 											</TableCell>
 										</TableRow>
-									);
-								})}
-								{rows.length === 0 && (
-									<TableRow>
-										<TableCell colSpan={compact ? 10 : 11}>
-											<Typography variant="body2" color="text.secondary" textAlign="center" sx={{ py: 2 }}>
-												Sin credenciales para el filtro elegido.
-											</Typography>
-										</TableCell>
-									</TableRow>
-								)}
-							</TableBody>
-						</Table>
+									)}
+								</TableBody>
+							</Table>
+						</TableContainer>
 					</Box>
 					<Typography variant="caption" color="text.secondary">
 						“Tenía → tiene” = total de expedientes en Mis Causas del portal antes/después de la última corrida. “Carpetas usuario” =
