@@ -125,10 +125,6 @@ const ScbaManagerTab: React.FC = () => {
 	const [alerts, setAlerts] = useState<ScbaAlert[]>([]);
 	const [stats, setStats] = useState<ScbaDailyStats[]>([]);
 
-	// Reset dialog
-	const [resetDialogOpen, setResetDialogOpen] = useState(false);
-	const [resetting, setResetting] = useState(false);
-
 	// Credentials
 	const [credentials, setCredentials] = useState<ScbaCredentialListItem[]>([]);
 	const [credentialsLoading, setCredentialsLoading] = useState(false);
@@ -264,26 +260,6 @@ const ScbaManagerTab: React.FC = () => {
 			});
 		} finally {
 			setSaving(false);
-		}
-	};
-
-	const handleReset = async () => {
-		try {
-			setResetting(true);
-			await ScbaManagerService.resetToDefaults();
-			enqueueSnackbar("Configuración reseteada a valores por defecto", {
-				variant: "success",
-				anchorOrigin: { vertical: "bottom", horizontal: "right" },
-			});
-			setResetDialogOpen(false);
-			await fetchConfig();
-		} catch (err: any) {
-			enqueueSnackbar(err.message || "Error al resetear", {
-				variant: "error",
-				anchorOrigin: { vertical: "bottom", horizontal: "right" },
-			});
-		} finally {
-			setResetting(false);
 		}
 	};
 
@@ -756,20 +732,8 @@ const ScbaManagerTab: React.FC = () => {
 						</Card>
 
 						{/* Actions */}
+						{/* Sin "Resetear a defaults": el endpoint destruía la config de los 5 workers y el estado del manager (S5, 2026-09-07). */}
 						<Stack direction="row" spacing={2} justifyContent="flex-end" flexWrap="wrap" useFlexGap>
-							<Button
-								variant="outlined"
-								color="error"
-								size="small"
-								onClick={() => setResetDialogOpen(true)}
-								sx={{
-									textTransform: "none",
-									transition: "transform 200ms ease",
-									"&:active": { transform: "scale(0.97)" },
-								}}
-							>
-								Resetear a defaults
-							</Button>
 							{hasChanges && (
 								<Button
 									variant="contained"
@@ -1231,7 +1195,7 @@ const ScbaManagerTab: React.FC = () => {
 									</TableHead>
 									<TableBody>
 										{alerts.map((alert, idx) => (
-											<TableRow key={idx}>
+											<TableRow key={alert.index ?? idx}>
 												<TableCell>
 													<Chip
 														size="small"
@@ -1243,7 +1207,7 @@ const ScbaManagerTab: React.FC = () => {
 												<TableCell>{alert.message}</TableCell>
 												<TableCell sx={{ fontVariantNumeric: "tabular-nums" }}>{formatDate(alert.timestamp)}</TableCell>
 												<TableCell align="center">
-													<Button size="small" variant="outlined" onClick={() => handleAcknowledgeAlert(idx)}>
+													<Button size="small" variant="outlined" onClick={() => handleAcknowledgeAlert(alert.index ?? idx)}>
 														Reconocer
 													</Button>
 												</TableCell>
@@ -1705,22 +1669,6 @@ const ScbaManagerTab: React.FC = () => {
 					</Stack>
 				</SubTabPanel>
 			</Paper>
-
-			{/* Reset dialog */}
-			<Dialog open={resetDialogOpen} onClose={() => setResetDialogOpen(false)}>
-				<DialogTitle>Resetear Configuración</DialogTitle>
-				<DialogContent>
-					<Typography>
-						¿Estás seguro de que quieres resetear toda la configuración SCBA a los valores por defecto? Esta acción no se puede deshacer.
-					</Typography>
-				</DialogContent>
-				<DialogActions>
-					<Button onClick={() => setResetDialogOpen(false)}>Cancelar</Button>
-					<Button variant="contained" color="error" onClick={handleReset} disabled={resetting}>
-						{resetting ? <CircularProgress size={20} /> : "Resetear"}
-					</Button>
-				</DialogActions>
-			</Dialog>
 
 			{/* Credential reset dialog */}
 			<Dialog

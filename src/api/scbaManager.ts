@@ -141,6 +141,8 @@ export interface ScbaHistorySnapshot {
 }
 
 export interface ScbaAlert {
+	/** Posición en el array completo de alertas del doc — es lo que espera `acknowledgeAlert` (mev-api lo manda desde S5). */
+	index?: number;
 	type: string;
 	workerType?: ScbaWorkerType;
 	message: string;
@@ -389,15 +391,6 @@ class ScbaManagerService {
 			return response.data;
 		} catch (error: any) {
 			throw new Error(error.response?.data?.message || "Error al obtener estadísticas del SCBA manager");
-		}
-	}
-
-	async resetToDefaults(): Promise<{ success: boolean; message: string; data: ScbaManagerConfig }> {
-		try {
-			const response = await mevAxios.post("/api/scba-manager/reset");
-			return response.data;
-		} catch (error: any) {
-			throw new Error(error.response?.data?.message || "Error al resetear configuración del SCBA manager");
 		}
 	}
 
