@@ -813,14 +813,32 @@ const CredencialesSCBA = () => {
 														</Typography>
 													</TableCell>
 													<TableCell align="center">
-														<Tooltip title={formatUnlinkDetail(cred) || ""} arrow disableHoverListener={cred.syncStatus !== "idle"}>
-															<Chip
-																label={getSyncStatusLabel(cred.syncStatus)}
-																color={getSyncStatusColor(cred.syncStatus) as any}
-																size="small"
-																sx={{ fontWeight: 600, letterSpacing: 0.3 }}
-															/>
-														</Tooltip>
+														<Stack spacing={0.5} alignItems="center">
+															<Tooltip title={formatUnlinkDetail(cred) || ""} arrow disableHoverListener={cred.syncStatus !== "idle"}>
+																<Chip
+																	label={getSyncStatusLabel(cred.syncStatus)}
+																	color={getSyncStatusColor(cred.syncStatus) as any}
+																	size="small"
+																	sx={{ fontWeight: 600, letterSpacing: 0.3 }}
+																/>
+															</Tooltip>
+															{cred.enabled && (cred.explicitRejections ?? 0) > 0 && (
+																<Tooltip
+																	arrow
+																	title={`El portal rechazó ${cred.explicitRejections} login(s) de esta credencial${
+																		cred.firstExplicitRejectionAt ? ` desde ${formatDate(cred.firstExplicitRejectionAt)}` : ""
+																	}. Sigue habilitada y reintentando — un login exitoso resetea el contador; si se acumulan suficientes, se deshabilita y se avisa al usuario.`}
+																>
+																	<Chip
+																		label={`🟡 ${cred.explicitRejections} rechazo${cred.explicitRejections === 1 ? "" : "s"}`}
+																		color="warning"
+																		size="small"
+																		variant="outlined"
+																		sx={{ fontWeight: 600, fontSize: "0.68rem", height: 20 }}
+																	/>
+																</Tooltip>
+															)}
+														</Stack>
 													</TableCell>
 													<TableCell align="center">
 														{cred.verified ? (

@@ -18,6 +18,11 @@ export interface ScbaCredential {
 	lastSync: string | null;
 	lastSyncAttempt: string | null;
 	consecutiveErrors: number;
+	/** Rechazos de login ("Datos inválidos") acumulándose mientras la credencial
+	 * sigue habilitada (pendientes de confirmación para el disable). 0 = ninguno. */
+	explicitRejections?: number;
+	/** Cuándo empezó a acumular rechazos el episodio en curso (para el tooltip). */
+	firstExplicitRejectionAt?: string | null;
 	lastError: {
 		message: string;
 		date: string;
