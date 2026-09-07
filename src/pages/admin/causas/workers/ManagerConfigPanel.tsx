@@ -493,11 +493,11 @@ const ManagerConfigPanel: React.FC = () => {
 									<TextField
 										fullWidth
 										size="small"
-										label="Horas Umbral (Escalado)"
+										label="Horas Umbral (fallback)"
 										type="number"
 										value={getValue("updateThresholdHours") || ""}
 										onChange={(e) => handleSettingChange("updateThresholdHours", parseInt(e.target.value))}
-										helperText="Solo decide cuántos workers levantar. NO es la cadencia de re-scrape (eso se edita en la columna 'Umbral (h)' de la tabla de configuraciones)."
+										helperText="Los pendientes por fuero se cuentan con el 'Umbral (h)' de cada configuración habilitada (el mismo que usa el worker). Este valor solo aplica a un fuero sin configuración."
 									/>
 								</Grid>
 
