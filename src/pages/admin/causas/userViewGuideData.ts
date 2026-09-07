@@ -571,7 +571,8 @@ export const PJN_FINDINGS: GuideFinding[] = [
 	{
 		id: "F14",
 		severity: "baja",
-		title: "[RESUELTO 2026-09-06, F14] Credencial PJN rechazada: la lista avisaba, la fila expandida y el detalle decían 'Vinculado con PJN'",
+		title:
+			"[RESUELTO 2026-09-06, F14] Credencial PJN rechazada: la lista avisaba, la fila expandida y el detalle decían 'Vinculado con PJN'",
 		detail:
 			"Era: solo folders.tsx consultaba usePjnCredentialError (punto ámbar + tooltip 'PJN — Sincronización pausada'); FolderView.tsx y details.tsx usaban getPjnBindingState sin esa señal y mostraban el pill verde 'Vinculado con PJN'. Para SCBA las tres vistas ya leían useScbaCredentialError y para MEV el estado viaja en el folder (mevCredentialStatus). Fix: getPjnBindingState(folder, { credError }) devuelve el nuevo estado cred_error (solo source pjn-login, después de todos los estados propios de la carpeta, antes de ok) con label 'PJN — Sincronización pausada', copy único y pill ámbar que lleva a Perfil → Cuentas Judiciales; la lista usa el mismo copy. No bloquea el detalle: la causa pública sigue actualizándose por scraping, lo pausado es la sync de Mis Causas. Verificado con juancamino713 (cred error CREDENTIAL_INVALID desde 2026-06-20, 5 carpetas pjn-login).",
 		where: "law-analytics-front src/utils/pjnBindingState.ts · folders.tsx · FolderView.tsx · details.tsx · hooks/usePjnCredentialError.ts",
@@ -994,7 +995,8 @@ export const MEV_FINDINGS: GuideFinding[] = [
 		title: "[RESUELTO 2026-09-06] mevCredentialStatus='invalid' inalcanzable",
 		detail:
 			"Era: el debounce solo dejaba pasar expiración o disabled; contraseña mal cargada → ~7 h de “Pendiente” (back-off 30 min→6 h) hasta el auto-disable. Fix: reportCredentialFailure devuelve likelyInvalid (credencial nunca verificada + ≥2 rechazos explícitos con ≥5 min de racha) y los workers lo tratan como fallo definitivo → 'invalid' + email, sin deshabilitar ni martillar el portal. El hub además sondea el login antes de guardar (rechazo = no se guarda) y limpia firstExplicitRejectionAt al re-guardar.",
-		where: "mev-workers credentials-resolver.js (reportCredentialFailure) · verify-worker.js · update-worker.js · hub mevCredentialsController.js (saveCredentials)",
+		where:
+			"mev-workers credentials-resolver.js (reportCredentialFailure) · verify-worker.js · update-worker.js · hub mevCredentialsController.js (saveCredentials)",
 	},
 	{
 		id: "M4",
@@ -1374,17 +1376,27 @@ export const EJE_FINDINGS: GuideFinding[] = [
 const scbaBase: F = { source: "scba-login", pjn: false, scba: true };
 const scbaPill = (label: string, accent: "green" | "amber", badge: string) => ({ label, accent, badge });
 
+/**
+ * SCBA (Suprema Corte de Buenos Aires — "Mis Causas" con credencial). Única
+ * puerta: la cuenta SCBA conectada desde el wizard o Integraciones; las
+ * carpetas las crea scba-workers. Estado de carpeta y de credencial en el
+ * front salen de una sola fuente (utils/scbaBindingState.ts, S15):
+ * unlinked > list_removed > cred_error > ok. Relevado 2026-09-05 y
+ * actualizado el 2026-09-07 tras el hardening S1–S24 (la-infra-docs
+ * flujos/estado-actual/scba-front.md §7).
+ */
 export const SCBA_GROUPS: GuideGroup[] = [
 	{
 		row: "ok",
 		title: "OK — carátula + tilde azul",
-		whatUserSees: "Carátula + tilde azul (“Causa vinculada a SCBA”). Fila expandida: pill verde “Vinculado con SCBA”.",
+		whatUserSees:
+			"Carátula + tilde azul (“Causa vinculada a SCBA”). Fila expandida/detalle: pill verde “Vinculado con SCBA”. Un rechazo de login todavía no confirmado NO cambia la fila (sólo la card de Integraciones).",
 		cases: [
 			{
 				key: "scba.ok.synced",
 				title: "Sincronizada y scrapeada (nominal)",
 				producer:
-					"scba-workers folder-service.ts:398-463 ensureFolder (insertOne con causaVerified=true, causaIsValid=true, assoc='success' HARDCODEADOS) + :510 updateFolderFromCausa tras el scraping",
+					"scba-workers folder-service.ts ensureFolder (insertOne con causaVerified=true, causaIsValid=true, assoc='success': “verificada” = figura en Mis Causas del portal con login OK) + updateFolderFromCausa tras cada scraping (recorre TODAS las carpetas de la causa, S1)",
 				fields: "source=scba-login · verified=true · isValid=true · assoc=success",
 				entry: entry(
 					{ ...scbaBase },
@@ -1397,10 +1409,10 @@ export const SCBA_GROUPS: GuideGroup[] = [
 			},
 			{
 				key: "scba.ok.unscraped",
-				title: "Recién creada, sin movimientos aún (o scraping fallido)",
+				title: "Recién creada, sin movimientos aún (o scraping inicial fallido)",
 				producer:
-					"folder-service.ts:398 con scrapingProgress pending; initial-scraping-worker.ts:569 escribe el error solo en la causa, el folder queda igual",
-				fields: "source=scba-login · verified=true · isValid=true · movementsCount=0 · scrapingProgress=pending",
+					"folder-service.ts con scrapingProgress pending; initial-scraping-worker escribe el error sólo en la causa (causas-scba.scrapingProgress), el folder queda igual. Desde S9 el front no queda clavado en 65 %: verification emite completed si no queda nada por extraer",
+				fields: "source=scba-login · verified=true · isValid=true · movementsCount=0 · scrapingProgress=pending|error",
 				entry: entry(
 					{ ...scbaBase },
 					{
@@ -1409,14 +1421,45 @@ export const SCBA_GROUPS: GuideGroup[] = [
 					},
 					credOk,
 				),
-				warn: "Tilde verde desde el instante 0 aunque la causa nunca se haya scrapeado; un fallo del scraping inicial es indistinguible.",
+				warn: "Tilde desde el instante 0 aunque la causa nunca se haya scrapeado; un fallo del scraping inicial sólo se ve en Actividad (0 movimientos). Aceptado (S21): la verificación SCBA es la lista del portal, no el scraping.",
+			},
+			{
+				key: "scba.ok.rejection_pending",
+				title: "Rechazo de login pendiente de confirmación (N de 3)",
+				producer:
+					"scba-workers credential-state.ts handleExplicitRejection: 'Datos inválidos' cuenta sólo si es del holder del lease, fuera de cuarentena de red y espaciado ≥30 min del primero (política 3/30 en configuracion-scba.credentialPolicy); la cred sigue enabled, syncStatus='pending', lastError.code='CREDENTIAL_REJECTED'. Hub: statusReason='rejection_pending' + rejectionProgress {count, required} (S10)",
+				fields: "source=scba-login · cred.enabled=true · cred.syncStatus=pending · cred.lastError.code=CREDENTIAL_REJECTED",
+				entry: entry(
+					{ ...scbaBase },
+					{
+						expanded: scbaPill("Vinculado con SCBA", "green", "valid"),
+						detail: { chip: scbaPill("Vinculado con SCBA", "green", "valid"), gate: null },
+					},
+					[{ ...credOk[0], credentialSyncStatus: "pending", credentialLastErrorCode: "CREDENTIAL_REJECTED" }],
+				),
+				warn: "La lista no cambia (correcto: puede ser rate-limit o la sesión del propio usuario). Integraciones muestra aviso ámbar “N de 3 rechazos” + “Actualizar contraseña”; POST /sync responde 400 RETRY_DEFERRED (S12). Credencial recién cargada: misma política (S8).",
+			},
+			{
+				key: "scba.ok.shared",
+				title: "Causa compartida por dos usuarios: cada uno tiene su carpeta",
+				producer:
+					"folder-service.ts ensureFolder busca {causaId, causaType, userId ∈ {owner del equipo, userId}} (S1, 9001c90): el segundo usuario recibe su propia carpeta; propagateTracking por usuario (S3) no apaga la de otro cuando una credencial cae",
+				fields: "source=scba-login · verified=true · isValid=true (una carpeta por usuario)",
+				entry: entry(
+					{ ...scbaBase },
+					{
+						expanded: scbaPill("Vinculado con SCBA", "green", "valid"),
+						detail: { chip: scbaPill("Vinculado con SCBA", "green", "valid"), gate: null },
+					},
+					credOk,
+				),
 			},
 			{
 				key: "scba.ok.toggle_off",
-				title: "Usuario apagó el seguimiento (toggle)",
+				title: "Credencial deshabilitada por el admin (toggle)",
 				producer:
-					"hub scbaCredentialsController.js:34 propagateTracking(false) → causaUpdateEnabled=false en folders; el front no lee causaUpdateEnabled",
-				fields: "source=scba-login · causaUpdateEnabled=false · cred.enabled=false",
+					"admin-api PATCH /api/scba-credentials/:id/toggle {enabled:false} → propagateTrackingToCausasAndFolders(false) → causaUpdateEnabled=false en las carpetas del usuario. La ruta de usuario del hub existe (idempotente desde S17) pero el front no tiene UI para llamarla",
+				fields: "source=scba-login · causaUpdateEnabled=false · cred.enabled=false · cred.syncStatus≠error",
 				entry: entry(
 					{ ...scbaBase },
 					{
@@ -1425,66 +1468,49 @@ export const SCBA_GROUPS: GuideGroup[] = [
 					},
 					[{ ...credOk[0], credentialEnabled: false }],
 				),
-				warn: "Completamente invisible en la UI.",
-			},
-			{
-				key: "scba.ok.shared",
-				title: "Causa compartida: el 2º usuario no tiene carpeta",
-				producer:
-					"folder-service.ts:262-265 findOne({causaId, causaType}) sin userId → isNew:false y no se crea folder para el segundo usuario",
-				fields: "(sin folder para ese usuario)",
-				entry: entry(
-					{ ...scbaBase },
-					{
-						expanded: scbaPill("Vinculado con SCBA", "green", "valid"),
-						detail: { chip: scbaPill("Vinculado con SCBA", "green", "valid"), gate: null },
-					},
-					credOk,
-				),
-				warn: "La causa está en su userCausaIds pero no aparece en su lista.",
+				warn: "Invisible para el usuario: el front no lee causaUpdateEnabled y GET /api/scba-credentials oculta la cred deshabilitada “limpia” (enabled=false sin error), así que Integraciones dice “No conectado” y la carpeta sigue con tilde. Abierto, baja (S23).",
 			},
 		],
 	},
 	{
 		row: "ok_cred_error",
-		title: "OK con credencial en error — warning ámbar",
+		title: "OK con credencial rota — warning ámbar",
 		whatUserSees:
-			"Carátula + warning ámbar (“SCBA — Sincronización pausada: tus credenciales fueron rechazadas…”). Fila expandida/detalle: pill “SCBA — Sincronización pausada”. Global por usuario.",
+			"Carátula + warning ámbar clickeable a Integraciones → SCBA. Fila expandida/detalle: pill “SCBA — Sincronización pausada”. Global por usuario (useScbaCredentialError, un fetch para N carpetas). Copy según statusReason (scbaStatusNotice).",
 		cases: [
 			{
 				key: "scba.cred.rejected",
-				title: "Rechazo de contraseña confirmado",
+				title: "Rechazo de contraseña confirmado (3 rechazos espaciados)",
 				producer:
-					"scba-workers credential-state.ts:524 markCredentialErroredAndNotify → cred syncStatus='error' (CREDENTIAL_INVALID) + propagateTracking(false) → causaUpdateEnabled=false",
-				fields: "source=scba-login · cred.syncStatus=error · causaUpdateEnabled=false",
+					"scba-workers credential-state.ts markCredentialErroredAndNotify (tras la confirmación de handleExplicitRejection): cred enabled=false, syncStatus='error', isExpired=true, lastError.code='CREDENTIAL_INVALID', email “Cuenta SCBA desactivada”; propagateTracking(false) por usuario → causaUpdateEnabled=false sólo en sus carpetas (S3). Hub statusReason='credential_invalid'",
+				fields: "source=scba-login · cred.syncStatus=error · cred.isExpired=true · causaUpdateEnabled=false",
 				entry: entry(
 					{ ...scbaBase },
 					{
 						list: "ok_cred_error",
 						expanded: scbaPill("SCBA — Sincronización pausada", "amber", "valid"),
 						detail: { chip: scbaPill("SCBA — Sincronización pausada", "amber", "valid"), gate: null },
-						credError: { code: "SCBA_ERROR", message: "Credenciales rechazadas" },
+						credError: { code: "CREDENTIAL_INVALID", message: "El Portal SCBA rechazó tus credenciales…" },
 					},
-					[{ ...credOk[0], credentialValid: false, credentialSyncStatus: "error" }],
+					[{ ...credOk[0], credentialValid: false, credentialSyncStatus: "error", credentialLastErrorCode: "CREDENTIAL_INVALID" }],
 				),
 			},
 			{
 				key: "scba.cred.syncerror",
-				title: "Error de scraping (no de contraseña) — mismo aviso",
+				title: "Error de scraping (no de contraseña) — mismo aviso, otro copy",
 				producer:
-					"scba-workers verification-worker.ts:203 markSyncError → syncStatus='error' (SYNC_ERROR) sin tocar folders; useScbaCredentialError solo mira syncStatus==='error'",
-				fields: "source=scba-login · cred.syncStatus=error · causaUpdateEnabled=true",
+					"scba-workers verification-worker markSyncError → syncStatus='error' (SYNC_ERROR) sin tocar folders. Hub statusReason='sync_error' (S10) → copy “Pudimos ingresar al Portal SCBA pero falló la lectura de tus causas…” (S15); el tracking sigue activo",
+				fields: "source=scba-login · cred.syncStatus=error · cred.isExpired=false · causaUpdateEnabled=true",
 				entry: entry(
 					{ ...scbaBase },
 					{
 						list: "ok_cred_error",
 						expanded: scbaPill("SCBA — Sincronización pausada", "amber", "valid"),
 						detail: { chip: scbaPill("SCBA — Sincronización pausada", "amber", "valid"), gate: null },
-						credError: { code: "SYNC_ERROR", message: "Fallo del scraping" },
+						credError: { code: "SYNC_ERROR", message: "Pudimos ingresar al Portal SCBA pero falló la lectura…" },
 					},
-					[{ ...credOk[0], credentialSyncStatus: "error" }],
+					[{ ...credOk[0], credentialSyncStatus: "error", credentialLastErrorCode: "SYNC_ERROR" }],
 				),
-				warn: "Copy falsa: dice “credenciales rechazadas” y el tracking sigue activo.",
 			},
 		],
 	},
@@ -1496,9 +1522,9 @@ export const SCBA_GROUPS: GuideGroup[] = [
 		cases: [
 			{
 				key: "scba.list_removed",
-				title: "Baja detectada por list-audit",
+				title: "Baja detectada por list-audit (3 ART)",
 				producer:
-					"scba-workers list-audit-worker.ts:298-315: listRemoved=true, listRemovedSource='scba', listRemovedAt (updateMany por causaId). Se limpia en scba-upsert.ts:224 si la causa reaparece",
+					"scba-workers list-audit-worker: listRemoved=true, listRemovedSource='scba', listRemovedAt (updateMany por causaId) + email “ℹ️ SCBA: M causa(s) ya no figura(n)”. Se limpia en scba-upsert si la causa reaparece; el unlink keep hace $unset de listRemoved* (84255a5) y el re-link no lo revive. Desde S19 una credencial sin lease a las 3 ART se reintenta al final del ciclo",
 				fields: "source=scba-login · listRemoved=true · listRemovedSource=scba",
 				entry: entry(
 					{ ...scbaBase, listRemoved: true, listRemovedSource: "scba" },
@@ -1509,21 +1535,52 @@ export const SCBA_GROUPS: GuideGroup[] = [
 					},
 					credOk,
 				),
-				warn: "A diferencia de PJN, acá SÍ se escribe (driver nativo, sin strict). Sobrevive al unlink keep y revive al re-link aunque la causa esté activa.",
+			},
+		],
+	},
+	{
+		row: "unlinked",
+		title: "Desvinculada (keep) — “Sincronización pausada (era SCBA)”",
+		whatUserSees:
+			"Carátula + ícono gris con tooltip “Esta carpeta fue desvinculada de SCBA… vinculá tu cuenta desde Integraciones → SCBA” (scbaBindingState 'unlinked'). Fila expandida/detalle: pill “Sincronización pausada (era SCBA)”. Movimientos: snapshot materializado en `movements` (source 'scba-snapshot') + PDFs copiados a folders/{id}/.",
+		cases: [
+			{
+				key: "scba.keep",
+				title: "Unlink modo keep (y su re-vinculación)",
+				producer:
+					"hub scbaCredentialsController.js executeScbaKeepMode: snapshot best-effort → source='manual', scba=false, causaId=null, causaType=null, causaVerified=false, assoc='unlinked', causaUpdateEnabled=false, previousSyncSource='scba', $unset listRemoved*; $pull folderIds/userCausaIds en causas-scba (S13, 2816abe). Al re-conectar la cuenta, ensureFolder re-ata la MISMA carpeta por previousSyncSource + judFolder.numberJudFolder, borra los Movement scba-snapshot y el worker re-propaga update:true (572d236)",
+				fields: "source=manual · scba=false · assoc=unlinked · previousSyncSource=scba · causaId=null · judFolder intacto",
+				entry: entry(
+					{
+						...scbaBase,
+						source: "manual",
+						scba: false,
+						causaVerified: false,
+						causaIsValid: undefined,
+						causaAssociationStatus: "unlinked",
+						previousSyncSource: "scba",
+					},
+					{
+						list: "unlinked",
+						expanded: scbaPill("Sincronización pausada (era SCBA)", "amber", "unlinked"),
+						detail: { chip: scbaPill("Sincronización pausada (era SCBA)", "amber", "unlinked"), gate: null },
+						inAttentionTable: false,
+					},
+				),
 			},
 		],
 	},
 	{
 		row: "pending",
-		title: "Pendiente de verificación — chip ámbar (terminal)",
-		whatUserSees: "Chip ámbar “Pendiente de verificación” + refresh.",
+		title: "Pendiente de verificación — chip ámbar (hoy no alcanzable)",
+		whatUserSees: "Chip ámbar “Pendiente de verificación” + refresh. Ninguna carpeta SCBA llega acá.",
 		cases: [
 			{
 				key: "scba.pending.reverify",
-				title: "Reverificación manual — sin consumidor",
+				title: "Reverificación manual — sin productor ni consumidor",
 				producer:
-					"hub folderController.js:5288 reverifyFolder: causaVerified=false, assoc='pending'; ningún worker SCBA vuelve a escribir causaVerified fuera de la creación/re-link",
-				fields: "source=scba-login · verified=false · assoc=pending · verificationAttempts=1..2",
+					"hub folderController.js reverifyFolder admite scba=true (causaVerified=false, assoc='pending') pero el botón vive en PendingVerificationView, que sólo se muestra con causaVerified=false — y las carpetas SCBA nacen verificadas y el keep las convierte en 'unlinked'. Ningún worker SCBA escribe causaVerified fuera de la creación/re-link",
+				fields: "source=scba-login · verified=false · assoc=pending (sólo por escritura manual en DB)",
 				entry: entry(
 					{ ...scbaBase, causaVerified: false, causaIsValid: undefined, causaAssociationStatus: "pending", verificationAttempts: 1 },
 					pendingView({
@@ -1532,44 +1589,21 @@ export const SCBA_GROUPS: GuideGroup[] = [
 					}),
 					credOk,
 				),
-				warn: "Estado terminal: queda pendiente para siempre con los 2 intentos consumidos.",
-			},
-		],
-	},
-	{
-		row: "plain",
-		title: "Sin indicador — desvinculada (keep)",
-		whatUserSees:
-			"Carátula sin ícono (scba=false). Fila expandida/detalle: pill ámbar “Sincronización pausada (era SCBA)”; botón “Vincular con Poder Judicial” bloqueado.",
-		cases: [
-			{
-				key: "scba.keep",
-				title: "Unlink modo keep",
-				producer:
-					"hub scbaCredentialsController.js:258-273 executeScbaKeepMode (driver nativo): source='manual', scba=false, causaId=null, causaVerified=false, causaIsValid=false, assoc=NULL, causaUpdateEnabled=false, previousSyncSource='scba'; movimientos materializados como snapshot",
-				fields: "source=manual · scba=false · assoc=null · previousSyncSource=scba",
-				entry: entry(
-					{ ...scbaBase, source: "manual", scba: false, causaVerified: false, causaIsValid: false, causaAssociationStatus: undefined },
-					{
-						list: "plain",
-						expanded: scbaPill("Sincronización pausada (era SCBA)", "amber", "pending"),
-						detail: { chip: scbaPill("Sincronización pausada (era SCBA)", "amber", "pending"), gate: null },
-					},
-				),
-				warn: "assoc=null y causaType=null violan el enum del schema (un folder.save() posterior fallaría).",
+				warn: "Si alguna vez se produce (edición en DB), es terminal: nadie la vuelve a verificar (S22, no aplica en la práctica).",
 			},
 		],
 	},
 	{
 		row: "hidden_archived",
 		title: "No aparece — archivada",
-		whatUserSees: "Solo en el modal Archivadas.",
+		whatUserSees:
+			"Solo en el modal Archivadas. Con updatePolicy 'unified' el update-worker la sigue actualizando; la notificación depende de notifyArchivedFolders.",
 		cases: [
 			{
 				key: "scba.archived.plan",
 				title: "Creada archivada por límite de plan",
 				producer:
-					"scba-workers subscription-limits.ts:177-181 getNextFolderState → 'archived' → folder-service.ts:398 archived=true (sin archivedAt/archivedBy). Si tampoco hay storage: 'pending' → NO se crea folder",
+					"scba-workers subscription-limits.ts getNextFolderState → 'archived' → folder-service.ts archived=true (sin archivedAt/archivedBy). Si tampoco hay storage: 'pending' → NO se crea folder (queda en foldersPending del email de sync)",
 				fields: "source=scba-login · archived=true",
 				entry: entry(
 					{ ...scbaBase, archived: true },
@@ -1580,73 +1614,209 @@ export const SCBA_GROUPS: GuideGroup[] = [
 					},
 					credOk,
 				),
-				warn: "99% de las carpetas SCBA (837/846). Indistinguible de un archivado manual del usuario.",
+				warn: "La gran mayoría de las carpetas SCBA (837/846 al 2026-09-05). Indistinguible de un archivado manual del usuario: falta archivedAt/archivedBy (S24, abierto, baja).",
 			},
 		],
 	},
 ];
 
+const R = (d: string, t: string) => `[RESUELTO ${d}] ${t}`;
+
+/**
+ * Misma numeración que la-infra-docs flujos/estado-actual/scba-front.md §7
+ * (S1–S20 del relevamiento del 2026-09-06/07) + S21–S24 (los hallazgos de
+ * esta guía que no estaban en ese relevamiento). Historial completo con
+ * commits y pruebas en prod: flujos/historial/scba-hardening.md.
+ */
 export const SCBA_FINDINGS: GuideFinding[] = [
 	{
 		id: "S1",
 		severity: "alta",
-		title: "Reverificación SCBA es terminal",
+		title: R("2026-09-06", "Un solo folder por causa compartida"),
 		detail:
-			"reverify pone causaVerified=false/'pending' pero ningún worker SCBA escribe causaVerified fuera de la creación/re-link → “Pendiente de verificación” para siempre.",
-		where: "law-analytics-server folderController.js:5288 · scba-workers folder-service.ts:267-297",
+			"ensureFolder buscaba {causaId, causaType} sin userId: el segundo usuario con la misma causa nunca recibía carpeta y updateFolderFromCausa sólo actualizaba una. Ahora filtra userId ∈ {owner del equipo, userId} y recorre todas las carpetas de la causa.",
+		where: "scba-workers folder-service.ts (9001c90)",
 	},
 	{
 		id: "S2",
-		severity: "alta",
-		title: "Un solo folder por causa compartida",
+		severity: "media",
+		title: "[ACEPTADO 2026-09-06] credentialId escalar en causas compartidas",
 		detail:
-			"ensureFolder busca por {causaId, causaType} sin userId: el segundo usuario con la misma causa en Mis Causas nunca recibe carpeta.",
-		where: "scba-workers folder-service.ts:262-265",
+			"Semántica explícita: “credencial que sirve la causa = la última cuya lista la vio”; S3 lo re-estampa a una habilitada cuando la actual no lo es. Prod tenía 0/851 causas compartidas.",
+		where: "scba-workers scba-upsert.ts",
 	},
 	{
 		id: "S3",
-		severity: "media",
-		title: "“Credenciales rechazadas” también ante error de scraping",
+		severity: "alta",
+		title: R("2026-09-06", "propagateTracking apagaba carpetas de otros usuarios"),
 		detail:
-			"useScbaCredentialError solo mira syncStatus==='error', que escriben tanto el rechazo de contraseña como markSyncError; en el segundo caso la copy es falsa y el tracking sigue activo.",
-		where: "law-analytics-front useScbaCredentialError.ts:23 · scba-workers verification-worker.ts:203",
+			"Busca por userCausaIds; update = algún usuario con credencial habilitada; causaUpdateEnabled sólo en las carpetas del usuario/owner. Gemelos worker + hub.",
+		where: "scba-workers credential-state.ts (9001c90) · hub scbaCredentialsController.js (cef5209)",
 	},
 	{
 		id: "S4",
-		severity: "media",
-		title: "verified/isValid hardcodeados en la creación",
+		severity: "alta",
+		title: R("2026-09-07", "Borrar una carpeta SCBA no la excluía: el sync la recreaba"),
 		detail:
-			"El folder nace verificado y válido antes de cualquier scraping; un fallo del scraping inicial queda invisible (scrapingProgress pending eterno).",
-		where: "scba-workers folder-service.ts:434-437 · initial-scraping-worker.ts:569",
+			"$pull folderIds/userCausaIds + excludedCausas en la credencial; el upsert respeta la exclusión; restauración desde Integraciones y admin (primer pase sin backlog ni email).",
+		where:
+			"hub folderController.js / scbaFolderDissociateService.js (72944b2, b5674d7) · scba-workers scba-upsert.ts (96edfe7, bcb8519) · front e8686b1e · admin 8866b92",
 	},
 	{
 		id: "S5",
-		severity: "media",
-		title: "Toggle de credencial invisible",
-		detail: "propagateTracking baja causaUpdateEnabled pero el front nunca lo lee: carpetas con seguimiento apagado se ven sincronizadas.",
-		where: "law-analytics-server scbaCredentialsController.js:34 · folders.tsx / FolderView.tsx / details.tsx",
+		severity: "alta",
+		title: R("2026-09-07", "POST /api/scba-manager/reset destruía la config del manager"),
+		detail:
+			"mev-api sin schema propio (utils/scbaManagerConfig.js), /reset → 410, botón quitado; getConfig/getStatus muestran los 5 workers; alertas reconocidas por índice real.",
+		where: "mev-api scbaManagerController.js (acbf91e) · admin ScbaManagerTab.tsx (8aefd8b)",
 	},
 	{
 		id: "S6",
-		severity: "baja",
-		title: "listRemoved sobrevive al keep y revive al re-link",
-		detail:
-			"executeScbaKeepMode no limpia listRemoved*; el re-link tampoco → el badge “Ya no en la lista” reaparece sobre una causa activa.",
-		where: "scbaCredentialsController.js:258-273 · scba-workers folder-service.ts:362-383",
+		severity: "media",
+		title: R("2026-09-06", "Login fallido dejaba la credencial in_progress 20 min"),
+		detail: "deferSyncRetry() vuelve la cred a pending tras rechazo no confirmado / conflicto de sesión / cuarentena / fallo transitorio.",
+		where: "scba-workers verification-worker.ts (819de75)",
 	},
 	{
 		id: "S7",
-		severity: "baja",
-		title: "assoc=null / causaType=null fuera del enum",
-		detail: "El keep escribe con driver nativo valores que el schema no admite.",
-		where: "law-analytics-server scbaCredentialsController.js:268",
+		severity: "media",
+		title: R("2026-09-06", "Toast rojo “Credenciales inválidas” con el perfil aún Conectado"),
+		detail:
+			"WS error sólo cuando handleExplicitRejection deshabilita; si no, fase 'deferred' (snackbar warning, aviso ámbar en la card, sin polling).",
+		where: "scba-workers verification-worker.ts (819de75) · front e053a64d",
 	},
 	{
 		id: "S8",
+		severity: "alta",
+		title: R("2026-09-07", "Credencial nueva se deshabilitaba al primer “Datos inválidos”"),
+		detail:
+			"Misma política de confirmación para nuevas y establecidas (3 rechazos espaciados ≥30 min, gate de sesión, cuarentena de red); saveCredentials resetea contadores; copy “N de 3” para cred recién cargada. Verificado E2E en prod.",
+		where: "scba-workers credential-state.ts (ce98e1b, 44e1f95) · hub 0f6a213 · front 31c5f83a",
+	},
+	{
+		id: "S9",
+		severity: "media",
+		title: R("2026-09-06", "Front clavado en 65 % “Extrayendo trámites…”"),
+		detail:
+			"verification emite completed 100 % si no queda nada por scrapear; initial-scraping también tras la última causa fallida. Verificado: 65 → 100 % en 6 s.",
+		where: "scba-workers verification-worker.ts / initial-scraping-worker.ts (819de75)",
+	},
+	{
+		id: "S10",
+		severity: "media",
+		title: R("2026-09-07", "El usuario no veía rechazos pendientes, portal inestable ni inactividad"),
+		detail:
+			"statusReason (credential_invalid | sync_error | user_inactive | unlinked | rejection_pending | session_conflict | portal_unstable | syncing | ok | never_synced) + rejectionProgress; lastError sin screenshotKey.",
+		where: "hub models/ScbaCredentials.js · scbaCredentialStatusService.js (1acd866)",
+	},
+	{
+		id: "S11",
 		severity: "baja",
-		title: "archived por plan sin archivedAt/archivedBy",
-		detail: "Indistinguible de un archivado manual; solo queda un bell transitorio.",
-		where: "scba-workers folder-service.ts:398",
+		title: R("2026-09-07", "Email de sync siempre con copy de “primer sync”"),
+		detail: "isFirstSync = !lastSync || unlinkedAt > lastSync; copy neutral para re-sync; scbaCausasAdded deja de ser código muerto.",
+		where: "scba-workers verification-worker.ts / email-service.ts (407c38e) · admin 5a51f93",
+	},
+	{
+		id: "S12",
+		severity: "media",
+		title: R("2026-09-07", "POST /sync aceptaba credencial expirada o con reintento diferido"),
+		detail: "400 CREDENTIAL_EXPIRED y 400 RETRY_DEFERRED (+retryReason); la card mantiene el aviso “N de M”.",
+		where: "hub scbaCredentialsController.js requestSync (5c18856)",
+	},
+	{
+		id: "S13",
+		severity: "media",
+		title: R("2026-09-07", "Unlink keep dejaba al usuario en userCausaIds → notificaciones de causas ajenas"),
+		detail:
+			"Los duplicados al re-vincular ya estaban resueltos (re-attach por judFolder). El efecto real: en causas compartidas el usuario keep-desvinculado seguía recibiendo movimientos (fallback userCausaIds + webhook sin chequeo de carpeta). Fix: $pull folderIds/userCausaIds como en delete + snapshot best-effort; el worker re-propaga update:true tras el sync (el hub lo hacía antes del sync y ya no encuentra las causas). Verificado E2E en prod.",
+		where: "hub scbaCredentialsController.js executeScbaKeepMode (2816abe) · scba-workers verification-worker.ts (572d236)",
+	},
+	{
+		id: "S14",
+		severity: "baja",
+		title: "[YA ESTABA 2026-09-07] Sync de marketing tras cambios de credencial",
+		detail: "LAW_ANALYTICS_API_URL + INTERNAL_SERVICE_TOKEN presentes en el secreto; el hub loguea [marketingInternal] en cada sync.",
+		where: "scba-workers notify-marketing.ts · hub marketingInternalRoutes.js",
+	},
+	{
+		id: "S15",
+		severity: "media",
+		title: R("2026-09-07", "Tres criterios distintos de “cuenta conectada” y copy inconsistente"),
+		detail:
+			"utils/scbaBindingState.ts: estado de carpeta (unlinked > list_removed > cred_error > ok) y de credencial (isScbaConnected, isScbaCredentialBroken, isScbaRetryDeferred, scbaStatusNotice) en un solo lugar; badge 'attention'; reintento diferido no se muestra como “Sincronizando”.",
+		where: "front utils/scbaBindingState.ts (1fc6e6cd, 33ffba1a, 0f31b12d)",
+	},
+	{
+		id: "S16",
+		severity: "baja",
+		title: R("2026-09-07", "Front: copy del wizard, doble toast de completada, tipos, 401"),
+		detail:
+			"La card BA del wizard decía sólo “MEV”; pollSyncStatus no re-chequeaba isPolling tras el await (dos toasts con números distintos cuando el WS cortaba el polling con una request en vuelo); username tipado; 401 → “Sesión expirada” en getCredentialsStatus (SCBA y PJN); toggleCredentials muerto borrado.",
+		where: "front judicialPowerSelection.tsx · api/scbaCredentials.ts · ScbaAccountConnect.tsx (79b625ca)",
+	},
+	{
+		id: "S17",
+		severity: "baja",
+		title: R("2026-09-07", "Hub: guard de propietario, toggle no idempotente, unlink-impact, gating, N+1"),
+		detail:
+			"requireScbaOwner en las rutas de gestión; toggle lee {enabled}; unlink-impact usa el filtro de getCredentialsStatus (404 si ya está desvinculada); 'unlinked' en el enum de causaAssociationHistory; scbaAccess con gating real en la rama sin paginación de movimientos; analyzeScbaImpact con un find $in. teamContext sigue sin setearse (igual que PJN) — dejado a propósito con el guard puesto.",
+		where: "hub routes/scbaCredentialsRoutes.js · scbaCredentialsController.js · movementController.js · models/Folder.js (f86664d)",
+	},
+	{
+		id: "S18",
+		severity: "media",
+		title: R("2026-09-07", "Config del manager que nunca aplicó + estado de instancias ficticio"),
+		detail:
+			"listSnapshots.retentionDays y sessionMaxCausas no estaban en el schema: getConfig() (doc hidratado, strict) los descartaba — la retención 180 corría con 90 y sessionMaxCausas siempre 500. El manager persistía el óptimo, no las instancias reales de PM2. workEndHour default 24 (es exclusivo). Guard in_progress en la auto-rehabilitación.",
+		where: "scba-models configuracion-scba.ts (a41bef2) · scba-workers scba-manager.ts / credential-state.ts (462246a)",
+	},
+	{
+		id: "S19",
+		severity: "baja",
+		title: R("2026-09-07", "WS folders_created al usuario equivocado en equipos; list-audit perdía el día sin lease"),
+		detail:
+			"folders_created agrupado por el owner real de cada carpeta; las credenciales sin lease a las 3 ART se reintentan al final del ciclo (12 min).",
+		where: "scba-workers verification-worker.ts · list-audit-worker.ts (462246a)",
+	},
+	{
+		id: "S20",
+		severity: "baja",
+		title: R("2026-09-07", "Docs decían worker_02; prod es worker-cloud-02"),
+		detail:
+			"CLAUDE.md de scba-workers y del ecosistema: worker-cloud-02 100.102.208.69, scba-models por symlink, alias de deploy key github-w02, pm2 /usr/bin/pm2.",
+		where: "scba-workers CLAUDE.md (b5f42db)",
+	},
+	{
+		id: "S21",
+		severity: "baja",
+		title: "[ACEPTADO 2026-09-07] verified/isValid=true desde la creación",
+		detail:
+			"Para SCBA “verificada” significa que la causa figura en Mis Causas del portal con login OK, no que se haya scrapeado. Un fallo del scraping inicial sólo se ve como 0 movimientos en Actividad (y en la causa: scrapingProgress). Se acepta; si hace falta un estado propio, sería un flag de scraping en la carpeta.",
+		where: "scba-workers folder-service.ts ensureFolder · initial-scraping-worker.ts",
+	},
+	{
+		id: "S22",
+		severity: "baja",
+		title: "[NO APLICA 2026-09-07] Reverificación SCBA terminal",
+		detail:
+			"reverifyFolder admite scba=true pero el botón sólo aparece en PendingVerificationView (causaVerified=false), estado al que ninguna carpeta SCBA llega (nacen verificadas; el keep las convierte en 'unlinked'). Sólo reproducible editando la DB.",
+		where: "hub folderController.js reverifyFolder · front PendingVerificationView.tsx",
+	},
+	{
+		id: "S23",
+		severity: "baja",
+		title: "Credencial deshabilitada por el admin es invisible para el usuario",
+		detail:
+			"El toggle sólo existe en admin-api (el front no tiene UI para la ruta de usuario). propagateTracking(false) apaga causaUpdateEnabled pero el front no lo lee y GET /api/scba-credentials oculta la cred deshabilitada sin error → carpetas con tilde e Integraciones “No conectado”. Abierto, baja: decidir si mostrar “Sincronización pausada por el administrador” (statusReason nuevo) o dejarlo como herramienta interna.",
+		where: "hub getCredentialsStatus · front scbaBindingState.ts",
+	},
+	{
+		id: "S24",
+		severity: "baja",
+		title: "Archivada por límite de plan sin archivedAt/archivedBy",
+		detail:
+			"folder-service crea la carpeta con archived=true y nada más: indistinguible de un archivado manual. Abierto, baja: setear archivedAt y un marcador (archivedBy es ObjectId de User; haría falta un campo archivedReason o similar).",
+		where: "scba-workers folder-service.ts · hub models/Folder.js",
 	},
 ];
 
