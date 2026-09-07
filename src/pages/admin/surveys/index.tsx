@@ -140,7 +140,7 @@ const SurveysAdminPage = () => {
 	const [items, setItems] = useState<Survey[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [page, setPage] = useState(0);
-	const [rowsPerPage, setRowsPerPage] = useState(20);
+	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [total, setTotal] = useState(0);
 
 	const [filterStatus, setFilterStatus] = useState<SurveyStatus | "">("");

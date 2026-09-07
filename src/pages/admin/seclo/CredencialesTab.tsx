@@ -37,7 +37,7 @@ export default function CredencialesTab() {
 	const { credentials, credentialsTotal, loading } = useSelector((s) => s.seclo);
 
 	const [page, setPage] = useState(0);
-	const [rowsPerPage] = useState(15);
+	const [rowsPerPage] = useState(10);
 	const [search, setSearch] = useState("");
 	const [openCreate, setOpenCreate] = useState(false);
 	const [editTarget, setEditTarget] = useState<TrabajoCredential | null>(null);
@@ -278,7 +278,7 @@ export default function CredencialesTab() {
 				page={page}
 				onPageChange={(_, p) => setPage(p)}
 				rowsPerPage={rowsPerPage}
-				rowsPerPageOptions={[15]}
+				rowsPerPageOptions={[10]}
 			/>
 
 			{/* Modales */}

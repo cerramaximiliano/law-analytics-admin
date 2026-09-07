@@ -184,7 +184,7 @@ export default function NotificacionesTab() {
 	const [rows, setRows] = useState<PlazoNotificacion[]>([]);
 	const [count, setCount] = useState(0);
 	const [page, setPage] = useState(0);
-	const [rowsPerPage, setRowsPerPage] = useState(25);
+	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [loading, setLoading] = useState(true);
 	const [status, setStatus] = useState("");
 	const [fuero, setFuero] = useState("");

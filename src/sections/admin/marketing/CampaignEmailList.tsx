@@ -124,7 +124,7 @@ const CampaignEmailList = ({ campaign, open, onClose }: CampaignEmailListProps) 
 
 	// State for pagination
 	const [page, setPage] = useState(0);
-	const [rowsPerPage, setRowsPerPage] = useState(5);
+	const [rowsPerPage, setRowsPerPage] = useState(10);
 
 	// State for help card collapse
 	const [helpExpanded, setHelpExpanded] = useState(false);

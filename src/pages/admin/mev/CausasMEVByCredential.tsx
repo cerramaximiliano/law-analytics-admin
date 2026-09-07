@@ -124,7 +124,7 @@ const CausasMEVByCredential = () => {
 	const [summary, setSummary] = useState<ScbaSyncedCausasSummary | null>(null);
 	const [loading, setLoading] = useState(false);
 	const [page, setPage] = useState(0);
-	const [rowsPerPage, setRowsPerPage] = useState(25);
+	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [totalCount, setTotalCount] = useState(0);
 
 	// Filtros

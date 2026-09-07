@@ -109,7 +109,7 @@ const InfolegNormasPage = () => {
 	const [loading, setLoading] = useState(true);
 	const [total, setTotal] = useState(0);
 	const [page, setPage] = useState(0);
-	const [rowsPerPage, setRowsPerPage] = useState(25);
+	const [rowsPerPage, setRowsPerPage] = useState(10);
 
 	// Filters
 	const [search, setSearch] = useState("");

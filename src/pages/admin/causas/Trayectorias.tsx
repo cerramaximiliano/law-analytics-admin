@@ -144,7 +144,7 @@ const Trayectorias = () => {
 	const [total, setTotal] = useState(0);
 	const [byFuero, setByFuero] = useState<Record<string, number>>({});
 	const [page, setPage] = useState(0);
-	const [rowsPerPage, setRowsPerPage] = useState(25);
+	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [fuero, setFuero] = useState("todos");
 
 	useEffect(() => {

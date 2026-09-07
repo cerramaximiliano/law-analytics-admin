@@ -90,7 +90,7 @@ const CausasUpdateEligiblePage = () => {
 	const [loading, setLoading] = useState(true);
 	const [total, setTotal] = useState(0);
 	const [page, setPage] = useState(0);
-	const [rowsPerPage, setRowsPerPage] = useState(20);
+	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [search, setSearch] = useState("");
 	const [searchInput, setSearchInput] = useState("");
 	const [onlyAvailable, setOnlyAvailable] = useState(false);

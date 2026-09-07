@@ -1557,7 +1557,7 @@ export default function SolicitudesTab() {
 	const { solicitudes, solicitudesTotal, loading } = useSelector((s) => s.seclo);
 
 	const [page, setPage] = useState(0);
-	const [rowsPerPage] = useState(15);
+	const [rowsPerPage] = useState(10);
 	const [search, setSearch] = useState("");
 	const [statusFilter, setStatusFilter] = useState("");
 	const [scheduledFilter, setScheduledFilter] = useState<ScheduledFilter>("all");
@@ -1964,7 +1964,7 @@ export default function SolicitudesTab() {
 				page={page}
 				onPageChange={(_, p) => setPage(p)}
 				rowsPerPage={rowsPerPage}
-				rowsPerPageOptions={[15]}
+				rowsPerPageOptions={[10]}
 			/>
 
 			{/* Modales */}

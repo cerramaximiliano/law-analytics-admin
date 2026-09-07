@@ -92,7 +92,7 @@ const DocumentosTab = () => {
 	const [codigos, setCodigos] = useState<Codigo[]>([]);
 	const [loading, setLoading] = useState(false);
 	const [page, setPage] = useState(0);
-	const [rowsPerPage, setRowsPerPage] = useState(20);
+	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [totalCount, setTotalCount] = useState(0);
 
 	// Filtros

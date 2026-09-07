@@ -546,7 +546,7 @@ const PdfTemplatesPage: React.FC = () => {
 	const [templates, setTemplates] = useState<PdfTemplate[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [page, setPage] = useState(0);
-	const [rowsPerPage, setRowsPerPage] = useState(20);
+	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [total, setTotal] = useState(0);
 
 	// Stats

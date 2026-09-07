@@ -602,7 +602,7 @@ const DatosPrevisionales = () => {
 
 	// Listado
 	const [rows, setRows] = useState<DatoPrevisional[]>([]);
-	const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 25, pages: 1 });
+	const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 10, pages: 1 });
 	const [loadingList, setLoadingList] = useState(false);
 	const [filterAnio, setFilterAnio] = useState<number | "">("");
 	const [filterMoneda, setFilterMoneda] = useState<"" | "australes" | "pesos">("");
@@ -1134,7 +1134,7 @@ const DatosPrevisionales = () => {
 								count={pagination.total}
 								page={pagination.page - 1}
 								rowsPerPage={pagination.limit}
-								rowsPerPageOptions={[25, 50, 100]}
+								rowsPerPageOptions={[10, 25, 50, 100]}
 								onPageChange={(_e, p) => fetchList(p + 1)}
 								onRowsPerPageChange={(e) => {
 									setPagination((prev) => ({ ...prev, limit: parseInt(e.target.value, 10), page: 1 }));

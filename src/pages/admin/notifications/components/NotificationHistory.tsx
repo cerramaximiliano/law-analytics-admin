@@ -63,7 +63,7 @@ const NotificationHistory = () => {
 
 	// Estado para alertas entregadas
 	const [alertsPage, setAlertsPage] = useState(0);
-	const [alertsRowsPerPage, setAlertsRowsPerPage] = useState(25);
+	const [alertsRowsPerPage, setAlertsRowsPerPage] = useState(10);
 	const [filterStatus, setFilterStatus] = useState<string>("all");
 	const [filterSourceType, setFilterSourceType] = useState<string>("all");
 	const [alertsStartDate, setAlertsStartDate] = useState<Date | null>(null);
@@ -75,7 +75,7 @@ const NotificationHistory = () => {
 
 	// Estado para historial de notificaciones
 	const [historyPage, setHistoryPage] = useState(0);
-	const [historyRowsPerPage, setHistoryRowsPerPage] = useState(25);
+	const [historyRowsPerPage, setHistoryRowsPerPage] = useState(10);
 	const [filterType, setFilterType] = useState<string>("all");
 	const [filterMethod, setFilterMethod] = useState<string>("all");
 	const [filterHistoryStatus, setFilterHistoryStatus] = useState<string>("all");

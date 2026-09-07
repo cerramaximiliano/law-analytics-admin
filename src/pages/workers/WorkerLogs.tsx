@@ -667,6 +667,10 @@ const WorkersTab: React.FC = () => {
 	const [timeline, setTimeline] = useState<import("api/workerLogs").ErrorTimelineResponse | null>(null);
 	const [hoursFilter, setHoursFilter] = useState(24);
 	const [workerTypeFilter, setWorkerTypeFilter] = useState<string>("all");
+	// Estas listas llegan completas del backend: se paginan acá, sobre lo que ya
+	// está en memoria, para no volcar cientos de filas de una.
+	const [workersPage, setWorkersPage] = useState(0);
+	const [workersRowsPerPage, setWorkersRowsPerPage] = useState(10);
 
 	const fetchData = useCallback(async () => {
 		try {
@@ -906,38 +910,40 @@ const WorkersTab: React.FC = () => {
 									</TableRow>
 								</TableHead>
 								<TableBody>
-									{data?.workers.map((worker) => (
-										<TableRow key={worker.workerId} hover>
-											<TableCell>
-												<Typography variant="body2" fontFamily="monospace" fontSize="0.75rem">
-													{worker.workerId}
-												</Typography>
-											</TableCell>
-											<TableCell>
-												<Chip label={getWorkerTypeLabel(worker.workerType)} size="small" color="primary" variant="outlined" />
-											</TableCell>
-											<TableCell>
-												<Typography variant="body2" fontSize="0.8rem">
-													{formatDate(worker.lastActivity)}
-												</Typography>
-											</TableCell>
-											<TableCell>
-												<Chip
-													label={getStatusLabel(worker.lastStatus)}
-													size="small"
-													sx={{
-														bgcolor: alpha(getStatusColor(worker.lastStatus, theme), 0.1),
-														color: getStatusColor(worker.lastStatus, theme),
-													}}
-												/>
-											</TableCell>
-											<TableCell align="right">{worker.stats.totalOperations}</TableCell>
-											<TableCell align="right">{worker.stats.successCount}</TableCell>
-											<TableCell align="right">{worker.stats.successRate.toFixed(1)}%</TableCell>
-											<TableCell align="right">{formatDuration(worker.stats.avgDuration)}</TableCell>
-											<TableCell align="right">{worker.stats.totalMovimientos}</TableCell>
-										</TableRow>
-									))}
+									{data?.workers
+										.slice(workersPage * workersRowsPerPage, workersPage * workersRowsPerPage + workersRowsPerPage)
+										.map((worker) => (
+											<TableRow key={worker.workerId} hover>
+												<TableCell>
+													<Typography variant="body2" fontFamily="monospace" fontSize="0.75rem">
+														{worker.workerId}
+													</Typography>
+												</TableCell>
+												<TableCell>
+													<Chip label={getWorkerTypeLabel(worker.workerType)} size="small" color="primary" variant="outlined" />
+												</TableCell>
+												<TableCell>
+													<Typography variant="body2" fontSize="0.8rem">
+														{formatDate(worker.lastActivity)}
+													</Typography>
+												</TableCell>
+												<TableCell>
+													<Chip
+														label={getStatusLabel(worker.lastStatus)}
+														size="small"
+														sx={{
+															bgcolor: alpha(getStatusColor(worker.lastStatus, theme), 0.1),
+															color: getStatusColor(worker.lastStatus, theme),
+														}}
+													/>
+												</TableCell>
+												<TableCell align="right">{worker.stats.totalOperations}</TableCell>
+												<TableCell align="right">{worker.stats.successCount}</TableCell>
+												<TableCell align="right">{worker.stats.successRate.toFixed(1)}%</TableCell>
+												<TableCell align="right">{formatDuration(worker.stats.avgDuration)}</TableCell>
+												<TableCell align="right">{worker.stats.totalMovimientos}</TableCell>
+											</TableRow>
+										))}
 									{(!data?.workers || data.workers.length === 0) && (
 										<TableRow>
 											<TableCell colSpan={9} align="center">
@@ -950,6 +956,22 @@ const WorkersTab: React.FC = () => {
 								</TableBody>
 							</Table>
 						</TableContainer>
+						{(data?.workers || []).length > workersRowsPerPage && (
+							<TablePagination
+								component="div"
+								count={(data?.workers || []).length}
+								page={workersPage}
+								onPageChange={(_, p) => setWorkersPage(p)}
+								rowsPerPage={workersRowsPerPage}
+								onRowsPerPageChange={(e) => {
+									setWorkersRowsPerPage(parseInt(e.target.value, 10));
+									setWorkersPage(0);
+								}}
+								rowsPerPageOptions={[10, 25, 50, 100]}
+								labelRowsPerPage="Filas por página"
+								labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
+							/>
+						)}
 					</>
 				)}
 			</Stack>
@@ -964,6 +986,8 @@ const ActivityTab: React.FC = () => {
 	const { enqueueSnackbar } = useSnackbar();
 	const [loading, setLoading] = useState(true);
 	const [data, setData] = useState<WorkerActivityResponse | null>(null);
+	const [tasksPage, setTasksPage] = useState(0);
+	const [tasksRowsPerPage, setTasksRowsPerPage] = useState(10);
 	const [minutesFilter, setMinutesFilter] = useState(5);
 	const [autoRefresh, setAutoRefresh] = useState(false);
 
@@ -1055,29 +1079,47 @@ const ActivityTab: React.FC = () => {
 												</TableRow>
 											</TableHead>
 											<TableBody>
-												{data.inProgressTasks.map((task) => (
-													<TableRow key={task._id}>
-														<TableCell>
-															<Typography variant="body2" fontFamily="monospace" fontSize="0.75rem">
-																{task.workerId}
-															</Typography>
-														</TableCell>
-														<TableCell>{getWorkerTypeLabel(task.workerType)}</TableCell>
-														<TableCell>
-															{task.document.fuero} {task.document.number}/{task.document.year}
-														</TableCell>
-														<TableCell align="right">
-															<Chip
-																label={formatDuration(task.runningFor)}
-																size="small"
-																color={task.runningFor > 60000 ? "warning" : "default"}
-															/>
-														</TableCell>
-													</TableRow>
-												))}
+												{data.inProgressTasks
+													.slice(tasksPage * tasksRowsPerPage, tasksPage * tasksRowsPerPage + tasksRowsPerPage)
+													.map((task) => (
+														<TableRow key={task._id}>
+															<TableCell>
+																<Typography variant="body2" fontFamily="monospace" fontSize="0.75rem">
+																	{task.workerId}
+																</Typography>
+															</TableCell>
+															<TableCell>{getWorkerTypeLabel(task.workerType)}</TableCell>
+															<TableCell>
+																{task.document.fuero} {task.document.number}/{task.document.year}
+															</TableCell>
+															<TableCell align="right">
+																<Chip
+																	label={formatDuration(task.runningFor)}
+																	size="small"
+																	color={task.runningFor > 60000 ? "warning" : "default"}
+																/>
+															</TableCell>
+														</TableRow>
+													))}
 											</TableBody>
 										</Table>
 									</TableContainer>
+									{data.inProgressTasks.length > tasksRowsPerPage && (
+										<TablePagination
+											component="div"
+											count={data.inProgressTasks.length}
+											page={tasksPage}
+											onPageChange={(_, p) => setTasksPage(p)}
+											rowsPerPage={tasksRowsPerPage}
+											onRowsPerPageChange={(e) => {
+												setTasksRowsPerPage(parseInt(e.target.value, 10));
+												setTasksPage(0);
+											}}
+											rowsPerPageOptions={[10, 25, 50, 100]}
+											labelRowsPerPage="Filas por página"
+											labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
+										/>
+									)}
 								</CardContent>
 							</Card>
 						)}
@@ -1505,7 +1547,7 @@ const LogsTab: React.FC = () => {
 
 	// Filters
 	const [filters, setFilters] = useState<LogsListParams>({
-		limit: 50,
+		limit: 10,
 		skip: 0,
 		hours: 24,
 	});
@@ -1538,7 +1580,7 @@ const LogsTab: React.FC = () => {
 	const handlePageChange = (_event: unknown, newPage: number) => {
 		setFilters((prev) => ({
 			...prev,
-			skip: newPage * (prev.limit || 50),
+			skip: newPage * (prev.limit || 10),
 		}));
 	};
 
@@ -1756,11 +1798,11 @@ const LogsTab: React.FC = () => {
 							<TablePagination
 								component="div"
 								count={data.pagination.total}
-								page={Math.floor((filters.skip || 0) / (filters.limit || 50))}
+								page={Math.floor((filters.skip || 0) / (filters.limit || 10))}
 								onPageChange={handlePageChange}
-								rowsPerPage={filters.limit || 50}
+								rowsPerPage={filters.limit || 10}
 								onRowsPerPageChange={handleRowsPerPageChange}
-								rowsPerPageOptions={[25, 50, 100, 200]}
+								rowsPerPageOptions={[10, 25, 50, 100, 200]}
 								labelRowsPerPage="Filas por página"
 								labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
 							/>
@@ -1783,6 +1825,8 @@ const ErrorsTab: React.FC = () => {
 	const [data, setData] = useState<FailedLogsResponse | null>(null);
 	const [hoursFilter, setHoursFilter] = useState(24);
 	const [expandedPattern, setExpandedPattern] = useState<string | null>(null);
+	const [failedPage, setFailedPage] = useState(0);
+	const [failedRowsPerPage, setFailedRowsPerPage] = useState(10);
 
 	const fetchData = useCallback(async () => {
 		try {
@@ -1972,7 +2016,7 @@ const ErrorsTab: React.FC = () => {
 												</TableRow>
 											</TableHead>
 											<TableBody>
-												{data.logs.map((log) => (
+												{data.logs.slice(failedPage * failedRowsPerPage, failedPage * failedRowsPerPage + failedRowsPerPage).map((log) => (
 													<TableRow key={log._id}>
 														<TableCell>{log.startTime ? formatDate(log.startTime) : "-"}</TableCell>
 														<TableCell>
@@ -2015,6 +2059,22 @@ const ErrorsTab: React.FC = () => {
 											</TableBody>
 										</Table>
 									</TableContainer>
+									{data.logs.length > failedRowsPerPage && (
+										<TablePagination
+											component="div"
+											count={data.logs.length}
+											page={failedPage}
+											onPageChange={(_, p) => setFailedPage(p)}
+											rowsPerPage={failedRowsPerPage}
+											onRowsPerPageChange={(e) => {
+												setFailedRowsPerPage(parseInt(e.target.value, 10));
+												setFailedPage(0);
+											}}
+											rowsPerPageOptions={[10, 25, 50, 100]}
+											labelRowsPerPage="Filas por página"
+											labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
+										/>
+									)}
 								</CardContent>
 							</Card>
 						)}
@@ -2045,7 +2105,7 @@ const SearchTab: React.FC = () => {
 	const [searchParams, setSearchParams] = useState<SearchLogsParams>({
 		q: "",
 		hours: 24,
-		limit: 50,
+		limit: 10,
 		skip: 0,
 	});
 	const [searchText, setSearchText] = useState("");
@@ -2082,7 +2142,7 @@ const SearchTab: React.FC = () => {
 	};
 
 	const handlePageChange = (_event: unknown, newPage: number) => {
-		const newSkip = newPage * (searchParams.limit || 50);
+		const newSkip = newPage * (searchParams.limit || 10);
 		setSearchParams((prev) => ({ ...prev, skip: newSkip }));
 		// Re-fetch with new skip
 		WorkerLogsService.searchLogs({ ...searchParams, skip: newSkip })
@@ -2288,10 +2348,14 @@ const SearchTab: React.FC = () => {
 							<TablePagination
 								component="div"
 								count={data.pagination.total}
-								page={Math.floor((searchParams.skip || 0) / (searchParams.limit || 50))}
+								page={Math.floor((searchParams.skip || 0) / (searchParams.limit || 10))}
 								onPageChange={handlePageChange}
-								rowsPerPage={searchParams.limit || 50}
-								rowsPerPageOptions={[50]}
+								rowsPerPage={searchParams.limit || 10}
+								onRowsPerPageChange={(e) => {
+									const limit = parseInt(e.target.value, 10);
+									setSearchParams((prev) => ({ ...prev, limit, skip: 0 }));
+								}}
+								rowsPerPageOptions={[10, 25, 50, 100]}
 								labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
 							/>
 						)}
@@ -2319,6 +2383,8 @@ const CleanupConfigTab: React.FC = () => {
 	const [config, setConfig] = useState<CleanupConfig | null>(null);
 	const [status, setStatus] = useState<CleanupStatusResponse["status"] | null>(null);
 	const [history, setHistory] = useState<ExecutionHistoryItem[]>([]);
+	const [historyPage, setHistoryPage] = useState(0);
+	const [historyRowsPerPage, setHistoryRowsPerPage] = useState(10);
 	const [actionLoading, setActionLoading] = useState(false);
 
 	// Edit state
@@ -2931,38 +2997,60 @@ const CleanupConfigTab: React.FC = () => {
 										</TableRow>
 									</TableHead>
 									<TableBody>
-										{history.map((item, index) => (
-											<TableRow key={index}>
-												<TableCell>{new Date(item.timestamp).toLocaleString("es-AR")}</TableCell>
-												<TableCell>
-													<Chip
-														label={item.status}
-														size="small"
-														sx={{
-															bgcolor: alpha(getStatusColor(item.status), 0.1),
-															color: getStatusColor(item.status),
-															textTransform: "capitalize",
-														}}
-													/>
-												</TableCell>
-												<TableCell align="right">{item.duration ? `${(item.duration / 1000).toFixed(1)}s` : "-"}</TableCell>
-												<TableCell align="right">{item.totalCleared?.toLocaleString() || 0}</TableCell>
-												<TableCell>
-													{item.error ? (
-														<Typography variant="body2" color="error" sx={{ maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis" }}>
-															{item.error}
-														</Typography>
-													) : (
-														"-"
-													)}
-												</TableCell>
-											</TableRow>
-										))}
+										{history
+											.slice(historyPage * historyRowsPerPage, historyPage * historyRowsPerPage + historyRowsPerPage)
+											.map((item, index) => (
+												<TableRow key={index}>
+													<TableCell>{new Date(item.timestamp).toLocaleString("es-AR")}</TableCell>
+													<TableCell>
+														<Chip
+															label={item.status}
+															size="small"
+															sx={{
+																bgcolor: alpha(getStatusColor(item.status), 0.1),
+																color: getStatusColor(item.status),
+																textTransform: "capitalize",
+															}}
+														/>
+													</TableCell>
+													<TableCell align="right">{item.duration ? `${(item.duration / 1000).toFixed(1)}s` : "-"}</TableCell>
+													<TableCell align="right">{item.totalCleared?.toLocaleString() || 0}</TableCell>
+													<TableCell>
+														{item.error ? (
+															<Typography
+																variant="body2"
+																color="error"
+																sx={{ maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis" }}
+															>
+																{item.error}
+															</Typography>
+														) : (
+															"-"
+														)}
+													</TableCell>
+												</TableRow>
+											))}
 									</TableBody>
 								</Table>
 							</TableContainer>
 						) : (
 							<Alert severity="info">No hay ejecuciones registradas</Alert>
+						)}
+						{history.length > historyRowsPerPage && (
+							<TablePagination
+								component="div"
+								count={history.length}
+								page={historyPage}
+								onPageChange={(_, p) => setHistoryPage(p)}
+								rowsPerPage={historyRowsPerPage}
+								onRowsPerPageChange={(e) => {
+									setHistoryRowsPerPage(parseInt(e.target.value, 10));
+									setHistoryPage(0);
+								}}
+								rowsPerPageOptions={[10, 25, 50, 100]}
+								labelRowsPerPage="Filas por página"
+								labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
+							/>
 						)}
 					</CardContent>
 				</Card>

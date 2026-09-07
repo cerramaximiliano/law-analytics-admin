@@ -519,7 +519,7 @@ const CredencialesPJN = () => {
 	const [emailLogsLoading, setEmailLogsLoading] = useState(false);
 	const [emailLogsTotal, setEmailLogsTotal] = useState(0);
 	const [emailLogsPage, setEmailLogsPage] = useState(0);
-	const [emailLogsRowsPerPage, setEmailLogsRowsPerPage] = useState(25);
+	const [emailLogsRowsPerPage, setEmailLogsRowsPerPage] = useState(10);
 	const [emailLogsFetched, setEmailLogsFetched] = useState(false);
 	const [emailLogsStatusFilter, setEmailLogsStatusFilter] = useState<string>("todos");
 	const [emailLogsTemplateFilter, setEmailLogsTemplateFilter] = useState<string>("todos");
@@ -530,7 +530,7 @@ const CredencialesPJN = () => {
 	const [adminAlertsLoading, setAdminAlertsLoading] = useState(false);
 	const [adminAlertsFetched, setAdminAlertsFetched] = useState(false);
 	const [adminAlertsPage, setAdminAlertsPage] = useState(0);
-	const [adminAlertsRowsPerPage, setAdminAlertsRowsPerPage] = useState(25);
+	const [adminAlertsRowsPerPage, setAdminAlertsRowsPerPage] = useState(10);
 	const [adminAlertsTotal, setAdminAlertsTotal] = useState(0);
 	const [adminAlertsActiveCount, setAdminAlertsActiveCount] = useState(0);
 	const [adminAlertsStatusFilter, setAdminAlertsStatusFilter] = useState<"all" | "active" | "resolved">("all");
@@ -2640,7 +2640,7 @@ const CredencialesPJN = () => {
 								setEmailLogsPage(0);
 								fetchEmailLogs(0, rows);
 							}}
-							rowsPerPageOptions={[25, 50, 100]}
+							rowsPerPageOptions={[10, 25, 50, 100]}
 						/>
 					</Grid>
 				</Grid>
@@ -2793,7 +2793,7 @@ const CredencialesPJN = () => {
 								setAdminAlertsPage(0);
 								fetchAdminAlerts(0, rpp);
 							}}
-							rowsPerPageOptions={[25, 50, 100]}
+							rowsPerPageOptions={[10, 25, 50, 100]}
 						/>
 					</Grid>
 				</Grid>

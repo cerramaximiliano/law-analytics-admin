@@ -173,7 +173,7 @@ const EmailLogsPage = () => {
 
 	// Pagination and sorting state
 	const [page, setPage] = useState(0);
-	const [rowsPerPage, setRowsPerPage] = useState(20);
+	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [orderBy, setOrderBy] = useState<string>("createdAt");
 	const [order, setOrder] = useState<"asc" | "desc">("desc");
 

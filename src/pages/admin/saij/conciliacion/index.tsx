@@ -97,7 +97,7 @@ export const ConciliacionSaijContent = () => {
 	const [items, setItems] = useState<CandidatoConciliacion[]>([]);
 	const [total, setTotal] = useState(0);
 	const [page, setPage] = useState(0);
-	const [limit, setLimit] = useState(25);
+	const [limit, setLimit] = useState(10);
 	const [cargando, setCargando] = useState(false);
 	const [resumen, setResumen] = useState<ResumenConciliacion | null>(null);
 	const [escaneando, setEscaneando] = useState(false);
@@ -419,7 +419,7 @@ export const ConciliacionSaijContent = () => {
 					rowsPerPage={limit}
 					onPageChange={(_, p) => setPage(p)}
 					onRowsPerPageChange={(e) => { setLimit(parseInt(e.target.value, 10)); setPage(0); }}
-					rowsPerPageOptions={[25, 50, 100]}
+					rowsPerPageOptions={[10, 25, 50, 100]}
 				/>
 			</TableContainer>
 

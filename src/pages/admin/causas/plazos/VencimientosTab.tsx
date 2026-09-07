@@ -26,7 +26,7 @@ export default function VencimientosTab() {
 	const [rows, setRows] = useState<PlazoNotificacion[]>([]);
 	const [count, setCount] = useState(0);
 	const [page, setPage] = useState(0);
-	const [rowsPerPage, setRowsPerPage] = useState(25);
+	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [loading, setLoading] = useState(true);
 	const [fuero, setFuero] = useState("");
 	const [desde, setDesde] = useState(hoy());

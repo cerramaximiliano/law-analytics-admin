@@ -42,7 +42,7 @@ const ZeroMovementsProtectionPanel: React.FC = () => {
 
 	const [fueroFilter, setFueroFilter] = useState<"CIV" | "COM" | "CSS" | "CNT" | "ALL">("ALL");
 	const [page, setPage] = useState(0);
-	const [rowsPerPage, setRowsPerPage] = useState(50);
+	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [sortBy, setSortBy] = useState<SortBy>("count");
 	const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
@@ -257,7 +257,7 @@ const ZeroMovementsProtectionPanel: React.FC = () => {
 						setRowsPerPage(parseInt(e.target.value, 10));
 						setPage(0);
 					}}
-					rowsPerPageOptions={[25, 50, 100, 200]}
+					rowsPerPageOptions={[10, 25, 50, 100, 200]}
 					labelRowsPerPage="Filas por página:"
 				/>
 			</Paper>

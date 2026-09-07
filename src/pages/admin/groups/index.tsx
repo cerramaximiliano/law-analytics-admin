@@ -151,7 +151,7 @@ export default function GroupsPage() {
 
 	// Filters
 	const [page, setPage] = useState(0);
-	const [rowsPerPage, setRowsPerPage] = useState(20);
+	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [search, setSearch] = useState("");
 	const [searchInput, setSearchInput] = useState("");
 	const [statusFilter, setStatusFilter] = useState("");

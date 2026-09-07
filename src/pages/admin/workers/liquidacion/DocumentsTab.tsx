@@ -92,7 +92,7 @@ export default function DocumentsTab() {
 	const [docs, setDocs] = useState<LiquidacionDocListItem[]>([]);
 	const [total, setTotal] = useState(0);
 	const [page, setPage] = useState(0); // MUI usa 0-indexed; backend usa 1-indexed
-	const [rowsPerPage, setRowsPerPage] = useState(50);
+	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [loading, setLoading] = useState(false);
 
 	// Filtros
@@ -452,7 +452,7 @@ export default function DocumentsTab() {
 					page={page}
 					onPageChange={(_, p) => setPage(p)}
 					rowsPerPage={rowsPerPage}
-					rowsPerPageOptions={[25, 50, 100, 200]}
+					rowsPerPageOptions={[10, 25, 50, 100, 200]}
 					onRowsPerPageChange={(e) => {
 						setRowsPerPage(parseInt(e.target.value, 10));
 						setPage(0);
