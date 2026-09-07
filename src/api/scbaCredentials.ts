@@ -40,6 +40,8 @@ export interface ScbaCredential {
 		progress: number;
 	} | null;
 	linkedCausasCount: number;
+	/** Carpetas SCBA que el usuario eliminó y quedaron excluidas del sync (S4) */
+	excludedCausasCount?: number;
 	// Auditoría de desvinculación (presente cuando syncStatus === "idle")
 	unlinkedAt?: string | null;
 	unlinkedMode?: "keep" | "delete" | null;
@@ -131,6 +133,17 @@ export interface GenericResponse {
 	data?: any;
 }
 
+export interface ScbaExcludedCausa {
+	scbaIdCausa: string;
+	scbaIdOrganismo: string;
+	excludedAt: string | null;
+	causaId: string | null;
+	causaExists: boolean;
+	scbaNumber: string | null;
+	caratula: string | null;
+	organismoNombre: string | null;
+}
+
 export interface CreateCredentialPayload {
 	userId: string;
 	username: string;
@@ -201,6 +214,22 @@ class ScbaCredentialsService {
 	 */
 	async deleteCredential(id: string): Promise<GenericResponse> {
 		const response = await adminAxios.delete(`/api/scba-credentials/${id}`);
+		return response.data;
+	}
+
+	/**
+	 * Causas excluidas del sync (carpetas SCBA eliminadas por el usuario)
+	 */
+	async getExcludedCausas(id: string): Promise<{ success: boolean; data?: ScbaExcludedCausa[]; message?: string }> {
+		const response = await adminAxios.get(`/api/scba-credentials/${id}/excluded-causas`);
+		return response.data;
+	}
+
+	/**
+	 * Restaurar una causa excluida (quita la exclusión y pide re-sync; el worker recrea la carpeta)
+	 */
+	async restoreExcludedCausa(id: string, key: { scbaIdCausa: string; scbaIdOrganismo: string }): Promise<GenericResponse> {
+		const response = await adminAxios.post(`/api/scba-credentials/${id}/excluded-causas/restore`, key);
 		return response.data;
 	}
 }

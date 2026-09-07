@@ -50,6 +50,8 @@ import {
 	Gallery,
 	Warning2,
 	Camera,
+	FolderMinus,
+	ArrowRotateLeft,
 } from "iconsax-react";
 import { enqueueSnackbar } from "notistack";
 import MainCard from "components/MainCard";
@@ -57,7 +59,12 @@ import ImageActions from "components/ImageActions";
 import CopyButton from "components/CopyButton";
 import { useTabParam, useTabIndexParam } from "hooks/useTabParam";
 import { AddCircle } from "iconsax-react";
-import scbaCredentialsService, { ScbaCredential, ScbaCredentialDetail, ScbaCredentialsFilters } from "api/scbaCredentials";
+import scbaCredentialsService, {
+	ScbaCredential,
+	ScbaCredentialDetail,
+	ScbaCredentialsFilters,
+	ScbaExcludedCausa,
+} from "api/scbaCredentials";
 import scbaManagerService, { ScbaListSnapshot, ScbaAdminAlert } from "api/scbaManager";
 import EmailLogsService from "api/emailLogs";
 import { EmailLog } from "types/email-log";
@@ -270,6 +277,14 @@ const CredencialesSCBA = () => {
 		credential: null,
 	});
 	const [createDialog, setCreateDialog] = useState(false);
+	// Causas excluidas del sync (carpetas SCBA eliminadas por el usuario, S4)
+	const [excludedDialog, setExcludedDialog] = useState<{
+		open: boolean;
+		credential: ScbaCredential | null;
+		loading: boolean;
+		data: ScbaExcludedCausa[];
+		restoringKey: string | null;
+	}>({ open: false, credential: null, loading: false, data: [], restoringKey: null });
 	const [createForm, setCreateForm] = useState({ userId: "", username: "", password: "", description: "" });
 	const [creating, setCreating] = useState(false);
 
@@ -457,6 +472,49 @@ const CredencialesSCBA = () => {
 			}
 		} catch (error) {
 			enqueueSnackbar("Error al resetear credencial", { variant: "error" });
+		}
+	};
+
+	const excludedKey = (c: { scbaIdCausa: string; scbaIdOrganismo: string }) => `${c.scbaIdCausa}|${c.scbaIdOrganismo}`;
+
+	const openExcludedDialog = async (cred: ScbaCredential) => {
+		setExcludedDialog({ open: true, credential: cred, loading: true, data: [], restoringKey: null });
+		try {
+			const response = await scbaCredentialsService.getExcludedCausas(cred._id);
+			setExcludedDialog((prev) => ({ ...prev, loading: false, data: response.success && response.data ? response.data : [] }));
+			if (!response.success) enqueueSnackbar(response.message || "No se pudieron cargar las causas excluidas", { variant: "warning" });
+		} catch (error) {
+			setExcludedDialog((prev) => ({ ...prev, loading: false }));
+			enqueueSnackbar("Error al cargar causas excluidas", { variant: "error" });
+		}
+	};
+
+	const closeExcludedDialog = () => {
+		if (excludedDialog.restoringKey) return;
+		setExcludedDialog({ open: false, credential: null, loading: false, data: [], restoringKey: null });
+	};
+
+	const handleRestoreExcluded = async (causa: ScbaExcludedCausa) => {
+		const cred = excludedDialog.credential;
+		if (!cred) return;
+		const key = excludedKey(causa);
+		setExcludedDialog((prev) => ({ ...prev, restoringKey: key }));
+		try {
+			const response = await scbaCredentialsService.restoreExcludedCausa(cred._id, {
+				scbaIdCausa: causa.scbaIdCausa,
+				scbaIdOrganismo: causa.scbaIdOrganismo,
+			});
+			if (response.success) {
+				enqueueSnackbar(response.message || "Causa restaurada", { variant: "success" });
+				setExcludedDialog((prev) => ({ ...prev, restoringKey: null, data: prev.data.filter((c) => excludedKey(c) !== key) }));
+				fetchCredentials();
+			} else {
+				enqueueSnackbar(response.message || "No se pudo restaurar la causa", { variant: "error" });
+				setExcludedDialog((prev) => ({ ...prev, restoringKey: null }));
+			}
+		} catch (error: any) {
+			enqueueSnackbar(error?.response?.data?.message || "Error al restaurar la causa", { variant: "error" });
+			setExcludedDialog((prev) => ({ ...prev, restoringKey: null }));
 		}
 	};
 
@@ -794,6 +852,15 @@ const CredencialesSCBA = () => {
 																<Tooltip title="Captura del rechazo de login (evidencia del portal)">
 																	<IconButton size="small" onClick={() => handleOpenLoginErrorShot(cred)} color="error">
 																		<Camera size={18} />
+																	</IconButton>
+																</Tooltip>
+															)}
+															{(cred.excludedCausasCount || 0) > 0 && (
+																<Tooltip
+																	title={`Causas excluidas del sync: ${cred.excludedCausasCount} (carpetas eliminadas por el usuario)`}
+																>
+																	<IconButton size="small" onClick={() => openExcludedDialog(cred)} color="warning">
+																		<FolderMinus size={18} />
 																	</IconButton>
 																</Tooltip>
 															)}
@@ -1283,6 +1350,87 @@ const CredencialesSCBA = () => {
 					<Button onClick={() => setCleanDialog({ open: false, credential: null })}>Cancelar</Button>
 					<Button onClick={handleResetAndClean} color="warning" variant="contained">
 						Resetear y limpiar
+					</Button>
+				</DialogActions>
+			</Dialog>
+
+			{/* Dialog de causas excluidas (carpetas SCBA eliminadas por el usuario) */}
+			<Dialog open={excludedDialog.open} onClose={closeExcludedDialog} maxWidth="md" fullWidth>
+				<DialogTitle>
+					Causas excluidas del sync
+					{excludedDialog.credential ? ` — ${excludedDialog.credential.userName} (${excludedDialog.credential.userEmail})` : ""}
+				</DialogTitle>
+				<DialogContent>
+					<DialogContentText sx={{ mb: 1.5 }}>
+						Al eliminar una carpeta SCBA, la causa queda excluida en la credencial del usuario para que el sync/list-audit no la recree.
+						Restaurar quita la exclusión, re-vincula al usuario y pide un re-sync: el worker recrea la carpeta (respetando el plan) sin
+						email de sincronización y sin notificar los movimientos acumulados (política de first-sync).
+					</DialogContentText>
+					{excludedDialog.loading ? (
+						<Box sx={{ display: "flex", justifyContent: "center", py: 3 }}>
+							<CircularProgress size={24} />
+						</Box>
+					) : excludedDialog.data.length === 0 ? (
+						<Typography variant="body2" color="text.secondary">
+							No quedan causas excluidas.
+						</Typography>
+					) : (
+						<TableContainer>
+							<Table size="small">
+								<TableHead>
+									<TableRow>
+										<TableCell>Carátula</TableCell>
+										<TableCell>Número</TableCell>
+										<TableCell>Organismo</TableCell>
+										<TableCell>Excluida</TableCell>
+										<TableCell align="right">Acción</TableCell>
+									</TableRow>
+								</TableHead>
+								<TableBody>
+									{excludedDialog.data.map((c) => {
+										const key = excludedKey(c);
+										const isRestoring = excludedDialog.restoringKey === key;
+										return (
+											<TableRow key={key} hover>
+												<TableCell sx={{ maxWidth: 320 }}>
+													<Typography variant="body2" noWrap title={c.caratula || undefined}>
+														{c.caratula || (c.causaExists ? "(sin carátula)" : "(causa borrada de causas-scba)")}
+													</Typography>
+													<Typography variant="caption" color="text.secondary">
+														{c.scbaIdCausa} / {c.scbaIdOrganismo}
+														{c.causaId ? ` · ${c.causaId}` : ""}
+													</Typography>
+												</TableCell>
+												<TableCell>{c.scbaNumber || "—"}</TableCell>
+												<TableCell sx={{ maxWidth: 220 }}>
+													<Typography variant="body2" noWrap title={c.organismoNombre || undefined}>
+														{c.organismoNombre || "—"}
+													</Typography>
+												</TableCell>
+												<TableCell>{c.excludedAt ? new Date(c.excludedAt).toLocaleString("es-AR") : "—"}</TableCell>
+												<TableCell align="right">
+													<Button
+														size="small"
+														variant="outlined"
+														color="primary"
+														disabled={excludedDialog.restoringKey !== null}
+														onClick={() => handleRestoreExcluded(c)}
+														startIcon={isRestoring ? <CircularProgress size={12} color="inherit" /> : <ArrowRotateLeft size={14} />}
+													>
+														{isRestoring ? "Restaurando…" : "Restaurar"}
+													</Button>
+												</TableCell>
+											</TableRow>
+										);
+									})}
+								</TableBody>
+							</Table>
+						</TableContainer>
+					)}
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={closeExcludedDialog} disabled={excludedDialog.restoringKey !== null}>
+						Cerrar
 					</Button>
 				</DialogActions>
 			</Dialog>
