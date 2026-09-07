@@ -1481,7 +1481,7 @@ const ScbaManagerTab: React.FC = () => {
 										<TableBody>
 											{[
 												["scbaSyncComplete", "Primera sync exitosa — resumen de carpetas creadas (activas / archivadas / pending)"],
-												["scbaCausasAdded", "Audit detectó altas en la lista de Mis Causas"],
+												["scbaCausasAdded", "Re-sync de cuenta ya sincronizada con causas nuevas"],
 												["scbaListUpdate", "Audit detectó altas y/o bajas (consolidado en un solo correo)"],
 												["scbaCredentialError / scbaCredentialDisabled", "Login fallido (una sola vez por errorNotifiedAt)"],
 												["scbaCredentialRestored", "Credencial corregida y sync exitoso sin folders nuevos"],
