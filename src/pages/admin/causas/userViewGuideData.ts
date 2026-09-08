@@ -577,6 +577,43 @@ export const PJN_FINDINGS: GuideFinding[] = [
 			"Era: solo folders.tsx consultaba usePjnCredentialError (punto ámbar + tooltip 'PJN — Sincronización pausada'); FolderView.tsx y details.tsx usaban getPjnBindingState sin esa señal y mostraban el pill verde 'Vinculado con PJN'. Para SCBA las tres vistas ya leían useScbaCredentialError y para MEV el estado viaja en el folder (mevCredentialStatus). Fix: getPjnBindingState(folder, { credError }) devuelve el nuevo estado cred_error (solo source pjn-login, después de todos los estados propios de la carpeta, antes de ok) con label 'PJN — Sincronización pausada', copy único y pill ámbar que lleva a Perfil → Cuentas Judiciales; la lista usa el mismo copy. No bloquea el detalle: la causa pública sigue actualizándose por scraping, lo pausado es la sync de Mis Causas. Verificado con juancamino713 (cred error CREDENTIAL_INVALID desde 2026-06-20, 5 carpetas pjn-login).",
 		where: "law-analytics-front src/utils/pjnBindingState.ts · folders.tsx · FolderView.tsx · details.tsx · hooks/usePjnCredentialError.ts",
 	},
+	{
+		id: "F15",
+		severity: "media",
+		title:
+			"[RESUELTO 2026-09-08] El hub ocultaba credentialInvalid y los contadores de rechazo del worker; el front mostraba el error crudo",
+		detail:
+			"pjn-mis-causas escribe credentialInvalid/credentialInvalidAt/explicitRejections/firstExplicitRejectionAt pero models/PjnCredentials.js no los declaraba: strict los descartaba, credentialInvalid llegaba undefined y FoldersSyncBadges nunca mostraba 'Requiere atención'. Además usePjnCredentialError, pollSyncStatus, pjnSyncError y el snackbar imprimían lastError.message tal cual lo escribe el worker ('Login falló - …'). Ahora el hub deriva statusReason (credential_invalid | required_action | rejection_pending | unlinked | portal_maintenance | portal_unstable | sync_error | syncing | never_synced | ok) y rejectionProgress en services/pjnCredentialStatusService.js, y el front traduce todo con pjnStatusNotice() (utils/pjnBindingState.ts): card, hook, snackbar y tooltips de lista/fila/detalle (el ícono ámbar de la lista ahora lleva a Integraciones → PJN). PJN_BINDING_COPY.cred_error decía 'Perfil → Cuentas Judiciales'.",
+		where:
+			"law-analytics-server models/PjnCredentials.js · services/pjnCredentialStatusService.js · pjnCredentialsController.js (0b9d3e8) · front utils/pjnBindingState.ts · hooks/usePjnCredentialError.ts · PjnAccountConnect.tsx · ResourceUsageWidget.tsx · folders.tsx / FolderView.tsx / details.tsx (04791d05)",
+	},
+	{
+		id: "F16",
+		severity: "media",
+		title: "[RESUELTO 2026-09-08] Desvincular con 'conservar carpetas' dejaba al usuario como destinatario de las causas compartidas",
+		detail:
+			"executeKeepMode convertía las carpetas a manuales pero no tocaba la causa: el usuario seguía en userCausaIds / userUpdatesEnabled / linkedCredentials y sus carpetas en folderIds. El worker privado arma los destinatarios con userUpdatesEnabled (fallback userCausaIds) y la-notification no verifica carpeta → seguía recibiendo los movimientos de las causas compartidas con otro usuario activo (delete también dejaba userCausaIds/userUpdatesEnabled). Ahora keep y delete llaman a pruneUserFromCausas: $pull de folderIds y linkedCredentials y, si el usuario no conserva otra carpeta sobre la causa (p. ej. una 'auto' del flujo público), de userCausaIds y su entrada de userUpdatesEnabled. Al re-vincular, ensureFolder de pjn-mis-causas vuelve a agregar folderIds + userCausaIds (antes no re-agregaba ni folderIds). También se quitó el código muerto de teamContext en estas rutas (ningún middleware lo setea; el guard de propietario sigue).",
+		where:
+			"law-analytics-server pjnCredentialsController.js pruneUserFromCausas (830a669, 0e46baa; test tests/pjn-credentials/keep-mode.test.js) · pjn-mis-causas causa-sync-service.js ensureFolder (fc91771)",
+	},
+	{
+		id: "F17",
+		severity: "alta",
+		title: "[RESUELTO 2026-09-08] Las causas nacidas del sync de Mis Causas no notificaban movimientos a nadie",
+		detail:
+			"El sync por credencial creaba la causa con folderIds y linkedCredentials pero nunca agregaba al usuario a userCausaIds (sólo lo hacían el alta solo-listado y el flujo público del hub). Como esas causas quedan update:false + hasActiveCredential:true, el único que las actualiza es private-causas-update-worker, y al notificar encontraba userUpdatesEnabled y userCausaIds vacíos: 'No hay usuarios con notificaciones habilitadas' en ~50 % de los lotes con movimientos nuevos (362 vs 379 notificados desde el 04/09; siempre justo después de 'Folders actualizados para causa …'). En prod el 99 % de las carpetas de Mis Causas (938 de 944, 12 usuarios) no tenía destinatario. Fix: ensureFolder hace $addToSet userCausaIds al crear y al re-vincular; backfill scripts/backfill-user-causa-ids.js aplicado (938 causas). Verificado el mismo día: 141 causas procesadas, 2 con movimientos nuevos, 2 notificadas, 0 sin destinatario. Regla de producto: se notifica igual sin plan y con la carpeta archivada (no hay filtro por plan; notifyArchivedFolders por defecto true).",
+		where:
+			"pjn-mis-causas causa-sync-service.js ensureFolder + scripts/backfill-user-causa-ids.js (609d2e8) · utils/notification-sync.js getEnabledUsers (sin cambios)",
+	},
+	{
+		id: "F18",
+		severity: "baja",
+		title: "[RESUELTO 2026-09-08] Contexto del último archivado de una carpeta (todas las jurisdicciones)",
+		detail:
+			"Archivar a mano (archiveItems) sólo escribía archived:true; el downgrade de la-subscriptions escribía un motivo en texto libre con un modelo que no declaraba el campo (se perdía); pjn-mis-causas ponía archivedBy = dueño en las creadas por tope del plan (no era una acción del usuario). Ahora Folder.archivedReason ∈ user (con archivedBy = quién y archivedAt) | plan_limit (creada archivada por tope: scba-workers y pjn-mis-causas) | plan_downgrade (automático al bajar de plan: hub y la-subscriptions); desarchivar limpia los tres y marca unarchivedAt. El modal Archivados muestra 'Por vos · fecha / Límite del plan / Cambio de plan'. Backfill SCBA: 841 carpetas de 4 usuarios → plan_limit.",
+		where:
+			"law-analytics-server models/Folder.js · services/subscriptionService.js · controllers/subscriptionController.js · folderController.js (541ed31, 6089a18) · la-subscriptions models/Folder.js + subscriptionService.js (8e10e6f) · pjn-mis-causas causa-sync-service.js (11797da) · scba-workers folder-service.ts (d12bc8d) + scripts/backfill-archived-reason.js · front ArchivedItemsModal.tsx (10d42c31)",
+	},
 ];
 
 // =====================================================================
@@ -1086,6 +1123,15 @@ export const MEV_FINDINGS: GuideFinding[] = [
 			"A diferencia de SCBA/PJN, el form de re-link MEV abría con usuario vacío y editable: el usuario podía cambiarlo y dejar la credencial con identificador incorrecto. getCredentialsStatus ahora expone username (descifrado) solo de la credencial de cuenta —la contraseña nunca viaja— y MevAccountConnect lo prellena bloqueado con helper text; la card muestra “Usuario … · con esta credencial consultamos …”.",
 		where:
 			"law-analytics-server mevCredentialsController.js getCredentialsStatus (hub f20b76f) · front api/mevCredentials.ts + MevAccountConnect.tsx (7b0cf09c)",
+	},
+	{
+		id: "M15",
+		severity: "baja",
+		title:
+			"[RESUELTO 2026-09-08] La card MEV mostraba el mensaje crudo del worker y pintaba 'Inválida' ante un error transitorio del portal",
+		detail:
+			"MevAccountConnect.tsx imprimía g.lastError.message ('Login falló - USUARIO O CLAVE INCORRECTA', 'Página de contraseña expirada detectada: …') y deriveStatus devolvía 'invalid' con cualquier lastError, incluido PORTAL_ERROR (transitorio, no penaliza la credencial). Ahora utils/mevCredential.ts tiene getMevStatusReason (disabled_by_failures | password_expired | credential_invalid | portal_unstable | pending | ok, derivado de enabled / isExpired / verified / lastError.code) y mevStatusNotice con copy propio; la card usa ambos y el copy de carpetas apunta a 'Integraciones → MEV' en vez de 'tu perfil'. Misma fuente única que SCBA (scbaStatusNotice) y PJN (pjnStatusNotice, F15).",
+		where: "law-analytics-front utils/mevCredential.ts · sections/apps/profiles/account/MevAccountConnect.tsx (04791d05)",
 	},
 ];
 
@@ -1820,6 +1866,15 @@ export const SCBA_FINDINGS: GuideFinding[] = [
 		detail:
 			"folder-service crea la carpeta con archived=true, archivedAt=now y archivedReason='plan_limit' (campo nuevo en Folder, enum ['plan_limit', null]); archivedBy queda para archivados manuales. Las carpetas anteriores al fix no tienen la marca.",
 		where: "scba-workers folder-service.ts · hub models/Folder.js",
+	},
+	{
+		id: "S25",
+		severity: "media",
+		title: R("2026-09-08", "El manager mataba el list-audit diario por CPU crítica y el día se perdía"),
+		detail:
+			"08/09 06:01 UTC: el propio scraping del audit (2ª de 4 credenciales, 11 páginas) llevó la CPU a 97 %, el manager aplicó 'CPU crítica → listAudit 1→0' (SIGINT a mitad de ciclo), lo respawneó 30 s después y el cron diario no vuelve hasta el día siguiente: 3 credenciales sin auditar, sin retención de snapshots ni reintento. Fix: los workers de cron diario (listAudit, updateArchived) quedan fuera de la reducción por CPU y el list-audit hace catch-up al arrancar si el disparo del día ya pasó y lastProcessedAt es anterior (SCBA_AUDIT_CATCHUP_DELAY_MS, 90 s). Verificado: catch-up 12:54–12:57 UTC, 4 credenciales, 152 s, 0 errores. cleanupOldListSnapshots loguea siempre la retención efectiva.",
+		where:
+			"scba-workers scba-manager.ts (CRON_DRIVEN_TYPES) · list-audit-worker.ts scheduleCatchUp (efc0249) · utils/list-snapshot.ts (9cf43f6)",
 	},
 ];
 
