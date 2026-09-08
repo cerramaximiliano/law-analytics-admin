@@ -188,7 +188,7 @@ const CamposPlantilla = ({
 							<Stack spacing={1.5}>
 								{filas.map((fila, i) => (
 									<MainCard key={i} content={false} sx={{ p: 1.5 }}>
-										<Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
+										<Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }} flexWrap="wrap" useFlexGap>
 											<Typography variant="caption" color="text.secondary">
 												{i + 1}
 											</Typography>
@@ -1200,7 +1200,7 @@ const SocialStudio = () => {
 
 							{/* Video: story 1080x1920, que es el formato en que IG publica video */}
 							<MainCard content={false} sx={{ p: 2 }}>
-								<Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
+								<Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }} flexWrap="wrap" useFlexGap>
 									<VideoPlay size={18} />
 									<Typography variant="subtitle2">Video 1080×1920</Typography>
 								</Stack>
@@ -1245,7 +1245,7 @@ const SocialStudio = () => {
 										</Typography>
 									)}
 									{clips.length > 0 && (
-										<Stack direction="row" spacing={1}>
+										<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 											<FormControl fullWidth size="small">
 												<InputLabel>Intro</InputLabel>
 												<Select value={introClip} label="Intro" onChange={(e) => setIntroClip(e.target.value)}>

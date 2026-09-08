@@ -757,7 +757,7 @@ function ResumenSection() {
 												</Typography>
 											</Stack>
 											<LinearProgress variant="determinate" value={pct} sx={{ height: 4, borderRadius: 2, mb: 0.75 }} color="success" />
-											<Stack direction="row" spacing={1}>
+											<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 												<Typography variant="caption" color="success.main">
 													{counts.embedded.toLocaleString("es-AR")} ok
 												</Typography>

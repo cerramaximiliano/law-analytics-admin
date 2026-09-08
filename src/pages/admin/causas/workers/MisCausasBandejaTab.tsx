@@ -127,7 +127,7 @@ const MisCausasBandejaTab: React.FC = () => {
 								Levanta notificaciones (cédulas) y escritos del portal del letrado PJN
 							</Typography>
 						</Box>
-						<Stack direction="row" spacing={1} alignItems="center">
+						<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
 							{enabled ? (
 								<Chip
 									icon={<TickCircle size={14} />}
@@ -171,7 +171,7 @@ const MisCausasBandejaTab: React.FC = () => {
 						</Grid>
 
 						<Grid item xs={12} sm={6}>
-							<Stack direction="row" justifyContent="space-between" alignItems="center">
+							<Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" useFlexGap>
 								<Box>
 									<Typography variant="body2" fontWeight={500}>
 										Notificaciones habilitadas

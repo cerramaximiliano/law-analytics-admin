@@ -363,7 +363,7 @@ const ContactsPanel = () => {
 						/>
 					</Grid>
 					<Grid item xs={12} sm={6} md={8}>
-						<Stack direction="row" spacing={1} justifyContent="flex-end">
+						<Stack direction="row" spacing={1} justifyContent="flex-end" flexWrap="wrap" useFlexGap>
 							<Button
 								variant="contained"
 								color="primary"

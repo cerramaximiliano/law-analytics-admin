@@ -75,7 +75,7 @@ export default function ComponentsOverrides(theme: Theme) {
 		CardContent(),
 		Checkbox(theme),
 		Chip(theme),
-		Dialog(),
+		Dialog(theme),
 		DialogContentText(theme),
 		DialogTitle(),
 		Drawer(),

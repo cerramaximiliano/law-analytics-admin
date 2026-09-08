@@ -246,7 +246,7 @@ function EditDialog({
 	return (
 		<Dialog open onClose={onClose} maxWidth="sm" fullWidth>
 			<DialogTitle>
-				<Stack direction="row" justifyContent="space-between" alignItems="center">
+				<Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" useFlexGap>
 					<Typography variant="h6">Editar fallo</Typography>
 					<IconButton size="small" onClick={onClose}>
 						<CloseCircle size={18} />

@@ -842,7 +842,7 @@ const WorkerControlTab = () => {
 				</DialogTitle>
 				<DialogContent>
 					<Stack spacing={2} sx={{ mt: 1 }}>
-						<Stack direction="row" alignItems="center" justifyContent="space-between">
+						<Stack direction="row" alignItems="center" justifyContent="space-between" flexWrap="wrap" useFlexGap>
 							<Typography variant="body2">Auto-escalado habilitado</Typography>
 							<Switch
 								checked={scSettings.enabled}
@@ -970,7 +970,7 @@ const WorkerControlTab = () => {
 				</DialogTitle>
 				<DialogContent>
 					<Stack spacing={2} sx={{ mt: 1 }}>
-						<Stack direction="row" alignItems="center" justifyContent="space-between">
+						<Stack direction="row" alignItems="center" justifyContent="space-between" flexWrap="wrap" useFlexGap>
 							<Typography variant="body2">Escalado de instancias habilitado</Typography>
 							<Switch
 								checked={isSettings.enabled}

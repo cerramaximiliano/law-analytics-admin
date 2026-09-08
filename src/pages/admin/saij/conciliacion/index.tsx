@@ -636,7 +636,7 @@ export const ConciliacionSaijContent = () => {
 			<Dialog open={reapareoAbierto} onClose={() => setReapareoAbierto(false)} maxWidth="sm" fullWidth>
 				<DialogTitle>Mover el fallo a otra causa</DialogTitle>
 				<DialogContent dividers>
-					<Stack direction="row" spacing={1} sx={{ mb: 2 }}>
+					<Stack direction="row" spacing={1} sx={{ mb: 2 }} flexWrap="wrap" useFlexGap>
 						<FormControl size="small" sx={{ minWidth: 110 }}>
 							<InputLabel>Fuero</InputLabel>
 							<Select value={destino.fuero} label="Fuero" onChange={(e) => setDestino({ ...destino, fuero: e.target.value })}>

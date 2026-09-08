@@ -518,8 +518,8 @@ const JudicialMovementsConfig: React.FC<JudicialMovementsConfigProps> = ({ secti
 			{show("general") && (
 				<Card sx={{ mb: 2 }}>
 					<CardContent>
-						<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-							<Stack direction="row" spacing={1} alignItems="center">
+						<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }} flexWrap="wrap" useFlexGap>
+							<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
 								<Clock size={20} />
 								<Typography variant="h6">Programación de horarios</Typography>
 							</Stack>
@@ -618,8 +618,8 @@ const JudicialMovementsConfig: React.FC<JudicialMovementsConfigProps> = ({ secti
 			{show("general") && (
 				<Card sx={{ mb: 2 }}>
 					<CardContent>
-						<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-							<Stack direction="row" spacing={1} alignItems="center">
+						<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }} flexWrap="wrap" useFlexGap>
+							<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
 								<ChartSquare size={20} />
 								<Typography variant="h6">Límites y restricciones</Typography>
 							</Stack>
@@ -1281,8 +1281,8 @@ const JudicialMovementsConfig: React.FC<JudicialMovementsConfigProps> = ({ secti
 			{show("general") && (
 				<Card sx={{ mb: 2 }}>
 					<CardContent>
-						<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-							<Stack direction="row" spacing={1} alignItems="center">
+						<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }} flexWrap="wrap" useFlexGap>
+							<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
 								<RefreshCircle size={20} />
 								<Typography variant="h6">Configuración de reintentos</Typography>
 							</Stack>
@@ -1406,8 +1406,8 @@ const JudicialMovementsConfig: React.FC<JudicialMovementsConfigProps> = ({ secti
 			{show("judicial") && (
 				<Card sx={{ mb: 2 }}>
 					<CardContent>
-						<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-							<Stack direction="row" spacing={1} alignItems="center">
+						<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }} flexWrap="wrap" useFlexGap>
+							<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
 								<Filter size={20} />
 								<Typography variant="h6">Filtros</Typography>
 							</Stack>
@@ -1488,8 +1488,8 @@ const JudicialMovementsConfig: React.FC<JudicialMovementsConfigProps> = ({ secti
 			{show("general") && (
 				<Card sx={{ mb: 2 }}>
 					<CardContent>
-						<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-							<Stack direction="row" spacing={1} alignItems="center">
+						<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }} flexWrap="wrap" useFlexGap>
+							<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
 								<Archive size={20} />
 								<Typography variant="h6">Retención de datos</Typography>
 							</Stack>
@@ -1587,8 +1587,8 @@ const JudicialMovementsConfig: React.FC<JudicialMovementsConfigProps> = ({ secti
 			{show("general") && (
 				<Card sx={{ mb: 2 }}>
 					<CardContent>
-						<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-							<Stack direction="row" spacing={1} alignItems="center">
+						<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }} flexWrap="wrap" useFlexGap>
+							<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
 								<Link21 size={20} />
 								<Typography variant="h6">Endpoints y URL</Typography>
 							</Stack>

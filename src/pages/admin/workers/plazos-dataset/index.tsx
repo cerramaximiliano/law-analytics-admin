@@ -163,7 +163,7 @@ export default function PlazosDatasetWorkerPage() {
 						<Grid item xs={12} md={5}>
 							<Stack spacing={2}>
 								<Typography variant="subtitle1">Configuración (hot-reload)</Typography>
-								<Stack direction="row" alignItems="center" spacing={1}>
+								<Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap" useFlexGap>
 									<Switch checked={form?.enabled ?? true} onChange={(e) => setForm({ ...form, enabled: e.target.checked })} />
 									<Typography>Harvester habilitado</Typography>
 								</Stack>

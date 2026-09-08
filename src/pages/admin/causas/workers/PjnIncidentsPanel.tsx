@@ -102,8 +102,8 @@ const PjnIncidentsPanel: React.FC = () => {
 		<Card variant="outlined" sx={{ backgroundColor: "background.default" }}>
 			<CardContent>
 				{/* Header */}
-				<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-					<Stack direction="row" spacing={1} alignItems="center">
+				<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }} flexWrap="wrap" useFlexGap>
+					<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
 						<Warning2 size={20} color={theme.palette.warning.main} />
 						<Typography
 							variant="h5"

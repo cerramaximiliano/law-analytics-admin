@@ -212,7 +212,7 @@ const BatchCreateWorkersModal: React.FC<BatchCreateWorkersModalProps> = ({ open,
 					</Stack>
 
 					<Box>
-						<Stack direction="row" spacing={2} alignItems="center">
+						<Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" useFlexGap>
 							<Typography variant="subtitle2">Rango Total</Typography>
 							<Tooltip title="Recalcular distribución">
 								<IconButton

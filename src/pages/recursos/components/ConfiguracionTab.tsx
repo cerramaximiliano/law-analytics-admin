@@ -419,7 +419,7 @@ const ConfiguracionTab = () => {
 
 			{/* Configuración de Ejecución */}
 			<Card sx={{ p: 3 }}>
-				<Stack direction="row" alignItems="center" gap={1} mb={2}>
+				<Stack direction="row" alignItems="center" gap={1} mb={2} flexWrap="wrap" useFlexGap>
 					<Setting2 size={24} />
 					<Typography variant="h6">Configuración de ejecución</Typography>
 				</Stack>
@@ -470,7 +470,7 @@ const ConfiguracionTab = () => {
 
 			{/* Re-scan Periódico */}
 			<Card sx={{ p: 3 }}>
-				<Stack direction="row" alignItems="center" gap={1} mb={1}>
+				<Stack direction="row" alignItems="center" gap={1} mb={1} flexWrap="wrap" useFlexGap>
 					<RotateLeft size={24} />
 					<Typography variant="h6">Re-scan periódico de inválidos</Typography>
 				</Stack>

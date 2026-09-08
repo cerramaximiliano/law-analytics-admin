@@ -127,7 +127,7 @@ const AnalyzeLogsModal = ({ open, onClose, filters }: Props) => {
 							</Stack>
 						</Paper>
 
-						<Stack direction="row" spacing={1.5}>
+						<Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
 							<FormControl size="small" sx={{ flex: 1 }}>
 								<InputLabel>Foco del análisis</InputLabel>
 								<Select value={focus} label="Foco del análisis" onChange={(e) => setFocus(e.target.value as any)}>

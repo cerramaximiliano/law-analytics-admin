@@ -581,19 +581,19 @@ const WorkerStatistics: React.FC = () => {
 								<Stack direction={{ xs: "column", md: "row" }} spacing={2} alignItems={{ xs: "stretch", md: "center" }}>
 									<ToggleButtonGroup value={dateMode} exclusive onChange={handleDateModeChange} size="small" sx={{ flexShrink: 0 }}>
 										<ToggleButton value="today" sx={{ px: 2 }}>
-											<Stack direction="row" spacing={1} alignItems="center">
+											<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
 												<CalendarTick size={16} />
 												<span>Hoy</span>
 											</Stack>
 										</ToggleButton>
 										<ToggleButton value="specific" sx={{ px: 2 }}>
-											<Stack direction="row" spacing={1} alignItems="center">
+											<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
 												<Calendar2 size={16} />
 												<span>Fecha</span>
 											</Stack>
 										</ToggleButton>
 										<ToggleButton value="range" sx={{ px: 2 }}>
-											<Stack direction="row" spacing={1} alignItems="center">
+											<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
 												<Calendar size={16} />
 												<span>Rango</span>
 											</Stack>

@@ -186,7 +186,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ user, open, onClose }) =>
 	return (
 		<ResponsiveDialog open={open} onClose={onClose} maxWidth="sm">
 			<DialogTitle sx={{ pb: 1.5 }}>
-				<Stack direction="row" justifyContent="space-between" alignItems="center">
+				<Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" useFlexGap>
 					<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
 						Editar usuario
 					</Typography>

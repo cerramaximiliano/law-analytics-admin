@@ -490,7 +490,7 @@ const StyleCorpusTab = () => {
 
 			{/* ── Full semantic search ── */}
 			<Box>
-				<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.5 }}>
+				<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.5 }} flexWrap="wrap" useFlexGap>
 					<DocumentText size={18} />
 					<Typography variant="subtitle1" fontWeight={600}>
 						Buscador de escritos

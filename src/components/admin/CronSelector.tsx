@@ -93,7 +93,7 @@ const CronSelector: React.FC<CronSelectorProps> = ({
 				<Select label={label} value={selectValue} onChange={(e) => handleSelectChange(e.target.value as string)}>
 					{PRESETS.map((p) => (
 						<MenuItem key={p.value} value={p.value}>
-							<Stack direction="row" spacing={1} alignItems="center" sx={{ width: "100%" }}>
+							<Stack direction="row" spacing={1} alignItems="center" sx={{ width: "100%" }} flexWrap="wrap" useFlexGap>
 								<span>{p.label}</span>
 								<Typography
 									component="span"

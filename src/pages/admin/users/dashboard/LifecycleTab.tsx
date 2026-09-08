@@ -495,7 +495,7 @@ const LifecycleTab: React.FC = () => {
 										label="Desactivar contacto de marketing"
 									/>
 								</Stack>
-								<Stack direction="row" spacing={1.5}>
+								<Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
 									{numberField("Edad mínima (días)", "purgeMinAgeDays")}
 									{numberField("Batch por corrida", "purgeBatchLimit")}
 								</Stack>
@@ -530,7 +530,7 @@ const LifecycleTab: React.FC = () => {
 
 			{/* Auditoría */}
 			<Paper variant="outlined" sx={{ p: 2.5, mt: 3 }}>
-				<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1.5 }}>
+				<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1.5 }} flexWrap="wrap" useFlexGap>
 					<Typography variant="h5">Auditoría</Typography>
 					<Select
 						size="small"

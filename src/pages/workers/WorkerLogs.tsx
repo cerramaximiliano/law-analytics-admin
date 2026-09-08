@@ -1018,8 +1018,8 @@ const ActivityTab: React.FC = () => {
 	return (
 		<Box sx={{ p: 3 }}>
 			<Stack spacing={3}>
-				<Stack direction="row" justifyContent="space-between" alignItems="center">
-					<Stack direction="row" spacing={2} alignItems="center">
+				<Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" useFlexGap>
+					<Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" useFlexGap>
 						<Typography variant="h5">Actividad en Tiempo Real</Typography>
 						{data && (
 							<Chip
@@ -1600,7 +1600,7 @@ const LogsTab: React.FC = () => {
 	return (
 		<Box sx={{ p: 3 }}>
 			<Stack spacing={3}>
-				<Stack direction="row" justifyContent="space-between" alignItems="center">
+				<Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" useFlexGap>
 					<Typography variant="h5">Historial de Logs</Typography>
 					<Tooltip title="Actualizar">
 						<IconButton onClick={fetchData}>
@@ -1850,8 +1850,8 @@ const ErrorsTab: React.FC = () => {
 	return (
 		<Box sx={{ p: 3 }}>
 			<Stack spacing={3}>
-				<Stack direction="row" justifyContent="space-between" alignItems="center">
-					<Stack direction="row" spacing={2} alignItems="center">
+				<Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" useFlexGap>
+					<Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" useFlexGap>
 						<Typography variant="h5">Errores y Fallos</Typography>
 						{data && (
 							<Chip icon={<Warning2 size={16} />} label={`${data.total} en ${data.period}`} color={data.total > 0 ? "error" : "default"} />

@@ -857,9 +857,9 @@ const TrialsTab = ({ testMode }: { testMode: boolean }) => {
 						<Stack spacing={2}>
 							{config.map((plan) => (
 								<Box key={plan.planId} sx={{ p: 2, border: `1px solid ${theme.palette.divider}`, borderRadius: 2 }}>
-									<Stack direction="row" justifyContent="space-between" alignItems="center">
+									<Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" useFlexGap>
 										<Box>
-											<Stack direction="row" spacing={1} alignItems="center">
+											<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
 												<Chip label={plan.displayName} size="small" color={PLAN_COLOR[plan.planId] ?? "default"} />
 												<Typography variant="body2" color="text.secondary">
 													Actual ({editEnv}):

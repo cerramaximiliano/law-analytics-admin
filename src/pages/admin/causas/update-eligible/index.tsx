@@ -391,7 +391,7 @@ const CausasUpdateEligiblePage = () => {
 							key={f}
 							value={f}
 							label={
-								<Stack direction="row" spacing={1} alignItems="center">
+								<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
 									<span>{FUERO_LABELS[f]}</span>
 									{stats?.[f] && (
 										<Chip size="small" label={stats[f].eligibles.toLocaleString("es-AR")} sx={{ fontVariantNumeric: "tabular-nums" }} />

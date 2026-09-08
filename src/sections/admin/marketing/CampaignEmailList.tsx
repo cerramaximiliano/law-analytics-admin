@@ -996,7 +996,7 @@ const CampaignEmailList = ({ campaign, open, onClose }: CampaignEmailListProps) 
 					justifyContent: "center",
 				}}
 			>
-				<Paper sx={{ width: 400, p: 3, borderRadius: 2 }}>
+				<Paper sx={{ width: { xs: "calc(100% - 32px)", sm: 400 }, p: { xs: 2, sm: 3 }, borderRadius: 2 }}>
 					<Typography variant="h6" id="delete-modal-title" gutterBottom>
 						¿Eliminar email?
 					</Typography>

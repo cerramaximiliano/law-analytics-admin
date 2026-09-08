@@ -66,7 +66,7 @@ const RemoveCampaignContactsDialog = ({ open, onClose, onConfirm, contactIds, co
 				justifyContent: "center",
 			}}
 		>
-			<Paper sx={{ width: 500, p: 3, borderRadius: 2 }}>
+			<Paper sx={{ width: { xs: "calc(100% - 32px)", sm: 500 }, p: { xs: 2, sm: 3 }, borderRadius: 2 }}>
 				<Typography variant="h5" id="delete-contacts-modal-title" gutterBottom>
 					¿Eliminar contactos de la campaña?
 				</Typography>
@@ -138,7 +138,7 @@ const RemoveAllContactsDialog = ({
 				justifyContent: "center",
 			}}
 		>
-			<Paper sx={{ width: 500, p: 3, borderRadius: 2 }}>
+			<Paper sx={{ width: { xs: "calc(100% - 32px)", sm: 500 }, p: { xs: 2, sm: 3 }, borderRadius: 2 }}>
 				<Typography variant="h5" id="delete-all-contacts-modal-title" gutterBottom>
 					¿Eliminar todos los contactos de la campaña?
 				</Typography>

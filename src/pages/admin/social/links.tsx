@@ -330,7 +330,7 @@ const LinksBio = () => {
 							fullWidth
 							inputProps={{ maxLength: 500 }}
 						/>
-						<Stack direction="row" spacing={2}>
+						<Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
 							<FormControl size="small" sx={{ minWidth: 220 }}>
 								<InputLabel>Icono</InputLabel>
 								<Select

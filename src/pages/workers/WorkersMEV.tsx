@@ -1556,7 +1556,7 @@ const MEVWorkers = () => {
 																		placeholder="0 = Todos"
 																	/>
 																) : (
-																	<Stack direction="row" spacing={1} alignItems="center" justifyContent="center">
+																	<Stack direction="row" spacing={1} alignItems="center" justifyContent="center" flexWrap="wrap" useFlexGap>
 																		<Typography variant="body2">{config.settings?.max_movimientos ?? 0}</Typography>
 																		{(config.settings?.max_movimientos === 0 || !config.settings?.max_movimientos) && (
 																			<Chip label="Todos" size="small" color="info" variant="outlined" />

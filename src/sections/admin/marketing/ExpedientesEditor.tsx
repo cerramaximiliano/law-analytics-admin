@@ -276,7 +276,7 @@ const ExpedientesEditor: React.FC<ExpedientesEditorProps> = ({ contact, onSaved 
 			<Typography variant="subtitle2" gutterBottom>
 				Agregar expediente manualmente
 			</Typography>
-			<Stack direction="row" spacing={1} alignItems="center">
+			<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
 				<TextField
 					size="small"
 					label="Expediente (numero/año)"

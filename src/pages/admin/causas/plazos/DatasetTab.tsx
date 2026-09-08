@@ -293,7 +293,7 @@ function RevisionSection({ actosConocidos }: { actosConocidos: string[] }) {
 		<Stack spacing={1.5}>
 			<Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" useFlexGap>
 				<Typography variant="subtitle1">Revisión de ejemplos</Typography>
-				<Stack direction="row" alignItems="center">
+				<Stack direction="row" alignItems="center" flexWrap="wrap" useFlexGap>
 					<Switch
 						size="small"
 						checked={soloDispersos}

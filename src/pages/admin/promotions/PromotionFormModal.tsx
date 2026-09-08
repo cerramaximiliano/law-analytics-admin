@@ -808,7 +808,7 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 							<Typography variant="body2" gutterBottom>
 								Períodos de facturación (vacío = todos)
 							</Typography>
-							<Stack direction="row" spacing={1}>
+							<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 								<FormControlLabel
 									control={
 										<Checkbox

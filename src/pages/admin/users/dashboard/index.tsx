@@ -400,13 +400,13 @@ const UsersDashboard: React.FC = () => {
 	return (
 		<MainCard
 			title={
-				<Stack direction="row" alignItems="center" spacing={1}>
+				<Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap" useFlexGap>
 					<Profile2User size={22} color={BRAND_BLUE} variant="Bold" />
 					<Typography variant="h3">Dashboard de Usuarios</Typography>
 				</Stack>
 			}
 			secondary={
-				<Stack direction="row" spacing={1.5} alignItems="center">
+				<Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" useFlexGap>
 					<Select size="small" value={windowDays} onChange={(e) => setWindowDays(Number(e.target.value))} sx={{ minWidth: 120 }}>
 						<MenuItem value={7}>Últimos 7 días</MenuItem>
 						<MenuItem value={30}>Últimos 30 días</MenuItem>

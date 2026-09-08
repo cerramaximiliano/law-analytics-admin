@@ -203,7 +203,7 @@ const EmailFunnels: React.FC = () => {
 	return (
 		<MainCard
 			title={
-				<Stack direction="row" spacing={1} alignItems="center">
+				<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
 					<Sms size={20} color={BRAND_BLUE} />
 					<span>Embudos de correo por fuente</span>
 				</Stack>

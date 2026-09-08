@@ -836,7 +836,7 @@ export default function SaijWorkerPage() {
 								<Grid container spacing={2}>
 									{(["errorEmail", "startupEmail", "dailyReport"] as const).map((k) => (
 										<Grid item xs={12} sm={4} key={k}>
-											<Stack direction="row" alignItems="center" spacing={1}>
+											<Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap" useFlexGap>
 												<Switch
 													size="small"
 													checked={!!s.notification[k]}
@@ -1521,7 +1521,7 @@ export default function SaijWorkerPage() {
 						La causa tiene que existir en la base. Al vincular, la sentencia capturada queda colgada de ese
 						expediente y el fallo aparece entre sus movimientos.
 					</Alert>
-					<Stack direction="row" spacing={2}>
+					<Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
 						<TextField
 							label="Fuero"
 							size="small"

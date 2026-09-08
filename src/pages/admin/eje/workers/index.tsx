@@ -550,7 +550,7 @@ const EditWorkerDialog: React.FC<EditDialogProps> = ({ open, workerType, config,
 					</Grid>
 
 					<Grid item xs={12}>
-						<Stack direction="row" alignItems="center" justifyContent="space-between">
+						<Stack direction="row" alignItems="center" justifyContent="space-between" flexWrap="wrap" useFlexGap>
 							<Typography variant="body2">Usar horario global</Typography>
 							<Switch
 								checked={formData.schedule?.useGlobalSchedule ?? true}

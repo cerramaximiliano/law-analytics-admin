@@ -234,7 +234,7 @@ const IncidentsPage = () => {
 									</Typography>
 								</Stack>
 								{silenciados > 0 && (
-									<Stack direction="row" spacing={0.75} alignItems="baseline">
+									<Stack direction="row" spacing={0.75} alignItems="baseline" flexWrap="wrap" useFlexGap>
 										<Typography variant="h4" fontWeight={700} color="text.disabled" sx={{ fontVariantNumeric: "tabular-nums" }}>
 											{silenciados}
 										</Typography>
@@ -525,7 +525,7 @@ const IncidentsPage = () => {
 				fullWidth
 			>
 				<DialogTitle>
-					<Stack direction="row" spacing={1} alignItems="center">
+					<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
 						<Danger size={20} color={STALE_AMBER} variant="Bold" />
 						<span>{ackEsLote ? `Silenciar ${idsSeleccionados.length} incidentes` : "Silenciar incidente"}</span>
 					</Stack>

@@ -1094,7 +1094,7 @@ const MisCausasWorkersTab: React.FC<Props> = ({ config, onConfigUpdate }) => {
 
 										{/* Health Check */}
 										<Box sx={{ mb: 2 }}>
-											<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+											<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }} flexWrap="wrap" useFlexGap>
 												<Typography variant="subtitle2" fontWeight="bold" color="primary">
 													Health Check
 												</Typography>

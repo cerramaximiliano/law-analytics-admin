@@ -545,7 +545,7 @@ const TargetUsersManager = ({ discountId, discountCode, isPublic, frozenSegment,
 			{/* Add Users Dialog - Search */}
 			<Dialog open={addDialogOpen} onClose={() => setAddDialogOpen(false)} maxWidth="sm" fullWidth>
 				<DialogTitle>
-					<Stack direction="row" justifyContent="space-between" alignItems="center">
+					<Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" useFlexGap>
 						<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
 							Buscar y agregar usuarios
 						</Typography>
@@ -629,7 +629,7 @@ const TargetUsersManager = ({ discountId, discountCode, isPublic, frozenSegment,
 			{/* Add Users Dialog - By Email */}
 			<Dialog open={addByEmailDialogOpen} onClose={() => setAddByEmailDialogOpen(false)} maxWidth="sm" fullWidth>
 				<DialogTitle>
-					<Stack direction="row" justifyContent="space-between" alignItems="center">
+					<Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" useFlexGap>
 						<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
 							Agregar usuarios por email
 						</Typography>
@@ -680,7 +680,7 @@ const TargetUsersManager = ({ discountId, discountCode, isPublic, frozenSegment,
 			{/* Segments Dialog */}
 			<Dialog open={segmentDialogOpen} onClose={() => setSegmentDialogOpen(false)} maxWidth="sm" fullWidth>
 				<DialogTitle>
-					<Stack direction="row" justifyContent="space-between" alignItems="center">
+					<Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" useFlexGap>
 						<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
 							Gestionar segmentos
 						</Typography>

@@ -196,7 +196,7 @@ const FeatureGrantsPage: React.FC = () => {
 		<MainCard
 			title="Feature Grants (manual bypass de plan/addon)"
 			secondary={
-				<Stack direction="row" spacing={1}>
+				<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 					<IconButton onClick={fetchList} title="Refrescar">
 						<Refresh size={18} />
 					</IconButton>

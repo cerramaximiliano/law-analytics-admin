@@ -545,7 +545,7 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 
 						{/* Campaign type - disabled in edit mode */}
 						<Grid item xs={12} sm={12} md={6}>
-							<Stack direction="row" spacing={1} alignItems="flex-start">
+							<Stack direction="row" spacing={1} alignItems="flex-start" flexWrap="wrap" useFlexGap>
 								<FormControl fullWidth error={formik.touched.type && Boolean(formik.errors.type)}>
 									<InputLabel id="type-label">Tipo de campaña *</InputLabel>
 									<Select

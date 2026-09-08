@@ -161,7 +161,7 @@ const NewCampaignModal = ({ open, onClose, onSuccess }: NewCampaignModalProps) =
 		>
 			<form onSubmit={formik.handleSubmit}>
 				<DialogTitle>
-					<Stack direction="row" justifyContent="space-between" alignItems="center">
+					<Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" useFlexGap>
 						<Typography variant="h4">Nueva Campaña de Email</Typography>
 					</Stack>
 				</DialogTitle>

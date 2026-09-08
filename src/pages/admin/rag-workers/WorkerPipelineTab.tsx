@@ -395,7 +395,7 @@ const WorkerPipelineTab = () => {
 									>
 										{/* Label + description */}
 										<Box sx={{ flex: 1, minWidth: 0 }}>
-											<Stack direction="row" spacing={1} alignItems="center">
+											<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
 												<Typography variant="body2" fontWeight={500} noWrap>
 													{v.label}
 												</Typography>

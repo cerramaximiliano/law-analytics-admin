@@ -772,13 +772,13 @@ const ScrapingWorker = () => {
 													<Select value={progresoFilter} onChange={(e) => handleProgresoFilterChange(e.target.value)} displayEmpty>
 														<MenuItem value="TODOS">Progreso</MenuItem>
 														<MenuItem value="completo">
-															<Stack direction="row" spacing={1} alignItems="center">
+															<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
 																<Typography variant="body2">Completo</Typography>
 																<Chip label="100%" size="small" color="success" />
 															</Stack>
 														</MenuItem>
 														<MenuItem value="incompleto">
-															<Stack direction="row" spacing={1} alignItems="center">
+															<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
 																<Typography variant="body2">En Progreso</Typography>
 																<Chip label="<100%" size="small" color="warning" />
 															</Stack>

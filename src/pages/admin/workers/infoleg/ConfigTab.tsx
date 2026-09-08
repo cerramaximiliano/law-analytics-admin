@@ -168,7 +168,7 @@ const ConfigTab = () => {
 
 			{/* Scraper worker */}
 			<Box>
-				<Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.5 }}>
+				<Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.5 }} flexWrap="wrap" useFlexGap>
 					<Typography variant="h6">Worker Scraper</Typography>
 					<FormControlLabel
 						control={<Switch checked={scrEnabled} onChange={(e) => setScrEnabled(e.target.checked)} />}
@@ -226,7 +226,7 @@ const ConfigTab = () => {
 
 			{/* Vinculaciones worker */}
 			<Box>
-				<Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.5 }}>
+				<Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.5 }} flexWrap="wrap" useFlexGap>
 					<Typography variant="h6">Worker Vinculaciones</Typography>
 					<FormControlLabel
 						control={<Switch checked={vinEnabled} onChange={(e) => setVinEnabled(e.target.checked)} />}
@@ -261,7 +261,7 @@ const ConfigTab = () => {
 
 			{/* Email */}
 			<Box>
-				<Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.5 }}>
+				<Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.5 }} flexWrap="wrap" useFlexGap>
 					<Typography variant="h6">Reporte diario por email</Typography>
 					<FormControlLabel
 						control={<Switch checked={emailEnabled} onChange={(e) => setEmailEnabled(e.target.checked)} />}

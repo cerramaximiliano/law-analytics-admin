@@ -704,7 +704,7 @@ pm2 save`}
 					</Typography>
 					<Grid container spacing={3} alignItems="center">
 						<Grid item xs={12} sm={3}>
-							<Stack direction="row" spacing={1} alignItems="center">
+							<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
 								<Typography variant="body2">Habilitado:</Typography>
 								<Switch checked={editEnabled} onChange={(e) => setEditEnabled(e.target.checked)} />
 							</Stack>
@@ -1036,7 +1036,7 @@ pm2 save`}
 							if (newOpen) loadExplorerData();
 						}}
 					>
-						<Stack direction="row" spacing={1} alignItems="center">
+						<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
 							<SearchNormal1 size={20} />
 							<Typography variant="h6">Explorador de navigation codes</Typography>
 						</Stack>

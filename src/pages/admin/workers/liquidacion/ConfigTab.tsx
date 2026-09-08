@@ -259,7 +259,7 @@ export default function ConfigTab({ doc, loading, onSaved }: Props) {
 				}}
 			>
 				<AccordionSummary expandIcon={<ArrowDown2 size={16} />} sx={{ bgcolor: alpha(BRAND_BLUE, isDark ? 0.06 : 0.03) }}>
-					<Stack direction="row" spacing={1} alignItems="center">
+					<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
 						<Typography variant="h6">URL Extractor</Typography>
 						<Chip label="pjn-liq-url-extractor" size="small" sx={{ fontFamily: "monospace", fontSize: "0.7rem" }} />
 						<Chip label={form.urlExtractor.enabled ? "ON" : "OFF"} color={form.urlExtractor.enabled ? "success" : "default"} size="small" />

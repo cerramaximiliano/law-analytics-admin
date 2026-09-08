@@ -682,7 +682,7 @@ const CoveragePanel: React.FC = () => {
 					<Tab
 						value="global"
 						label={
-							<Stack direction="row" alignItems="center" spacing={0.5}>
+							<Stack direction="row" alignItems="center" spacing={0.5} flexWrap="wrap" useFlexGap>
 								<Flash size={14} />
 								<span>Análisis global</span>
 							</Stack>

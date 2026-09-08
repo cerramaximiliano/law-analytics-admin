@@ -182,7 +182,7 @@ const EditLegalDocumentModal: React.FC<EditLegalDocumentModalProps> = ({ open, o
 			}}
 		>
 			<DialogTitle>
-				<Stack direction="row" justifyContent="space-between" alignItems="center">
+				<Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" useFlexGap>
 					<Typography variant="h5" sx={{ fontWeight: 600, letterSpacing: "-0.01em" }}>
 						Editar documento legal
 					</Typography>
@@ -330,7 +330,7 @@ const EditLegalDocumentModal: React.FC<EditLegalDocumentModalProps> = ({ open, o
 										<Typography variant="subtitle2" color="primary">
 											Sección {section.order}
 										</Typography>
-										<Stack direction="row" spacing={0.5}>
+										<Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
 											<IconButton size="small" onClick={() => handleMoveSection(index, "up")} disabled={index === 0}>
 												<ArrowUp2 size={16} />
 											</IconButton>

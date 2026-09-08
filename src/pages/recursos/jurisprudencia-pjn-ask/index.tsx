@@ -499,7 +499,7 @@ export default function JurisprudenciaPjnAskPage() {
 				<Card variant="outlined">
 					<CardContent sx={{ py: "12px !important" }}>
 						<Stack direction="row" alignItems="center" justifyContent="space-between" flexWrap="wrap" rowGap={1}>
-							<Stack direction="row" alignItems="center" spacing={1.5}>
+							<Stack direction="row" alignItems="center" spacing={1.5} flexWrap="wrap" useFlexGap>
 								<Typography variant="body2" fontWeight={600}>
 									Uso de búsqueda semántica
 								</Typography>
@@ -510,7 +510,7 @@ export default function JurisprudenciaPjnAskPage() {
 									</Typography>
 								)}
 							</Stack>
-							<Stack direction="row" spacing={1} alignItems="center">
+							<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
 								<TextField
 									select
 									size="small"
@@ -561,7 +561,15 @@ export default function JurisprudenciaPjnAskPage() {
 										</Typography>
 										<Stack spacing={0.25}>
 											{usage.topUsers.map((u) => (
-												<Stack key={u.userId} direction="row" spacing={1} alignItems="center" justifyContent="space-between">
+												<Stack
+													key={u.userId}
+													direction="row"
+													spacing={1}
+													alignItems="center"
+													justifyContent="space-between"
+													flexWrap="wrap"
+													useFlexGap
+												>
 													<Typography variant="caption" sx={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}>
 														{u.email || u.userId}
 													</Typography>

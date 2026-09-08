@@ -62,7 +62,7 @@ function ConfigTab({ doc, loading, onSaved }: { doc: PlazosWorkerFullDoc | null;
 
 	return (
 		<Stack spacing={2.5} sx={{ maxWidth: 640 }}>
-			<Stack direction="row" alignItems="center" spacing={1}>
+			<Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap" useFlexGap>
 				<Switch checked={form.enabled} onChange={(e) => setForm({ ...form, enabled: e.target.checked })} />
 				<Typography>Worker habilitado</Typography>
 			</Stack>

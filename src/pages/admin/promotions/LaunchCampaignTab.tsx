@@ -572,7 +572,7 @@ const LaunchCampaignTab = ({ discount, onCampaignLaunched }: Props) => {
 											variant="outlined"
 											sx={{ p: 1.5, bgcolor: alpha(theme.palette.info.main, 0.04), borderColor: alpha(theme.palette.info.main, 0.3) }}
 										>
-											<Stack direction="row" spacing={1} alignItems="flex-start">
+											<Stack direction="row" spacing={1} alignItems="flex-start" flexWrap="wrap" useFlexGap>
 												<InfoCircle size={16} color={theme.palette.info.main} style={{ marginTop: 2, flexShrink: 0 }} />
 												<Typography variant="caption" color="text.secondary">
 													Seleccioná un template del repositorio de marketing como <strong>punto de partida</strong>. Su contenido se

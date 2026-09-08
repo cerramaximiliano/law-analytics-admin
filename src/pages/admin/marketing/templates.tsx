@@ -1771,7 +1771,7 @@ const EmailTemplates = () => {
 			<MainCard content={false}>
 				<Box sx={{ p: { xs: 1.5, sm: 2 } }}>
 					{/* Búsqueda + acceso a filtros (compacto y usable en mobile) */}
-					<Stack direction="row" spacing={1} alignItems="center">
+					<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
 						<TextField
 							fullWidth
 							value={filter}

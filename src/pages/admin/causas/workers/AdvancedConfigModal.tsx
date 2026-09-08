@@ -413,7 +413,7 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 
 								{/* Configuración 2Captcha */}
 								<Box>
-									<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+									<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }} flexWrap="wrap" useFlexGap>
 										<Typography variant="subtitle1" fontWeight={500}>
 											2Captcha
 										</Typography>
@@ -453,7 +453,7 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 
 								{/* Configuración Capsolver */}
 								<Box>
-									<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+									<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }} flexWrap="wrap" useFlexGap>
 										<Typography variant="subtitle1" fontWeight={500}>
 											Capsolver
 										</Typography>
@@ -493,7 +493,7 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 
 								{/* Configuración CaptchaAI */}
 								<Box>
-									<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+									<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }} flexWrap="wrap" useFlexGap>
 										<Typography variant="subtitle1" fontWeight={500}>
 											CaptchaAI
 										</Typography>

@@ -195,7 +195,7 @@ const MisCausasManagerTab: React.FC<Props> = ({ config, onConfigUpdate }) => {
 			{/* Configuración del Manager */}
 			<Card variant="outlined">
 				<CardContent>
-					<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+					<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }} flexWrap="wrap" useFlexGap>
 						<Setting2 size={20} />
 						<Typography
 							variant="h5"

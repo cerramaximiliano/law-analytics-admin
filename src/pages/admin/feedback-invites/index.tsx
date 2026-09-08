@@ -236,7 +236,7 @@ const FeedbackInvitesPage = () => {
 
 				{/* Filtros */}
 				<Paper variant="outlined" sx={{ p: 2 }}>
-					<Stack direction="row" spacing={1} alignItems="center" mb={2}>
+					<Stack direction="row" spacing={1} alignItems="center" mb={2} flexWrap="wrap" useFlexGap>
 						<Filter size={18} />
 						<Typography variant="subtitle2" sx={{ textTransform: "uppercase", letterSpacing: 0.4, fontSize: "0.72rem" }}>
 							Filtros

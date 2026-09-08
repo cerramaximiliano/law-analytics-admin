@@ -434,7 +434,7 @@ const GenerateAICampaignModal = ({ open, onClose, onCampaignSaved }: Props) => {
 								helperText="Mínimo 10 caracteres. Sé específico sobre el objetivo, narrativa y tono esperado."
 							/>
 
-							<Stack direction="row" spacing={1}>
+							<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 								<FormControl fullWidth size="small">
 									<InputLabel>Tipo</InputLabel>
 									<Select value={campaignType} label="Tipo" onChange={(e) => setCampaignType(e.target.value as any)} disabled={busy}>
@@ -482,7 +482,7 @@ const GenerateAICampaignModal = ({ open, onClose, onCampaignSaved }: Props) => {
 								</Paper>
 							)}
 
-							<Stack direction="row" spacing={1}>
+							<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 								<FormControl fullWidth size="small">
 									<InputLabel>Categoría</InputLabel>
 									<Select value={category} label="Categoría" onChange={(e) => setCategory(e.target.value)} disabled={busy}>
@@ -539,7 +539,7 @@ const GenerateAICampaignModal = ({ open, onClose, onCampaignSaved }: Props) => {
 								)}
 								<Stack spacing={1}>
 									{campaignVariables.map((v, idx) => (
-										<Stack key={idx} direction="row" spacing={1}>
+										<Stack key={idx} direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 											<TextField
 												size="small"
 												placeholder="key (ej: discountCode)"
@@ -714,7 +714,7 @@ const GenerateAICampaignModal = ({ open, onClose, onCampaignSaved }: Props) => {
 							<Stack spacing={2}>
 								{/* Metadata de la campaña */}
 								<Paper variant="outlined" sx={{ p: 1.5 }}>
-									<Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
+									<Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }} flexWrap="wrap" useFlexGap>
 										<Send2 size={16} color={theme.palette.primary.main} />
 										<Typography variant="subtitle2" fontWeight={700}>
 											Campaña
@@ -817,7 +817,7 @@ const GenerateAICampaignModal = ({ open, onClose, onCampaignSaved }: Props) => {
 													</Stack>
 												)}
 												{emailTab > 0 && (
-													<Stack direction="row" spacing={1} alignItems="center">
+													<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
 														<TextField
 															label="Delay (días)"
 															size="small"
@@ -887,7 +887,7 @@ const GenerateAICampaignModal = ({ open, onClose, onCampaignSaved }: Props) => {
 										{/* ── Refinar este email con AI ── */}
 										<Paper variant="outlined" sx={{ p: 1.5, bgcolor: theme.palette.mode === "dark" ? "grey.900" : "grey.50" }}>
 											<Stack spacing={1}>
-												<Stack direction="row" alignItems="center" spacing={1}>
+												<Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap" useFlexGap>
 													<Magicpen size={14} color={theme.palette.secondary.main} />
 													<Typography variant="caption" fontWeight={700} color="text.secondary">
 														Refinar solo este email con AI

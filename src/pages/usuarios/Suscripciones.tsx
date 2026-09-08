@@ -1869,7 +1869,7 @@ const Suscripciones = () => {
 			{/* Modal de actualizar fecha de gracia */}
 			<Dialog open={openUpdateDialog} onClose={handleCloseUpdateDialog} maxWidth="sm" fullWidth>
 				<DialogTitle>
-					<Stack direction="row" justifyContent="space-between" alignItems="center">
+					<Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" useFlexGap>
 						<Typography variant="h5">Actualizar Fecha de Gracia</Typography>
 						<IconButton onClick={handleCloseUpdateDialog} size="small">
 							<CloseSquare size={20} />

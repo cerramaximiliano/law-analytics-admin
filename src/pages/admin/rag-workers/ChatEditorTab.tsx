@@ -368,7 +368,7 @@ const ChatEditorTab = () => {
 											>
 												{v.options!.map((opt) => (
 													<MenuItem key={String(opt.value)} value={opt.value}>
-														<Stack direction="row" spacing={1} alignItems="center">
+														<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
 															<Typography variant="body2" sx={{ fontFamily: "monospace" }}>
 																{opt.label}
 															</Typography>
@@ -497,7 +497,7 @@ const ChatEditorTab = () => {
 						</Typography>
 					</Stack>
 					{!editingPrompt && (
-						<Stack direction="row" spacing={1} alignItems="center">
+						<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
 							<Chip label={`${editorConfig.systemPrompt?.length ?? 0} chars`} size="small" variant="outlined" sx={{ fontSize: "0.7rem" }} />
 							<Tooltip title="Editar">
 								<IconButton size="small" onClick={handleStartEditPrompt}>

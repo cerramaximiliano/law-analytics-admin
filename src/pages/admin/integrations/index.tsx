@@ -687,7 +687,7 @@ const IntegrationsPage: React.FC = () => {
 							return (
 								<Grid item xs={12} sm={6} md={4} key={entry.key}>
 									<Stack spacing={0.75} sx={{ p: 1.25, borderRadius: 1.5, border: `1px solid ${theme.palette.divider}` }}>
-										<Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
+										<Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1} flexWrap="wrap" useFlexGap>
 											<Box sx={{ minWidth: 0, flex: 1 }}>
 												<Typography variant="body2" fontWeight={600} noWrap>
 													{entry.name || visual.shortName}
@@ -968,7 +968,7 @@ const IntegrationsPage: React.FC = () => {
 								}
 								helperText="Minúsculas, sin espacios. Ej: pjmendoza, pjsanluis. No se puede cambiar después."
 							/>
-							<Stack direction="row" spacing={2}>
+							<Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
 								<TextField
 									size="small"
 									label="Nombre corto (bajo el ícono)"
@@ -1004,7 +1004,7 @@ const IntegrationsPage: React.FC = () => {
 										: "Obligatorio para que el ícono aparezca en la landing. Ej: URL de Cloudinary con fondo transparente."
 								}
 							/>
-							<Stack direction="row" spacing={2} alignItems="center">
+							<Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" useFlexGap>
 								<TextField
 									size="small"
 									label="Color de fondo"

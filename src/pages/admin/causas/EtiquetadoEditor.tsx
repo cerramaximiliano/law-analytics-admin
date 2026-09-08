@@ -2480,7 +2480,7 @@ const EtiquetadoEditor = () => {
 													setDecisiones(mSel.idx, nuevas);
 												}}
 											/>
-											<Stack direction="row" spacing={1}>
+											<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 												<Select
 													fullWidth
 													size="small"

@@ -330,7 +330,7 @@ const EditDialog = ({ open, doc, missingDate, onClose, onSave }: EditDialogProps
 						</Typography>
 						<Stack spacing={1}>
 							{(form.links ?? []).map((link, idx) => (
-								<Stack key={idx} direction="row" spacing={1} alignItems="center">
+								<Stack key={idx} direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
 									<TextField
 										fullWidth
 										size="small"

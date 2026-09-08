@@ -665,7 +665,7 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 							</Grid>
 						)}
 						<Grid item xs={12}>
-							<Stack direction="row" alignItems="center" justifyContent="space-between" mb={1}>
+							<Stack direction="row" alignItems="center" justifyContent="space-between" mb={1} flexWrap="wrap" useFlexGap>
 								<Typography variant="subtitle2">Trabajador (requirente)</Typography>
 								<Button
 									size="small"
@@ -993,7 +993,7 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 									<Typography variant="body2">Sin restricción de carpeta. Se muestran todos los contactos del usuario.</Typography>
 								</Alert>
 							)}
-							<Stack direction="row" alignItems="center" justifyContent="space-between" mb={1}>
+							<Stack direction="row" alignItems="center" justifyContent="space-between" mb={1} flexWrap="wrap" useFlexGap>
 								<Typography variant="subtitle2">Empleador (requerido)</Typography>
 								<Button
 									size="small"
@@ -1473,7 +1473,7 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 				</ReviewSection>
 
 				<Box sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 1.5 }}>
-					<Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
+					<Stack direction="row" justifyContent="space-between" alignItems="center" mb={1} flexWrap="wrap" useFlexGap>
 						<Typography variant="subtitle2">Programación (opcional)</Typography>
 						{scheduledLocal && (
 							<Link component="button" type="button" onClick={() => setScheduledLocal("")} sx={{ fontSize: 12 }}>

@@ -728,7 +728,7 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 			</DialogContent>
 
 			<DialogActions sx={{ px: 3, py: 2, justifyContent: "space-between" }}>
-				<Stack direction="row" spacing={2} alignItems="center">
+				<Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" useFlexGap>
 					<Button
 						variant="outlined"
 						size="small"
@@ -744,7 +744,7 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 						label="Auto-actualizar"
 					/>
 					{autoRefresh && (
-						<Stack direction="row" spacing={1} alignItems="center">
+						<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
 							<Typography variant="body2">cada</Typography>
 							<TextField
 								type="number"

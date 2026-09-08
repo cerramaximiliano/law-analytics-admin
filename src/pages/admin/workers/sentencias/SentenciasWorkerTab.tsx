@@ -1254,7 +1254,7 @@ function NoveltySection({ stats, loading, onRefresh }: { stats: SentenciasStats 
 						{config ? (
 							<Stack spacing={2}>
 								{/* Habilitado */}
-								<Stack direction="row" justifyContent="space-between" alignItems="center">
+								<Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" useFlexGap>
 									<Box>
 										<Typography variant="body2" fontWeight={600}>
 											Layer 2 habilitado
@@ -1409,7 +1409,7 @@ function NoveltySection({ stats, loading, onRefresh }: { stats: SentenciasStats 
 										(~320k, incluye sentencias PJN capturadas de causas de usuarios). Se aplica en el servidor: el cliente no puede
 										ampliarlo.
 									</Typography>
-									<Stack direction="row" spacing={2}>
+									<Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
 										<TextField
 											select
 											size="small"
@@ -2602,7 +2602,7 @@ function FueroRow({
 		>
 			<Stack direction={{ xs: "column", sm: "row" }} alignItems={{ xs: "stretch", sm: "center" }} spacing={1.5} flexWrap="wrap">
 				{/* Label + toggle */}
-				<Stack direction="row" alignItems="center" spacing={1} sx={{ minWidth: 120 }}>
+				<Stack direction="row" alignItems="center" spacing={1} sx={{ minWidth: 120 }} flexWrap="wrap" useFlexGap>
 					<Switch size="small" checked={fuero.enabled} onChange={(e) => onToggle(fuero.fuero, e.target.checked)} disabled={saving} />
 					<Typography variant="body2" fontWeight={700}>
 						{fuero.fuero}

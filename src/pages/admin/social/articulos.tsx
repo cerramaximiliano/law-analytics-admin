@@ -705,7 +705,7 @@ const ArticulosBlog = () => {
 							<ExportSquare size={13} />
 						</Typography>
 					</Box>
-					<Stack direction="row" spacing={1.5} alignItems="center" sx={{ flexShrink: 0 }}>
+					<Stack direction="row" spacing={1.5} alignItems="center" sx={{ flexShrink: 0 }} flexWrap="wrap" useFlexGap>
 						<FormControl size="small" sx={{ minWidth: 160, flex: { xs: 1, sm: "initial" } }}>
 							<InputLabel>Estado</InputLabel>
 							<Select

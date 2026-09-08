@@ -82,7 +82,7 @@ export default function ConfigTab({ config, onChange }: { config: CijurWorkerCon
 						<Typography variant="caption" color="text.secondary" sx={{ mb: 0.5 }}>
 							Canales a vigilar
 						</Typography>
-						<Stack direction="row" spacing={1}>
+						<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 							{CANALES.map((c) => (
 								<Chip
 									key={c}
