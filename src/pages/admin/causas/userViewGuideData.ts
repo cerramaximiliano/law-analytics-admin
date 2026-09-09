@@ -1173,10 +1173,10 @@ export const MEV_FINDINGS: GuideFinding[] = [
 	{
 		id: "MV4",
 		severity: "media",
-		title: "[ABIERTO — decisión de producto] Borrar la credencial MEV no saca al usuario de las causas: sigue recibiendo notificaciones de causas compartidas",
+		title: "[RESUELTO 2026-09-09, deploy pendiente] Borrar la credencial MEV dejaba al usuario recibiendo notificaciones de causas compartidas",
 		detail:
-			"deleteCredentials borra el doc, marca las carpetas mevCredentialStatus:'missing' y resetea elegibilidad, pero no toca las causas: el usuario permanece en userCausaIds/userUpdatesEnabled y, si otro usuario con credencial las mantiene vivas, sigue recibiendo movimientos. En PJN (F16) se decidió podar; en MEV la intención declarada de borrar credencial es 'pausar', no desvincular (la carpeta queda mev:true con causaId). Falta decidir si 'pausar' incluye dejar de notificar. Si sí: misma poda que pruneUserFromCausas condicionada a que el usuario no conserve carpeta activa… que siempre conserva; habría que definir el criterio (p. ej. podar userUpdatesEnabled.enabled=false y restaurar al re-vincular la credencial).",
-		where: "law-analytics-server controllers/mevCredentialsController.js deleteCredentials (462-590)",
+			"deleteCredentials borraba el doc, marcaba las carpetas mevCredentialStatus:'missing' y reseteaba elegibilidad, pero no tocaba las causas: el usuario seguía en userCausaIds/userUpdatesEnabled y, si otro usuario con credencial las mantenía vivas, seguía recibiendo movimientos. Decisión de producto (2026-09-09): sin credencial no hay notificaciones. Implementación: CausasMEV.notificationsPausedUserIds; deleteCredentials hace $addToSet del usuario en sus causas no cubiertas (sólo si no queda credencial global); saveCredentials (alta y actualización) hace $pull; mev-workers notification-sync excluye a los pausados también del fallback a userCausaIds; dissociate de mev-api limpia la pausa del usuario que se va. La carpeta sigue mev:true con causaId ('pausada'), no se desvincula. Test tests/mev-credentials/pause-notifications.test.js.",
+		where: "law-analytics-server controllers/mevCredentialsController.js pause/resumeMevNotifications + models/CausasMEV.js · mev-workers notification-sync.js getEnabledUsers (06df478) · mev-api folderAssociationController.js (5d1cf60)",
 	},
 	{
 		id: "MV5",
