@@ -1173,7 +1173,7 @@ export const MEV_FINDINGS: GuideFinding[] = [
 	{
 		id: "MV4",
 		severity: "media",
-		title: "[RESUELTO 2026-09-09, deploy pendiente] Borrar la credencial MEV dejaba al usuario recibiendo notificaciones de causas compartidas",
+		title: "[RESUELTO 2026-09-09, pausa verificada E2E] Borrar la credencial MEV dejaba al usuario recibiendo notificaciones de causas compartidas",
 		detail:
 			"deleteCredentials borraba el doc, marcaba las carpetas mevCredentialStatus:'missing' y reseteaba elegibilidad, pero no tocaba las causas: el usuario seguía en userCausaIds/userUpdatesEnabled y, si otro usuario con credencial las mantenía vivas, seguía recibiendo movimientos. Decisión de producto (2026-09-09): sin credencial no hay notificaciones. Implementación: CausasMEV.notificationsPausedUserIds; deleteCredentials hace $addToSet del usuario en sus causas no cubiertas (sólo si no queda credencial global); saveCredentials (alta y actualización) hace $pull; mev-workers notification-sync excluye a los pausados también del fallback a userCausaIds; dissociate de mev-api limpia la pausa del usuario que se va. La carpeta sigue mev:true con causaId ('pausada'), no se desvincula. Test tests/mev-credentials/pause-notifications.test.js.",
 		where: "law-analytics-server controllers/mevCredentialsController.js pause/resumeMevNotifications + models/CausasMEV.js · mev-workers notification-sync.js getEnabledUsers (06df478) · mev-api folderAssociationController.js (5d1cf60)",
@@ -1249,6 +1249,14 @@ export const MEV_FINDINGS: GuideFinding[] = [
 		detail:
 			"Con la cuenta en 5/5 carpetas, agregar una causa que ya se tiene devolvía 'Has alcanzado el límite…' en vez de 'Ya existe una carpeta…'. El guard de duplicados (PJN/MEV/EJE/IOL) se extrajo a findDuplicatePortalFolder y corre también como middleware rejectDuplicatePortalFolder antes de checkResourceLimits en POST /api/folders. Test en tests/eje/eje-folders.test.js.",
 		where: "law-analytics-server controllers/folderController.js · routes/folderRoutes.js (5f2233e)",
+	},
+	{
+		id: "MV15",
+		severity: "alta",
+		title: "[RESUELTO 2026-09-09, deploy pendiente] Sólo se notifica a los usuarios con credencial MEV cargada; los que no la cargaron recuperan el seguimiento al cargarla",
+		detail:
+			"Contexto (usuario, 2026-09-09): muchas causas quedaron sin seguimiento porque los usuarios no cargaron su credencial tras la migración de la credencial de sistema (41 de las 43 causas con enabled:false pertenecen a 8 usuarios sin ninguna credencial). Regla: esas causas no están 'pendientes'; el seguimiento y las novedades se restablecen cuando el usuario carga su credencial, y en causas compartidas sigue recibiendo el usuario que sí la tiene. Implementación: notification-sync.getEnabledUsers (async) cruza mev-credentials y excluye a quien no tenga una credencial habilitada que cubra la causa (global o por causa), además de los pausados por MV4; al guardar la credencial, resumeMevNotifications vuelve a poner enabled:true al usuario en sus causas y lo saca de la pausa. Verificado contra prod (lectura): un doc sintético con 4 usuarios sólo devuelve al que tiene credencial. Con esto el backfill de MV13 queda reducido a normalizar enabled:true (el filtro real es la credencial) y update:true donde haya carpetas.",
+		where: "mev-workers src/utils/notification-sync.js getEnabledUsers (dfc1122) · law-analytics-server controllers/mevCredentialsController.js resumeMevNotifications (83e2f6f)",
 	},
 	{
 		id: "MV11",
