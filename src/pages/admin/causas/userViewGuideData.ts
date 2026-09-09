@@ -2288,9 +2288,9 @@ const iolFindings = (jur: "pjsalta" | "pjcatamarca" | "pjmendoza", prefix: strin
 		{
 			id: `${prefix}13`,
 			severity: "media",
-			title: "[RESUELTO 2026-09-09, deploy pendiente] Desvincular o borrar la carpeta dejaba al usuario como destinatario de notificaciones (N7, paridad PJN F16)",
+			title: "[RESUELTO 2026-09-09, verificado E2E] Desvincular o borrar la carpeta dejaba al usuario como destinatario de notificaciones (N7, paridad PJN F16)",
 			detail:
-				"dissociate-folder de la API sacaba la carpeta de folderIds y apagaba update si no quedaban carpetas, pero nunca tocaba userCausaIds ni userUpdatesEnabled; el hub además no mandaba userId en DELETE /api/folders ni en unlink-causa. Como notification-sync arma los destinatarios con userUpdatesEnabled (fallback userCausaIds), el usuario seguía recibiendo los movimientos mientras otro usuario mantuviera la causa viva. Verificado en la E2E de Salta: tras unlink-causa la causa seguía con el usuario de test en ambas listas (limpiado a mano). Fix: la API poda al usuario si no conserva otra carpeta sobre la causa (countDocuments sobre los folderIds restantes); el hub manda userId y su fallback local (unlink y las 3 ramas de delete) hace la misma poda.",
+				"dissociate-folder de la API sacaba la carpeta de folderIds y apagaba update si no quedaban carpetas, pero nunca tocaba userCausaIds ni userUpdatesEnabled; el hub además no mandaba userId en DELETE /api/folders ni en unlink-causa. Como notification-sync arma los destinatarios con userUpdatesEnabled (fallback userCausaIds), el usuario seguía recibiendo los movimientos mientras otro usuario mantuviera la causa viva. Verificado en la E2E de Salta: tras unlink-causa la causa seguía con el usuario de test en ambas listas (limpiado a mano). Fix: la API poda al usuario si no conserva otra carpeta sobre la causa (countDocuments sobre los folderIds restantes); el hub manda userId y su fallback local (unlink y las 3 ramas de delete) hace la misma poda. Verificado tras el deploy (18:42 UTC): alta Salta + unlink-causa → la causa quedó sin el usuario en userCausaIds/userUpdatesEnabled; log de pjsalta-api 'desvinculado … · usuario podado de destinatarios'.",
 			where: `${jur}-api causasService.js dissociateFolderFromCausa · law-analytics-server folderUnlinkService.js · folderController.js (deleteFolderById ramas IOL)`,
 		},
 	);
