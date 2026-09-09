@@ -1916,8 +1916,8 @@ const iolGroups = (jur: "pjsalta" | "pjcatamarca" | "pjmendoza", label: string):
 					entry: entry({ ...base }, { expanded: pill("valid"), detail: { chip: pill("valid"), gate: null } }),
 				},
 				{
-				
-				warn: `Resuelto: el verifier sólo llega acá con la causa verificada (1 resultado); el dedupe usa el mismo helper (T3). Desde N1 (2026-09-09) el helper escribe sólo en carpetas que siguen apuntando a la causa.`,	key: `${jur}.ok.dedupe`,
+					warn: `Resuelto: el verifier sólo llega acá con la causa verificada (1 resultado); el dedupe usa el mismo helper (T3). Desde N1 (2026-09-09) el helper escribe sólo en carpetas que siguen apuntando a la causa.`,
+					key: `${jur}.ok.dedupe`,
 					title: "Alta sobre causa ya verificada (dedup por expedienteId/CUIJ)",
 					producer:
 						"hub folderController.js (H3): assoc='success', verified/isValid de la causa; carátula si no empieza con “Pendiente de verificación”",
@@ -1973,8 +1973,8 @@ const iolGroups = (jur: "pjsalta" | "pjcatamarca" | "pjmendoza", label: string):
 					),
 				},
 				{
-				
-				warn: `Resuelto IOL-2: tras 48 h con errores el stuck-worker pasa la causa a isValid:false y la carpeta a 'failed' (con email); antes de las 48 h se reencola cada 2 h.`,	key: `${jur}.pending.stuck`,
+					warn: `Resuelto IOL-2: tras 48 h con errores el stuck-worker pasa la causa a isValid:false y la carpeta a 'failed' (con email); antes de las 48 h se reencola cada 2 h.`,
+					key: `${jur}.pending.stuck`,
 					title: "Causa marcada inválida por stuck-worker, folder congelado",
 					producer: `${jur}-workers stuck-worker.js: reencola errorCount≥3 cada 2h durante 48h y luego invalida (causa isValid=false) aplicando W1 al folder ('failed') + mail (IOL-2/T2)`,
 					fields: "source=auto · verified=false · assoc=pending (causa isValid=false)",
@@ -2068,8 +2068,8 @@ const iolGroups = (jur: "pjsalta" | "pjcatamarca" | "pjmendoza", label: string):
 					),
 				},
 				{
-				
-				warn: `Resuelto IOL-7: la fila expandida muestra “Vinculación fallida · <jurisdicción>” en rojo (FolderView), y el detalle su gate.`,	key: `${jur}.failed.api`,
+					warn: `Resuelto IOL-7: la fila expandida muestra “Vinculación fallida · <jurisdicción>” en rojo (FolderView), y el detalle su gate.`,
+					key: `${jur}.failed.api`,
 					title: "Micro caído y fallback local fallido (sin causaId)",
 					producer:
 						"hub folderController.js (H6): assoc='failed' + causaAssociationError; causaVerified queda false (default) y sin causaId",
@@ -2129,11 +2129,11 @@ const iolGroups = (jur: "pjsalta" | "pjcatamarca" | "pjmendoza", label: string):
 						{ ...base, archived: true },
 						{ hiddenFromList: true, expanded: pill("valid"), detail: { chip: pill("valid"), gate: "archived" } },
 					),
+					warn: "Las archivadas se siguen actualizando a propósito (archivar no desvincula; contexto archivedReason desde el 08/09). Los workers no filtran archived, pero desde N1 sí exigen causaId coincidente.",
 				},
 			],
 		},
-	]
-				warn: `Las archivadas se siguen actualizando a propósito (archivar no desvincula; contexto archivedReason desde el 08/09). Los workers no filtran archived, pero desde N1 sí exigen causaId coincidente.`,;
+	];
 };
 
 const iolFindings = (jur: "pjsalta" | "pjcatamarca" | "pjmendoza", prefix: string): GuideFinding[] => {
@@ -2160,7 +2160,8 @@ const iolFindings = (jur: "pjsalta" | "pjcatamarca" | "pjmendoza", prefix: strin
 			id: `${prefix}3`,
 			severity: "media",
 			title: "[RESUELTO (IOL-7, verificado 2026-09-09)] Pill siempre verde en la fila expandida",
-			detail: "FolderView distingue “Vinculación fallida · <jur>” (rojo) y “Pendiente de verificación · <jur>” (ámbar); details.tsx usa iolFailed/iolPending/iolRemoved.",
+			detail:
+				"FolderView distingue “Vinculación fallida · <jur>” (rojo) y “Pendiente de verificación · <jur>” (ámbar); details.tsx usa iolFailed/iolPending/iolRemoved.",
 			where: "law-analytics-front FolderView.tsx · details.tsx",
 		},
 		{
@@ -2191,7 +2192,8 @@ const iolFindings = (jur: "pjsalta" | "pjcatamarca" | "pjmendoza", prefix: strin
 			id: `${prefix}7`,
 			severity: "baja",
 			title: "[RESUELTO (IOL-10 + N1)] Reset de verificación por admin no tocaba la carpeta",
-			detail: "resetVerification resetea causa (verified:false, errorCount:0, sin locks) y carpetas ('pending', causaVerified:false, $unset causaIsValid); desde N1 sólo las que apuntan a la causa.",
+			detail:
+				"resetVerification resetea causa (verified:false, errorCount:0, sin locks) y carpetas ('pending', causaVerified:false, $unset causaIsValid); desde N1 sólo las que apuntan a la causa.",
 			where: `${api} causasController.js resetVerification`,
 		},
 		{
@@ -2217,28 +2219,32 @@ const iolFindings = (jur: "pjsalta" | "pjcatamarca" | "pjmendoza", prefix: strin
 				id: `${prefix}0a`,
 				severity: "alta",
 				title: "[RESUELTO (IOL-3, verificado 2026-09-09)] Default de Mendoza era Catamarca",
-				detail: "defaultMendozaFolderJuris = { label: 'Mendoza', item: 'Mendoza - 1ª Circunscripción - Mendoza' }; la circunscripción real la escribe el verifier al leer el organismo. 3 carpetas backfilleadas en su momento.",
+				detail:
+					"defaultMendozaFolderJuris = { label: 'Mendoza', item: 'Mendoza - 1ª Circunscripción - Mendoza' }; la circunscripción real la escribe el verifier al leer el organismo. 3 carpetas backfilleadas en su momento.",
 				where: "law-analytics-server folderController.js (bloque Mendoza)",
 			},
 			{
 				id: `${prefix}0b`,
 				severity: "alta",
 				title: "[RESUELTO (verificado 2026-09-09)] Resolución de pivote degradada",
-				detail: "moveFoldersFromPivotToSelected de Mendoza lee la carpeta, respeta overwrite, propaga carátula/materia/folderJuris/judFolder (con merge) y limpia causaAssociationError — idéntico a Salta; además usa mapFueroDelPortal (el portal declara el fuero).",
+				detail:
+					"moveFoldersFromPivotToSelected de Mendoza lee la carpeta, respeta overwrite, propaga carátula/materia/folderJuris/judFolder (con merge) y limpia causaAssociationError — idéntico a Salta; además usa mapFueroDelPortal (el portal declara el fuero).",
 				where: "pjmendoza-workers folder-updater.js · pjmendoza-api folder-updater.js",
 			},
 			{
 				id: `${prefix}0c`,
 				severity: "media",
 				title: "[RESUELTO (verificado 2026-09-09)] judFolder reemplazado entero en el escenario de 1 resultado",
-				detail: "judFolder se escribe con spread del subdocumento existente (courtNumber/secretaryNumber/initialDateJudFolder se conservan) y judFolder.cuij cuando el CUIJ es válido.",
+				detail:
+					"judFolder se escribe con spread del subdocumento existente (courtNumber/secretaryNumber/initialDateJudFolder se conservan) y judFolder.cuij cuando el CUIJ es válido.",
 				where: "pjmendoza-workers folder-updater.js",
 			},
 			{
 				id: `${prefix}0d`,
 				severity: "baja",
 				title: "[RESUELTO 2026-09-09] Sin .env.local ni restart-prod-siblings.sh (N6)",
-				detail: "Era el único de los seis repos IOL sin configuración de /deploy ni script para reiniciar verifier/updater/stuck: la vía más probable para que un fix llegue a Salta y no a Mendoza. Agregados (sin secretos). Bonus: `const errors` del stuck-worker → `let`.",
+				detail:
+					"Era el único de los seis repos IOL sin configuración de /deploy ni script para reiniciar verifier/updater/stuck: la vía más probable para que un fix llegue a Salta y no a Mendoza. Agregados (sin secretos). Bonus: `const errors` del stuck-worker → `let`.",
 				where: "pjmendoza-workers .env.local · scripts/restart-prod-siblings.sh · stuck-worker.js",
 			},
 		);
@@ -2248,7 +2254,8 @@ const iolFindings = (jur: "pjsalta" | "pjcatamarca" | "pjmendoza", prefix: strin
 			id: `${prefix}8`,
 			severity: "baja",
 			title: "[RESUELTO (IOL-11, verificado 2026-09-09)] deleteFolder sin rama propia",
-			detail: "Las 3 IOL tienen rama propia en deleteFolderById (DELETE dissociate-folder de la API + fallback local con $pull y update según restantes); unlink vía folderUnlinkService con el mismo fallback.",
+			detail:
+				"Las 3 IOL tienen rama propia en deleteFolderById (DELETE dissociate-folder de la API + fallback local con $pull y update según restantes); unlink vía folderUnlinkService con el mismo fallback.",
 			where: "law-analytics-server folderController.js · services/folderUnlinkService.js",
 		});
 	}
@@ -2257,7 +2264,8 @@ const iolFindings = (jur: "pjsalta" | "pjcatamarca" | "pjmendoza", prefix: strin
 			id: `${prefix}11`,
 			severity: "baja",
 			title: "[RESUELTO 2026-09-09] folderJuris pisada con undefined cuando la inferencia falla (N5, paridad C4 de Catamarca)",
-			detail: "Salta y Mendoza escribían folderJuris con el resultado de inferFolderJuris aunque fuera undefined (borrando una corrección manual del usuario); Catamarca sólo la escribe si la inferencia encontró la circunscripción. Portado a los dos.",
+			detail:
+				"Salta y Mendoza escribían folderJuris con el resultado de inferFolderJuris aunque fuera undefined (borrando una corrección manual del usuario); Catamarca sólo la escribe si la inferencia encontró la circunscripción. Portado a los dos.",
 			where: `${workers} folder-updater.js (1 resultado y resolución de pivote)`,
 		});
 	}
