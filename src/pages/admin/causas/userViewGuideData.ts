@@ -1973,7 +1973,6 @@ const iolGroups = (jur: "pjsalta" | "pjcatamarca" | "pjmendoza", label: string):
 					),
 				},
 				{
-					warn: `Resuelto IOL-2: tras 48 h con errores el stuck-worker pasa la causa a isValid:false y la carpeta a 'failed' (con email); antes de las 48 h se reencola cada 2 h.`,
 					key: `${jur}.pending.stuck`,
 					title: "Causa marcada inválida por stuck-worker, folder congelado",
 					producer: `${jur}-workers stuck-worker.js: reencola errorCount≥3 cada 2h durante 48h y luego invalida (causa isValid=false) aplicando W1 al folder ('failed') + mail (IOL-2/T2)`,
@@ -1982,7 +1981,7 @@ const iolGroups = (jur: "pjsalta" | "pjcatamarca" | "pjmendoza", label: string):
 						{ ...base, causaVerified: false, causaIsValid: undefined, causaAssociationStatus: "pending" },
 						pendingView({ expanded: pill("pending"), detail: { chip: pill("pending"), gate: "pending" } }),
 					),
-					warn: "“Pendiente de verificación” para siempre; el mail dice 'failed' pero la carpeta no.",
+					warn: "Resuelto IOL-2: tras 48 h con errores el stuck-worker pasa la causa a isValid:false y la carpeta a 'failed' (con email); antes de las 48 h se reencola cada 2 h. Desde N1 sólo sobre carpetas que siguen apuntando a la causa.",
 				},
 				{
 					key: `${jur}.pending.reverify`,
@@ -2068,7 +2067,6 @@ const iolGroups = (jur: "pjsalta" | "pjcatamarca" | "pjmendoza", label: string):
 					),
 				},
 				{
-					warn: `Resuelto IOL-7: la fila expandida muestra “Vinculación fallida · <jurisdicción>” en rojo (FolderView), y el detalle su gate.`,
 					key: `${jur}.failed.api`,
 					title: "Micro caído y fallback local fallido (sin causaId)",
 					producer:
@@ -2078,7 +2076,7 @@ const iolGroups = (jur: "pjsalta" | "pjcatamarca" | "pjmendoza", label: string):
 						{ ...base, causaVerified: false, causaIsValid: undefined, causaAssociationStatus: "failed", causaId: null },
 						failedView({ expanded: pill("pending"), detail: { chip: pill("pending"), gate: "failed" } }),
 					),
-					warn: "La fila expandida dice “Pendiente de verificación” (verified=false) cuando el estado real es failed.",
+					warn: "Resuelto IOL-7: la fila expandida muestra “Vinculación fallida · <jurisdicción>” en rojo (FolderView) y el detalle su gate, aunque causaVerified sea false.",
 				},
 			],
 		},
