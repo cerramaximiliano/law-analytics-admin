@@ -1142,6 +1142,98 @@ export const MEV_FINDINGS: GuideFinding[] = [
 			"MevAccountConnect.tsx imprimía g.lastError.message ('Login falló - USUARIO O CLAVE INCORRECTA', 'Página de contraseña expirada detectada: …') y deriveStatus devolvía 'invalid' con cualquier lastError, incluido PORTAL_ERROR (transitorio, no penaliza la credencial). Ahora utils/mevCredential.ts tiene getMevStatusReason (disabled_by_failures | password_expired | credential_invalid | portal_unstable | pending | ok, derivado de enabled / isExpired / verified / lastError.code) y mevStatusNotice con copy propio; la card usa ambos y el copy de carpetas apunta a 'Integraciones → MEV' en vez de 'tu perfil'. Misma fuente única que SCBA (scbaStatusNotice) y PJN (pjnStatusNotice, F15).",
 		where: "law-analytics-front utils/mevCredential.ts · sections/apps/profiles/account/MevAccountConnect.tsx (04791d05)",
 	},
+	// Segunda pasada MEV (2026-09-09): las clases de bug encontradas en PJN/EJE/IOL
+	// esa semana (guard causaId, poda de destinatarios, fallback al borrar,
+	// progreso al vincular) revisadas en hub, mev-api y mev-workers. Datos de
+	// prod al 09/09: 50 carpetas / 62 causas, sin huérfanas ni destinatarios sin carpeta.
+	{
+		id: "MV1",
+		severity: "alta",
+		title: "[RESUELTO 2026-09-09, deploy pendiente] El updater reescribía carpetas que ya no apuntan a la causa (sin guard causaId)",
+		detail:
+			"updateAssociatedFolders iteraba causa.folderIds y hacía updateOne por _id sin verificar folder.causaId: una carpeta desvinculada (causaId null, manual) o re-vinculada a otra causa que quedó en la lista vieja se pisaba entera (carátula, materia, juzgado, situación, movementsCount, scrapingProgress, causaVerified…). Lo llaman verify-worker (3 puntos) y update-worker. Ahora se lee causaId y se saltea la carpeta si apunta a otra causa (log 'ya apunta a otra causa — no se escribe'). Paridad EJE E3b / IOL N1.",
+		where: "mev-workers src/utils/folder-updater.js updateAssociatedFolders (3004481)",
+	},
+	{
+		id: "MV2",
+		severity: "alta",
+		title: "[RESUELTO 2026-09-09, deploy pendiente] Desvincular vía mev-api dejaba al usuario como destinatario si otro usuario conservaba una carpeta",
+		detail:
+			"dissociate-folder podaba userCausaIds/userUpdatesEnabled sólo si la causa quedaba sin NINGUNA carpeta (hasOtherFolders = folderIds.length > 0), sin mirar de quién eran. Con otra carpeta ajena, el que se iba seguía recibiendo los movimientos (notification-sync arma destinatarios con userUpdatesEnabled, fallback userCausaIds). Ahora cuenta las carpetas restantes del propio usuario en folders y poda si no tiene ninguna. El hub ya podaba en su fallback local (N7), pero el camino normal es la API. Paridad IOL N7 / PJN F16.",
+		where: "mev-api src/controllers/folderAssociationController.js dissociateFolder (1babc81)",
+	},
+	{
+		id: "MV3",
+		severity: "alta",
+		title: "[RESUELTO 2026-09-09, deploy pendiente] Borrar una carpeta MEV (sola o en lote) llamaba a mev-api sin timeout ni fallback local",
+		detail:
+			"deleteFolderById y el borrado masivo hacían el POST dissociate-folder y, si fallaba, 'continuaban' sin tocar la causa: quedaba la carpeta borrada en folderIds (update:true, el updater seguía scrapeando) y el usuario en userCausaIds/userUpdatesEnabled. Ahora ambos usan desasociarCausa de folderUnlinkService (timeout 15 s; fallback local con $pull de folderIds, update según restantes y poda N7 del usuario si no conserva otra carpeta). Es el mismo camino que ya usaba unlink-causa.",
+		where: "law-analytics-server controllers/folderController.js deleteFolderById + bulk (92946d5) · services/folderUnlinkService.js destino MEV",
+	},
+	{
+		id: "MV4",
+		severity: "media",
+		title: "[ABIERTO — decisión de producto] Borrar la credencial MEV no saca al usuario de las causas: sigue recibiendo notificaciones de causas compartidas",
+		detail:
+			"deleteCredentials borra el doc, marca las carpetas mevCredentialStatus:'missing' y resetea elegibilidad, pero no toca las causas: el usuario permanece en userCausaIds/userUpdatesEnabled y, si otro usuario con credencial las mantiene vivas, sigue recibiendo movimientos. En PJN (F16) se decidió podar; en MEV la intención declarada de borrar credencial es 'pausar', no desvincular (la carpeta queda mev:true con causaId). Falta decidir si 'pausar' incluye dejar de notificar. Si sí: misma poda que pruneUserFromCausas condicionada a que el usuario no conserve carpeta activa… que siempre conserva; habría que definir el criterio (p. ej. podar userUpdatesEnabled.enabled=false y restaurar al re-vincular la credencial).",
+		where: "law-analytics-server controllers/mevCredentialsController.js deleteCredentials (462-590)",
+	},
+	{
+		id: "MV5",
+		severity: "media",
+		title: "[RESUELTO 2026-09-09, deploy pendiente] El email 'carpeta verificada' iba al último usuario de la causa y se mandaba por cada carpeta, incluidas ajenas y desvinculadas",
+		detail:
+			"verify-worker buscaba la causa por number solamente (podía ser otra causa con el mismo número en otra jurisdicción), tomaba el ÚLTIMO userCausaIds como destinatario y mandaba un email por cada folderId de la causa sin filtrar por usuario ni por causaId. Ahora manda un email por carpeta que siga apuntando a la causa, al dueño de esa carpeta; si el dueño no tiene email se omite.",
+		where: "mev-workers src/tasks/verify-worker.js (bloque emailNotification, 3004481)",
+	},
+	{
+		id: "MV6",
+		severity: "media",
+		title: "[RESUELTO 2026-09-09, deploy pendiente] markCredentialMissing marcaba 'missing' carpetas que ya no apuntan a la causa",
+		detail:
+			"updateMany({_id:{$in:folderIds}, mev:true, mevCredentialStatus:{$in:[null,'valid']}}) sin causaId: una carpeta re-vinculada a otra causa que quedó en folderIds viejo aparecía 'sin credencial'. Ahora filtra por causaId.",
+		where: "mev-workers src/services/user-credential-notifier.js markCredentialMissing (3004481)",
+	},
+	{
+		id: "MV7",
+		severity: "baja",
+		title: "[RESUELTO 2026-09-09, deploy pendiente] Al vincular a una causa existente el hub no escribía scrapingProgress (F19); el updater nunca cierra isComplete tras una verificación 'partial'",
+		detail:
+			"createFolder y linkFolderToCausa dejaban el default del schema ({isComplete:false} sin status). El síntoma ('Iniciando descarga') ya estaba mitigado por F19 en el endpoint de movimientos (pisa con el progreso de la causa y descarta el vacío); ahora además el hub escribe pjnFolderProgressFromCausa(result) al vincular. Queda como nota: update-worker nunca toca scrapingProgress, así que una verificación que terminó 'partial' deja la carpeta isComplete:false aunque esté al día — inocuo con F19.",
+		where: "law-analytics-server controllers/folderController.js createFolder/linkFolderToCausa MEV (92946d5) · mev-workers update-worker.js",
+	},
+	{
+		id: "MV8",
+		severity: "baja",
+		title: "[ABIERTO] mev-api acepta userId crudo sin schema ni cruce con el JWT en associate/dissociate",
+		detail:
+			"Sin Joi/zod; userId opcional del body sin comparar con req.userId. Un usuario autenticado puede desvincular una carpeta ajena pasando _id + folderId. Las llamadas legítimas vienen del hub con el token del usuario. Fix propuesto: si el token no es admin/api-key, userId = req.userId y folderId debe pertenecerle.",
+		where: "mev-api src/controllers/folderAssociationController.js:10, 229 · src/middlewares/authMiddleware.js",
+	},
+	{
+		id: "MV9",
+		severity: "baja",
+		title: "[ABIERTO — sólo admin] DELETE /api/causas/:id deja folder.causaId colgado y PUT /api/causas/:id permite pisar folderIds/userCausaIds",
+		detail:
+			"deleteCausa/updateCausa/verifyCausa/reVerifyCausa no tocan carpetas; PUT acepta el body entero. Sólo rutas admin; sin uso desde el front de usuario.",
+		where: "mev-api src/controllers/causasController.js:130-207, 254-299",
+	},
+	{
+		id: "MV10",
+		severity: "baja",
+		title: "[ABIERTO] El guard de duplicados MEV no filtra por organismo",
+		detail:
+			"Clave número/año (numberJudFolder o searchTerm) filtrada por fuero si viene; mismo número y año en dos organismos con igual fuero → 409 falso. En MEV folderFuero suele venir vacío en el alta (se infiere después). Fix propuesto: incluir navigationCode/organismo en la clave cuando el alta lo trae.",
+		where: "law-analytics-server controllers/folderController.js:680-720",
+	},
+	{
+		id: "MV11",
+		severity: "baja",
+		title: "[INFO] Selección múltiple para MEV está rota pero es flujo muerto",
+		detail:
+			"selectPendingCausaForFolder hace mongoose.models['MEV'] (el modelo se registra como 'CausasMEV') → 'Modelo MEV no encontrado'; storePendingCausasInFolder acepta 'MEV' pero mev-api nunca devuelve múltiples resultados (clave number+year+navigationCode). No aplica hasta que MEV tenga pivotes.",
+		where: "law-analytics-server services/causaService.js:745-750, 629",
+	},
 ];
 
 // =====================================================================
