@@ -614,6 +614,15 @@ export const PJN_FINDINGS: GuideFinding[] = [
 		where:
 			"law-analytics-server models/Folder.js · services/subscriptionService.js · controllers/subscriptionController.js · folderController.js (541ed31, 6089a18) · la-subscriptions models/Folder.js + subscriptionService.js (8e10e6f) · pjn-mis-causas causa-sync-service.js (11797da) · scba-workers folder-service.ts (d12bc8d) + scripts/backfill-archived-reason.js · front ArchivedItemsModal.tsx (10d42c31)",
 	},
+	{
+		id: "F19",
+		severity: "baja",
+		title: "[RESUELTO 2026-09-09] Carpeta nueva sobre una causa PJN ya verificada mostraba 'Iniciando descarga de movimientos PJN…' hasta 4 h",
+		detail:
+			"Reportado con una carpeta creada el 09/09 14:51 UTC (alta pública, causa CNT ya verificada con 184 movimientos y compartida con otro usuario): la pestaña Actividad mostraba el banner 'Iniciando descarga' con barra indeterminada aunque los 184 movimientos ya estaban listados. No era polling ni WebSocket (Socket.IO conectado y autenticado; el banner se alimenta por polling de /movements/folder cada 30 s). Causa: al vincular a una causa existente el hub no escribía scrapingProgress en el folder y quedaba el default del schema {isComplete:false, 0, 0} sin status ni startedAt; movementController tomaba isComplete:false como 'el worker está actualizando' y no pisaba con el progreso completed de la causa, el detector de stale exige startedAt, y el guard del front sólo ignoraba status === 'pending'. Se curaba solo cuando el app-update-worker copiaba el progreso de la causa en su próximo ciclo (~4 h). Sólo afectaba a altas del flujo público sobre causa existente (las carpetas de Mis Causas nacen con progreso + startedAt; 62/62 de los últimos 14 días). Fix en tres capas: el hub escribe scrapingProgress al vincular (copia el de la causa, o pending explícito si está sin verificar); /movements/folder sólo respeta el progreso del folder si tiene status activo y descarta el progreso vacío; el front trata status ausente como pending. Test tests/pjn-folders/scraping-progress.test.js.",
+		where:
+			"law-analytics-server controllers/folderController.js (pjnFolderProgressFromCausa) · services/causaCacheService.js (linkExistingCausa) · controllers/movementController.js (folderIsUpdating + progreso vacío) · front hooks/useScrapingProgress.ts (e620a37c)",
+	},
 ];
 
 // =====================================================================
