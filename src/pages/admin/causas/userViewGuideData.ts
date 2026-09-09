@@ -1245,7 +1245,7 @@ export const MEV_FINDINGS: GuideFinding[] = [
 	{
 		id: "MV14",
 		severity: "baja",
-		title: "[RESUELTO 2026-09-09, deploy pendiente] El tope del plan (403) se evaluaba antes que el duplicado (409)",
+		title: "[RESUELTO 2026-09-09, verificado E2E] El tope del plan (403) se evaluaba antes que el duplicado (409)",
 		detail:
 			"Con la cuenta en 5/5 carpetas, agregar una causa que ya se tiene devolvía 'Has alcanzado el límite…' en vez de 'Ya existe una carpeta…'. El guard de duplicados (PJN/MEV/EJE/IOL) se extrajo a findDuplicatePortalFolder y corre también como middleware rejectDuplicatePortalFolder antes de checkResourceLimits en POST /api/folders. Test en tests/eje/eje-folders.test.js.",
 		where: "law-analytics-server controllers/folderController.js · routes/folderRoutes.js (5f2233e)",
@@ -1257,6 +1257,14 @@ export const MEV_FINDINGS: GuideFinding[] = [
 		detail:
 			"Contexto (usuario, 2026-09-09): muchas causas quedaron sin seguimiento porque los usuarios no cargaron su credencial tras la migración de la credencial de sistema (41 de las 43 causas con enabled:false pertenecen a 8 usuarios sin ninguna credencial). Regla: esas causas no están 'pendientes'; el seguimiento y las novedades se restablecen cuando el usuario carga su credencial, y en causas compartidas sigue recibiendo el usuario que sí la tiene. Implementación: notification-sync.getEnabledUsers (async) cruza mev-credentials y excluye a quien no tenga una credencial habilitada que cubra la causa (global o por causa), además de los pausados por MV4; al guardar la credencial, resumeMevNotifications vuelve a poner enabled:true al usuario en sus causas y lo saca de la pausa. Verificado contra prod (lectura): un doc sintético con 4 usuarios sólo devuelve al que tiene credencial. Con esto el backfill de MV13 queda reducido a normalizar enabled:true (el filtro real es la credencial) y update:true donde haya carpetas.",
 		where: "mev-workers src/utils/notification-sync.js getEnabledUsers (dfc1122) · law-analytics-server controllers/mevCredentialsController.js resumeMevNotifications (83e2f6f)",
+	},
+	{
+		id: "MV16",
+		severity: "alta",
+		title: "[RESUELTO 2026-09-09, deploy pendiente] Fallo de credencial MEV: propagación a todas las carpetas, prioridad de credenciales sanas y destinatarios válidos",
+		detail:
+			"Relevamiento del flujo completo (worker → credencial → carpetas → causa → email). Lo que ya estaba bien: el fallo definitivo (rechazo explícito, contraseña expirada, auto-deshabilitada a los 5 rechazos espaciados) marca mevCredentialStatus invalid/expired/disabled y manda UN email por credencial (claim de notifiedStatus; se vuelve a avisar sólo si el estado cambia); las carpetas muestran 'Credencial inválida / Contraseña expirada / Credencial desactivada / Credencial requerida'; el hub prueba la credencial contra el portal al cargarla y al recargarla resetea elegibilidad, carpetas a pendiente y notifiedStatus. Huecos cerrados: (a) el estado sólo se escribía en las carpetas de la causa que falló y las demás iban cayendo a 'missing' con back-off de 6/24 h → ahora, con credencial global, el fallo y la recuperación se propagan a todas las carpetas MEV del usuario; (b) en causas compartidas el resolver elegía la credencial fallida mientras siguiera enabled → las credenciales con fallo definitivo conocido van al final y se usa la sana de otro usuario; (c) un usuario con credencial expirada o ya avisada seguía recibiendo notificaciones → destinatario sólo con credencial válida (enabled, no expirada, sin fallo definitivo notificado); (d) el login exitoso no limpiaba isExpired/expiredAt → ahora sí. Backfill MV13 aplicado (43 causas enabled:true, 2 update:true) una vez cerrado esto.",
+		where: "mev-workers src/services/user-credential-notifier.js · src/utils/credentials-resolver.js · src/utils/notification-sync.js (a8ab9b0)",
 	},
 	{
 		id: "MV11",
