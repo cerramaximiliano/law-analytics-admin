@@ -1366,7 +1366,7 @@ export const EJE_FINDINGS: GuideFinding[] = [
 		severity: "alta",
 		title: "[RESUELTO 2026-09-09] Reverificar un pivote era un callejón sin salida",
 		detail:
-			"El hub ya rechazaba (400) reverificar una carpeta en pending_selection. Quedaba el caso de deriva: carpeta 'failed'/'pending' cuyo causaId es un pivote sin resolver → el reset dejaba el pivote en un estado que ningún verifier vuelve a tomar. Ahora reverifyFolder lee la causa y responde 400 PIVOTE_SIN_RESOLVER. La búsqueda no se re-ejecuta (el usuario elige o cancela); re-buscar con el mismo término queda como mejora aparte.",
+			"El hub ya rechazaba (400) reverificar una carpeta en pending_selection. Quedaba el caso de deriva: carpeta 'failed'/'pending' cuyo causaId es un pivote sin resolver → el reset dejaba el pivote en un estado que ningún verifier vuelve a tomar. Ahora reverifyFolder lee la causa y responde 400 PIVOTE_SIN_RESOLVER. La búsqueda no se re-ejecuta (el usuario elige o cancela); re-buscar con el mismo término queda como mejora aparte. No reproducible en E2E (la búsqueda por número/año de EJE devolvió un solo expediente en 100/2023 y 1/2024); cubierto por código.",
 		where:
 			"law-analytics-server folderController.js reverifyFolder (d5cc640) · eje-workers verification-worker.ts findPendingDocuments (isPivot excluido, sin cambios)",
 	},
@@ -1384,7 +1384,7 @@ export const EJE_FINDINGS: GuideFinding[] = [
 		severity: "alta",
 		title: "[RESUELTO 2026-09-09] Dedupe (1 resultado que ya existía) dejaba la carpeta vacía",
 		detail:
-			"Peor de lo relevado: además de no limpiar pendingCausaIds/searchTerm ni setear eje:true, no copiaba carátula, materia, jurisdicción, fuero, CUIJ ni fecha de inicio — la carpeta quedaba verde pero llamada “Pendiente de verificación: 12345/2024” para siempre, sin juzgado ni materia. Ahora usa el mismo helper que el resultado nuevo (updateFoldersOnSingleResult) con los datos de la causa existente, respetando overwrite.",
+			"Peor de lo relevado: además de no limpiar pendingCausaIds/searchTerm ni setear eje:true, no copiaba carátula, materia, jurisdicción, fuero, CUIJ ni fecha de inicio — la carpeta quedaba verde pero llamada “Pendiente de verificación: 12345/2024” para siempre, sin juzgado ni materia. Ahora usa el mismo helper que el resultado nuevo (updateFoldersOnSingleResult) con los datos de la causa existente, respetando overwrite. E2E 09/09: el camino compartido verificado con un alta 100/2023 (1 resultado): carátula, materia, jurisdicción, fuero, CUIJ y fecha completos en 617 ms; el dedupe en sí no es reproducible a mano (requiere dos altas cruzadas del mismo expediente nuevo).",
 		where: "eje-workers verification-worker.ts (5d3bb04)",
 	},
 	{
@@ -1400,7 +1400,7 @@ export const EJE_FINDINGS: GuideFinding[] = [
 		severity: "baja",
 		title: "[RESUELTO 2026-09-09] causaIsValid optimista al seleccionar",
 		detail:
-			"selectPendingCausaForFolder escribía (verified:false, isValid:true, 'success') si la candidata no estaba verificada. Ahora el estado sigue al de la causa: pending si no está verificada, isValid null si no se sabe. Test tests/eje/eje-folders.test.js.",
+			"selectPendingCausaForFolder escribía (verified:false, isValid:true, 'success') si la candidata no estaba verificada. Ahora el estado sigue al de la causa: pending si no está verificada, isValid null si no se sabe. Test tests/eje/eje-folders.test.js (3/3 contra URLDB_TEST); pivote no reproducible en E2E.",
 		where: "law-analytics-server services/causaService.js (d5cc640)",
 	},
 	{
@@ -1408,7 +1408,7 @@ export const EJE_FINDINGS: GuideFinding[] = [
 		severity: "baja",
 		title: "[RESUELTO 2026-09-09] Duplicados EJE no controlados",
 		detail:
-			"El guard de duplicado por expediente de createFolder filtraba pjn|mev. Ahora también eje, con clave CUIJ o numero/anio (lo mismo que queda en judFolder.numberJudFolder) → 409 con la carpeta existente. Mismo hueco pendiente en PJ Salta/Catamarca/Mendoza (se ve en el bloque IOL).",
+			"El guard de duplicado por expediente de createFolder filtraba pjn|mev. Ahora también eje, con clave CUIJ o numero/anio (lo mismo que queda en judFolder.numberJudFolder) → 409 con la carpeta existente. E2E 09/09: 409 verificado con la cuenta de test (el mensaje decía “carpeta MEV”: proyección sin `eje`, hub 1966534). Mismo hueco pendiente en PJ Salta/Catamarca/Mendoza (se ve en el bloque IOL).",
 		where: "law-analytics-server folderController.js createFolder (d5cc640)",
 	},
 	{
@@ -1424,7 +1424,7 @@ export const EJE_FINDINGS: GuideFinding[] = [
 		severity: "media",
 		title: "[RESUELTO 2026-09-09] Desvincular EJE sin fallback si eje-api no responde",
 		detail:
-			"folderUnlinkService declaraba modelo:null para CausasEje (el hub sí tiene models/CausasEje.js). Si el DELETE dissociate-folder de eje-api fallaba, la carpeta pasaba a manual pero la causa la conservaba en folderIds con update:true: se seguía scrapeando y el stuck-worker le escribía (E3b). Ahora el fallback local hace el $pull y ajusta update.",
+			"folderUnlinkService declaraba modelo:null para CausasEje (el hub sí tiene models/CausasEje.js). Si el DELETE dissociate-folder de eje-api fallaba, la carpeta pasaba a manual pero la causa la conservaba en folderIds con update:true: se seguía scrapeando y el stuck-worker le escribía (E3b). Ahora el fallback local hace el $pull y ajusta update. E2E 09/09: unlink vía eje-api OK (“Desasociación OK vía microservicio (CausasEje)”); el fallback no se puede simular en prod.",
 		where: "law-analytics-server services/folderUnlinkService.js (d5cc640)",
 	},
 ];
