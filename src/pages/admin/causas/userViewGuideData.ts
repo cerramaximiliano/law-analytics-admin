@@ -1227,6 +1227,30 @@ export const MEV_FINDINGS: GuideFinding[] = [
 		where: "law-analytics-server controllers/folderController.js:680-720",
 	},
 	{
+		id: "MV12",
+		severity: "alta",
+		title: "[RESUELTO 2026-09-09, deploy pendiente] Carpetas MEV en 'pending' para siempre sobre causas ya verificadas (33 en prod)",
+		detail:
+			"Caso FRANQUET 46817/2020 de la cuenta de test: carpeta creada el 23/07 con causaVerified:false / 'pending' aunque la causa estaba verificada desde 2025-10 con 148 movimientos; el mismo estado en 32 carpetas de otro usuario. Dos causas: (a) el 409-recovery de createFolder (mev-api responde 409 con causaId) escribía 'pending' sin mirar el estado real de la causa; (b) update-worker sólo llama a updateAssociatedFolders cuando hay movimientos nuevos, así que una carpeta vinculada a una causa quieta nunca se refrescaba. Fix: el 409-recovery lee verified/isValid/scrapingProgress del espejo local y escribe success/failed; update-worker detecta carpetas desincronizadas (causaVerified o causaAssociationStatus distintos a los de la causa) y las refresca aunque no haya movimientos. Las 33 carpetas se autocorrigen en el primer ciclo tras el deploy (~2 h).",
+		where: "law-analytics-server controllers/folderController.js createFolder MEV 409-recovery (5f2233e) · mev-workers src/tasks/update-worker.js PASO 7.5 (830cba8)",
+	},
+	{
+		id: "MV13",
+		severity: "alta",
+		title: "[RESUELTO 2026-09-09, deploy pendiente] Notificaciones y actualización MEV atadas al plan: el usuario free no recibía y la causa dejaba de scrapearse",
+		detail:
+			"En la asociación (hub mevAssociateService y mev-api associate) userUpdatesEnabled.enabled = hasPaidSubscription y update = enabled de alguno; al desvincular, update = alguno enabled. Efecto visto en la E2E: al irse el usuario de prueba, la causa quedó update:false porque el usuario restante es free (enabled:false) → ni se actualiza ni se notifica. Regla de producto (2026-09-09): se notifica a todo usuario con carpeta sin importar el plan, y la causa se actualiza mientras tenga alguna carpeta; sí dejan de recibir los que borran/desvinculan (N7/MV2) o borran la credencial (MV4). Fix: enabled siempre true y update = folderIds.length > 0 en associate y dissociate. Pendiente backfill (con consentimiento): 43 causas con algún enabled:false y 2 causas verificadas con carpetas y update:false.",
+		where: "law-analytics-server services/mevAssociateService.js (5f2233e) · mev-api folderAssociationController.js associate/dissociate (03b5c7c)",
+	},
+	{
+		id: "MV14",
+		severity: "baja",
+		title: "[RESUELTO 2026-09-09, deploy pendiente] El tope del plan (403) se evaluaba antes que el duplicado (409)",
+		detail:
+			"Con la cuenta en 5/5 carpetas, agregar una causa que ya se tiene devolvía 'Has alcanzado el límite…' en vez de 'Ya existe una carpeta…'. El guard de duplicados (PJN/MEV/EJE/IOL) se extrajo a findDuplicatePortalFolder y corre también como middleware rejectDuplicatePortalFolder antes de checkResourceLimits en POST /api/folders. Test en tests/eje/eje-folders.test.js.",
+		where: "law-analytics-server controllers/folderController.js · routes/folderRoutes.js (5f2233e)",
+	},
+	{
 		id: "MV11",
 		severity: "baja",
 		title: "[INFO] Selección múltiple para MEV está rota pero es flujo muerto",
