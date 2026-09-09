@@ -1163,7 +1163,7 @@ export const EJE_GROUPS: GuideGroup[] = [
 				producer: "verification-worker.ts:470-492: mismo $set pero NO limpia pendingCausaIds/pendingCausaType/searchTerm ni setea eje:true",
 				fields: "source=auto · verified=true · isValid=true · assoc=success · pendingCausaIds residuales",
 				entry: entry({ ...ejeBase }, { expanded: ejePill("valid"), detail: { chip: ejePill("valid"), gate: null } }),
-				warn: "Se ve OK pero conserva ids de selección colgados (índice pendingCausaIds los sigue encontrando).",
+				warn: "Resuelto E4 (2026-09-09, eje-workers 5d3bb04): el dedupe usa el mismo helper que el resultado nuevo — limpia pendingCausaIds/searchTerm y copia carátula, materia, jurisdicción, CUIJ y fecha. Antes la carpeta quedaba verde pero llamada “Pendiente de verificación: …” y sin datos.",
 			},
 			{
 				key: "eje.ok.selected",
@@ -1172,7 +1172,7 @@ export const EJE_GROUPS: GuideGroup[] = [
 					"hub causaService.js:886-905 selectPendingCausaForFolder: assoc='success', causaVerified=causa.verified||false, causaIsValid=causa.isValid!==false (optimista), causaUpdateEnabled=hasPaidSubscription; no limpia searchTerm",
 				fields: "source=auto · verified=<causa> · isValid=true · assoc=success",
 				entry: entry({ ...ejeBase }, { expanded: ejePill("valid"), detail: { chip: ejePill("valid"), gate: null } }),
-				warn: "Si la causa candidata nacía con verified=false, el folder queda (false, true, 'success'): pendiente en la tabla pero pill verde.",
+				warn: "Resuelto E6 (2026-09-09, hub d5cc640): el estado sigue al de la causa elegida — candidata sin verificar → pending / verified:false / isValid:null; verificada → success. Fila expandida (E5, front 6c0304db): la pill verde EJE sólo con verified+válida.",
 			},
 			{
 				key: "eje.ok.admin_resolve",
@@ -1180,7 +1180,7 @@ export const EJE_GROUPS: GuideGroup[] = [
 				producer: "eje-api causasEjeController.js:672-694 resolvePivot: para cada folder del pivote → causaId elegido, assoc='success'",
 				fields: "source=auto · verified=true · isValid=true · assoc=success",
 				entry: entry({ ...ejeBase }, { expanded: ejePill("valid"), detail: { chip: ejePill("valid"), gate: null } }),
-				warn: "Pisa la selección previa del usuario porque EJE no saca el folder de pivot.folderIds al seleccionar.",
+				warn: "Resuelto E3/E3a: el hub hace $pull de pivot.folderIds al seleccionar/cancelar y resolvePivot (eje-api ba65966) sólo re-apunta folders que siguen en pending_selection sobre ese pivote.",
 			},
 		],
 	},
@@ -1211,7 +1211,7 @@ export const EJE_GROUPS: GuideGroup[] = [
 					{ ...ejeBase, causaVerified: false, causaIsValid: undefined, causaAssociationStatus: "pending", verificationAttempts: 1 },
 					pendingView({ expanded: ejePill("pending"), detail: { chip: ejePill("pending"), gate: "pending" } }),
 				),
-				warn: "Pendiente eterno: el pivote nunca se re-procesa, el flusher lo marca skipped y consumió 1 de 2 intentos.",
+				warn: "Resuelto E2: reverificar una carpeta en selección (o cuyo causaId es un pivote sin resolver, hub d5cc640) devuelve 400 “elegí uno o cancelá” sin consumir intentos.",
 			},
 			{
 				key: "eje.pending.not_attempted",
@@ -1304,27 +1304,31 @@ export const EJE_GROUPS: GuideGroup[] = [
 					{ ...ejeBase, causaVerified: false, causaIsValid: undefined, causaAssociationStatus: "failed", causaId: null },
 					failedView({ expanded: ejePill("pending"), detail: { chip: ejePill("pending"), gate: "failed" } }),
 				),
-				warn: "Sin causa que reverificar; se ve igual que una fallida normal.",
+				warn: "Reverificar devuelve 400 SIN_CAUSA_QUE_VERIFICAR con la instrucción de volver a vincular desde la carpeta (no consume intentos).",
 			},
 		],
 	},
 	{
-		row: "invisible",
-		title: "INVISIBLE — no aparece en ninguna tabla",
+		row: "pending_selection",
+		title: "Link a un pivote — seleccionar expediente (antes INVISIBLE)",
 		whatUserSees:
-			"No cae en la tabla principal (exige verified+isValid=true) ni en “requieren tu atención” (exige verified=false, inválida, failed o pending_selection). La carpeta existe pero el usuario no la ve en la lista; si entra por URL, ve el detalle completo de un pivote.",
+			"Igual que el pivote del worker: chip ámbar “Seleccionar expediente” en la lista (tabla “requieren tu atención”), pill en la fila expandida y gate con CausaSelector en el detalle.",
 		cases: [
 			{
 				key: "eje.invisible.link_pivot",
-				title: "linkFolderToCausa contra un pivote",
+				title: "linkFolderToCausa contra un pivote (E1 resuelto)",
 				producer:
-					"hub folderController.js:4246 associationStatus = verified===false ? 'pending' : 'success' — ignora isPivot y causaAssociationStatus de eje-api → (true, null, 'success') con causaId=pivote y sin pendingCausaIds",
-				fields: "source=auto · verified=true · isValid=null · assoc=success · causaId=pivote",
+					"hub folderController.js linkFolderToCausa: isEjePivot = result.isPivot && pendingCausaIds.length → assoc='pending_selection' + pendingCausaIds/pendingCausaType/searchTerm, causaVerified=true, causaIsValid=null. Antes escribía 'success' con causaId=pivote y la carpeta no entraba en ninguna tabla",
+				fields: "source=auto · verified=true · isValid=null · assoc=pending_selection · causaId=pivote · pendingCausaIds=[…]",
 				entry: entry(
-					{ ...ejeBase, causaVerified: true, causaIsValid: undefined },
-					{ list: "plain", expanded: ejePill("invalid"), detail: { chip: ejePill("invalid"), gate: null }, inAttentionTable: false },
+					{ ...ejeBase, causaVerified: true, causaIsValid: undefined, causaAssociationStatus: "pending_selection" },
+					{
+						list: "pending_selection",
+						expanded: { label: "Seleccionar expediente", accent: "amber", badge: "pending_selection" },
+						detail: { chip: { label: "Seleccionar expediente", accent: "amber", badge: "pending_selection" }, gate: "pending_selection" },
+						inAttentionTable: true,
+					},
 				),
-				warn: "Fila expandida: “Vinculado con EJE” + badge rojo “Causa inválida”; detalle: sin gate, muestra el pivote como si fuera la causa.",
 			},
 		],
 	},
@@ -1337,7 +1341,7 @@ export const EJE_GROUPS: GuideGroup[] = [
 				key: "eje.archived",
 				title: "Archivada por downgrade de plan",
 				producer:
-					"hub subscriptionService.js (agnóstico de fuente) archived=true; los workers EJE no filtran archived y siguen escribiendo",
+					"hub subscriptionService.js archived=true (+ archivedAt/archivedReason desde el 08/09). Los workers EJE NO filtran archived a propósito: archivar no desvincula y la carpeta debe estar al día si se desarchiva. Desde el 09/09 sí exigen que la carpeta siga apuntando a la causa (causaId) — antes el stuck-worker escribía en carpetas desvinculadas (E3b)",
 				fields: "source=auto · archived=true",
 				entry: entry(
 					{ ...ejeBase, archived: true },
@@ -1352,65 +1356,76 @@ export const EJE_FINDINGS: GuideFinding[] = [
 	{
 		id: "E1",
 		severity: "alta",
-		title: "Link a un pivote → carpeta invisible",
+		title: "[RESUELTO (ya estaba) 2026-09-09] Link a un pivote → carpeta invisible",
 		detail:
-			"linkFolderToCausa ignora isPivot y deja (verified:true, isValid:null, 'success') con causaId=pivote: no entra en ninguna de las dos tablas de la lista; el detalle muestra el pivote sin gate.",
-		where: "law-analytics-server folderController.js:4246 · folders.tsx:1945-1988",
+			"linkFolderToCausa ya detecta isPivot y escribe pending_selection + pendingCausaIds; la lista incluye assoc=pending_selection en “requieren tu atención” (T21) y el detalle tiene gate con CausaSelector. Verificado en código el 09/09; la guía lo tenía como abierto.",
+		where: "law-analytics-server folderController.js linkFolderToCausa · front folders.tsx (tablas) · details.tsx (gate)",
 	},
 	{
 		id: "E2",
 		severity: "alta",
-		title: "Reverificar un pivote es un callejón sin salida",
+		title: "[RESUELTO 2026-09-09] Reverificar un pivote era un callejón sin salida",
 		detail:
-			"reverify pone 'pending' y resetea el pivote, pero verification-worker excluye isPivot; el flusher lo marca skipped; consume 1 de 2 intentos.",
-		where: "law-analytics-server folderController.js:5294 · eje-workers verification-worker.ts:84 · pending-selection-flusher.ts:256",
+			"El hub ya rechazaba (400) reverificar una carpeta en pending_selection. Quedaba el caso de deriva: carpeta 'failed'/'pending' cuyo causaId es un pivote sin resolver → el reset dejaba el pivote en un estado que ningún verifier vuelve a tomar. Ahora reverifyFolder lee la causa y responde 400 PIVOTE_SIN_RESOLVER. La búsqueda no se re-ejecuta (el usuario elige o cancela); re-buscar con el mismo término queda como mejora aparte.",
+		where:
+			"law-analytics-server folderController.js reverifyFolder (d5cc640) · eje-workers verification-worker.ts findPendingDocuments (isPivot excluido, sin cambios)",
 	},
 	{
 		id: "E3",
 		severity: "media",
-		title: "EJE no desreferencia el pivote al seleccionar/cancelar",
+		title: "[RESUELTO 2026-09-09] Pivote pisado por el admin; workers escribiendo en carpetas desvinculadas",
 		detail:
-			"causaService solo hace $pull de pivot.folderIds para PjSalta/PjCatamarca/PjMendoza. En EJE un resolvePivot posterior del admin pisa la elección del usuario, y una carpeta vuelta manual sigue recibiendo writes de update/stuck.",
-		where: "law-analytics-server causaService.js:823-853, :984-994 · eje-api causasEjeController.js:672",
+			"(a) El hub ya hace $pull del folder en pivot.folderIds al seleccionar/cancelar (best-effort); ahora resolvePivot de eje-api sólo re-apunta folders que siguen en pending_selection sobre ese pivote, así una elección del usuario no se pisa aunque el $pull haya fallado. (b) stuck-worker escribía en TODOS los folderIds de la causa sin exigir que siguieran apuntando a ella (el update-worker sí lo exigía): materia/juzgado/fechas y hasta 'failed' en carpetas desvinculadas o re-vinculadas. Ahora todas las escrituras a folders de eje-workers llevan causaId. Archivadas: se siguen actualizando a propósito (archivar no desvincula).",
+		where:
+			"eje-api causasEjeController.js resolvePivot (ba65966) · eje-workers stuck-worker.ts markPermanentlyFailed/first-touch, verification-worker.ts (5d3bb04)",
 	},
 	{
 		id: "E4",
-		severity: "media",
-		title: "Dedupe deja pendingCausaIds residuales",
-		detail: "El camino “1 resultado ya existente” no limpia pendingCausaIds/pendingCausaType/searchTerm ni setea eje:true.",
-		where: "eje-workers verification-worker.ts:470-492 vs :161-166",
+		severity: "alta",
+		title: "[RESUELTO 2026-09-09] Dedupe (1 resultado que ya existía) dejaba la carpeta vacía",
+		detail:
+			"Peor de lo relevado: además de no limpiar pendingCausaIds/searchTerm ni setear eje:true, no copiaba carátula, materia, jurisdicción, fuero, CUIJ ni fecha de inicio — la carpeta quedaba verde pero llamada “Pendiente de verificación: 12345/2024” para siempre, sin juzgado ni materia. Ahora usa el mismo helper que el resultado nuevo (updateFoldersOnSingleResult) con los datos de la causa existente, respetando overwrite.",
+		where: "eje-workers verification-worker.ts (5d3bb04)",
 	},
 	{
 		id: "E5",
 		severity: "media",
-		title: "pending y failed se pintan verde en la fila expandida",
+		title: "[RESUELTO 2026-09-09] pending y failed en verde en la fila expandida",
 		detail:
-			"FolderView no tiene pill propia para EJE pendiente/fallida: caen en la rama genérica verde “Vinculado con EJE” con solo el badge chico distinto.",
-		where: "law-analytics-front FolderView.tsx:396, :492",
+			"La rama verde de EJE en FolderView se evaluaba antes que la rama IOL (que sí pinta “Pendiente de verificación · EJE” / “Vinculación fallida · EJE”). Ahora la rama verde exige causaVerified=true y causaIsValid≠false; el resto cae en la IOL. El detalle ya estaba protegido por el gate.",
+		where: "law-analytics-front FolderView.tsx (6c0304db)",
 	},
 	{
 		id: "E6",
 		severity: "baja",
-		title: "causaIsValid optimista al seleccionar",
+		title: "[RESUELTO 2026-09-09] causaIsValid optimista al seleccionar",
 		detail:
-			"selectPendingCausaForFolder escribe causaIsValid = causa.isValid !== false (true si null) → (false, true, 'success') contradictoria.",
-		where: "law-analytics-server causaService.js:851",
+			"selectPendingCausaForFolder escribía (verified:false, isValid:true, 'success') si la candidata no estaba verificada. Ahora el estado sigue al de la causa: pending si no está verificada, isValid null si no se sabe. Test tests/eje/eje-folders.test.js.",
+		where: "law-analytics-server services/causaService.js (d5cc640)",
 	},
 	{
 		id: "E7",
 		severity: "baja",
-		title: "Duplicados EJE no controlados",
+		title: "[RESUELTO 2026-09-09] Duplicados EJE no controlados",
 		detail:
-			"El chequeo de duplicado por expediente en createFolder filtra pjn|mev; EJE no está → dos carpetas para el mismo CUIJ, ambas en CausasEje.folderIds.",
-		where: "law-analytics-server folderController.js:620-626",
+			"El guard de duplicado por expediente de createFolder filtraba pjn|mev. Ahora también eje, con clave CUIJ o numero/anio (lo mismo que queda en judFolder.numberJudFolder) → 409 con la carpeta existente. Mismo hueco pendiente en PJ Salta/Catamarca/Mendoza (se ve en el bloque IOL).",
+		where: "law-analytics-server folderController.js createFolder (d5cc640)",
 	},
 	{
 		id: "E8",
 		severity: "baja",
-		title: "folderJuris divergente",
+		title: "[RESUELTO (ya estaba) 2026-09-09] folderJuris divergente",
 		detail:
-			"link escribe item 'EJE - Expediente Judicial Electrónico' que no existe en el selector; worker y alta usan 'CABA - Contencioso Administrativo y Tributario'.",
-		where: "folderController.js:4265 vs :808 / verification-worker.ts:194",
+			"Link, alta y worker escriben el mismo item canónico (“CABA - Contencioso Administrativo y Tributario”, o “Penal Contravencional y Faltas” si la causa es privada), presentes en el selector (folder.json). Verificado el 09/09.",
+		where: "law-analytics-server folderController.js · eje-workers verification-worker.ts",
+	},
+	{
+		id: "E9",
+		severity: "media",
+		title: "[RESUELTO 2026-09-09] Desvincular EJE sin fallback si eje-api no responde",
+		detail:
+			"folderUnlinkService declaraba modelo:null para CausasEje (el hub sí tiene models/CausasEje.js). Si el DELETE dissociate-folder de eje-api fallaba, la carpeta pasaba a manual pero la causa la conservaba en folderIds con update:true: se seguía scrapeando y el stuck-worker le escribía (E3b). Ahora el fallback local hace el $pull y ajusta update.",
+		where: "law-analytics-server services/folderUnlinkService.js (d5cc640)",
 	},
 ];
 
