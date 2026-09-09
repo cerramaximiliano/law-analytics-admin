@@ -2276,6 +2276,24 @@ const iolFindings = (jur: "pjsalta" | "pjcatamarca" | "pjmendoza", prefix: strin
 			where: `${workers} folder-updater.js (1 resultado y resolución de pivote)`,
 		});
 	}
+	common.push(
+		{
+			id: `${prefix}12`,
+			severity: "alta",
+			title: "[RESUELTO 2026-09-09] Regresión de N1: el dedupe del verifier dejaba la carpeta en 'pending' apuntando a un doc borrado (N1b)",
+			detail:
+				"Vista en la E2E de Salta del 09/09 (alta pública de EXP 905878/25, causa ya existente): el verifier encontró la causa existente, la fusionó (folderIds/userCausaIds) y borró el doc PENDING, pero el guard N1 de resolveFolderIds filtró la carpeta ('ya apunta a otra causa') porque su causaId todavía era el doc PENDING. Resultado: carpeta 'pending' para siempre con causaId inexistente, y al borrarla el hub no podía desasociarla (dejaba folderIds/userCausaIds viejos en la causa real). Fix: resolveFolderIds/updateFoldersOnSingleResult aceptan fromCausaIds (los docs que se fusionan) y el dedupe pasa el id del PENDING. Deployado en cloud-01 y verificado con una segunda alta: success apuntando a la causa existente, con carátula/juzgado/materia. Sólo la carpeta de prueba quedó afectada en prod (barrido de las 3 jurisdicciones desde el deploy de N1).",
+			where: `${workers} folder-updater.js (resolveFolderIds fromCausaIds) · verifier.js (single_result_existing) · ${jur}-api folder-updater.js (misma copia)`,
+		},
+		{
+			id: `${prefix}13`,
+			severity: "media",
+			title: "[RESUELTO 2026-09-09, deploy pendiente] Desvincular o borrar la carpeta dejaba al usuario como destinatario de notificaciones (N7, paridad PJN F16)",
+			detail:
+				"dissociate-folder de la API sacaba la carpeta de folderIds y apagaba update si no quedaban carpetas, pero nunca tocaba userCausaIds ni userUpdatesEnabled; el hub además no mandaba userId en DELETE /api/folders ni en unlink-causa. Como notification-sync arma los destinatarios con userUpdatesEnabled (fallback userCausaIds), el usuario seguía recibiendo los movimientos mientras otro usuario mantuviera la causa viva. Verificado en la E2E de Salta: tras unlink-causa la causa seguía con el usuario de test en ambas listas (limpiado a mano). Fix: la API poda al usuario si no conserva otra carpeta sobre la causa (countDocuments sobre los folderIds restantes); el hub manda userId y su fallback local (unlink y las 3 ramas de delete) hace la misma poda.",
+			where: `${jur}-api causasService.js dissociateFolderFromCausa · law-analytics-server folderUnlinkService.js · folderController.js (deleteFolderById ramas IOL)`,
+		},
+	);
 	return common;
 };
 
