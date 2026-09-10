@@ -1275,6 +1275,14 @@ export const MEV_FINDINGS: GuideFinding[] = [
 		where: "law-analytics-front utils/mevCredential.ts (MEV_CRED_MISSING_ON_FAILED, isMevCredMissing) · pages/apps/folders/folders.tsx · sections/apps/folders/PendingVerificationView.tsx (5922755f)",
 	},
 	{
+		id: "MV18",
+		severity: "alta",
+		title: "[RESUELTO 2026-09-10, deploy pendiente] Al recargar la credencial, las causas inválidas o sin decidir no volvían a verificarse nunca",
+		detail:
+			"Censo del 10/09 (13 usuarios con carpetas MEV): 10 sin credencial (sus causas están elegibles y el update-worker las toma cada ~24 h, no encuentra credencial y las deja en 'Credencial requerida' sin scrapear — lastUpdate detenido en la fecha en que se retiró la credencial de sistema, 2026-06-19), 1 con contraseña expirada ('Contraseña expirada'), 1 con credencial válida y causa inválida ('Asociación fallida'), y la cuenta de test pausada. Flujo de recarga verificado en código: sonda de login → resetMevEligibility (lastCheckedDate/skipUntil/lock) → resumeMevNotifications (MV4/MV15: saca la pausa y enabled:true) → resetMevFolders (carpetas missing/invalid/expired/disabled → 'pending') → el update-worker toma la causa en el siguiente loop, reportCredentialSuccess, notifyCredentialResult('valid') marca todas las carpetas (MV16), updateAssociatedFolders vuelve a 'success' (MV12 refresca aunque no haya movimientos), email 'credencial validada' una vez. HUECO: 3 causas verified:true con isValid false/null no las toma ningún worker (update-worker exige isValid:true, verify-worker verified:false); tras resetMevFolders la carpeta quedaba 'Pendiente de verificación' para siempre. Fix: saveCredentials (alta y actualización) llama a reverifyUndecidedMevCausas → verified:false, isValid:null, estado 'pendiente', elegibilidad limpia → el verify-worker re-evalúa con la credencial nueva. El modelo del hub ahora declara verified e isValid de primer nivel (antes se descartaban silenciosamente en filtros/escrituras). Test en pause-notifications.test.js.",
+		where: "law-analytics-server controllers/mevCredentialsController.js reverifyUndecidedMevCausas (dc7239b) · models/CausasMEV.js (3193451)",
+	},
+	{
 		id: "MV11",
 		severity: "baja",
 		title: "[INFO] Selección múltiple para MEV está rota pero es flujo muerto",
