@@ -1293,10 +1293,18 @@ export const MEV_FINDINGS: GuideFinding[] = [
 	{
 		id: "MV20",
 		severity: "media",
-		title: "[RESUELTO 2026-09-10, deploy pendiente] El email 'credencial MEV validada' llegaba horas después, cuando el update-worker la usaba, y con el número de una causa en el asunto",
+		title: "[RESUELTO 2026-09-10, verificado E2E] El email 'credencial MEV validada' llegaba horas después, cuando el update-worker la usaba, y con el número de una causa en el asunto",
 		detail:
 			"E2E 10/09: credencial recargada 05:30 ART (la card dijo 'Validada' en el acto por la sonda del hub), pero el email '✅ Credencial MEV validada — 61804/2022' recién salió 08:02 ART, cuando el update-cluster (ventana 08–20 ART del worker-manager) la usó por primera vez: el aviso lo mandaba el worker en su primer login exitoso, con la causa de turno en el asunto. Ahora saveCredentials (alta y actualización) manda el email en el acto al confirmar la sonda (template mevCredentialValidatedAccount / mevCredentialValidatedCausa, sin causa en el asunto) y deja notifiedStatus:'valid' para que el worker no duplique; si la sonda no concluye (red), el worker sigue avisando en el primer éxito. El email de 'carpeta verificada' queda sólo para causas nuevas (verify-worker); una recarga de credencial no lo dispara.",
 		where: "law-analytics-server controllers/mevCredentialsController.js notifyMevCredentialValidated (9ad11ec) · mev-workers user-credential-notifier.js (claim notifiedStatus, sin cambios)",
+	},
+	{
+		id: "MV21",
+		severity: "baja",
+		title: "[RESUELTO 2026-09-10, deploy front pendiente] La card MEV mostraba los snackbars abajo a la izquierda y decía 'la validaremos' aunque la sonda ya la había validado",
+		detail:
+			"MevAccountConnect usaba enqueueSnackbar (notistack) sin anchorOrigin, y el provider no fija uno → notistack los pone abajo a la izquierda; el resto de la app usa abajo a la derecha (reducer snackbar y demás llamadas). Ahora los 5 snackbars de la card usan bottom-right. Además, al guardar con la sonda OK (MV20) el mensaje dice 'Credencial MEV validada. Ya sincronizamos tus causas.' en vez de 'La validaremos al consultar tus causas'. E2E 10/09 13:39 UTC: recarga → verifiedAt y email 'Credencial MEV validada' (hub-probe) en el mismo segundo, pausa levantada, 3 carpetas valid/success sin pasar por pendientes (MV19); 'Validada' en la card es real: el hub hace login HTTP contra el portal antes de guardar.",
+		where: "law-analytics-front sections/apps/profiles/account/MevAccountConnect.tsx (6d49910b)",
 	},
 	{
 		id: "MV11",
@@ -2063,6 +2071,14 @@ export const SCBA_FINDINGS: GuideFinding[] = [
 			"08/09 06:01 UTC: el propio scraping del audit (2ª de 4 credenciales, 11 páginas) llevó la CPU a 97 %, el manager aplicó 'CPU crítica → listAudit 1→0' (SIGINT a mitad de ciclo), lo respawneó 30 s después y el cron diario no vuelve hasta el día siguiente: 3 credenciales sin auditar, sin retención de snapshots ni reintento. Fix: los workers de cron diario (listAudit, updateArchived) quedan fuera de la reducción por CPU y el list-audit hace catch-up al arrancar si el disparo del día ya pasó y lastProcessedAt es anterior (SCBA_AUDIT_CATCHUP_DELAY_MS, 90 s). Verificado: catch-up 12:54–12:57 UTC, 4 credenciales, 152 s, 0 errores. cleanupOldListSnapshots loguea siempre la retención efectiva.",
 		where:
 			"scba-workers scba-manager.ts (CRON_DRIVEN_TYPES) · list-audit-worker.ts scheduleCatchUp (efc0249) · utils/list-snapshot.ts (9cf43f6)",
+	},
+	{
+		id: "S26",
+		severity: "baja",
+		title: "[RESUELTO 2026-09-10, deploy front pendiente] El filtro 'Tipo' del listado de carpetas no ofrecía SCBA",
+		detail:
+			"El select de tipo listaba Manual/PJN/EJE/MEV/PJ Salta/PJ Catamarca/PJ Mendoza; el tipo TypeScript repetía 'pjmendoza' donde debía ir 'scba' y el switch no tenía el caso. Además 'Manual' no excluía carpetas scba. Ahora hay opción SCBA (después de PJN), caso 'scba' en el filtro y 'Manual' excluye scba.",
+		where: "law-analytics-front pages/apps/folders/folders.tsx (6d49910b)",
 	},
 ];
 
