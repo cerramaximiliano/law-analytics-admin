@@ -1315,6 +1315,14 @@ export const MEV_FINDINGS: GuideFinding[] = [
 		where: "law-analytics-front sections/apps/profiles/account/MevAccountConnect.tsx (6d49910b)",
 	},
 	{
+		id: "MV22",
+		severity: "alta",
+		title: "[RESUELTO 2026-09-10] E2E del pivote desde la UI: 4 bugs que impedían armarlo y elegir la candidata",
+		detail:
+			"E2E con cerramaximiliano sobre Necochea (Juzgado Civil y Comercial N°1, 100/2020: 2 resultados sin año; Tribunal de Trabajo N°1, 2544/2010: resultados de distintos años, desambigua por año). (1) mev-workers c4ad7e7: el historial del pivote usaba source 'verify-worker', fuera del enum → el save() fallaba por validación cada ~6 min en producción y la carpeta nunca pasaba a selección. (2) mev-workers ae3cb3f: con varios resultados, los callbacks tempranos/incrementales del scraper escribían carátula, objeto y movimientos del primer resultado en la causa y marcaban las carpetas verificadas antes de decidir; ahora llevan multipleResult y el verify-worker los ignora hasta elegir o armar el pivote. (3) hub b15f9f2: el enum de historial del modelo del hub rechazaba 'verificacion'/'update-worker' → elegir candidata daba ValidationError. (4) hub ffb5ca9: el modelo del hub no declaraba update → la candidata elegida quedaba update:false y el update-worker nunca la tomaba. Verificado desde la UI: detalle 'Hay varias coincidencias', selector con las 2 candidatas, 'Causa vinculada exitosamente', pivote resolved con folderIds vacío, usuario destinatario; y desvincular desde el pill (carpeta manual/unlinked, causa sin carpeta ni usuario).",
+		where: "mev-workers src/utils/pivot-helpers.js · src/controllers/mev-scraper.js · src/tasks/verify-worker.js (c4ad7e7, ae3cb3f) · law-analytics-server models/CausasMEV.js (b15f9f2, ffb5ca9)",
+	},
+	{
 		id: "MV11",
 		severity: "media",
 		title: "[RESUELTO 2026-09-10, deploy pendiente] Selección múltiple (pivote) en MEV sobre las coincidencias que devuelve la búsqueda dentro del organismo",
