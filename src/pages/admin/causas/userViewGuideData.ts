@@ -623,6 +623,14 @@ export const PJN_FINDINGS: GuideFinding[] = [
 		where:
 			"law-analytics-server controllers/folderController.js (pjnFolderProgressFromCausa) · services/causaCacheService.js (linkExistingCausa) · controllers/movementController.js (folderIsUpdating + progreso vacío) · front hooks/useScrapingProgress.ts (e620a37c)",
 	},
+	{
+		id: "F20",
+		severity: "alta",
+		title: "[RESUELTO 2026-09-10] Carpetas de Mis Causas nacían 'Pendiente de verificación' con la causa ya verificada (Verificada: No / Válida: Sí en el admin)",
+		detail:
+			"Reportado desde /admin/users/resources (FERRARI 11548/2026 CCF, DAYAN 19721/2026, D'AGATA 59787/2025, entre otras: 4 carpetas pjn-login de 3 usuarios del 08 al 10/09, más 2 'auto' de marzo). La vista muestra folder.causaVerified / folder.causaIsValid: la causa estaba verified:true con movimientos al día (update/app cada 2 h) pero la carpeta seguía causaVerified:false / 'pending'. Causa: en processCausasBatch, cuando la causa NO existía en BD, upsertCausa la creaba ya verified:true (importada del caché o confirmada por el login) pero ensureFolder se llamaba con existingCausa=null → causaVerified = null?.verified || false. Nadie la corregía después: los workers públicos excluyen los folders pjn-login (F8/F11) y el privado sólo escribe progreso. Impacto para el usuario: la carpeta salía del listado principal a 'Pendientes de verificación' y el detalle mostraba PendingVerificationView (bloqueado) aunque los movimientos ya se sincronizaban. Fix: se relee la causa recién creada y se pasa a ensureFolder (pjn-mis-causas 0fbb645, cloud-02). Backfill: 6 carpetas → success/verified/valid con historial 'F20 backfill'.",
+		where: "pjn-mis-causas src/services/causa-sync-service.js processCausasBatch → ensureFolder (0fbb645) · admin UserResourcesTab.tsx (columnas Verificada/Válida)",
+	},
 ];
 
 // =====================================================================
