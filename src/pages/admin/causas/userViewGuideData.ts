@@ -1213,26 +1213,26 @@ export const MEV_FINDINGS: GuideFinding[] = [
 	{
 		id: "MV8",
 		severity: "baja",
-		title: "[ABIERTO] mev-api acepta userId crudo sin schema ni cruce con el JWT en associate/dissociate",
+		title: "[RESUELTO 2026-09-10, deploy pendiente] mev-api aceptaba userId crudo sin schema ni cruce con el JWT en associate/dissociate",
 		detail:
-			"Sin Joi/zod; userId opcional del body sin comparar con req.userId. Un usuario autenticado puede desvincular una carpeta ajena pasando _id + folderId. Las llamadas legítimas vienen del hub con el token del usuario. Fix propuesto: si el token no es admin/api-key, userId = req.userId y folderId debe pertenecerle.",
-		where: "mev-api src/controllers/folderAssociationController.js:10, 229 · src/middlewares/authMiddleware.js",
+			"Sin Joi/zod; userId opcional del body sin comparar con req.userId. Un usuario autenticado puede desvincular una carpeta ajena pasando _id + folderId. Las llamadas legítimas vienen del hub con el token del usuario. Fix propuesto: si el token no es admin/api-key, userId = req.userId y folderId debe pertenecerle. Fix (paridad pjn-api): el middleware acepta x-api-key = MEV_API_KEY → actor 'service'; en associate/dissociate un usuario común actúa siempre como él mismo (403 si manda otro userId) y sólo servicio/admin pueden indicar userId. El hub manda la API key desde folderUnlinkService si MEV_API_KEY está configurada (hoy sigue usando el JWT del usuario, que también es válido).",
+		where: "mev-api src/middlewares/authMiddleware.js · src/controllers/folderAssociationController.js resolveActorUserId (708013e) · law-analytics-server services/folderUnlinkService.js destino MEV (6062d52)",
 	},
 	{
 		id: "MV9",
 		severity: "baja",
-		title: "[ABIERTO — sólo admin] DELETE /api/causas/:id deja folder.causaId colgado y PUT /api/causas/:id permite pisar folderIds/userCausaIds",
+		title: "[RESUELTO 2026-09-10, deploy pendiente] DELETE /api/causas/:id dejaba folder.causaId colgado y PUT /api/causas/:id permitía pisar folderIds/userCausaIds",
 		detail:
-			"deleteCausa/updateCausa/verifyCausa/reVerifyCausa no tocan carpetas; PUT acepta el body entero. Sólo rutas admin; sin uso desde el front de usuario.",
-		where: "mev-api src/controllers/causasController.js:130-207, 254-299",
+			"deleteCausa/updateCausa/verifyCausa/reVerifyCausa no tocan carpetas; PUT acepta el body entero. Sólo rutas admin; sin uso desde el front de usuario. Fix: PUT ignora folderIds, userCausaIds, userUpdatesEnabled, notificationsPausedUserIds, movimiento, movimientosCount y updateHistory (log de aviso); DELETE desvincula las carpetas como el hub (manual + 'unlinked' + previousSyncSource 'mev', historial 'Causa eliminada por administración') y devuelve foldersDesvinculados.",
+		where: "mev-api src/controllers/causasController.js updateCausa/deleteCausa (708013e)",
 	},
 	{
 		id: "MV10",
 		severity: "baja",
-		title: "[ABIERTO] El guard de duplicados MEV no filtra por organismo",
+		title: "[RESUELTO 2026-09-10, deploy pendiente] El guard de duplicados MEV no filtraba por organismo",
 		detail:
-			"Clave número/año (numberJudFolder o searchTerm) filtrada por fuero si viene; mismo número y año en dos organismos con igual fuero → 409 falso. En MEV folderFuero suele venir vacío en el alta (se infiere después). Fix propuesto: incluir navigationCode/organismo en la clave cuando el alta lo trae.",
-		where: "law-analytics-server controllers/folderController.js:680-720",
+			"Clave número/año (numberJudFolder o searchTerm) filtrada por fuero si viene; mismo número y año en dos organismos con igual fuero → 409 falso. En MEV folderFuero suele venir vacío en el alta (se infiere después). Fix propuesto: incluir navigationCode/organismo en la clave cuando el alta lo trae. Fix: la clave pasa a número/año + organismo: el guard compara navigationCode de la carpeta o, en las viejas, el de su causa (mismo número/año en otro organismo del mismo fuero ya no da 409; sin dato se sigue tratando como duplicado). Además Folder declara navigationCode: createFolder/linkFolderToCausa lo escribían pero el schema lo descartaba (1 de 50 carpetas MEV lo tenía). Test en tests/eje/eje-folders.test.js.",
+		where: "law-analytics-server controllers/folderController.js findDuplicatePortalFolder · models/Folder.js · models/CausasMEV.js (6062d52, 264265f)",
 	},
 	{
 		id: "MV12",
@@ -1317,10 +1317,10 @@ export const MEV_FINDINGS: GuideFinding[] = [
 	{
 		id: "MV11",
 		severity: "baja",
-		title: "[INFO] Selección múltiple para MEV está rota pero es flujo muerto",
+		title: "[PARCIAL 2026-09-10] Selección múltiple para MEV: mapeo del modelo corregido; el pivote real depende de una búsqueda sin organismo en el portal",
 		detail:
-			"selectPendingCausaForFolder hace mongoose.models['MEV'] (el modelo se registra como 'CausasMEV') → 'Modelo MEV no encontrado'; storePendingCausasInFolder acepta 'MEV' pero mev-api nunca devuelve múltiples resultados (clave number+year+navigationCode). No aplica hasta que MEV tenga pivotes.",
-		where: "law-analytics-server services/causaService.js:745-750, 629",
+			"selectPendingCausaForFolder hace mongoose.models['MEV'] (el modelo se registra como 'CausasMEV') → 'Modelo MEV no encontrado'; storePendingCausasInFolder acepta 'MEV' pero mev-api nunca devuelve múltiples resultados (clave number+year+navigationCode). No aplica hasta que MEV tenga pivotes. Corregido el mapeo causaType 'MEV' → modelo CausasMEV en selectPendingCausaForFolder (antes 'Modelo MEV no encontrado'). Falta lo grande: mev-api sólo asocia con navigationCode y el scraper navega por organismo, así que no hay quien produzca candidatas. En evaluación (10/09) si el portal permite buscar por número/año sin organismo; si no, la alternativa es iterar los organismos de la jurisdicción elegida.",
+		where: "law-analytics-server services/causaService.js (6062d52) · mev-api associate-folder · mev-workers mev-scraper.js",
 	},
 ];
 
