@@ -1291,6 +1291,14 @@ export const MEV_FINDINGS: GuideFinding[] = [
 		where: "law-analytics-server controllers/mevCredentialsController.js resetMevFolders (22e870d) · configuracion-verificacion-mev.schedule.active_hours",
 	},
 	{
+		id: "MV20",
+		severity: "media",
+		title: "[RESUELTO 2026-09-10, deploy pendiente] El email 'credencial MEV validada' llegaba horas después, cuando el update-worker la usaba, y con el número de una causa en el asunto",
+		detail:
+			"E2E 10/09: credencial recargada 05:30 ART (la card dijo 'Validada' en el acto por la sonda del hub), pero el email '✅ Credencial MEV validada — 61804/2022' recién salió 08:02 ART, cuando el update-cluster (ventana 08–20 ART del worker-manager) la usó por primera vez: el aviso lo mandaba el worker en su primer login exitoso, con la causa de turno en el asunto. Ahora saveCredentials (alta y actualización) manda el email en el acto al confirmar la sonda (template mevCredentialValidatedAccount / mevCredentialValidatedCausa, sin causa en el asunto) y deja notifiedStatus:'valid' para que el worker no duplique; si la sonda no concluye (red), el worker sigue avisando en el primer éxito. El email de 'carpeta verificada' queda sólo para causas nuevas (verify-worker); una recarga de credencial no lo dispara.",
+		where: "law-analytics-server controllers/mevCredentialsController.js notifyMevCredentialValidated (9ad11ec) · mev-workers user-credential-notifier.js (claim notifiedStatus, sin cambios)",
+	},
+	{
 		id: "MV11",
 		severity: "baja",
 		title: "[INFO] Selección múltiple para MEV está rota pero es flujo muerto",
