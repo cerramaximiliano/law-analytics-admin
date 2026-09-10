@@ -1261,10 +1261,18 @@ export const MEV_FINDINGS: GuideFinding[] = [
 	{
 		id: "MV16",
 		severity: "alta",
-		title: "[RESUELTO 2026-09-09, deploy pendiente] Fallo de credencial MEV: propagación a todas las carpetas, prioridad de credenciales sanas y destinatarios válidos",
+		title: "[RESUELTO 2026-09-09, deployado] Fallo de credencial MEV: propagación a todas las carpetas, prioridad de credenciales sanas y destinatarios válidos",
 		detail:
 			"Relevamiento del flujo completo (worker → credencial → carpetas → causa → email). Lo que ya estaba bien: el fallo definitivo (rechazo explícito, contraseña expirada, auto-deshabilitada a los 5 rechazos espaciados) marca mevCredentialStatus invalid/expired/disabled y manda UN email por credencial (claim de notifiedStatus; se vuelve a avisar sólo si el estado cambia); las carpetas muestran 'Credencial inválida / Contraseña expirada / Credencial desactivada / Credencial requerida'; el hub prueba la credencial contra el portal al cargarla y al recargarla resetea elegibilidad, carpetas a pendiente y notifiedStatus. Huecos cerrados: (a) el estado sólo se escribía en las carpetas de la causa que falló y las demás iban cayendo a 'missing' con back-off de 6/24 h → ahora, con credencial global, el fallo y la recuperación se propagan a todas las carpetas MEV del usuario; (b) en causas compartidas el resolver elegía la credencial fallida mientras siguiera enabled → las credenciales con fallo definitivo conocido van al final y se usa la sana de otro usuario; (c) un usuario con credencial expirada o ya avisada seguía recibiendo notificaciones → destinatario sólo con credencial válida (enabled, no expirada, sin fallo definitivo notificado); (d) el login exitoso no limpiaba isExpired/expiredAt → ahora sí. Backfill MV13 aplicado (43 causas enabled:true, 2 update:true) una vez cerrado esto.",
 		where: "mev-workers src/services/user-credential-notifier.js · src/utils/credentials-resolver.js · src/utils/notification-sync.js (a8ab9b0)",
+	},
+	{
+		id: "MV17",
+		severity: "baja",
+		title: "[RESUELTO 2026-09-10, deploy front pendiente] Carpeta con causa fallida y usuario sin credencial MEV no mostraba la relación",
+		detail:
+			"Auditoría del 09/09 (credencial real de cada usuario vs. lo que ven sus carpetas): los 10 usuarios sin credencial veían 'Credencial requerida', el expirado 'Contraseña expirada' y el de credencial válida con causa inválida 'Asociación fallida' — todo correcto — salvo 2 carpetas de 2 usuarios sin credencial con mevCredentialStatus vacío y 'Asociación fallida': el worker nunca procesa causas inválidas (no las marca 'missing') y esos usuarios nunca borraron una credencial (el otro camino que marca 'missing'). Backfill: las 2 marcadas 'missing'. Front: en la fila, bajo 'Asociación fallida' aparece 'Sin credencial MEV — cargala para volver a verificar' (link a Integraciones → MEV), el tooltip suma esa nota al motivo del portal y el detalle (PendingVerificationView, gate failed) la muestra bajo la descripción. La lógica de prioridad no cambia: 'missing' sigue sin tapar el diagnóstico real de la causa.",
+		where: "law-analytics-front utils/mevCredential.ts (MEV_CRED_MISSING_ON_FAILED, isMevCredMissing) · pages/apps/folders/folders.tsx · sections/apps/folders/PendingVerificationView.tsx (5922755f)",
 	},
 	{
 		id: "MV11",
