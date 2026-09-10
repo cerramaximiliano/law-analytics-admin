@@ -1283,6 +1283,14 @@ export const MEV_FINDINGS: GuideFinding[] = [
 		where: "law-analytics-server controllers/mevCredentialsController.js reverifyUndecidedMevCausas (dc7239b) · models/CausasMEV.js (3193451)",
 	},
 	{
+		id: "MV19",
+		severity: "media",
+		title: "[RESUELTO 2026-09-10, deploy pendiente] Al recargar la credencial, las carpetas de causas ya verificadas caían a 'Pendientes de verificación'",
+		detail:
+			"E2E 10/09 con cerramaximiliano: al cargar la credencial (sonda OK → la card dice 'Validada' en el acto, correcto) resetMevFolders mandaba las 3 carpetas a causaVerified:false / 'pending', y el listado las sacaba de la tabla principal a 'Pendientes de verificación' como si nunca se hubieran verificado — aunque sus causas están verificadas y con movimientos. Inconsistente con PJN, donde una credencial caída/desvinculada deja la carpeta en el listado principal con el aviso ámbar. Fix: si la causa está verified+isValid, sólo se resetea el eje credencial (mevCredentialStatus 'valid' con la sonda OK, si no 'pending') y la asociación queda en success; el worker la refresca en su próximo ciclo (MV12). Las causas no verificadas/inválidas siguen yendo a pendiente y MV18 las devuelve a verificación. Datos: las 3 carpetas de la cuenta de test devueltas a success/valid a mano. Observación operativa: los update-workers MEV tienen active_hours 06–22 (America/Argentina/Buenos_Aires); una recarga fuera de ese horario (la E2E fue 05:30 ART) no se refleja en las carpetas hasta las 06:00 ART, otro motivo para no degradarlas a 'pendiente' mientras tanto.",
+		where: "law-analytics-server controllers/mevCredentialsController.js resetMevFolders (22e870d) · configuracion-verificacion-mev.schedule.active_hours",
+	},
+	{
 		id: "MV11",
 		severity: "baja",
 		title: "[INFO] Selección múltiple para MEV está rota pero es flujo muerto",
