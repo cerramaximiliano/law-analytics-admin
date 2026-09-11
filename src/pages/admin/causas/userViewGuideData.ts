@@ -2112,6 +2112,14 @@ export const SCBA_FINDINGS: GuideFinding[] = [
 			"El select de tipo listaba Manual/PJN/EJE/MEV/PJ Salta/PJ Catamarca/PJ Mendoza; el tipo TypeScript repetía 'pjmendoza' donde debía ir 'scba' y el switch no tenía el caso. Además 'Manual' no excluía carpetas scba. Ahora hay opción SCBA (después de PJN), caso 'scba' en el filtro y 'Manual' excluye scba.",
 		where: "law-analytics-front pages/apps/folders/folders.tsx (6d49910b)",
 	},
+	{
+		id: "S27",
+		severity: "media",
+		title: "[RESUELTO 2026-09-11, deployado y verificado] Causa nueva: la primera actualización tras la captura inicial no notifica y no espera la ventana 15–19 ART",
+		detail:
+			"Auditoría del 11/09: 145 de 739 avisos SCBA de movimientos eran de trámites con más de 30 días. Los volcados reales vinieron de capturas iniciales incompletas (9243/2026 pasó de 1 a 54 movimientos, 824/2023 de 5 a 145, 9775/2021 de 28 a 75) que el update completó y notificó enteras, porque el guard de primera sincronización sólo aplicaba cuando la causa no tenía ningún movimiento. Además la primera actualización de una causa nueva esperaba la ventana del update (15–19 ART). Ahora el initial-scraping marca firstUpdatePending al completar una causa que nunca tuvo un update. Con el flag: (1) la primera pasada del update nunca notifica, sea cual sea la política (today-only en SCBA), y el flag se borra en el mismo guardado; si falla, queda marcado; (2) fuera de la ventana el manager deja un worker de update vivo mientras haya causas con flag y ese worker procesa sólo esas. Respeta la frecuencia mínima (1 h en prod), así que la primera actualización llega ~1 h después de la captura a cualquier hora. Para el usuario: la carpeta nueva se completa aunque sea de noche y no recibe el email de 'Nuevos movimientos' por el histórico que faltaba. E2E en prod 11/09 07:23 ART con la cuenta de test: causa con flag y un movimiento quitado → worker levantado fuera de horario, 1 movimiento recuperado sin aviso, flag borrado, 0 notificaciones, manager de vuelta a 0.",
+		where: "scba-workers src/workers/initial-scraping-worker.ts · src/workers/update-worker.ts (folderStageMatch, onlyFirstUpdate, notificación) · src/workers/scba-manager.ts countFirstUpdatePending (1f71783)",
+	},
 ];
 
 // =====================================================================
