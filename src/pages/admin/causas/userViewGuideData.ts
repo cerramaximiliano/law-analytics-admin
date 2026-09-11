@@ -1323,6 +1323,14 @@ export const MEV_FINDINGS: GuideFinding[] = [
 		where: "mev-workers src/tasks/update-worker.js (PASO 1 esPrimeraActualizacion, PASO 7 fallback, PASO 8 guard) · src/utils/pivot-helpers.js movimientosDesde (86f85ac)",
 	},
 	{
+		id: "MV24",
+		severity: "media",
+		title: "[RESUELTO 2026-09-11, deploy pendiente] Causa recién verificada: la primera actualización no notifica y no espera el horario del update",
+		detail:
+			"Pedido de producto. Antes, una causa verificada fuera de 08–20 ART esperaba hasta las 08:00: la carpeta mostraba lo que había traído la verificación y la primera actualización llegaba horas después, porque el worker-manager apaga mev-update-cluster fuera de su ventana (el verify corre 24 h). Ahora verify-worker marca firstUpdatePending cuando verifica una causa que el update-worker nunca actualizó (una re-verificación de una causa que ya se venía actualizando no se marca), y las candidatas del pivote nacen con el flag. Con el flag: (1) esa primera pasada nunca notifica, sea cual sea la política (todo lo que trae es línea de base; MV23 queda como respaldo para causas anteriores al flag); (2) el worker-manager deja un worker de update vivo fuera de horario mientras haya causas con flag elegibles o en proceso y con credencial, y el update-worker, fuera de ventana, toma sólo esas. Las causas con flag van primero también dentro del horario. El flag se borra en la primera actualización exitosa (save, retry y fallback atómico); si falla (credencial, portal) queda y se reintenta con el back-off habitual. Para el usuario: la carpeta nueva se completa en minutos a cualquier hora y no recibe el email 'Nuevos movimientos' por el histórico. En prod no había causas sin actualizar, sin backfill.",
+		where: "mev-workers src/tasks/verify-worker.js · src/utils/pivot-helpers.js · src/tasks/update-worker.js (ventana, query/sort, PASO 6-8) · src/monitors/worker-manager.js countFirstUpdatePending · src/utils/update-window.js · src/models/CausasMEV.js (170242a)",
+	},
+	{
 		id: "MV22",
 		severity: "alta",
 		title: "[RESUELTO 2026-09-10] E2E del pivote desde la UI: 4 bugs que impedían armarlo y elegir la candidata",
