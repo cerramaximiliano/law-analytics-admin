@@ -1315,6 +1315,14 @@ export const MEV_FINDINGS: GuideFinding[] = [
 		where: "law-analytics-front sections/apps/profiles/account/MevAccountConnect.tsx (6d49910b)",
 	},
 	{
+		id: "MV23",
+		severity: "alta",
+		title: "[RESUELTO 2026-09-11, deploy pendiente] La primera actualización tras verificar notificaba movimientos históricos",
+		detail:
+			"Reportado por el usuario y confirmado en la E2E: la candidata 100/2020 (Necochea) generó un JudicialMovement a las 19:28 y el email 'Nuevos movimientos en 1 expediente(s)' a las 19:30 por un movimiento de 2021. Causas: (1) el guard de primera sincronización del update-worker sólo aplicaba firstSyncPolicy (silent-baseline en MEV) cuando la causa no tenía NINGÚN movimiento; si la verificación o el pivote habían guardado una parte, la primera pasada notificaba el resto como novedad. (2) pivot-helpers descartaba el texto del movimiento (descripcion del scraper) y guardaba detalle vacío: la dedup fecha|detalle nunca empataba, el save fallaba por campo requerido y caía al fallback atómico, que no persistía los movimientos, así que cada corrida volvía a detectar el mismo movimiento como nuevo (frenado sólo por el límite de 24 h por expediente). Fix: la política de primera sincronización se aplica también cuando la causa nunca pasó por el update-worker (updateStats.count 0; verify-worker nunca lo escribe — en prod 48 de 50 causas ya tenían actualizaciones, sólo las 2 candidatas de prueba no); las candidatas guardan detalle; el fallback atómico persiste movimiento/movimientosCount e incrementa updateStats.count. Datos: las 2 candidatas de prueba quedaron sin movimientos para que una futura selección arranque con primera sincronización silenciosa.",
+		where: "mev-workers src/tasks/update-worker.js (PASO 1 esPrimeraActualizacion, PASO 7 fallback, PASO 8 guard) · src/utils/pivot-helpers.js movimientosDesde (86f85ac)",
+	},
+	{
 		id: "MV22",
 		severity: "alta",
 		title: "[RESUELTO 2026-09-10] E2E del pivote desde la UI: 4 bugs que impedían armarlo y elegir la candidata",
