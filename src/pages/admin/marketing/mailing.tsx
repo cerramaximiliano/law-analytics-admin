@@ -765,6 +765,9 @@ const MailingCampaigns = () => {
 								<TableCell align="right" sx={COL_MD}>
 									Tasa apertura
 								</TableCell>
+								<TableCell align="right" sx={COL_MD}>
+									Bajas
+								</TableCell>
 								<TableCell align="right" sx={COL_LG}>
 									Vigencia
 								</TableCell>
@@ -773,10 +776,10 @@ const MailingCampaigns = () => {
 						</TableHead>
 						<TableBody>
 							{loading ? (
-								<TableSkeleton columns={10} rows={10} />
+								<TableSkeleton columns={11} rows={10} />
 							) : campaigns.length === 0 ? (
 								<TableRow>
-									<TableCell colSpan={10} align="center" sx={{ py: 3 }}>
+									<TableCell colSpan={11} align="center" sx={{ py: 3 }}>
 										<Typography variant="subtitle1">No hay campañas disponibles</Typography>
 									</TableCell>
 								</TableRow>
@@ -789,6 +792,10 @@ const MailingCampaigns = () => {
 											? ((campaign.metrics.opens / campaign.metrics.totalEmailsSent) * 100).toFixed(1)
 											: "0";
 									const isEditable = campaign.status !== "completed" && campaign.status !== "archived";
+									// Bajas atribuidas a la campaña (link de baja del email) sobre contactos alcanzados
+									const unsubscribes = campaign.metrics?.unsubscribes || 0;
+									const reached = campaign.metrics?.totalContacts || 0;
+									const unsubscribeRate = unsubscribes > 0 && reached > 0 ? ((unsubscribes / reached) * 100).toFixed(1) : null;
 
 									return (
 										<TableRow hover key={campaign._id} tabIndex={-1}>
@@ -823,6 +830,22 @@ const MailingCampaigns = () => {
 												)}
 											</TableCell>
 											<TableCell align="right" sx={COL_MD}>{`${openRate}%`}</TableCell>
+											<TableCell align="right" sx={COL_MD}>
+												{unsubscribes > 0 ? (
+													<Tooltip
+														title={unsubscribeRate ? `${unsubscribeRate}% de los contactos alcanzados` : "Bajas atribuidas a esta campaña"}
+													>
+														<Typography variant="body2" color={unsubscribeRate && Number(unsubscribeRate) >= 3 ? "error" : "textPrimary"}>
+															{unsubscribes}
+															{unsubscribeRate ? ` (${unsubscribeRate}%)` : ""}
+														</Typography>
+													</Tooltip>
+												) : (
+													<Typography variant="body2" color="textSecondary">
+														0
+													</Typography>
+												)}
+											</TableCell>
 											<TableCell align="right" sx={COL_LG}>
 												{(() => {
 													const tz = campaign.settings?.timezone || "UTC";
