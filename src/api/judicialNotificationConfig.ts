@@ -97,6 +97,8 @@ export interface JudicialNotificationConfig {
 		coordinatorEnabled?: boolean;
 		/** Coordinación de cédulas (bandeja PJN → JudicialCedula) */
 		cedulasEnabled?: boolean;
+		/** Kill-switch del canal WhatsApp (default apagado; la-notification lo lee con cache de 60 s) */
+		whatsappEnabled?: boolean;
 	};
 	/** Banner de upgrade de plan en el email de movimientos (entrega central) */
 	planBanner?: {
@@ -470,6 +472,44 @@ export function resolveEffectivePolicy(
 }
 
 // ----------------------------------------------------------------------
+// Líneas de WhatsApp (colección whatsapp-instances, dueña: la-notification).
+// Solo entran en rotación las enabled + connected. El status lo mueve solo el
+// webhook de Evolution (connection.update); desde la admin se puede forzar.
+// ----------------------------------------------------------------------
+
+export type WhatsAppInstanceStatus = "pending_link" | "connected" | "disconnected" | "banned" | "disabled";
+
+export interface WhatsAppInstance {
+	name: string;
+	label: string | null;
+	phoneNumber: string | null;
+	status: WhatsAppInstanceStatus;
+	enabled: boolean;
+	dailyLimit: number | null;
+	lastConnectionChange: string | null;
+	lastConnectionReason: string | null;
+	createdAt: string | null;
+	inRotation: boolean;
+	/** Mensajes del outbox de hoy (ART) por status, para esta línea */
+	outboxToday: Partial<Record<"pending" | "sent" | "delivered" | "read" | "failed" | "expired", number>>;
+}
+
+export interface WhatsAppInstancesData {
+	instances: WhatsAppInstance[];
+	/** Mensajes pending en total (todas las líneas, cualquier fecha) */
+	outboxPendingTotal: number;
+	/** Mensajes de hoy que todavía no tienen línea asignada */
+	outboxTodayUnassigned: WhatsAppInstance["outboxToday"];
+}
+
+export interface WhatsAppInstancePatch {
+	enabled?: boolean;
+	status?: WhatsAppInstanceStatus;
+	dailyLimit?: number;
+	label?: string;
+}
+
+// ----------------------------------------------------------------------
 // API
 // ----------------------------------------------------------------------
 
@@ -500,6 +540,15 @@ const JudicialNotificationConfigService = {
 	async resetStats(): Promise<JudicialNotificationConfig["stats"]> {
 		const response = await adminAxios.post(`${BASE}/reset-stats`);
 		return response.data.data;
+	},
+
+	async getWhatsappInstances(): Promise<WhatsAppInstancesData> {
+		const response = await adminAxios.get(`${BASE}/whatsapp-instances`);
+		return response.data.data;
+	},
+
+	async updateWhatsappInstance(name: string, patch: WhatsAppInstancePatch): Promise<void> {
+		await adminAxios.patch(`${BASE}/whatsapp-instances/${encodeURIComponent(name)}`, patch);
 	},
 };
 

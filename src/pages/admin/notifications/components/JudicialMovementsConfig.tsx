@@ -41,6 +41,7 @@ import { dispatch } from "store";
 import { openSnackbar } from "store/reducers/snackbar";
 import judicialNotificationConfigService, { JudicialNotificationConfig, EMAIL_TYPES } from "api/judicialNotificationConfig";
 import MovementPoliciesSection from "./MovementPoliciesSection";
+import WhatsAppInstancesCard from "./WhatsAppInstancesCard";
 
 const dayNames = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
 
@@ -449,7 +450,26 @@ const JudicialMovementsConfig: React.FC<JudicialMovementsConfigProps> = ({ secti
 								</Typography>
 							}
 						/>
+						<FormControlLabel
+							control={
+								<Switch
+									size="small"
+									checked={config.status.whatsappEnabled === true}
+									onChange={(e) => handleFieldChange("status.whatsappEnabled", e.target.checked)}
+								/>
+							}
+							label={
+								<Typography variant="body2">
+									Canal WhatsApp{" "}
+									<Typography component="span" variant="caption" color="text.secondary">
+										(kill-switch: apagado no encola nada y lo encolado espera; toma efecto en ≤60 s)
+									</Typography>
+								</Typography>
+							}
+						/>
 					</Stack>
+
+					<WhatsAppInstancesCard />
 
 					{/* Statistics */}
 					{config.stats && (
