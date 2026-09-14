@@ -3,6 +3,7 @@ import { alpha, useTheme } from "@mui/material/styles";
 import {
 	Alert,
 	Box,
+	Button,
 	Chip,
 	CircularProgress,
 	FormControl,
@@ -28,6 +29,7 @@ import judicialNotificationConfigService, {
 	WhatsAppInstancesData,
 } from "api/judicialNotificationConfig";
 import { BRAND_BLUE } from "themes/dashboardTokens";
+import WhatsAppLinkPanel from "./WhatsAppLinkPanel";
 
 /**
  * Líneas de WhatsApp registradas (colección whatsapp-instances de
@@ -35,8 +37,8 @@ import { BRAND_BLUE } from "themes/dashboardTokens";
  * seguro prender el canal: sin ninguna línea "en rotación" (habilitada +
  * conectada), lo que se encole queda esperando.
  *
- * El alta de una línea sigue siendo por script en la-notification
- * (scripts/whatsappInstances.js add) — acá se administra lo que ya existe.
+ * "Vincular línea nueva" abre WhatsAppLinkPanel (QR / pairing code en pantalla,
+ * sin consola). El script scripts/whatsappInstances.js queda de respaldo.
  */
 
 const STATUS_LABEL: Record<WhatsAppInstanceStatus, string> = {
@@ -71,6 +73,7 @@ const WhatsAppInstancesCard = () => {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [busyName, setBusyName] = useState<string | null>(null);
+	const [linking, setLinking] = useState(false);
 
 	const load = useCallback(async () => {
 		try {
@@ -147,6 +150,9 @@ const WhatsAppInstancesCard = () => {
 					<Chip size="small" variant="outlined" label={`${data.outboxPendingTotal} mensaje(s) esperando en el outbox`} />
 				)}
 				<Box sx={{ flexGrow: 1 }} />
+				<Button size="small" variant={linking ? "text" : "outlined"} onClick={() => setLinking((v) => !v)}>
+					{linking ? "Cerrar" : "Vincular línea nueva"}
+				</Button>
 				<Tooltip title="Refrescar">
 					<span>
 						<IconButton size="small" onClick={load} disabled={loading}>
@@ -155,6 +161,15 @@ const WhatsAppInstancesCard = () => {
 					</span>
 				</Tooltip>
 			</Stack>
+
+			{linking && (
+				<WhatsAppLinkPanel
+					onConnected={() => {
+						setLinking(false);
+						load();
+					}}
+				/>
+			)}
 
 			{loading && (
 				<Stack direction="row" alignItems="center" spacing={1}>
@@ -173,9 +188,8 @@ const WhatsAppInstancesCard = () => {
 
 			{!loading && !error && instances.length === 0 && (
 				<Typography variant="body2" color="text.secondary">
-					No hay ninguna línea registrada todavía. Se cargan desde la-notification con{" "}
-					<code>node scripts/whatsappInstances.js add &lt;nombre&gt; "&lt;etiqueta&gt;" +549…</code>; con el canal prendido y sin líneas,
-					los mensajes quedan esperando (y vencen a las 48 h).
+					No hay ninguna línea registrada todavía. Usá "Vincular línea nueva" (necesita Evolution API configurada en la-notification). Con
+					el canal prendido y sin líneas, los mensajes quedan esperando (y vencen a las 48 h).
 				</Typography>
 			)}
 

@@ -509,6 +509,24 @@ export interface WhatsAppInstancePatch {
 	label?: string;
 }
 
+/** QR / pairing code de una instancia (null = Evolution todavía no lo generó, reintentar) */
+export interface WhatsAppQr {
+	/** data:image/png;base64,... */
+	base64: string | null;
+	/** Código de 8 caracteres para "Vincular con el número de teléfono" (solo si se pasó el número) */
+	pairingCode: string | null;
+	alreadyOpen?: boolean;
+}
+
+export interface WhatsAppLinkResult {
+	name: string;
+	alreadyExisted: boolean;
+	evolutionStatus: string | null;
+	qr: WhatsAppQr | null;
+}
+
+export type WhatsAppConnectionState = "open" | "close" | "connecting" | "unknown";
+
 // ----------------------------------------------------------------------
 // API
 // ----------------------------------------------------------------------
@@ -549,6 +567,25 @@ const JudicialNotificationConfigService = {
 
 	async updateWhatsappInstance(name: string, patch: WhatsAppInstancePatch): Promise<void> {
 		await adminAxios.patch(`${BASE}/whatsapp-instances/${encodeURIComponent(name)}`, patch);
+	},
+
+	/** Alta + creación en Evolution con webhook; devuelve el primer QR/pairing code */
+	async createWhatsappInstance(body: { name: string; label?: string; phone?: string }): Promise<WhatsAppLinkResult> {
+		const response = await adminAxios.post(`${BASE}/whatsapp-instances`, body);
+		return response.data.data;
+	},
+
+	async getWhatsappInstanceQr(name: string, number?: string): Promise<WhatsAppQr | null> {
+		const response = await adminAxios.get(`${BASE}/whatsapp-instances/${encodeURIComponent(name)}/qr`, {
+			params: number ? { number } : undefined,
+		});
+		return response.data.data;
+	},
+
+	/** Estado en Evolution; `open` deja la línea `connected` del lado de la-notification */
+	async getWhatsappInstanceState(name: string): Promise<{ state: WhatsAppConnectionState }> {
+		const response = await adminAxios.get(`${BASE}/whatsapp-instances/${encodeURIComponent(name)}/state`);
+		return response.data.data;
 	},
 };
 
