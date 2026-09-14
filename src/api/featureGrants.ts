@@ -1,6 +1,7 @@
 import adminAxios from "utils/adminAxios";
 
-export type KnownFeature = "mcp_access";
+/** whatsapp_channel: inscripción al canal WhatsApp durante el piloto (inscripción cerrada) */
+export type KnownFeature = "mcp_access" | "whatsapp_channel";
 
 export interface FeatureGrantMeta {
 	granted: boolean;

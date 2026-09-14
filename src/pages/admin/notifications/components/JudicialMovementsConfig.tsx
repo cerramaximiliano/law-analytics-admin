@@ -467,6 +467,23 @@ const JudicialMovementsConfig: React.FC<JudicialMovementsConfigProps> = ({ secti
 								</Typography>
 							}
 						/>
+						<FormControlLabel
+							control={
+								<Switch
+									size="small"
+									checked={config.status.whatsappOpenEnrollment === true}
+									onChange={(e) => handleFieldChange("status.whatsappOpenEnrollment", e.target.checked)}
+								/>
+							}
+							label={
+								<Typography variant="body2">
+									Inscripción a WhatsApp abierta a todos{" "}
+									<Typography component="span" variant="caption" color="text.secondary">
+										(apagado = piloto: solo usuarios con el grant <code>whatsapp_channel</code> ven la opción en Configuración)
+									</Typography>
+								</Typography>
+							}
+						/>
 					</Stack>
 
 					<WhatsAppInstancesCard />

@@ -99,6 +99,8 @@ export interface JudicialNotificationConfig {
 		cedulasEnabled?: boolean;
 		/** Kill-switch del canal WhatsApp (default apagado; la-notification lo lee con cache de 60 s) */
 		whatsappEnabled?: boolean;
+		/** Inscripción abierta a todos; en false (piloto) solo users con featureGrants.whatsapp_channel */
+		whatsappOpenEnrollment?: boolean;
 	};
 	/** Banner de upgrade de plan en el email de movimientos (entrega central) */
 	planBanner?: {
