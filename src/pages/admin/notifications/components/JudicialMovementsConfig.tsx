@@ -42,6 +42,7 @@ import { openSnackbar } from "store/reducers/snackbar";
 import judicialNotificationConfigService, { JudicialNotificationConfig, EMAIL_TYPES } from "api/judicialNotificationConfig";
 import MovementPoliciesSection from "./MovementPoliciesSection";
 import WhatsAppInstancesCard from "./WhatsAppInstancesCard";
+import WhatsAppConversationsCard from "./WhatsAppConversationsCard";
 
 const dayNames = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
 
@@ -502,6 +503,7 @@ const JudicialMovementsConfig: React.FC<JudicialMovementsConfigProps> = ({ secti
 					</Stack>
 
 					<WhatsAppInstancesCard />
+					<WhatsAppConversationsCard />
 
 					{/* Statistics */}
 					{config.stats && (

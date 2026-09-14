@@ -481,6 +481,35 @@ export function resolveEffectivePolicy(
 // webhook de Evolution (connection.update); desde la admin se puede forzar.
 // ----------------------------------------------------------------------
 
+export interface WhatsAppConversationsQuery {
+	limit?: number;
+	/** Filtra por sufijo del teléfono (se ignoran separadores) */
+	phone?: string;
+	/** Filtra por email del usuario (parcial, sin distinguir mayúsculas) */
+	email?: string;
+}
+
+export interface WhatsAppConversationMessage {
+	id: string;
+	direction: "in" | "out";
+	at: string;
+	phone: string | null;
+	user: { email: string; name?: string } | null;
+	text: string | null;
+	/** in: handledAs (verification, opt_out, bot_novedades, bot_menu, ignored_unknown…); out: messageType */
+	kind: string | null;
+	/** Solo salientes: pending | sent | delivered | read | failed | expired */
+	status: string | null;
+	instance: string | null;
+	provider: string | null;
+	failureReason?: string | null;
+}
+
+export interface WhatsAppConversationsData {
+	messages: WhatsAppConversationMessage[];
+	today: { inboundByKind: Record<string, number>; outboundByStatus: Record<string, number> };
+}
+
 export type WhatsAppInstanceStatus = "pending_link" | "connected" | "disconnected" | "banned" | "disabled";
 /** meta = WhatsApp Cloud API oficial (principal); baileys = Evolution API (respaldo/dev, QR) */
 export type WhatsAppProvider = "meta" | "baileys";
@@ -579,6 +608,12 @@ const JudicialNotificationConfigService = {
 
 	async resetStats(): Promise<JudicialNotificationConfig["stats"]> {
 		const response = await adminAxios.post(`${BASE}/reset-stats`);
+		return response.data.data;
+	},
+
+	/** Línea de tiempo de mensajes entrantes (whatsapp-messages) y salientes (outbox), solo lectura */
+	async getWhatsappConversations(params: WhatsAppConversationsQuery = {}): Promise<WhatsAppConversationsData> {
+		const response = await adminAxios.get(`${BASE}/whatsapp-conversations`, { params });
 		return response.data.data;
 	},
 
