@@ -1,9 +1,21 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { alpha, useTheme } from "@mui/material/styles";
-import { Alert, Box, Button, Chip, CircularProgress, Stack, TextField, Typography } from "@mui/material";
+import {
+	Alert,
+	Box,
+	Button,
+	Chip,
+	CircularProgress,
+	FormControlLabel,
+	Radio,
+	RadioGroup,
+	Stack,
+	TextField,
+	Typography,
+} from "@mui/material";
 import { dispatch } from "store";
 import { openSnackbar } from "store/reducers/snackbar";
-import judicialNotificationConfigService, { WhatsAppConnectionState, WhatsAppQr } from "api/judicialNotificationConfig";
+import judicialNotificationConfigService, { WhatsAppConnectionState, WhatsAppProvider, WhatsAppQr } from "api/judicialNotificationConfig";
 import { BRAND_BLUE } from "themes/dashboardTokens";
 
 /**
@@ -25,9 +37,17 @@ const NAME_RE = /^[a-z0-9][a-z0-9_-]{1,39}$/i;
 
 const WhatsAppLinkPanel = ({ onConnected }: Props) => {
 	const theme = useTheme();
+	const [provider, setProvider] = useState<WhatsAppProvider>("meta");
 	const [name, setName] = useState("");
 	const [label, setLabel] = useState("");
 	const [phone, setPhone] = useState("");
+	const [phoneNumberId, setPhoneNumberId] = useState("");
+	const [wabaId, setWabaId] = useState("");
+	const [metaResult, setMetaResult] = useState<{
+		displayPhoneNumber: string | null;
+		verifiedName: string | null;
+		qualityRating: string | null;
+	} | null>(null);
 	const [busy, setBusy] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [created, setCreated] = useState<string | null>(null);
@@ -100,18 +120,40 @@ const WhatsAppLinkPanel = ({ onConnected }: Props) => {
 			setError("El nombre de la instancia admite letras, números, guiones y guión bajo (2 a 40 caracteres), por ejemplo linea-1.");
 			return;
 		}
+		if (provider === "meta" && !phoneNumberId.trim()) {
+			setError("Para un número de Meta hace falta el Phone number ID (WhatsApp Manager → Números de teléfono).");
+			return;
+		}
 		setBusy(true);
 		setError(null);
 		setQr(null);
 		setState(null);
+		setMetaResult(null);
 		try {
 			const result = await judicialNotificationConfigService.createWhatsappInstance({
 				name: trimmed,
 				label: label.trim() || undefined,
 				phone: phone.trim() || undefined,
+				provider,
+				phoneNumberId: provider === "meta" ? phoneNumberId.trim() : undefined,
+				wabaId: provider === "meta" && wabaId.trim() ? wabaId.trim() : undefined,
 			});
 			setCreated(result.name);
-			if (result.qr?.alreadyOpen) {
+			if (result.provider === "meta") {
+				// Sin QR: queda conectada al validar contra Graph API.
+				setMetaResult(result.meta || null);
+				setState("open");
+				dispatch(
+					openSnackbar({
+						open: true,
+						message: `Número de Meta ${result.meta?.displayPhoneNumber || result.name} registrado y en rotación`,
+						variant: "alert",
+						alert: { color: "success" },
+						close: false,
+					}),
+				);
+				onConnected?.(result.name);
+			} else if (result.qr?.alreadyOpen) {
 				setState("open");
 				onConnected?.(result.name);
 			} else {
@@ -151,19 +193,32 @@ const WhatsAppLinkPanel = ({ onConnected }: Props) => {
 
 			{!created && (
 				<Stack spacing={1.5}>
+					<RadioGroup row value={provider} onChange={(e) => setProvider(e.target.value as WhatsAppProvider)}>
+						<FormControlLabel
+							value="meta"
+							control={<Radio size="small" />}
+							label={<Typography variant="body2">WhatsApp Cloud API (Meta) — principal</Typography>}
+						/>
+						<FormControlLabel
+							value="baileys"
+							control={<Radio size="small" />}
+							label={<Typography variant="body2">Evolution API (QR) — respaldo</Typography>}
+						/>
+					</RadioGroup>
 					<Typography variant="caption" color="text.secondary">
-						El chip tiene que estar activo en un teléfono con WhatsApp instalado. Con el número, además del QR vas a tener un pairing code
-						para vincular sin cámara.
+						{provider === "meta"
+							? "Número dado de alta en la WABA (WhatsApp Manager). Se valida contra Meta y queda en rotación al instante, sin QR. Necesita WHATSAPP_META_ACCESS_TOKEN en la-notification."
+							: "El chip tiene que estar activo en un teléfono con WhatsApp instalado. Con el número, además del QR vas a tener un pairing code para vincular sin cámara."}
 					</Typography>
 					<Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
 						<TextField
 							id="wa-link-name"
 							size="small"
 							label="Nombre de instancia"
-							placeholder="linea-1"
+							placeholder={provider === "meta" ? "meta-principal" : "linea-1"}
 							value={name}
 							onChange={(e) => setName(e.target.value)}
-							helperText="Igual en Evolution y en la tabla"
+							helperText={provider === "meta" ? "Identificador interno" : "Igual en Evolution y en la tabla"}
 							sx={{ flex: 1 }}
 						/>
 						<TextField
@@ -175,21 +230,63 @@ const WhatsAppLinkPanel = ({ onConnected }: Props) => {
 							onChange={(e) => setLabel(e.target.value)}
 							sx={{ flex: 1 }}
 						/>
-						<TextField
-							id="wa-link-phone"
-							size="small"
-							label="Número (opcional)"
-							placeholder="+54 9 11 5555 5555"
-							value={phone}
-							onChange={(e) => setPhone(e.target.value)}
-							sx={{ flex: 1 }}
-						/>
+						{provider === "meta" ? (
+							<TextField
+								id="wa-link-phone-number-id"
+								size="small"
+								label="Phone number ID"
+								placeholder="1065403522…"
+								value={phoneNumberId}
+								onChange={(e) => setPhoneNumberId(e.target.value)}
+								helperText="WhatsApp Manager → Números"
+								sx={{ flex: 1 }}
+							/>
+						) : (
+							<TextField
+								id="wa-link-phone"
+								size="small"
+								label="Número (opcional)"
+								placeholder="+54 9 11 5555 5555"
+								value={phone}
+								onChange={(e) => setPhone(e.target.value)}
+								sx={{ flex: 1 }}
+							/>
+						)}
 					</Stack>
+					{provider === "meta" && (
+						<TextField
+							id="wa-link-waba-id"
+							size="small"
+							label="WABA ID (opcional)"
+							value={wabaId}
+							onChange={(e) => setWabaId(e.target.value)}
+							sx={{ maxWidth: 320 }}
+						/>
+					)}
 					<Box>
-						<Button variant="contained" size="small" onClick={handleCreate} disabled={busy || !name.trim()} sx={{ bgcolor: BRAND_BLUE }}>
-							{busy ? "Creando…" : "Crear y mostrar QR"}
+						<Button
+							variant="contained"
+							size="small"
+							onClick={handleCreate}
+							disabled={busy || !name.trim() || (provider === "meta" && !phoneNumberId.trim())}
+							sx={{ bgcolor: BRAND_BLUE }}
+						>
+							{busy ? "Registrando…" : provider === "meta" ? "Registrar número de Meta" : "Crear y mostrar QR"}
 						</Button>
 					</Box>
+				</Stack>
+			)}
+
+			{created && metaResult && (
+				<Stack spacing={0.5} sx={{ mb: 1 }}>
+					<Typography variant="body2">
+						<strong>{metaResult.displayPhoneNumber || created}</strong>
+						{metaResult.verifiedName ? ` · ${metaResult.verifiedName}` : ""}
+						{metaResult.qualityRating ? ` · calidad ${metaResult.qualityRating}` : ""}
+					</Typography>
+					<Typography variant="caption" color="text.secondary">
+						Registrado como WhatsApp Cloud API. Recordá dar de alta el webhook en Meta apuntando a /api/whatsapp/meta-webhook.
+					</Typography>
 				</Stack>
 			)}
 

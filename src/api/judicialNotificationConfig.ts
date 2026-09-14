@@ -480,9 +480,14 @@ export function resolveEffectivePolicy(
 // ----------------------------------------------------------------------
 
 export type WhatsAppInstanceStatus = "pending_link" | "connected" | "disconnected" | "banned" | "disabled";
+/** meta = WhatsApp Cloud API oficial (principal); baileys = Evolution API (respaldo/dev, QR) */
+export type WhatsAppProvider = "meta" | "baileys";
 
 export interface WhatsAppInstance {
 	name: string;
+	provider: WhatsAppProvider;
+	/** Solo meta: id del número en la WABA */
+	phoneNumberId: string | null;
 	label: string | null;
 	phoneNumber: string | null;
 	status: WhatsAppInstanceStatus;
@@ -522,9 +527,22 @@ export interface WhatsAppQr {
 
 export interface WhatsAppLinkResult {
 	name: string;
+	provider: WhatsAppProvider;
 	alreadyExisted: boolean;
 	evolutionStatus: string | null;
 	qr: WhatsAppQr | null;
+	/** Solo meta: datos del número validados contra Graph API */
+	meta?: { displayPhoneNumber: string | null; verifiedName: string | null; qualityRating: string | null };
+}
+
+export interface WhatsAppCreateInstanceBody {
+	name: string;
+	label?: string;
+	phone?: string;
+	provider?: WhatsAppProvider;
+	/** meta: obligatorio */
+	phoneNumberId?: string;
+	wabaId?: string;
 }
 
 export type WhatsAppConnectionState = "open" | "close" | "connecting" | "unknown";
@@ -571,8 +589,8 @@ const JudicialNotificationConfigService = {
 		await adminAxios.patch(`${BASE}/whatsapp-instances/${encodeURIComponent(name)}`, patch);
 	},
 
-	/** Alta + creación en Evolution con webhook; devuelve el primer QR/pairing code */
-	async createWhatsappInstance(body: { name: string; label?: string; phone?: string }): Promise<WhatsAppLinkResult> {
+	/** Alta de una línea: meta (valida el número contra Graph, queda conectada) o baileys (Evolution + QR/pairing code) */
+	async createWhatsappInstance(body: WhatsAppCreateInstanceBody): Promise<WhatsAppLinkResult> {
 		const response = await adminAxios.post(`${BASE}/whatsapp-instances`, body);
 		return response.data.data;
 	},

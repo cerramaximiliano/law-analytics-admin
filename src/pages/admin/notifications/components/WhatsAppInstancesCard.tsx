@@ -210,12 +210,26 @@ const WhatsAppInstancesCard = () => {
 							{instances.map((i) => (
 								<TableRow key={i.name} sx={{ opacity: i.inRotation ? 1 : 0.75 }}>
 									<TableCell>
-										<Typography variant="body2" sx={{ fontWeight: 600 }}>
-											{i.label || i.name}
-										</Typography>
+										<Stack direction="row" spacing={0.75} alignItems="center">
+											<Typography variant="body2" sx={{ fontWeight: 600 }}>
+												{i.label || i.name}
+											</Typography>
+											<Chip
+												size="small"
+												label={i.provider === "meta" ? "Meta" : "Evolution"}
+												sx={{
+													height: 18,
+													fontSize: "0.65rem",
+													fontWeight: 600,
+													bgcolor: alpha(i.provider === "meta" ? BRAND_BLUE : theme.palette.text.secondary, 0.12),
+													color: i.provider === "meta" ? BRAND_BLUE : "text.secondary",
+												}}
+											/>
+										</Stack>
 										<Typography variant="caption" color="text.secondary">
 											{i.name}
 											{i.phoneNumber ? ` · ${i.phoneNumber}` : ""}
+											{i.provider === "meta" && i.phoneNumberId ? ` · id ${i.phoneNumberId}` : ""}
 										</Typography>
 									</TableCell>
 									<TableCell>
