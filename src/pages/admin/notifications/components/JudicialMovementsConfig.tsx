@@ -484,6 +484,21 @@ const JudicialMovementsConfig: React.FC<JudicialMovementsConfigProps> = ({ secti
 								</Typography>
 							}
 						/>
+						<Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" useFlexGap sx={{ pt: 0.5 }}>
+							<TextField
+								label="Prueba de WhatsApp (plan gratuito)"
+								type="number"
+								size="small"
+								value={config.status.whatsappTrialDays ?? 14}
+								onChange={(e) => handleFieldChange("status.whatsappTrialDays", Math.max(0, parseInt(e.target.value) || 0))}
+								inputProps={{ min: 0, max: 365 }}
+								sx={{ width: 240 }}
+							/>
+							<Typography variant="caption" color="text.secondary">
+								Días de avisos + bot para el plan gratuito desde la primera verificación del número. 0 = solo planes pagos
+								(Estándar/Pro/Premium) o grant. Cambiarlo no afecta pruebas ya iniciadas.
+							</Typography>
+						</Stack>
 					</Stack>
 
 					<WhatsAppInstancesCard />

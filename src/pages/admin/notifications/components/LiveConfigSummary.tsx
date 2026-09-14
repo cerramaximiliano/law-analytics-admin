@@ -143,6 +143,9 @@ const LiveConfigSummary: React.FC<{ live: LiveJudicialConfig }> = ({ live }) => 
 						<InfoRow label="Inscripción WhatsApp">
 							<BoolChip value={status.whatsappOpenEnrollment === true} labelOn="Abierta a todos" labelOff="Piloto (por grant)" />
 						</InfoRow>
+						<InfoRow label="Prueba WhatsApp (free)">
+							{(status.whatsappTrialDays ?? 14) > 0 ? `${status.whatsappTrialDays ?? 14} días` : "Sin prueba (solo planes pagos)"}
+						</InfoRow>
 						<InfoRow label="Hora de entrega">
 							{sched.dailyNotificationHour ?? 19}:{String(sched.dailyNotificationMinute ?? 0).padStart(2, "0")} ({sched.timezone})
 						</InfoRow>

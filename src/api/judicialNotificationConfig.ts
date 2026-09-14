@@ -101,6 +101,8 @@ export interface JudicialNotificationConfig {
 		whatsappEnabled?: boolean;
 		/** Inscripción abierta a todos; en false (piloto) solo users con featureGrants.whatsapp_channel */
 		whatsappOpenEnrollment?: boolean;
+		/** Días de prueba del canal (avisos + bot) para el plan gratuito desde la primera verificación; 0 = solo planes pagos */
+		whatsappTrialDays?: number;
 	};
 	/** Banner de upgrade de plan en el email de movimientos (entrega central) */
 	planBanner?: {
