@@ -54,6 +54,7 @@ import { Add, ClipboardText, Copy, DocumentDownload, Gallery, Magicpen, Refresh,
 
 // project imports
 import MainCard from "components/MainCard";
+import MetaPublicarPanel from "./MetaPublicarPanel";
 import {
 	guardarMediaPost,
 	getProgresoRender,
@@ -98,9 +99,10 @@ import {
 
 // ==============================|| HELPERS ||============================== //
 
-const ESTADO_COLOR: Record<string, "default" | "info" | "success"> = {
+const ESTADO_COLOR: Record<string, "default" | "info" | "success" | "warning"> = {
 	borrador: "default",
 	aprobado: "info",
+	programado: "warning",
 	publicado: "success",
 };
 
@@ -1143,6 +1145,12 @@ const SocialStudio = () => {
 									Copiar caption
 								</Button>
 							</Stack>
+
+							{/* Programar / publicar en Facebook e Instagram vía Graph API.
+							    Solo para posts guardados: la imagen que se sube es la
+							    archivada en S3, no la del preview. `key` fuerza un panel
+							    nuevo al cambiar de post. */}
+							{editandoId && <MetaPublicarPanel key={editandoId} postId={editandoId} onChange={() => cargarPosts()} />}
 						</Stack>
 					</Grid>
 
@@ -1461,6 +1469,7 @@ const SocialStudio = () => {
 								<MenuItem value="">Todos</MenuItem>
 								<MenuItem value="borrador">Borrador</MenuItem>
 								<MenuItem value="aprobado">Aprobado</MenuItem>
+								<MenuItem value="programado">Programado</MenuItem>
 								<MenuItem value="publicado">Publicado</MenuItem>
 							</Select>
 						</FormControl>
@@ -1588,6 +1597,18 @@ const SocialStudio = () => {
 											</TableCell>
 											<TableCell>
 												<Chip size="small" label={p.estado} color={ESTADO_COLOR[p.estado] || "default"} variant="outlined" />
+												{p.estado === "programado" && p.programadoPara && (
+													<Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+														{fmtDate(p.programadoPara)}
+													</Typography>
+												)}
+												{p.publicacion?.estado === "error" && (
+													<Tooltip title={p.publicacion.error || "Falló la publicación en Meta"}>
+														<Typography variant="caption" color="error.main" display="block">
+															Error en Meta
+														</Typography>
+													</Tooltip>
+												)}
 												{p.publicadoEn && (
 													<Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
 														{fmtDate(p.publicadoEn)}
@@ -1599,14 +1620,25 @@ const SocialStudio = () => {
 												<Button size="small" onClick={() => handleAbrirPost(p)}>
 													Abrir
 												</Button>
-												<Tooltip title={p.estado === "publicado" ? "Publicado — volver a borrador" : "Marcar como publicado"}>
-													<IconButton
-														size="small"
-														color={p.estado === "publicado" ? "success" : "default"}
-														onClick={() => handleTogglePublicado(p)}
-													>
-														<TickCircle size={16} variant={p.estado === "publicado" ? "Bold" : "Linear"} />
-													</IconButton>
+												<Tooltip
+													title={
+														p.estado === "programado"
+															? "Programado en Meta — cancelá la programación desde el editor"
+															: p.estado === "publicado"
+															? "Publicado — volver a borrador"
+															: "Marcar como publicado"
+													}
+												>
+													<span>
+														<IconButton
+															size="small"
+															color={p.estado === "publicado" ? "success" : "default"}
+															disabled={p.estado === "programado"}
+															onClick={() => handleTogglePublicado(p)}
+														>
+															<TickCircle size={16} variant={p.estado === "publicado" ? "Bold" : "Linear"} />
+														</IconButton>
+													</span>
 												</Tooltip>
 												<Tooltip title={p.caption ? "Copiar caption al portapapeles" : "Este post no tiene caption"}>
 													<span>

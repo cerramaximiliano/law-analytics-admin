@@ -17,7 +17,9 @@ export type TemplateId =
 	| "efemeride"
 	| "planes";
 export type FormatoId = "feed34" | "feed45" | "square" | "story" | "reel";
-export type EstadoPost = "borrador" | "aprobado" | "publicado";
+export type EstadoPost = "borrador" | "aprobado" | "programado" | "publicado";
+/** Redes donde se publica vía Graph API (services/social/metaPublisher.js). */
+export type DestinoMeta = "facebook" | "instagram";
 /** Orden del listado de guardados. El backend cae a "recientes" ante cualquier otro valor. */
 export type OrdenPosts = "recientes" | "antiguos";
 
@@ -167,6 +169,11 @@ export interface SocialPost {
 	estado: EstadoPost;
 	/** Fecha en que se marcó como publicado. Null si no se publicó. */
 	publicadoEn?: string | null;
+	/** Publicación automática en Meta: cuándo (estado 'programado'). */
+	programadoPara?: string | null;
+	destinos?: DestinoMeta[];
+	/** Resultado de la publicación en Meta (ids de Graph API, último error). */
+	publicacion?: PublicacionMeta | null;
 	/** Animación del video, guardada con el post para que sirva como plantilla. */
 	animacion?: string;
 	/** Estilo visual. Null = el que la plantilla trae por defecto. */
@@ -180,6 +187,25 @@ export interface SocialPost {
 	creadoPor: string | null;
 	createdAt: string;
 	updatedAt: string;
+}
+
+export interface PublicacionMeta {
+	estado: "pendiente" | "publicando" | "publicado" | "parcial" | "error" | null;
+	facebookPostId?: string | null;
+	instagramMediaId?: string | null;
+	error?: string | null;
+	intentos?: number;
+	ultimoIntentoEn?: string | null;
+}
+
+/** GET /api/social/meta/whoami — diagnóstico del token de Meta. */
+export interface MetaWhoami {
+	configurado: boolean;
+	graphVersion: string;
+	usuario?: { id: string; name: string } | null;
+	pagina?: { id: string; name: string } | null;
+	instagram?: { id: string; username?: string } | null;
+	error?: string | null;
 }
 
 export interface ListPostsResponse {
@@ -366,7 +392,18 @@ export const updatePost = async (
 	payload: Partial<
 		Pick<
 			SocialPost,
-			"titulo" | "formato" | "contenido" | "caption" | "hashtags" | "estado" | "animacion" | "duracionSeg" | "estilo" | "composicion" | "pie" | "publicadoEn"
+			| "titulo"
+			| "formato"
+			| "contenido"
+			| "caption"
+			| "hashtags"
+			| "estado"
+			| "animacion"
+			| "duracionSeg"
+			| "estilo"
+			| "composicion"
+			| "pie"
+			| "publicadoEn"
 		>
 	>,
 ): Promise<SocialPost> => {
@@ -600,4 +637,32 @@ export interface FalloExplicadoResponse {
 export const crearFalloExplicado = async (scId: string, notas?: string): Promise<FalloExplicadoResponse> => {
 	const { data } = await mktAxios.post("/api/social/fallo-explicado", { scId, notas });
 	return data.data;
+};
+
+// ==================== Publicación en Meta (Graph API) ====================
+
+/** Valida el token de Meta y muestra qué página e Instagram ve. */
+export const getMetaWhoami = async (): Promise<MetaWhoami> => {
+	const res = await mktAxios.get("/api/social/meta/whoami");
+	return res.data.data;
+};
+
+/** Programa la publicación: el cron del backend la ejecuta cuando llega la hora. */
+export const programarPost = async (id: string, payload: { programadoPara: string; destinos?: DestinoMeta[] }): Promise<SocialPost> => {
+	const res = await mktAxios.post(`/api/social/posts/${id}/programar`, payload);
+	return res.data.data;
+};
+
+/** Cancela la programación: el post vuelve a borrador. */
+export const cancelarProgramacionPost = async (id: string): Promise<SocialPost> => {
+	const res = await mktAxios.delete(`/api/social/posts/${id}/programar`);
+	return res.data.data;
+};
+
+/**
+ * Publica ahora. El backend responde 202 y publica en segundo plano: hay que
+ * consultar getPost hasta que publicacion.estado deje de ser 'publicando'.
+ */
+export const publicarPostAhora = async (id: string, destinos?: DestinoMeta[]): Promise<void> => {
+	await mktAxios.post(`/api/social/posts/${id}/publicar`, destinos ? { destinos } : {});
 };
