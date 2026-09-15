@@ -165,6 +165,8 @@ export interface SocialPost {
 	prompt: string;
 	contenido: ContenidoPost;
 	caption: string;
+	/** Caption propio para Facebook. Vacío = se deriva del caption sin "Link in BIO". */
+	captionFacebook?: string;
 	hashtags: string[];
 	estado: EstadoPost;
 	/** Fecha en que se marcó como publicado. Null si no se publicó. */
@@ -396,6 +398,7 @@ export const updatePost = async (
 			| "formato"
 			| "contenido"
 			| "caption"
+			| "captionFacebook"
 			| "hashtags"
 			| "estado"
 			| "animacion"
@@ -648,7 +651,10 @@ export const getMetaWhoami = async (): Promise<MetaWhoami> => {
 };
 
 /** Programa la publicación: el cron del backend la ejecuta cuando llega la hora. */
-export const programarPost = async (id: string, payload: { programadoPara: string; destinos?: DestinoMeta[] }): Promise<SocialPost> => {
+export const programarPost = async (
+	id: string,
+	payload: { programadoPara: string; destinos?: DestinoMeta[]; captionFacebook?: string },
+): Promise<SocialPost> => {
 	const res = await mktAxios.post(`/api/social/posts/${id}/programar`, payload);
 	return res.data.data;
 };
@@ -663,6 +669,9 @@ export const cancelarProgramacionPost = async (id: string): Promise<SocialPost> 
  * Publica ahora. El backend responde 202 y publica en segundo plano: hay que
  * consultar getPost hasta que publicacion.estado deje de ser 'publicando'.
  */
-export const publicarPostAhora = async (id: string, destinos?: DestinoMeta[]): Promise<void> => {
-	await mktAxios.post(`/api/social/posts/${id}/publicar`, destinos ? { destinos } : {});
+export const publicarPostAhora = async (
+	id: string,
+	payload: { destinos?: DestinoMeta[]; captionFacebook?: string } = {},
+): Promise<void> => {
+	await mktAxios.post(`/api/social/posts/${id}/publicar`, payload);
 };

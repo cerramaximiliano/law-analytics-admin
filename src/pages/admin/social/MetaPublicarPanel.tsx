@@ -54,6 +54,15 @@ const aInputLocal = (d: Date) => {
 	return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 };
 
+/** Misma regla que captionParaFacebook() en la-marketing-service: sin la línea "Link in BIO". */
+const captionParaFacebook = (caption: string) =>
+	caption
+		.split("\n")
+		.filter((l) => !/^\s*link\s+in\s+bio\s*$/i.test(l))
+		.join("\n")
+		.replace(/\n{3,}/g, "\n\n")
+		.trim();
+
 const fmt = (iso?: string | null) => (iso ? new Date(iso).toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" }) : "—");
 
 const PUBLICACION_LABEL: Record<string, { label: string; color: "default" | "info" | "success" | "warning" | "error" }> = {
@@ -71,6 +80,8 @@ const MetaPublicarPanel = ({ postId, onChange }: Props) => {
 	const [cargando, setCargando] = useState(false);
 	const [accion, setAccion] = useState<"programar" | "publicar" | "cancelar" | null>(null);
 	const [destinos, setDestinos] = useState<DestinoMeta[]>(["facebook", "instagram"]);
+	// Caption propio para Facebook. Vacío = el backend usa el de Instagram sin "Link in BIO".
+	const [captionFacebook, setCaptionFacebook] = useState("");
 	// Default: mañana a las 10:00 hora local.
 	const [fecha, setFecha] = useState<string>(() => {
 		const d = new Date();
@@ -86,6 +97,7 @@ const MetaPublicarPanel = ({ postId, onChange }: Props) => {
 			const p = await getPost(postId);
 			setPost(p);
 			if (p.destinos?.length) setDestinos(p.destinos);
+			setCaptionFacebook(p.captionFacebook || "");
 			if (p.programadoPara) setFecha(aInputLocal(new Date(p.programadoPara)));
 			return p;
 		} catch (err: any) {
@@ -144,7 +156,7 @@ const MetaPublicarPanel = ({ postId, onChange }: Props) => {
 		if (Number.isNaN(cuando.getTime())) return enqueueSnackbar("Fecha inválida", { variant: "warning" });
 		setAccion("programar");
 		try {
-			const p = await programarPost(postId, { programadoPara: cuando.toISOString(), destinos });
+			const p = await programarPost(postId, { programadoPara: cuando.toISOString(), destinos, captionFacebook });
 			setPost(p);
 			onChange?.(p);
 			enqueueSnackbar(`Programado para ${fmt(p.programadoPara)}`, { variant: "success" });
@@ -173,7 +185,7 @@ const MetaPublicarPanel = ({ postId, onChange }: Props) => {
 		if (!destinos.length) return enqueueSnackbar("Elegí al menos una red", { variant: "warning" });
 		setAccion("publicar");
 		try {
-			await publicarPostAhora(postId, destinos);
+			await publicarPostAhora(postId, { destinos, captionFacebook });
 			enqueueSnackbar("Publicando en Meta…", { variant: "info" });
 			esperarPublicacion();
 		} catch (err: any) {
@@ -260,6 +272,25 @@ const MetaPublicarPanel = ({ postId, onChange }: Props) => {
 					label="Instagram"
 				/>
 			</FormGroup>
+
+			{destinos.includes("facebook") && (
+				<TextField
+					label="Caption para Facebook (opcional)"
+					size="small"
+					fullWidth
+					multiline
+					minRows={2}
+					value={captionFacebook}
+					onChange={(e) => setCaptionFacebook(e.target.value)}
+					disabled={ocupado || publicado}
+					placeholder={captionParaFacebook(post?.caption || "") || 'Se usa el caption del post sin la línea "Link in BIO"'}
+					helperText={
+						captionFacebook.trim()
+							? `${captionFacebook.length}/5000 — Instagram sigue usando el caption del post`
+							: 'Vacío: Facebook recibe el caption del post sin "Link in BIO" (ahí el link sí es clickeable)'
+					}
+				/>
+			)}
 
 			<Stack direction={{ xs: "column", sm: "row" }} spacing={1} alignItems={{ sm: "center" }}>
 				<TextField
