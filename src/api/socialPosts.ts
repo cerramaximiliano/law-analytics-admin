@@ -234,7 +234,24 @@ export interface EstadoPromocion {
 		cpc?: string;
 		ctr?: string;
 	} | null;
+	/** Snapshots diarios del cron de seguimiento (más reciente primero). */
+	historial?: HistorialMetaAds[];
+	/** Registros atribuidos acumulados (suma del historial). */
+	registros?: number;
 	adsManagerUrl: string;
+}
+
+export interface HistorialMetaAds {
+	fecha: string;
+	impressions: number;
+	reach: number;
+	clicks: number;
+	inlineLinkClicks: number;
+	spend: number;
+	cpc: number | null;
+	ctr: number | null;
+	registros: number;
+	capturadoEn: string;
 }
 
 /** GET /api/social/meta/whoami — diagnóstico del token de Meta. */

@@ -25,6 +25,11 @@ import {
 	MenuItem,
 	Select,
 	Stack,
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableRow,
 	TextField,
 	Tooltip,
 	Typography,
@@ -241,6 +246,48 @@ const MetaPromocionPanel = ({ post, onChange }: Props) => {
 						<Typography variant="caption" color="text.secondary">
 							Sin métricas todavía{activa ? " (Meta tarda unas horas en reportar)" : ""}.
 						</Typography>
+					)}
+
+					{typeof estado?.registros === "number" && (
+						<Typography variant="caption" color="text.secondary">
+							Registros atribuidos: <strong>{estado.registros}</strong>
+							{ins?.spend && estado.registros > 0 ? ` · ${ars(Number(ins.spend) / estado.registros)} por registro` : ""}
+						</Typography>
+					)}
+
+					{estado?.historial && estado.historial.length > 0 && (
+						<Box sx={{ overflowX: "auto" }}>
+							<Table size="small" sx={{ minWidth: 520, "& td, & th": { py: 0.25, fontSize: 12 } }}>
+								<TableHead>
+									<TableRow>
+										<TableCell>Día</TableCell>
+										<TableCell align="right">Impresiones</TableCell>
+										<TableCell align="right">Clics</TableCell>
+										<TableCell align="right">CTR</TableCell>
+										<TableCell align="right">CPC</TableCell>
+										<TableCell align="right">Gasto</TableCell>
+										<TableCell align="right">Registros</TableCell>
+									</TableRow>
+								</TableHead>
+								<TableBody>
+									{estado.historial.map((h) => (
+										<TableRow key={h.fecha}>
+											<TableCell>{h.fecha.slice(5).split("-").reverse().join("/")}</TableCell>
+											<TableCell align="right">{h.impressions.toLocaleString("es-AR")}</TableCell>
+											<TableCell align="right">{h.inlineLinkClicks}</TableCell>
+											<TableCell align="right">{h.ctr === null ? "—" : `${Number(h.ctr).toFixed(2)}%`}</TableCell>
+											<TableCell align="right">{h.cpc === null ? "—" : ars(h.cpc)}</TableCell>
+											<TableCell align="right">{ars(h.spend)}</TableCell>
+											<TableCell align="right">{h.registros}</TableCell>
+										</TableRow>
+									))}
+								</TableBody>
+							</Table>
+							<Typography variant="caption" color="text.secondary">
+								Lo guarda el cron de seguimiento cada 6 horas; Meta ajusta los números del día durante ~48 h. Resumen diario por Telegram a
+								las 9:00.
+							</Typography>
+						</Box>
 					)}
 
 					{efectivo === "WITH_ISSUES" || efectivo === "DISAPPROVED" ? (
