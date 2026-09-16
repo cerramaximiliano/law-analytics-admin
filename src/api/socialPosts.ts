@@ -176,6 +176,8 @@ export interface SocialPost {
 	destinos?: DestinoMeta[];
 	/** Resultado de la publicación en Meta (ids de Graph API, último error). */
 	publicacion?: PublicacionMeta | null;
+	/** Campaña paga creada desde el panel (Marketing API). */
+	promocion?: PromocionMeta | null;
 	/** Animación del video, guardada con el post para que sirva como plantilla. */
 	animacion?: string;
 	/** Estilo visual. Null = el que la plantilla trae por defecto. */
@@ -198,6 +200,41 @@ export interface PublicacionMeta {
 	error?: string | null;
 	intentos?: number;
 	ultimoIntentoEn?: string | null;
+}
+
+export interface PromocionMeta {
+	campaignId?: string | null;
+	adsetId?: string | null;
+	adId?: string | null;
+	creativeId?: string | null;
+	estado?: "pausada" | "activa" | "finalizada" | null;
+	presupuestoDiarioARS?: number | null;
+	dias?: number | null;
+	inicio?: string | null;
+	fin?: string | null;
+	url?: string | null;
+	cta?: string | null;
+	creadoEn?: string | null;
+	activadoEn?: string | null;
+}
+
+/** GET /api/social/posts/:id/promocion — estado real en Meta + métricas. */
+export interface EstadoPromocion {
+	promocion: PromocionMeta;
+	campana: { id: string; nombre: string; status: string; effectiveStatus: string };
+	conjunto: { status: string; presupuestoDiario: number; inicio: string; fin: string } | null;
+	anuncio: { status: string; effectiveStatus: string } | null;
+	insights: {
+		impressions?: string;
+		reach?: string;
+		frequency?: string;
+		inline_link_clicks?: string;
+		clicks?: string;
+		spend?: string;
+		cpc?: string;
+		ctr?: string;
+	} | null;
+	adsManagerUrl: string;
 }
 
 /** GET /api/social/meta/whoami — diagnóstico del token de Meta. */
@@ -683,4 +720,37 @@ export const publicarPostAhora = async (
 	payload: { destinos?: DestinoMeta[]; captionFacebook?: string } = {},
 ): Promise<void> => {
 	await mktAxios.post(`/api/social/posts/${id}/publicar`, payload);
+};
+
+// ==================== Promoción paga en Meta (Marketing API) ====================
+
+/** Crea la campaña EN PAUSA que promociona el post de Instagram. No gasta hasta activar. */
+export const promocionarPost = async (
+	id: string,
+	payload: { presupuestoDiarioARS: number; dias: number; url?: string; cta?: "SIGN_UP" | "LEARN_MORE"; nombre?: string },
+): Promise<SocialPost> => {
+	const res = await mktAxios.post(`/api/social/posts/${id}/promocionar`, payload);
+	return res.data.data;
+};
+
+export const getEstadoPromocion = async (id: string): Promise<EstadoPromocion | null> => {
+	const res = await mktAxios.get(`/api/social/posts/${id}/promocion`);
+	return res.data.data;
+};
+
+/** LANZA la campaña: empieza el gasto (Meta la revisa antes de entregar). */
+export const activarPromocion = async (id: string): Promise<SocialPost> => {
+	const res = await mktAxios.post(`/api/social/posts/${id}/promocion/activar`);
+	return res.data.data;
+};
+
+export const pausarPromocion = async (id: string): Promise<SocialPost> => {
+	const res = await mktAxios.post(`/api/social/posts/${id}/promocion/pausar`);
+	return res.data.data;
+};
+
+/** Borra la campaña en Meta y desvincula el post. */
+export const eliminarPromocion = async (id: string): Promise<SocialPost> => {
+	const res = await mktAxios.delete(`/api/social/posts/${id}/promocion`);
+	return res.data.data;
 };

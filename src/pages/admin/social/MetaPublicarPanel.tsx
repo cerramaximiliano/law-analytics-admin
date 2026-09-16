@@ -43,6 +43,7 @@ import {
 	type MetaWhoami,
 	type SocialPost,
 } from "api/socialPosts";
+import MetaPromocionPanel from "./MetaPromocionPanel";
 
 interface Props {
 	postId: string;
@@ -456,6 +457,16 @@ const MetaPublicarPanel = ({ postId, onChange }: Props) => {
 						</Alert>
 					)}
 				</Box>
+			)}
+
+			{post && (
+				<MetaPromocionPanel
+					post={post}
+					onChange={(p) => {
+						setPost(p);
+						onChange?.(p);
+					}}
+				/>
 			)}
 
 			<Dialog open={desvincular !== null} onClose={() => setDesvincular(null)} maxWidth="xs" fullWidth>
