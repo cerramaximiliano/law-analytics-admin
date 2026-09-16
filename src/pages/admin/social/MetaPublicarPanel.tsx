@@ -30,7 +30,7 @@ import {
 	Typography,
 } from "@mui/material";
 import { useSnackbar } from "notistack";
-import { Calendar, CloseCircle, Link21, Refresh, Send2 } from "iconsax-react";
+import { Calendar, CloseCircle, Link21, Refresh, Send2, VideoPlay } from "iconsax-react";
 
 import {
 	cancelarProgramacionPost,
@@ -39,6 +39,7 @@ import {
 	getPost,
 	programarPost,
 	publicarPostAhora,
+	publicarReel,
 	type DestinoMeta,
 	type MetaWhoami,
 	type SocialPost,
@@ -87,6 +88,8 @@ const MetaPublicarPanel = ({ postId, onChange }: Props) => {
 	const [accion, setAccion] = useState<"programar" | "publicar" | "cancelar" | null>(null);
 	const [confirmarPublicar, setConfirmarPublicar] = useState(false);
 	const [desvincular, setDesvincular] = useState<DestinoMeta | null>(null);
+	const [confirmarReel, setConfirmarReel] = useState(false);
+	const [publicandoReel, setPublicandoReel] = useState(false);
 	const [destinos, setDestinos] = useState<DestinoMeta[]>(["facebook", "instagram"]);
 	// Caption propio para Facebook. Vacío = el backend usa el de Instagram sin "Link in BIO".
 	const [captionFacebook, setCaptionFacebook] = useState("");
@@ -194,6 +197,40 @@ const MetaPublicarPanel = ({ postId, onChange }: Props) => {
 			enqueueSnackbar(err?.response?.data?.error || "No se pudo cancelar", { variant: "error" });
 		} finally {
 			setAccion(null);
+		}
+	};
+
+	const esperarReel = useCallback(() => {
+		let vueltas = 0;
+		const id = window.setInterval(async () => {
+			vueltas += 1;
+			const p = await cargar();
+			const terminado = p && p.publicacion?.reel?.estado !== "publicando";
+			if (terminado || vueltas >= 100) {
+				window.clearInterval(id);
+				setPublicandoReel(false);
+				if (p) {
+					onChange?.(p);
+					const est = p.publicacion?.reel?.estado;
+					if (est === "publicado") enqueueSnackbar("Reel publicado", { variant: "success" });
+					else if (est === "parcial") enqueueSnackbar("Reel publicado en una sola red: revisá el error", { variant: "warning" });
+					else if (est === "error") enqueueSnackbar("El reel falló: revisá el error", { variant: "error" });
+				}
+			}
+		}, 5000);
+	}, [cargar, onChange, enqueueSnackbar]);
+
+	const handlePublicarReel = async () => {
+		if (!post) return;
+		setConfirmarReel(false);
+		setPublicandoReel(true);
+		try {
+			await publicarReel(post._id);
+			enqueueSnackbar("Publicando el reel: Instagram tarda unos minutos en procesar el video", { variant: "info" });
+			esperarReel();
+		} catch (err: any) {
+			setPublicandoReel(false);
+			enqueueSnackbar(err?.response?.data?.error || "No se pudo publicar el reel", { variant: "error" });
 		}
 	};
 
@@ -458,6 +495,88 @@ const MetaPublicarPanel = ({ postId, onChange }: Props) => {
 					)}
 				</Box>
 			)}
+
+			{post && post.mediaResumen?.video && (
+				<Box>
+					<Divider sx={{ mt: 1 }}>
+						<Typography variant="caption" color="text.secondary">
+							Reel
+						</Typography>
+					</Divider>
+					<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap sx={{ mt: 1 }}>
+						{post.publicacion?.reel?.estado ? (
+							<Chip
+								size="small"
+								variant="outlined"
+								color={
+									post.publicacion.reel.estado === "publicado"
+										? "success"
+										: post.publicacion.reel.estado === "publicando"
+										? "info"
+										: post.publicacion.reel.estado === "parcial"
+										? "warning"
+										: "error"
+								}
+								label={`Reel: ${post.publicacion.reel.estado}`}
+							/>
+						) : (
+							<Typography variant="caption" color="text.secondary">
+								Hay un video 9:16 archivado. Se publica como reel en Instagram (también en el feed) y como video en la página de Facebook,
+								con el caption del post.
+							</Typography>
+						)}
+						{post.publicacion?.reel?.instagramReelId && (
+							<Typography variant="caption" color="text.secondary">
+								IG {post.publicacion.reel.instagramReelId}
+								{post.publicacion.reel.facebookVideoId ? ` · FB video ${post.publicacion.reel.facebookVideoId}` : ""}
+							</Typography>
+						)}
+						<Button
+							size="small"
+							variant="outlined"
+							startIcon={
+								publicandoReel || post.publicacion?.reel?.estado === "publicando" ? (
+									<CircularProgress size={14} color="inherit" />
+								) : (
+									<VideoPlay size={16} />
+								)
+							}
+							disabled={
+								!configurado ||
+								ocupado ||
+								publicandoReel ||
+								post.publicacion?.reel?.estado === "publicando" ||
+								(Boolean(post.publicacion?.reel?.instagramReelId) && Boolean(post.publicacion?.reel?.facebookVideoId))
+							}
+							onClick={() => setConfirmarReel(true)}
+							sx={{ whiteSpace: "nowrap" }}
+						>
+							{post.publicacion?.reel?.estado === "parcial" ? "Completar reel" : "Publicar reel ahora"}
+						</Button>
+					</Stack>
+					{post.publicacion?.reel?.error && (
+						<Alert severity="error" variant="outlined" sx={{ mt: 1 }}>
+							{post.publicacion.reel.error}
+						</Alert>
+					)}
+				</Box>
+			)}
+
+			<Dialog open={confirmarReel} onClose={() => setConfirmarReel(false)} maxWidth="xs" fullWidth>
+				<DialogTitle>Publicar el reel</DialogTitle>
+				<DialogContent>
+					<Typography variant="body2">
+						Se publica ahora el video archivado como reel en Instagram y como video en la página de Facebook, con el caption del post.
+						Instagram tarda unos minutos en procesarlo. No se puede deshacer desde acá.
+					</Typography>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => setConfirmarReel(false)}>Cancelar</Button>
+					<Button variant="contained" onClick={handlePublicarReel}>
+						Publicar reel
+					</Button>
+				</DialogActions>
+			</Dialog>
 
 			{post && (
 				<MetaPromocionPanel

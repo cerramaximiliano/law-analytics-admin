@@ -200,6 +200,14 @@ export interface PublicacionMeta {
 	error?: string | null;
 	intentos?: number;
 	ultimoIntentoEn?: string | null;
+	/** Reel (video 9:16 archivado) publicado aparte de la imagen. */
+	reel?: {
+		estado: "publicando" | "publicado" | "parcial" | "error" | null;
+		instagramReelId?: string | null;
+		facebookVideoId?: string | null;
+		error?: string | null;
+		publicadoEn?: string | null;
+	} | null;
 }
 
 export interface PromocionMeta {
@@ -731,6 +739,14 @@ export const programarPost = async (
 ): Promise<SocialPost> => {
 	const res = await mktAxios.post(`/api/social/posts/${id}/programar`, payload);
 	return res.data.data;
+};
+
+/**
+ * Publica el video archivado como reel en Instagram y video en Facebook.
+ * 202 + segundo plano: consultar getPost hasta que publicacion.reel.estado deje de ser 'publicando'.
+ */
+export const publicarReel = async (id: string, destinos?: DestinoMeta[]): Promise<void> => {
+	await mktAxios.post(`/api/social/posts/${id}/publicar-reel`, destinos ? { destinos } : {});
 };
 
 /**
