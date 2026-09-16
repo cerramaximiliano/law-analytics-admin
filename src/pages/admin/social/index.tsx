@@ -91,6 +91,7 @@ import {
 	AnimacionInfo,
 	AudioInfo,
 	ClipInfo,
+	DestinoMeta,
 	EstadoPost,
 	OrdenPosts,
 	createPost,
@@ -119,6 +120,63 @@ const ESTADO_COLOR: Record<string, "default" | "info" | "success" | "warning"> =
 	aprobado: "info",
 	programado: "warning",
 	publicado: "success",
+};
+
+/**
+ * Estado por red de un post en Meta, para el listado: un post puede estar
+ * publicado en Facebook y programado para Instagram a la vez, y el chip de
+ * estado general no alcanza para contarlo.
+ */
+const RedesMeta = ({ post }: { post: SocialPost }) => {
+	const pub = post.publicacion;
+	const redes: { id: DestinoMeta; label: string; publicadoId?: string | null; url?: string }[] = [
+		{
+			id: "facebook",
+			label: "FB",
+			publicadoId: pub?.facebookPostId,
+			url: pub?.facebookPostId ? `https://www.facebook.com/${pub.facebookPostId}` : undefined,
+		},
+		{ id: "instagram", label: "IG", publicadoId: pub?.instagramMediaId },
+	];
+	const chips = redes
+		.map((r) => {
+			if (r.publicadoId) {
+				return { key: r.id, label: `${r.label} ✓`, color: "success" as const, tip: `Publicado en ${r.id}`, url: r.url };
+			}
+			const enDestinos = (post.destinos || []).includes(r.id);
+			if (!enDestinos) return null;
+			if (post.estado === "programado" && post.programadoPara) {
+				return { key: r.id, label: `${r.label} ${fmtDate(post.programadoPara)}`, color: "warning" as const, tip: `Programado en ${r.id}` };
+			}
+			if (pub?.estado === "error" || pub?.estado === "parcial") {
+				return { key: r.id, label: `${r.label} ✗`, color: "error" as const, tip: pub?.error || `Falló en ${r.id}` };
+			}
+			if (pub?.estado === "publicando") {
+				return { key: r.id, label: `${r.label} …`, color: "info" as const, tip: `Publicando en ${r.id}` };
+			}
+			return null;
+		})
+		.filter(Boolean) as { key: string; label: string; color: "success" | "warning" | "error" | "info"; tip: string; url?: string }[];
+	if (!chips.length) return null;
+	return (
+		<Stack direction="row" spacing={0.5} sx={{ mt: 0.5 }} flexWrap="wrap" useFlexGap>
+			{chips.map((c) => (
+				<Tooltip key={c.key} title={c.tip}>
+					<Chip
+						size="small"
+						variant="filled"
+						color={c.color}
+						label={c.label}
+						component={c.url ? "a" : "div"}
+						href={c.url}
+						target={c.url ? "_blank" : undefined}
+						clickable={Boolean(c.url)}
+						sx={{ height: 20, "& .MuiChip-label": { px: 0.75, fontSize: 11 } }}
+					/>
+				</Tooltip>
+			))}
+		</Stack>
+	);
 };
 
 const fmtDate = (iso: string) => (iso ? new Date(iso).toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" }) : "—");
@@ -1087,26 +1145,7 @@ const SocialStudio = () => {
 								</Stack>
 							</MainCard>
 
-							<MainCard
-								title="Contenido"
-								contentSX={{ p: 2 }}
-								secondary={
-									<Stack direction="row" spacing={1}>
-										<Button
-											size="small"
-											variant="contained"
-											startIcon={generando ? <CircularProgress size={14} color="inherit" /> : <Magicpen size={16} />}
-											disabled={generando || !health?.claude}
-											onClick={handleGenerar}
-										>
-											{generando ? "Generando…" : "Generar con Claude"}
-										</Button>
-										<Button size="small" variant="text" color="secondary" onClick={handleNuevo}>
-											Limpiar
-										</Button>
-									</Stack>
-								}
-							>
+							<MainCard title="Contenido" contentSX={{ p: 2 }}>
 								<Stack spacing={1.5}>
 									<TextField
 										label="Prompt"
@@ -1122,6 +1161,23 @@ const SocialStudio = () => {
 												: "Claude sin API key: completá los campos a mano"
 										}
 									/>
+									<Stack direction="row" spacing={1} justifyContent="flex-end" flexWrap="wrap" useFlexGap>
+										<Button size="small" variant="text" color="secondary" onClick={handleNuevo} sx={{ whiteSpace: "nowrap" }}>
+											Limpiar
+										</Button>
+										{health?.claude && (
+											<Button
+												size="small"
+												variant="outlined"
+												startIcon={generando ? <CircularProgress size={14} color="inherit" /> : <Magicpen size={16} />}
+												disabled={generando}
+												onClick={handleGenerar}
+												sx={{ whiteSpace: "nowrap" }}
+											>
+												{generando ? "Generando…" : "Generar con Claude"}
+											</Button>
+										)}
+									</Stack>
 
 									{warnings.length > 0 && (
 										<Alert severity="warning" onClose={() => setWarnings([])}>
@@ -1255,11 +1311,12 @@ const SocialStudio = () => {
 									<Grid container spacing={1}>
 										<Grid item xs={6}>
 											<Button
-												variant="contained"
+												variant="outlined"
 												fullWidth
 												startIcon={renderizando ? <CircularProgress size={16} color="inherit" /> : <Refresh size={18} />}
 												disabled={renderizando || excesos.length > 0 || !health?.renderer}
 												onClick={handleRenderizar}
+												sx={{ whiteSpace: "nowrap" }}
 											>
 												{renderizando ? "Renderizando…" : "Renderizar"}
 											</Button>
@@ -1271,6 +1328,7 @@ const SocialStudio = () => {
 												startIcon={generandoVariantes ? <CircularProgress size={16} color="inherit" /> : <Gallery size={18} />}
 												disabled={generandoVariantes || excesos.length > 0 || !health?.renderer}
 												onClick={handleVariantes}
+												sx={{ whiteSpace: "nowrap" }}
 											>
 												{generandoVariantes ? "Generando…" : "Los 4 formatos"}
 											</Button>
@@ -1278,10 +1336,11 @@ const SocialStudio = () => {
 										<Grid item xs={12}>
 											<Button
 												variant="contained"
-												color="secondary"
 												fullWidth
+												startIcon={guardando || guardandoPiezas ? <CircularProgress size={16} color="inherit" /> : <TickCircle size={18} />}
 												disabled={guardando || guardandoPiezas}
 												onClick={handleGuardar}
+												sx={{ whiteSpace: "nowrap" }}
 											>
 												{guardando || guardandoPiezas
 													? "Guardando…"
@@ -1721,18 +1780,7 @@ const SocialStudio = () => {
 											</TableCell>
 											<TableCell>
 												<Chip size="small" label={p.estado} color={ESTADO_COLOR[p.estado] || "default"} variant="outlined" />
-												{p.estado === "programado" && p.programadoPara && (
-													<Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
-														{fmtDate(p.programadoPara)}
-													</Typography>
-												)}
-												{p.publicacion?.estado === "error" && (
-													<Tooltip title={p.publicacion.error || "Falló la publicación en Meta"}>
-														<Typography variant="caption" color="error.main" display="block">
-															Error en Meta
-														</Typography>
-													</Tooltip>
-												)}
+												<RedesMeta post={p} />
 												{p.publicadoEn && (
 													<Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
 														{fmtDate(p.publicadoEn)}

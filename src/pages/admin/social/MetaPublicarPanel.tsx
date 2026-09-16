@@ -353,32 +353,36 @@ const MetaPublicarPanel = ({ postId, onChange }: Props) => {
 					value={captionFacebook}
 					onChange={(e) => setCaptionFacebook(e.target.value)}
 					disabled={ocupado || pendientes.length === 0}
-					placeholder={captionParaFacebook(post?.caption || "") || 'Se usa el caption del post sin la línea "Link in BIO"'}
+					placeholder="Vacío: se usa el caption del post sin la línea Link in BIO"
+					maxRows={6}
 					helperText={
 						captionFacebook.trim()
 							? `${captionFacebook.length}/5000 — Instagram sigue usando el caption del post`
-							: 'Vacío: Facebook recibe el caption del post sin "Link in BIO" (ahí el link sí es clickeable)'
+							: `Facebook recibiría: "${captionParaFacebook(post?.caption || "")
+									.replace(/\s+/g, " ")
+									.slice(0, 90)}…"`
 					}
 				/>
 			)}
 
-			<Stack direction={{ xs: "column", sm: "row" }} spacing={1} alignItems={{ sm: "center" }}>
-				<TextField
-					label="Publicar el"
-					type="datetime-local"
-					size="small"
-					value={fecha}
-					onChange={(e) => setFecha(e.target.value)}
-					disabled={ocupado || pendientes.length === 0}
-					InputLabelProps={{ shrink: true }}
-					sx={{ minWidth: 220 }}
-				/>
+			<TextField
+				label="Publicar el (hora local)"
+				type="datetime-local"
+				size="small"
+				value={fecha}
+				onChange={(e) => setFecha(e.target.value)}
+				disabled={ocupado || pendientes.length === 0}
+				InputLabelProps={{ shrink: true }}
+				sx={{ maxWidth: 260 }}
+			/>
+			<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
 				<Button
 					variant="contained"
 					size="small"
 					startIcon={accion === "programar" ? <CircularProgress size={14} color="inherit" /> : <Calendar size={16} />}
 					disabled={!listo}
 					onClick={handleProgramar}
+					sx={{ whiteSpace: "nowrap" }}
 				>
 					{programado ? "Reprogramar" : "Programar"}
 				</Button>
@@ -390,6 +394,7 @@ const MetaPublicarPanel = ({ postId, onChange }: Props) => {
 						startIcon={accion === "cancelar" ? <CircularProgress size={14} color="inherit" /> : <CloseCircle size={16} />}
 						disabled={ocupado}
 						onClick={handleCancelar}
+						sx={{ whiteSpace: "nowrap" }}
 					>
 						Cancelar programación
 					</Button>
@@ -402,6 +407,7 @@ const MetaPublicarPanel = ({ postId, onChange }: Props) => {
 							startIcon={publicando ? <CircularProgress size={14} color="inherit" /> : <Send2 size={16} />}
 							disabled={!listo}
 							onClick={() => setConfirmarPublicar(true)}
+							sx={{ whiteSpace: "nowrap" }}
 						>
 							{publicando ? "Publicando…" : "Publicar ahora"}
 						</Button>
