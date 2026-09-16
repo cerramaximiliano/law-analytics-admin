@@ -23,6 +23,7 @@ import {
 	Alert,
 	Box,
 	Button,
+	Checkbox,
 	Chip,
 	CircularProgress,
 	Dialog,
@@ -31,6 +32,7 @@ import {
 	DialogTitle,
 	Divider,
 	FormControl,
+	FormControlLabel,
 	Grid,
 	IconButton,
 	InputAdornment,
@@ -159,6 +161,20 @@ const RedesMeta = ({ post }: { post: SocialPost }) => {
 			return null;
 		})
 		.filter(Boolean) as { key: string; label: string; color: "success" | "warning" | "error" | "info"; tip: string; url?: string }[];
+	// Promoción paga (campaña de Meta creada desde el panel).
+	const promo = post.promocion;
+	if (promo?.campaignId) {
+		const est = promo.estado || "pausada";
+		chips.push({
+			key: "ads",
+			label: `📣 Ads ${est}`,
+			color: est === "activa" ? "success" : est === "finalizada" ? "info" : "warning",
+			tip: `Campaña de Meta (${promo.objetivo === "interaccion" ? "interacción" : "tráfico"}) · ARS ${
+				promo.presupuestoDiarioARS ?? "?"
+			}/día · ${promo.dias ?? "?"} días`,
+			url: `https://adsmanager.facebook.com/adsmanager/manage/campaigns?act=880272417776246&selected_campaign_ids=${promo.campaignId}`,
+		});
+	}
 	if (!chips.length) return null;
 	return (
 		<Stack direction="row" spacing={0.5} sx={{ mt: 0.5 }} flexWrap="wrap" useFlexGap>
@@ -460,6 +476,8 @@ const SocialStudio = () => {
 	const [filtroPlantilla, setFiltroPlantilla] = useState<TemplateId | "">("");
 	const [filtroEstado, setFiltroEstado] = useState<EstadoPost | "">("");
 	const [ordenPosts, setOrdenPosts] = useState<OrdenPosts>("recientes");
+	// Filtro local: posts con campaña de Meta (promocion.campaignId).
+	const [soloPromocionados, setSoloPromocionados] = useState(false);
 	// El orden no filtra: no cambia QUÉ posts hay, solo en qué secuencia salen.
 	const hayFiltros = Boolean(filtroPlantilla || filtroEstado);
 	const limpiarFiltros = () => {
@@ -1691,6 +1709,10 @@ const SocialStudio = () => {
 								<MenuItem value="publicado">Publicado</MenuItem>
 							</Select>
 						</FormControl>
+						<FormControlLabel
+							control={<Checkbox size="small" checked={soloPromocionados} onChange={(e) => setSoloPromocionados(e.target.checked)} />}
+							label="Solo promocionados"
+						/>
 						<FormControl size="small" sx={{ minWidth: 160 }}>
 							<InputLabel>Orden</InputLabel>
 							<Select
@@ -1757,141 +1779,143 @@ const SocialStudio = () => {
 									</TableRow>
 								)}
 								{!loadingPosts &&
-									posts.map((p) => (
-										<TableRow key={p._id} hover>
-											<TableCell sx={{ width: 72, pr: 0 }}>
-												{p.mediaResumen?.previewUrl ? (
-													<Tooltip
-														title={`Ver lo guardado: ${p.mediaResumen.imagenes} imagen(es)${
-															p.mediaResumen.formatos?.length
-																? ` en ${p.mediaResumen.formatos.length} formato${p.mediaResumen.formatos.length > 1 ? "s" : ""}`
-																: ""
-														}${p.mediaResumen.video ? " + video" : ""}`}
-													>
+									posts
+										.filter((p) => !soloPromocionados || Boolean(p.promocion?.campaignId))
+										.map((p) => (
+											<TableRow key={p._id} hover>
+												<TableCell sx={{ width: 72, pr: 0 }}>
+													{p.mediaResumen?.previewUrl ? (
+														<Tooltip
+															title={`Ver lo guardado: ${p.mediaResumen.imagenes} imagen(es)${
+																p.mediaResumen.formatos?.length
+																	? ` en ${p.mediaResumen.formatos.length} formato${p.mediaResumen.formatos.length > 1 ? "s" : ""}`
+																	: ""
+															}${p.mediaResumen.video ? " + video" : ""}`}
+														>
+															<Box
+																component="img"
+																src={p.mediaResumen.previewUrl}
+																alt=""
+																onClick={() => handleVerPiezas(p)}
+																sx={{
+																	width: 48,
+																	height: 64,
+																	objectFit: "cover",
+																	borderRadius: 1,
+																	border: "1px solid",
+																	borderColor: "divider",
+																	display: "block",
+																	cursor: "pointer",
+																	transition: "all 0.2s ease",
+																	"&:hover": { borderColor: "primary.main", transform: "scale(1.06)" },
+																}}
+															/>
+														</Tooltip>
+													) : p.mediaResumen?.video ? (
+														<Tooltip title="Ver el video guardado">
+															<Box
+																onClick={() => handleVerPiezas(p)}
+																sx={{
+																	cursor: "pointer",
+																	width: 48,
+																	height: 64,
+																	borderRadius: 1,
+																	border: "1px solid",
+																	borderColor: "divider",
+																	display: "flex",
+																	alignItems: "center",
+																	justifyContent: "center",
+																	color: "text.secondary",
+																}}
+															>
+																<VideoPlay size={20} />
+															</Box>
+														</Tooltip>
+													) : (
 														<Box
-															component="img"
-															src={p.mediaResumen.previewUrl}
-															alt=""
-															onClick={() => handleVerPiezas(p)}
 															sx={{
 																width: 48,
 																height: 64,
-																objectFit: "cover",
 																borderRadius: 1,
-																border: "1px solid",
+																border: "1px dashed",
 																borderColor: "divider",
-																display: "block",
-																cursor: "pointer",
-																transition: "all 0.2s ease",
-																"&:hover": { borderColor: "primary.main", transform: "scale(1.06)" },
 															}}
 														/>
-													</Tooltip>
-												) : p.mediaResumen?.video ? (
-													<Tooltip title="Ver el video guardado">
-														<Box
-															onClick={() => handleVerPiezas(p)}
-															sx={{
-																cursor: "pointer",
-																width: 48,
-																height: 64,
-																borderRadius: 1,
-																border: "1px solid",
-																borderColor: "divider",
-																display: "flex",
-																alignItems: "center",
-																justifyContent: "center",
-																color: "text.secondary",
-															}}
-														>
-															<VideoPlay size={20} />
-														</Box>
-													</Tooltip>
-												) : (
-													<Box
-														sx={{
-															width: 48,
-															height: 64,
-															borderRadius: 1,
-															border: "1px dashed",
-															borderColor: "divider",
-														}}
-													/>
-												)}
-											</TableCell>
-											<TableCell>{p.titulo}</TableCell>
-											<TableCell sx={{ display: { xs: "none", md: "table-cell" } }}>
-												{templates.find((t) => t.id === p.templateId)?.label || p.templateId}
-											</TableCell>
-											<TableCell sx={{ display: { xs: "none", md: "table-cell" } }}>
-												{formats.find((f) => f.id === p.formato)?.label || p.formato}
-											</TableCell>
-											<TableCell sx={{ display: { xs: "none", md: "table-cell" } }}>
-												<Typography variant="caption" color="text.secondary">
-													{animacionEfectiva(p)}
-												</Typography>
-											</TableCell>
-											<TableCell>
-												<Chip size="small" label={p.estado} color={ESTADO_COLOR[p.estado] || "default"} variant="outlined" />
-												<RedesMeta post={p} />
-												{p.publicadoEn && (
-													<Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
-														{fmtDate(p.publicadoEn)}
+													)}
+												</TableCell>
+												<TableCell>{p.titulo}</TableCell>
+												<TableCell sx={{ display: { xs: "none", md: "table-cell" } }}>
+													{templates.find((t) => t.id === p.templateId)?.label || p.templateId}
+												</TableCell>
+												<TableCell sx={{ display: { xs: "none", md: "table-cell" } }}>
+													{formats.find((f) => f.id === p.formato)?.label || p.formato}
+												</TableCell>
+												<TableCell sx={{ display: { xs: "none", md: "table-cell" } }}>
+													<Typography variant="caption" color="text.secondary">
+														{animacionEfectiva(p)}
 													</Typography>
-												)}
-											</TableCell>
-											<TableCell sx={{ display: { xs: "none", md: "table-cell" } }}>{fmtDate(p.createdAt)}</TableCell>
-											<TableCell align="right">
-												<Button size="small" onClick={() => handleAbrirPost(p)}>
-													Abrir
-												</Button>
-												<Tooltip
-													title={
-														p.estado === "programado"
-															? "Programado en Meta — cancelá la programación desde el editor"
-															: p.estado === "publicado"
-															? "Publicado — volver a borrador"
-															: "Marcar como publicado"
-													}
-												>
-													<span>
-														<IconButton
-															size="small"
-															color={p.estado === "publicado" ? "success" : "default"}
-															disabled={p.estado === "programado"}
-															onClick={() => handleTogglePublicado(p)}
-														>
-															<TickCircle size={16} variant={p.estado === "publicado" ? "Bold" : "Linear"} />
-														</IconButton>
-													</span>
-												</Tooltip>
-												<Tooltip title={p.caption ? "Copiar caption al portapapeles" : "Este post no tiene caption"}>
-													<span>
-														<IconButton size="small" disabled={!p.caption} onClick={() => copiarCaption(p.caption)}>
-															<ClipboardText size={16} />
-														</IconButton>
-													</span>
-												</Tooltip>
-												<Tooltip title={videoEnCurso ? "Hay un video generándose" : "Generar video con la animación guardada"}>
-													{/* El span hace falta para que el tooltip siga apareciendo
+												</TableCell>
+												<TableCell>
+													<Chip size="small" label={p.estado} color={ESTADO_COLOR[p.estado] || "default"} variant="outlined" />
+													<RedesMeta post={p} />
+													{p.publicadoEn && (
+														<Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+															{fmtDate(p.publicadoEn)}
+														</Typography>
+													)}
+												</TableCell>
+												<TableCell sx={{ display: { xs: "none", md: "table-cell" } }}>{fmtDate(p.createdAt)}</TableCell>
+												<TableCell align="right">
+													<Button size="small" onClick={() => handleAbrirPost(p)}>
+														Abrir
+													</Button>
+													<Tooltip
+														title={
+															p.estado === "programado"
+																? "Programado en Meta — cancelá la programación desde el editor"
+																: p.estado === "publicado"
+																? "Publicado — volver a borrador"
+																: "Marcar como publicado"
+														}
+													>
+														<span>
+															<IconButton
+																size="small"
+																color={p.estado === "publicado" ? "success" : "default"}
+																disabled={p.estado === "programado"}
+																onClick={() => handleTogglePublicado(p)}
+															>
+																<TickCircle size={16} variant={p.estado === "publicado" ? "Bold" : "Linear"} />
+															</IconButton>
+														</span>
+													</Tooltip>
+													<Tooltip title={p.caption ? "Copiar caption al portapapeles" : "Este post no tiene caption"}>
+														<span>
+															<IconButton size="small" disabled={!p.caption} onClick={() => copiarCaption(p.caption)}>
+																<ClipboardText size={16} />
+															</IconButton>
+														</span>
+													</Tooltip>
+													<Tooltip title={videoEnCurso ? "Hay un video generándose" : "Generar video con la animación guardada"}>
+														{/* El span hace falta para que el tooltip siga apareciendo
 													    con el botón deshabilitado. */}
-													<span>
-														<IconButton size="small" disabled={videoEnCurso} onClick={() => handleVideoDePost(p)}>
-															<VideoPlay size={16} />
+														<span>
+															<IconButton size="small" disabled={videoEnCurso} onClick={() => handleVideoDePost(p)}>
+																<VideoPlay size={16} />
+															</IconButton>
+														</span>
+													</Tooltip>
+													<Tooltip title="Duplicar cambiando solo los datos">
+														<IconButton size="small" onClick={() => handleAbrirDuplicar(p)}>
+															<Copy size={16} />
 														</IconButton>
-													</span>
-												</Tooltip>
-												<Tooltip title="Duplicar cambiando solo los datos">
-													<IconButton size="small" onClick={() => handleAbrirDuplicar(p)}>
-														<Copy size={16} />
+													</Tooltip>
+													<IconButton size="small" color="error" onClick={() => setABorrar(p)}>
+														<Trash size={16} />
 													</IconButton>
-												</Tooltip>
-												<IconButton size="small" color="error" onClick={() => setABorrar(p)}>
-													<Trash size={16} />
-												</IconButton>
-											</TableCell>
-										</TableRow>
-									))}
+												</TableCell>
+											</TableRow>
+										))}
 							</TableBody>
 						</Table>
 					</TableContainer>
