@@ -208,6 +208,7 @@ export interface PromocionMeta {
 	adId?: string | null;
 	creativeId?: string | null;
 	estado?: "pausada" | "activa" | "finalizada" | null;
+	objetivo?: "trafico" | "interaccion";
 	presupuestoDiarioARS?: number | null;
 	dias?: number | null;
 	inicio?: string | null;
@@ -250,8 +251,23 @@ export interface HistorialMetaAds {
 	spend: number;
 	cpc: number | null;
 	ctr: number | null;
+	interacciones?: number;
+	likes?: number;
+	comentarios?: number;
+	guardados?: number;
 	registros: number;
 	capturadoEn: string;
+}
+
+/** GET /api/social/meta/instagram-media — publicaciones recientes de la cuenta. */
+export interface InstagramMedia {
+	id: string;
+	tipo: "imagen" | "carrusel" | "video";
+	fecha: string;
+	likes: number;
+	comentarios: number;
+	permalink: string;
+	titulo: string;
 }
 
 /** GET /api/social/meta/whoami — diagnóstico del token de Meta. */
@@ -744,9 +760,23 @@ export const publicarPostAhora = async (
 /** Crea la campaña EN PAUSA que promociona el post de Instagram. No gasta hasta activar. */
 export const promocionarPost = async (
 	id: string,
-	payload: { presupuestoDiarioARS: number; dias: number; url?: string; cta?: "SIGN_UP" | "LEARN_MORE"; nombre?: string },
+	payload: {
+		presupuestoDiarioARS: number;
+		dias: number;
+		objetivo?: "trafico" | "interaccion";
+		url?: string;
+		cta?: "SIGN_UP" | "LEARN_MORE";
+		nombre?: string;
+		/** Post publicado a mano: id de la publicación de Instagram a vincular. */
+		igMediaId?: string;
+	},
 ): Promise<SocialPost> => {
 	const res = await mktAxios.post(`/api/social/posts/${id}/promocionar`, payload);
+	return res.data.data;
+};
+
+export const getInstagramMedia = async (): Promise<InstagramMedia[]> => {
+	const res = await mktAxios.get("/api/social/meta/instagram-media");
 	return res.data.data;
 };
 

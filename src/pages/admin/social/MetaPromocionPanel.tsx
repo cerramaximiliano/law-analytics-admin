@@ -41,9 +41,11 @@ import {
 	activarPromocion,
 	eliminarPromocion,
 	getEstadoPromocion,
+	getInstagramMedia,
 	pausarPromocion,
 	promocionarPost,
 	type EstadoPromocion,
+	type InstagramMedia,
 	type SocialPost,
 } from "api/socialPosts";
 
@@ -79,9 +81,21 @@ const MetaPromocionPanel = ({ post, onChange }: Props) => {
 	const [dias, setDias] = useState("7");
 	const [url, setUrl] = useState(URL_DEFAULT);
 	const [cta, setCta] = useState<"SIGN_UP" | "LEARN_MORE">("SIGN_UP");
+	const [objetivo, setObjetivo] = useState<"trafico" | "interaccion">("trafico");
+	// Posts publicados a mano (sin id de Instagram): se elige la publicación de la lista.
+	const [mediaIg, setMediaIg] = useState<InstagramMedia[] | null>(null);
+	const [igMediaId, setIgMediaId] = useState("");
 
 	const tieneCampana = Boolean(post.promocion?.campaignId);
 	const enInstagram = Boolean(post.publicacion?.instagramMediaId);
+	const esInteraccion = objetivo === "interaccion";
+
+	useEffect(() => {
+		if (enInstagram || tieneCampana || mediaIg !== null) return;
+		getInstagramMedia()
+			.then(setMediaIg)
+			.catch(() => setMediaIg([]));
+	}, [enInstagram, tieneCampana, mediaIg]);
 
 	const cargar = useCallback(async () => {
 		if (!post.promocion?.campaignId) {
@@ -110,7 +124,14 @@ const MetaPromocionPanel = ({ post, onChange }: Props) => {
 			if (que === "crear") {
 				const n = Number(presupuesto);
 				if (!n || n < 1) return enqueueSnackbar("Poné un presupuesto diario en pesos", { variant: "warning" });
-				p = await promocionarPost(post._id, { presupuestoDiarioARS: n, dias: Number(dias) || 7, url, cta });
+				if (!enInstagram && !igMediaId) return enqueueSnackbar("Elegí la publicación de Instagram a promocionar", { variant: "warning" });
+				p = await promocionarPost(post._id, {
+					presupuestoDiarioARS: n,
+					dias: Number(dias) || 7,
+					objetivo,
+					...(esInteraccion ? {} : { url, cta }),
+					...(enInstagram ? {} : { igMediaId }),
+				});
 				enqueueSnackbar("Campaña creada en pausa. Revisala y activala cuando quieras.", { variant: "success" });
 			} else if (que === "activar") {
 				p = await activarPromocion(post._id);
@@ -150,17 +171,47 @@ const MetaPromocionPanel = ({ post, onChange }: Props) => {
 				</Typography>
 			</Divider>
 
-			{!enInstagram && (
-				<Typography variant="caption" color="text.secondary">
-					Primero publicá el post en Instagram: la campaña promociona esa publicación (conserva likes y comentarios).
-				</Typography>
+			{!enInstagram && !tieneCampana && (
+				<FormControl size="small" fullWidth>
+					<InputLabel>Publicación de Instagram a promocionar</InputLabel>
+					<Select
+						value={igMediaId}
+						label="Publicación de Instagram a promocionar"
+						onChange={(e) => setIgMediaId(String(e.target.value))}
+						disabled={ocupado || mediaIg === null}
+					>
+						{(mediaIg || []).map((m) => (
+							<MenuItem key={m.id} value={m.id}>
+								{fmt(m.fecha).slice(0, 5)} · {m.tipo} · {m.likes} likes · {m.titulo}
+							</MenuItem>
+						))}
+					</Select>
+					<Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+						Este post se publicó a mano y el Studio no tiene su id de Instagram: elegilo de la lista y queda vinculado al crear la campaña.
+					</Typography>
+				</FormControl>
 			)}
 
-			{enInstagram && !tieneCampana && (
+			{!tieneCampana && (
 				<>
+					<FormControl size="small" sx={{ maxWidth: 360 }}>
+						<InputLabel>Objetivo</InputLabel>
+						<Select
+							value={objetivo}
+							label="Objetivo"
+							onChange={(e) => setObjetivo(e.target.value as "trafico" | "interaccion")}
+							disabled={ocupado}
+						>
+							<MenuItem value="trafico">Tráfico: clics al sitio (registros)</MenuItem>
+							<MenuItem value="interaccion">Interacción: likes, comentarios, guardados</MenuItem>
+						</Select>
+					</FormControl>
 					<Typography variant="caption" color="text.secondary">
-						Campaña de tráfico a Instagram (feed y Explorar), Argentina, 25 a 60 años, abogados por cargo, estudios e interés. Se crea{" "}
-						<strong>en pausa</strong>: no gasta hasta que la actives.
+						{esInteraccion
+							? "Meta muestra el post a quien tiende a interactuar; sin botón ni destino. Sirve para prueba social y seguidores."
+							: "Meta muestra el post a quien tiende a hacer clic; botón y destino al sitio con atribución."}{" "}
+						Instagram (feed y Explorar), Argentina, 25 a 60 años, abogados por cargo, estudios e interés. Se crea <strong>en pausa</strong>:
+						no gasta hasta que la actives.
 					</Typography>
 					<Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
 						<TextField
@@ -185,23 +236,27 @@ const MetaPromocionPanel = ({ post, onChange }: Props) => {
 							helperText="Desde hoy"
 							sx={{ width: 110 }}
 						/>
-						<FormControl size="small" sx={{ minWidth: 170 }}>
-							<InputLabel>Botón</InputLabel>
-							<Select value={cta} label="Botón" onChange={(e) => setCta(e.target.value as "SIGN_UP" | "LEARN_MORE")} disabled={ocupado}>
-								<MenuItem value="SIGN_UP">Registrarte</MenuItem>
-								<MenuItem value="LEARN_MORE">Más información</MenuItem>
-							</Select>
-						</FormControl>
+						{!esInteraccion && (
+							<FormControl size="small" sx={{ minWidth: 170 }}>
+								<InputLabel>Botón</InputLabel>
+								<Select value={cta} label="Botón" onChange={(e) => setCta(e.target.value as "SIGN_UP" | "LEARN_MORE")} disabled={ocupado}>
+									<MenuItem value="SIGN_UP">Registrarte</MenuItem>
+									<MenuItem value="LEARN_MORE">Más información</MenuItem>
+								</Select>
+							</FormControl>
+						)}
 					</Stack>
-					<TextField
-						label="URL de destino"
-						size="small"
-						fullWidth
-						value={url}
-						onChange={(e) => setUrl(e.target.value)}
-						disabled={ocupado}
-						helperText="Los parámetros de atribución (source=meta_ads, utm_*) se agregan solos"
-					/>
+					{!esInteraccion && (
+						<TextField
+							label="URL de destino"
+							size="small"
+							fullWidth
+							value={url}
+							onChange={(e) => setUrl(e.target.value)}
+							disabled={ocupado}
+							helperText="Los parámetros de atribución (source=meta_ads, utm_*) se agregan solos"
+						/>
+					)}
 					<Box>
 						<Button
 							variant="contained"
@@ -225,6 +280,7 @@ const MetaPromocionPanel = ({ post, onChange }: Props) => {
 						) : (
 							<Chip size="small" variant="outlined" label={cargando ? "Consultando…" : `Local: ${post.promocion?.estado}`} />
 						)}
+						<Chip size="small" variant="outlined" label={post.promocion?.objetivo === "interaccion" ? "Interacción" : "Tráfico"} />
 						<Typography variant="caption" color="text.secondary">
 							{ars(post.promocion?.presupuestoDiarioARS)}/día · {post.promocion?.dias} días · {fmt(post.promocion?.inicio)} →{" "}
 							{fmt(post.promocion?.fin)}
@@ -248,7 +304,7 @@ const MetaPromocionPanel = ({ post, onChange }: Props) => {
 						</Typography>
 					)}
 
-					{typeof estado?.registros === "number" && (
+					{typeof estado?.registros === "number" && post.promocion?.objetivo !== "interaccion" && (
 						<Typography variant="caption" color="text.secondary">
 							Registros atribuidos: <strong>{estado.registros}</strong>
 							{ins?.spend && estado.registros > 0 ? ` · ${ars(Number(ins.spend) / estado.registros)} por registro` : ""}
@@ -266,7 +322,15 @@ const MetaPromocionPanel = ({ post, onChange }: Props) => {
 										<TableCell align="right">CTR</TableCell>
 										<TableCell align="right">CPC</TableCell>
 										<TableCell align="right">Gasto</TableCell>
-										<TableCell align="right">Registros</TableCell>
+										{post.promocion?.objetivo === "interaccion" ? (
+											<>
+												<TableCell align="right">Interacc.</TableCell>
+												<TableCell align="right">Likes</TableCell>
+												<TableCell align="right">Guardados</TableCell>
+											</>
+										) : (
+											<TableCell align="right">Registros</TableCell>
+										)}
 									</TableRow>
 								</TableHead>
 								<TableBody>
@@ -278,7 +342,15 @@ const MetaPromocionPanel = ({ post, onChange }: Props) => {
 											<TableCell align="right">{h.ctr === null ? "—" : `${Number(h.ctr).toFixed(2)}%`}</TableCell>
 											<TableCell align="right">{h.cpc === null ? "—" : ars(h.cpc)}</TableCell>
 											<TableCell align="right">{ars(h.spend)}</TableCell>
-											<TableCell align="right">{h.registros}</TableCell>
+											{post.promocion?.objetivo === "interaccion" ? (
+												<>
+													<TableCell align="right">{h.interacciones ?? 0}</TableCell>
+													<TableCell align="right">{h.likes ?? 0}</TableCell>
+													<TableCell align="right">{h.guardados ?? 0}</TableCell>
+												</>
+											) : (
+												<TableCell align="right">{h.registros}</TableCell>
+											)}
 										</TableRow>
 									))}
 								</TableBody>
