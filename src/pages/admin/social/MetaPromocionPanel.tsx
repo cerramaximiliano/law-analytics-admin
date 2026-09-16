@@ -118,6 +118,12 @@ const MetaPromocionPanel = ({ post, onChange }: Props) => {
 				enqueueSnackbar("Campaña eliminada en Meta", { variant: "success" });
 			}
 			onChange?.(p);
+			// El estado real (chip "Meta: …") sale de Graph: se relee después de cada acción.
+			if (que !== "eliminar")
+				await getEstadoPromocion(p._id)
+					.then(setEstado)
+					.catch(() => undefined);
+			else setEstado(null);
 		} catch (err: any) {
 			enqueueSnackbar(err?.response?.data?.error || "Meta rechazó la operación", { variant: "error" });
 		} finally {

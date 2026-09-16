@@ -463,7 +463,9 @@ const MetaPublicarPanel = ({ postId, onChange }: Props) => {
 				<MetaPromocionPanel
 					post={post}
 					onChange={(p) => {
-						setPost(p);
+						// Se relee el post por GET (trae mediaResumen); la respuesta del
+						// POST no lo incluye y disparaba el aviso "sin piezas".
+						cargar();
 						onChange?.(p);
 					}}
 				/>
