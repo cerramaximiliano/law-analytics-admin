@@ -659,6 +659,15 @@ export const programarPost = async (
 	return res.data.data;
 };
 
+/**
+ * Olvida el id de Meta de una red (porque el post se borró allá) para poder
+ * volver a publicarlo. No borra nada en Meta.
+ */
+export const desvincularRedPost = async (id: string, destino: DestinoMeta): Promise<SocialPost> => {
+	const res = await mktAxios.delete(`/api/social/posts/${id}/publicacion/${destino}`);
+	return res.data.data;
+};
+
 /** Cancela la programación: el post vuelve a borrador. */
 export const cancelarProgramacionPost = async (id: string): Promise<SocialPost> => {
 	const res = await mktAxios.delete(`/api/social/posts/${id}/programar`);

@@ -17,6 +17,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 // material-ui
 import {
+	Accordion,
+	AccordionDetails,
+	AccordionSummary,
 	Alert,
 	Box,
 	Button,
@@ -50,7 +53,19 @@ import {
 
 // third-party
 import { useSnackbar } from "notistack";
-import { Add, ClipboardText, Copy, DocumentDownload, Gallery, Magicpen, Refresh, TickCircle, Trash, VideoPlay } from "iconsax-react";
+import {
+	Add,
+	ArrowDown2,
+	ClipboardText,
+	Copy,
+	DocumentDownload,
+	Gallery,
+	Magicpen,
+	Refresh,
+	TickCircle,
+	Trash,
+	VideoPlay,
+} from "iconsax-react";
 
 // project imports
 import MainCard from "components/MainCard";
@@ -364,6 +379,9 @@ const SocialStudio = () => {
 	const [video, setVideo] = useState<VideoResponse | null>(null);
 	const [generandoVideo, setGenerandoVideo] = useState(false);
 	const [editandoId, setEditandoId] = useState<string | null>(null);
+	// Estado (borrador/aprobado/publicado) del post abierto, para cambiarlo desde el editor.
+	const [estadoPost, setEstadoPost] = useState<EstadoPost | null>(null);
+	const [cambiandoEstado, setCambiandoEstado] = useState(false);
 
 	// --- guardados
 	const [posts, setPosts] = useState<SocialPost[]>([]);
@@ -803,6 +821,7 @@ const SocialStudio = () => {
 					pie: pie || undefined,
 				});
 				setEditandoId(creado._id);
+				setEstadoPost(creado.estado);
 				enqueueSnackbar("Post guardado", { variant: "success" });
 				await persistirPiezas(creado._id);
 			}
@@ -830,6 +849,7 @@ const SocialStudio = () => {
 		setPie(post.pie || "");
 		setContenido(post.contenido);
 		setEditandoId(post._id);
+		setEstadoPost(post.estado);
 		setImages([]);
 		setWarnings([]);
 		setTab(0);
@@ -837,6 +857,21 @@ const SocialStudio = () => {
 
 	// Genera el video de un post guardado usando la animación que el post tiene
 	// grabada: el flujo mensual es duplicar, cambiar datos y pedir el video.
+	const handleCambiarEstado = async (nuevo: EstadoPost) => {
+		if (!editandoId || nuevo === estadoPost) return;
+		setCambiandoEstado(true);
+		try {
+			const p = await updatePost(editandoId, { estado: nuevo });
+			setEstadoPost(p.estado);
+			enqueueSnackbar(nuevo === "publicado" ? "Marcado como publicado" : `Estado: ${nuevo}`, { variant: "success" });
+			cargarPosts();
+		} catch (err: any) {
+			enqueueSnackbar(err?.response?.data?.error || "No se pudo cambiar el estado", { variant: "error" });
+		} finally {
+			setCambiandoEstado(false);
+		}
+	};
+
 	const handleTogglePublicado = async (post: SocialPost) => {
 		const nuevo = post.estado === "publicado" ? "borrador" : "publicado";
 		try {
@@ -929,6 +964,7 @@ const SocialStudio = () => {
 		setComposicion("");
 		setWarnings([]);
 		setEditandoId(null);
+		setEstadoPost(null);
 	};
 
 	const setCampo = (field: string, value: unknown) => setContenido((prev) => ({ ...prev, [field]: value }));
@@ -961,387 +997,475 @@ const SocialStudio = () => {
 
 			{tab === 0 && (
 				<Grid container spacing={2}>
-					{/* ---------- Panel izquierdo: prompt y campos ---------- */}
+					{/* ---------- Panel izquierdo: diseño, contenido y publicación ---------- */}
 					<Grid item xs={12} md={6}>
 						<Stack spacing={2}>
-							<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-								<FormControl fullWidth size="small">
-									<InputLabel>Plantilla</InputLabel>
-									<Select value={templateId} label="Plantilla" onChange={(e) => setTemplateId(e.target.value as TemplateId)}>
-										{templates.map((t) => (
-											<MenuItem key={t.id} value={t.id}>
-												{t.label}
-											</MenuItem>
-										))}
-									</Select>
-								</FormControl>
-								<FormControl fullWidth size="small">
-									<InputLabel>Formato</InputLabel>
-									<Select value={formato} label="Formato" onChange={(e) => setFormato(e.target.value as FormatoId)}>
-										{formats.map((f) => (
-											<MenuItem key={f.id} value={f.id}>
-												{f.label} · {f.width}×{f.height}
-											</MenuItem>
-										))}
-									</Select>
-								</FormControl>
-							</Stack>
-
-							<FormControl fullWidth size="small">
-								<InputLabel>Estilo</InputLabel>
-								<Select value={estilo} label="Estilo" onChange={(e) => setEstilo(e.target.value)}>
-									<MenuItem value="">
-										<em>El de la plantilla{tplActual?.estiloPorDefecto ? ` (${tplActual.estiloPorDefecto})` : ""}</em>
-									</MenuItem>
-									{estilos.map((es) => (
-										<MenuItem key={es.id} value={es.id}>
-											{es.label} — {es.oscuro ? "oscuro" : "claro"}
-										</MenuItem>
-									))}
-								</Select>
-							</FormControl>
-
-							<FormControl fullWidth size="small">
-								<InputLabel>Composición</InputLabel>
-								<Select value={composicion} label="Composición" onChange={(e) => setComposicion(e.target.value)}>
-									<MenuItem value="">
-										<em>La de la plantilla{tplActual?.composicionPorDefecto ? ` (${tplActual.composicionPorDefecto})` : ""}</em>
-									</MenuItem>
-									{composiciones.map((cm) => (
-										<MenuItem key={cm.id} value={cm.id}>
-											{cm.label}
-										</MenuItem>
-									))}
-								</Select>
-							</FormControl>
-
-							<FormControl fullWidth size="small">
-								<InputLabel>Pie</InputLabel>
-								<Select value={pie} label="Pie" onChange={(e) => setPie(e.target.value)}>
-									<MenuItem value="">
-										<em>Con el contenido (por defecto)</em>
-									</MenuItem>
-									{pies.map((p) => (
-										<MenuItem key={p.id} value={p.id}>
-											{p.label}
-										</MenuItem>
-									))}
-								</Select>
-							</FormControl>
-							{pie && pies.find((p) => p.id === pie) && (
-								<Typography variant="caption" color="text.secondary">
-									{pies.find((p) => p.id === pie)?.description}
-								</Typography>
-							)}
-
-							{tplActual && (
-								<Typography variant="caption" color="text.secondary">
-									{tplActual.description}
-								</Typography>
-							)}
-							{estilo && estilos.find((es) => es.id === estilo) && (
-								<Typography variant="caption" color="text.secondary">
-									{estilos.find((es) => es.id === estilo)?.description}
-								</Typography>
-							)}
-
-							<TextField
-								label="Prompt"
-								placeholder="Ej: anunciá que ya cubrimos Catamarca, con tono sobrio"
-								fullWidth
-								multiline
-								minRows={3}
-								value={prompt}
-								onChange={(e) => setPrompt(e.target.value)}
-							/>
-
-							<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-								<Button
-									variant="contained"
-									startIcon={generando ? <CircularProgress size={16} color="inherit" /> : <Magicpen size={18} />}
-									disabled={generando || !health?.claude}
-									onClick={handleGenerar}
-								>
-									{generando ? "Generando…" : "Generar con Claude"}
-								</Button>
-								<Button variant="outlined" color="secondary" onClick={handleNuevo}>
-									Limpiar
-								</Button>
-							</Stack>
-
-							{warnings.length > 0 && (
-								<Alert severity="warning" onClose={() => setWarnings([])}>
-									<Typography variant="subtitle2">Revisá estos campos</Typography>
-									{warnings.map((w, i) => (
-										<Typography key={i} variant="caption" display="block">
-											• {w}
-										</Typography>
-									))}
-								</Alert>
-							)}
-
-							<Divider>
-								<Typography variant="caption" color="text.secondary">
-									Contenido
-								</Typography>
-							</Divider>
-
-							<Stack spacing={1.5}>{tplActual && <CamposPlantilla tpl={tplActual} contenido={contenido} setCampo={setCampo} />}</Stack>
-
-							<Divider>
-								<Typography variant="caption" color="text.secondary">
-									Publicación
-								</Typography>
-							</Divider>
-
-							<TextField
-								label="Título interno"
-								size="small"
-								fullWidth
-								value={titulo}
-								onChange={(e) => setTitulo(e.target.value)}
-								helperText="Solo para identificarlo en la lista"
-							/>
-							<TextField
-								label="Caption del post"
-								size="small"
-								fullWidth
-								multiline
-								minRows={3}
-								value={caption}
-								onChange={(e) => setCaption(e.target.value)}
-								helperText={`${caption.length}/2200 — el texto que acompaña a la imagen`}
-								InputProps={{
-									endAdornment: (
-										<InputAdornment position="end" sx={{ alignSelf: "flex-start", mt: 0.5 }}>
-											<Tooltip title="Copiar caption">
-												<span>
-													<IconButton size="small" edge="end" disabled={!caption.trim()} onClick={() => copiarCaption(caption)}>
-														<Copy size={16} />
-													</IconButton>
-												</span>
-											</Tooltip>
-										</InputAdornment>
-									),
-								}}
-							/>
-							<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-								<Button
-									variant="text"
-									size="small"
-									startIcon={generandoCaption ? <CircularProgress size={14} color="inherit" /> : <Magicpen size={16} />}
-									disabled={generandoCaption}
-									onClick={handleCaptionIA}
-								>
-									{generandoCaption ? "Generando…" : "Generar caption con IA"}
-								</Button>
-								<Button
-									variant="text"
-									size="small"
-									startIcon={<ClipboardText size={16} />}
-									disabled={!caption.trim()}
-									onClick={() => copiarCaption(caption)}
-								>
-									Copiar caption
-								</Button>
-							</Stack>
-
-							{/* Programar / publicar en Facebook e Instagram vía Graph API.
-							    Solo para posts guardados: la imagen que se sube es la
-							    archivada en S3, no la del preview. `key` fuerza un panel
-							    nuevo al cambiar de post. */}
-							{editandoId && <MetaPublicarPanel key={editandoId} postId={editandoId} onChange={() => cargarPosts()} />}
-						</Stack>
-					</Grid>
-
-					{/* ---------- Panel derecho: preview ---------- */}
-					<Grid item xs={12} md={6}>
-						<Stack spacing={2}>
-							<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-								<Button
-									variant="contained"
-									fullWidth
-									startIcon={renderizando ? <CircularProgress size={16} color="inherit" /> : <Refresh size={18} />}
-									disabled={renderizando || excesos.length > 0 || !health?.renderer}
-									onClick={handleRenderizar}
-								>
-									{renderizando ? "Renderizando…" : "Renderizar"}
-								</Button>
-								<Button variant="outlined" fullWidth disabled={guardando || guardandoPiezas} onClick={handleGuardar}>
-									{guardando || guardandoPiezas ? "Guardando…" : editandoId ? "Actualizar post" : "Guardar post"}
-								</Button>
-							</Stack>
-							{/* Guardar hace dos cosas y no era evidente: persiste el contenido y
-							    sube a S3 lo que esté renderizado en pantalla. */}
-							<Typography variant="caption" color="text.secondary" sx={{ mt: -1 }}>
-								{images.length > 0 || variantes.some((v) => v.formato === formato && (v.images || []).length > 0) || video
-									? (() => {
-											const conImg = variantes.filter((v) => (v.images || []).length > 0);
-											const n = conImg.length > 0 ? conImg.reduce((a, v) => a + (v.images || []).length, 0) : images.length;
-											const fmts = conImg.length > 0 ? ` en ${conImg.length} formato${conImg.length > 1 ? "s" : ""}` : "";
-											return `Al guardar también quedan archivadas las piezas de esta pantalla${
-												n > 0 ? `: ${n} imagen${n > 1 ? "es" : ""}${fmts}` : ""
-											}${n > 0 && video ? " y" : video ? ": " : ""}${video ? " el video" : ""}.`;
-									  })()
-									: "Guarda el contenido del post. Si además renderizás, las piezas quedan archivadas junto con él."}
-							</Typography>
-
-							<Button
-								variant="contained"
-								color="secondary"
-								fullWidth
-								startIcon={generandoVariantes ? <CircularProgress size={16} color="inherit" /> : <Gallery size={18} />}
-								disabled={generandoVariantes || excesos.length > 0 || !health?.renderer}
-								onClick={handleVariantes}
-							>
-								{generandoVariantes ? "Generando variantes…" : "Generar los 4 formatos"}
-							</Button>
-							{generandoVariantes && progresoRender?.variantes?.activo && (
-								<Typography variant="caption" color="text.secondary" sx={{ mt: -1 }}>
-									Formato {progresoRender.variantes.indice} de {progresoRender.variantes.total}
-									{progresoRender.variantes.formato
-										? ` · ${formats.find((f) => f.id === progresoRender.variantes?.formato)?.label || progresoRender.variantes.formato}`
-										: ""}
-									{progresoRender.variantes.segundos ? ` · ${progresoRender.variantes.segundos}s` : ""}
-								</Typography>
-							)}
-
-							{/* Video: story 1080x1920, que es el formato en que IG publica video */}
-							<MainCard content={false} sx={{ p: 2 }}>
-								<Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }} flexWrap="wrap" useFlexGap>
-									<VideoPlay size={18} />
-									<Typography variant="subtitle2">Video 1080×1920</Typography>
-								</Stack>
+							<MainCard title="Diseño" contentSX={{ p: 2 }}>
 								<Stack spacing={1.5}>
-									<FormControl fullWidth size="small">
-										<InputLabel>Destino</InputLabel>
-										<Select value={formatoVideo} label="Destino" onChange={(e) => setFormatoVideo(e.target.value as FormatoId)}>
-											<MenuItem value="reel">Reel — hasta 90s</MenuItem>
-											<MenuItem value="story">Story — se corta cada 15s</MenuItem>
-										</Select>
-									</FormControl>
-									<FormControl fullWidth size="small">
-										<InputLabel>Animación</InputLabel>
-										<Select value={animacion} label="Animación" onChange={(e) => setAnimacion(e.target.value)}>
-											{animsDisponibles.map((a) => (
-												<MenuItem key={a.id} value={a.id}>
-													{a.label}
-													{a.duracion ? ` · ${a.duracion}s` : ""}
-												</MenuItem>
-											))}
-										</Select>
-									</FormControl>
-									{animsDisponibles.find((a) => a.id === animacion) && (
-										<Typography variant="caption" color="text.secondary">
-											{animsDisponibles.find((a) => a.id === animacion)?.description}
-										</Typography>
-									)}
-									<FormControl fullWidth size="small">
-										<InputLabel>Duración</InputLabel>
-										<Select value={duracionVideo} label="Duración" onChange={(e) => setDuracionVideo(e.target.value)}>
-											<MenuItem value="">Automática — según el contenido</MenuItem>
-											<MenuItem value="20">20 s</MenuItem>
-											<MenuItem value="30">30 s</MenuItem>
-											<MenuItem value="45">45 s</MenuItem>
-											<MenuItem value="60">60 s — tope de una story</MenuItem>
-											<MenuItem value="90">90 s — solo reel</MenuItem>
-										</Select>
-									</FormControl>
-									{Number(duracionVideo) > 60 && (
-										<Typography variant="caption" color="warning.main">
-											Más de 60 s: Instagram lo acepta como reel; una story se corta en tramos.
-										</Typography>
-									)}
-									{clips.length > 0 && (
-										<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-											<FormControl fullWidth size="small">
-												<InputLabel>Intro</InputLabel>
-												<Select value={introClip} label="Intro" onChange={(e) => setIntroClip(e.target.value)}>
-													<MenuItem value="">Sin intro</MenuItem>
-													{clips.map((c) => (
-														<MenuItem key={c.id} value={c.id}>
-															{c.label} · {(c.duracionMs / 1000).toFixed(1)}s
-														</MenuItem>
-													))}
-												</Select>
-											</FormControl>
-											<FormControl fullWidth size="small">
-												<InputLabel>Cierre</InputLabel>
-												<Select value={cierreClip} label="Cierre" onChange={(e) => setCierreClip(e.target.value)}>
-													<MenuItem value="">Sin cierre</MenuItem>
-													{clips.map((c) => (
-														<MenuItem key={c.id} value={c.id}>
-															{c.label} · {(c.duracionMs / 1000).toFixed(1)}s
-														</MenuItem>
-													))}
-												</Select>
-											</FormControl>
-										</Stack>
-									)}
-									{(introClip || cierreClip) && (
-										<Typography variant="caption" color="text.secondary">
-											El logo animado de la app abre y/o cierra el video. Su duración sale del tope de 90s: el post cede ese tiempo.
-										</Typography>
-									)}
-									{audios.length > 0 && (
+									<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 										<FormControl fullWidth size="small">
-											<InputLabel>Música</InputLabel>
-											<Select value={audioPista} label="Música" onChange={(e) => setAudioPista(e.target.value)}>
-												<MenuItem value="">Sin música</MenuItem>
-												{audios.map((a) => (
-													<MenuItem key={a.id} value={a.id}>
-														{a.label}
+											<InputLabel>Plantilla</InputLabel>
+											<Select value={templateId} label="Plantilla" onChange={(e) => setTemplateId(e.target.value as TemplateId)}>
+												{templates.map((t) => (
+													<MenuItem key={t.id} value={t.id}>
+														{t.label}
 													</MenuItem>
 												))}
 											</Select>
 										</FormControl>
-									)}
-									<Button
-										variant="contained"
-										fullWidth
-										startIcon={generandoVideo ? <CircularProgress size={16} color="inherit" /> : <VideoPlay size={18} />}
-										disabled={videoEnCurso || excesos.length > 0 || !health?.renderer}
-										onClick={handleVideo}
-									>
-										{generandoVideo ? "Renderizando video…" : "Generar video"}
-									</Button>
-									{generandoVideo && (
+										<FormControl fullWidth size="small">
+											<InputLabel>Formato</InputLabel>
+											<Select value={formato} label="Formato" onChange={(e) => setFormato(e.target.value as FormatoId)}>
+												{formats.map((f) => (
+													<MenuItem key={f.id} value={f.id}>
+														{f.label} · {f.width}×{f.height}
+													</MenuItem>
+												))}
+											</Select>
+										</FormControl>
+									</Stack>
+
+									<Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+										<FormControl fullWidth size="small">
+											<InputLabel>Estilo</InputLabel>
+											<Select value={estilo} label="Estilo" onChange={(e) => setEstilo(e.target.value)}>
+												<MenuItem value="">
+													<em>El de la plantilla{tplActual?.estiloPorDefecto ? ` (${tplActual.estiloPorDefecto})` : ""}</em>
+												</MenuItem>
+												{estilos.map((es) => (
+													<MenuItem key={es.id} value={es.id}>
+														{es.label} — {es.oscuro ? "oscuro" : "claro"}
+													</MenuItem>
+												))}
+											</Select>
+										</FormControl>
+
+										<FormControl fullWidth size="small">
+											<InputLabel>Composición</InputLabel>
+											<Select value={composicion} label="Composición" onChange={(e) => setComposicion(e.target.value)}>
+												<MenuItem value="">
+													<em>La de la plantilla{tplActual?.composicionPorDefecto ? ` (${tplActual.composicionPorDefecto})` : ""}</em>
+												</MenuItem>
+												{composiciones.map((cm) => (
+													<MenuItem key={cm.id} value={cm.id}>
+														{cm.label}
+													</MenuItem>
+												))}
+											</Select>
+										</FormControl>
+
+										<FormControl fullWidth size="small">
+											<InputLabel>Pie</InputLabel>
+											<Select value={pie} label="Pie" onChange={(e) => setPie(e.target.value)}>
+												<MenuItem value="">
+													<em>Con el contenido (por defecto)</em>
+												</MenuItem>
+												{pies.map((p) => (
+													<MenuItem key={p.id} value={p.id}>
+														{p.label}
+													</MenuItem>
+												))}
+											</Select>
+										</FormControl>
+									</Stack>
+									{pie && pies.find((p) => p.id === pie) && (
 										<Typography variant="caption" color="text.secondary">
-											{progresoRender?.activo
-												? progresoRender.encodeando
-													? `Capturados ${progresoRender.total} frames — armando el video…`
-													: `Capturando ${progresoRender.frames} de ${progresoRender.total} frames (${progresoRender.porcentaje}%) · ${progresoRender.segundos}s`
-												: "El render captura un frame por vez: un video de 30 s tarda ~2 minutos y uno de 90 s, ~3."}
+											{pies.find((p) => p.id === pie)?.description}
 										</Typography>
 									)}
-									{video && (
-										<Box>
-											<Box
-												component="video"
-												src={`data:video/mp4;base64,${video.video}`}
-												controls
-												autoPlay
-												loop
-												muted
-												playsInline
-												sx={{ width: "100%", display: "block", borderRadius: 1, boxShadow: 3, bgcolor: "#000" }}
-											/>
-											<Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mt: 0.5 }}>
-												<Typography variant="caption" color="text.secondary">
-													{video.width}×{video.height} · {(video.duracionMs / 1000).toFixed(1)}s · {(video.bytes / 1024).toFixed(0)} KB
-												</Typography>
-												<Button
-													size="small"
-													startIcon={<DocumentDownload size={16} />}
-													onClick={() => downloadVideo(video.video, `${templateId}-${video.animacion}`)}
-												>
-													Descargar mp4
-												</Button>
-											</Stack>
-										</Box>
+
+									{tplActual && (
+										<Typography variant="caption" color="text.secondary">
+											{tplActual.description}
+										</Typography>
+									)}
+									{estilo && estilos.find((es) => es.id === estilo) && (
+										<Typography variant="caption" color="text.secondary">
+											{estilos.find((es) => es.id === estilo)?.description}
+										</Typography>
 									)}
 								</Stack>
 							</MainCard>
+
+							<MainCard
+								title="Contenido"
+								contentSX={{ p: 2 }}
+								secondary={
+									<Stack direction="row" spacing={1}>
+										<Button
+											size="small"
+											variant="contained"
+											startIcon={generando ? <CircularProgress size={14} color="inherit" /> : <Magicpen size={16} />}
+											disabled={generando || !health?.claude}
+											onClick={handleGenerar}
+										>
+											{generando ? "Generando…" : "Generar con Claude"}
+										</Button>
+										<Button size="small" variant="text" color="secondary" onClick={handleNuevo}>
+											Limpiar
+										</Button>
+									</Stack>
+								}
+							>
+								<Stack spacing={1.5}>
+									<TextField
+										label="Prompt"
+										placeholder="Ej: anunciá que ya cubrimos Catamarca, con tono sobrio"
+										fullWidth
+										multiline
+										minRows={2}
+										value={prompt}
+										onChange={(e) => setPrompt(e.target.value)}
+										helperText={
+											health?.claude
+												? "Lo que Claude usa para llenar los campos de abajo"
+												: "Claude sin API key: completá los campos a mano"
+										}
+									/>
+
+									{warnings.length > 0 && (
+										<Alert severity="warning" onClose={() => setWarnings([])}>
+											<Typography variant="subtitle2">Revisá estos campos</Typography>
+											{warnings.map((w, i) => (
+												<Typography key={i} variant="caption" display="block">
+													• {w}
+												</Typography>
+											))}
+										</Alert>
+									)}
+
+									<Stack spacing={1.5}>{tplActual && <CamposPlantilla tpl={tplActual} contenido={contenido} setCampo={setCampo} />}</Stack>
+								</Stack>
+							</MainCard>
+
+							<MainCard
+								title="Publicación"
+								contentSX={{ p: 2 }}
+								secondary={
+									editandoId && estadoPost ? (
+										<Chip size="small" label={estadoPost} color={ESTADO_COLOR[estadoPost] || "default"} variant="outlined" />
+									) : (
+										<Chip size="small" label="sin guardar" variant="outlined" />
+									)
+								}
+							>
+								<Stack spacing={1.5}>
+									<Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+										<TextField
+											label="Título interno"
+											size="small"
+											fullWidth
+											value={titulo}
+											onChange={(e) => setTitulo(e.target.value)}
+											helperText="Solo para identificarlo en la lista"
+										/>
+										{editandoId && estadoPost && (
+											<FormControl size="small" sx={{ minWidth: 170 }}>
+												<InputLabel>Estado</InputLabel>
+												<Select
+													value={estadoPost}
+													label="Estado"
+													disabled={cambiandoEstado || estadoPost === "programado"}
+													onChange={(e) => handleCambiarEstado(e.target.value as EstadoPost)}
+												>
+													<MenuItem value="borrador">Borrador</MenuItem>
+													<MenuItem value="aprobado">Aprobado</MenuItem>
+													{estadoPost === "programado" && <MenuItem value="programado">Programado</MenuItem>}
+													<MenuItem value="publicado">Publicado</MenuItem>
+												</Select>
+											</FormControl>
+										)}
+									</Stack>
+									{editandoId && estadoPost && estadoPost !== "publicado" && estadoPost !== "programado" && (
+										<Box>
+											<Button
+												size="small"
+												variant="outlined"
+												color="success"
+												startIcon={cambiandoEstado ? <CircularProgress size={14} color="inherit" /> : <TickCircle size={16} />}
+												disabled={cambiandoEstado}
+												onClick={() => handleCambiarEstado("publicado")}
+											>
+												Marcar como publicado
+											</Button>
+											<Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+												Para posts subidos a mano. Si publicás desde acá con Meta, el estado se marca solo.
+											</Typography>
+										</Box>
+									)}
+									<TextField
+										label="Caption del post"
+										size="small"
+										fullWidth
+										multiline
+										minRows={3}
+										value={caption}
+										onChange={(e) => setCaption(e.target.value)}
+										helperText={`${caption.length}/2200 — el texto que acompaña a la imagen`}
+										InputProps={{
+											endAdornment: (
+												<InputAdornment position="end" sx={{ alignSelf: "flex-start", mt: 0.5 }}>
+													<Tooltip title="Copiar caption">
+														<span>
+															<IconButton size="small" edge="end" disabled={!caption.trim()} onClick={() => copiarCaption(caption)}>
+																<Copy size={16} />
+															</IconButton>
+														</span>
+													</Tooltip>
+												</InputAdornment>
+											),
+										}}
+									/>
+									<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+										<Button
+											variant="text"
+											size="small"
+											startIcon={generandoCaption ? <CircularProgress size={14} color="inherit" /> : <Magicpen size={16} />}
+											disabled={generandoCaption}
+											onClick={handleCaptionIA}
+										>
+											{generandoCaption ? "Generando…" : "Generar caption con IA"}
+										</Button>
+										<Button
+											variant="text"
+											size="small"
+											startIcon={<ClipboardText size={16} />}
+											disabled={!caption.trim()}
+											onClick={() => copiarCaption(caption)}
+										>
+											Copiar caption
+										</Button>
+									</Stack>
+
+									{/* Programar / publicar en Facebook e Instagram vía Graph API.
+							    Solo para posts guardados: la imagen que se sube es la
+							    archivada en S3, no la del preview. `key` fuerza un panel
+							    nuevo al cambiar de post. */}
+									{editandoId && <MetaPublicarPanel key={editandoId} postId={editandoId} onChange={() => cargarPosts()} />}
+								</Stack>
+							</MainCard>
+						</Stack>
+					</Grid>
+
+					{/* ---------- Panel derecho: piezas (render, guardado, preview) y video ---------- */}
+					<Grid item xs={12} md={6}>
+						<Stack spacing={2}>
+							<MainCard title="Piezas" contentSX={{ p: 2 }}>
+								<Stack spacing={1.5}>
+									<Grid container spacing={1}>
+										<Grid item xs={6}>
+											<Button
+												variant="contained"
+												fullWidth
+												startIcon={renderizando ? <CircularProgress size={16} color="inherit" /> : <Refresh size={18} />}
+												disabled={renderizando || excesos.length > 0 || !health?.renderer}
+												onClick={handleRenderizar}
+											>
+												{renderizando ? "Renderizando…" : "Renderizar"}
+											</Button>
+										</Grid>
+										<Grid item xs={6}>
+											<Button
+												variant="outlined"
+												fullWidth
+												startIcon={generandoVariantes ? <CircularProgress size={16} color="inherit" /> : <Gallery size={18} />}
+												disabled={generandoVariantes || excesos.length > 0 || !health?.renderer}
+												onClick={handleVariantes}
+											>
+												{generandoVariantes ? "Generando…" : "Los 4 formatos"}
+											</Button>
+										</Grid>
+										<Grid item xs={12}>
+											<Button
+												variant="contained"
+												color="secondary"
+												fullWidth
+												disabled={guardando || guardandoPiezas}
+												onClick={handleGuardar}
+											>
+												{guardando || guardandoPiezas
+													? "Guardando…"
+													: editandoId
+													? "Actualizar post y archivar piezas"
+													: "Guardar post y archivar piezas"}
+											</Button>
+										</Grid>
+									</Grid>
+									{/* Guardar hace dos cosas y no era evidente: persiste el contenido y
+							    sube a S3 lo que esté renderizado en pantalla. */}
+									<Typography variant="caption" color="text.secondary" sx={{ mt: -1 }}>
+										{images.length > 0 || variantes.some((v) => v.formato === formato && (v.images || []).length > 0) || video
+											? (() => {
+													const conImg = variantes.filter((v) => (v.images || []).length > 0);
+													const n = conImg.length > 0 ? conImg.reduce((a, v) => a + (v.images || []).length, 0) : images.length;
+													const fmts = conImg.length > 0 ? ` en ${conImg.length} formato${conImg.length > 1 ? "s" : ""}` : "";
+													return `Al guardar también quedan archivadas las piezas de esta pantalla${
+														n > 0 ? `: ${n} imagen${n > 1 ? "es" : ""}${fmts}` : ""
+													}${n > 0 && video ? " y" : video ? ": " : ""}${video ? " el video" : ""}.`;
+											  })()
+											: "Guarda el contenido del post. Si además renderizás, las piezas quedan archivadas junto con él."}
+									</Typography>
+
+									{generandoVariantes && progresoRender?.variantes?.activo && (
+										<Typography variant="caption" color="text.secondary" sx={{ mt: -1 }}>
+											Formato {progresoRender.variantes.indice} de {progresoRender.variantes.total}
+											{progresoRender.variantes.formato
+												? ` · ${formats.find((f) => f.id === progresoRender.variantes?.formato)?.label || progresoRender.variantes.formato}`
+												: ""}
+											{progresoRender.variantes.segundos ? ` · ${progresoRender.variantes.segundos}s` : ""}
+										</Typography>
+									)}
+								</Stack>
+							</MainCard>
+
+							{/* Video: story 1080x1920, que es el formato en que IG publica video.
+							    Cerrado por defecto: es la minoría de los posts. */}
+							<Accordion
+								disableGutters
+								defaultExpanded={Boolean(video)}
+								sx={{ "&:before": { display: "none" }, borderRadius: 1, boxShadow: 1 }}
+							>
+								<AccordionSummary expandIcon={<ArrowDown2 size={16} />}>
+									<Stack direction="row" alignItems="center" spacing={1}>
+										<VideoPlay size={18} />
+										<Typography variant="subtitle2">Video 1080×1920</Typography>
+										<Typography variant="caption" color="text.secondary">
+											reel o story · opcional
+										</Typography>
+									</Stack>
+								</AccordionSummary>
+								<AccordionDetails sx={{ pt: 0 }}>
+									<Stack spacing={1.5}>
+										<FormControl fullWidth size="small">
+											<InputLabel>Destino</InputLabel>
+											<Select value={formatoVideo} label="Destino" onChange={(e) => setFormatoVideo(e.target.value as FormatoId)}>
+												<MenuItem value="reel">Reel — hasta 90s</MenuItem>
+												<MenuItem value="story">Story — se corta cada 15s</MenuItem>
+											</Select>
+										</FormControl>
+										<FormControl fullWidth size="small">
+											<InputLabel>Animación</InputLabel>
+											<Select value={animacion} label="Animación" onChange={(e) => setAnimacion(e.target.value)}>
+												{animsDisponibles.map((a) => (
+													<MenuItem key={a.id} value={a.id}>
+														{a.label}
+														{a.duracion ? ` · ${a.duracion}s` : ""}
+													</MenuItem>
+												))}
+											</Select>
+										</FormControl>
+										{animsDisponibles.find((a) => a.id === animacion) && (
+											<Typography variant="caption" color="text.secondary">
+												{animsDisponibles.find((a) => a.id === animacion)?.description}
+											</Typography>
+										)}
+										<FormControl fullWidth size="small">
+											<InputLabel>Duración</InputLabel>
+											<Select value={duracionVideo} label="Duración" onChange={(e) => setDuracionVideo(e.target.value)}>
+												<MenuItem value="">Automática — según el contenido</MenuItem>
+												<MenuItem value="20">20 s</MenuItem>
+												<MenuItem value="30">30 s</MenuItem>
+												<MenuItem value="45">45 s</MenuItem>
+												<MenuItem value="60">60 s — tope de una story</MenuItem>
+												<MenuItem value="90">90 s — solo reel</MenuItem>
+											</Select>
+										</FormControl>
+										{Number(duracionVideo) > 60 && (
+											<Typography variant="caption" color="warning.main">
+												Más de 60 s: Instagram lo acepta como reel; una story se corta en tramos.
+											</Typography>
+										)}
+										{clips.length > 0 && (
+											<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+												<FormControl fullWidth size="small">
+													<InputLabel>Intro</InputLabel>
+													<Select value={introClip} label="Intro" onChange={(e) => setIntroClip(e.target.value)}>
+														<MenuItem value="">Sin intro</MenuItem>
+														{clips.map((c) => (
+															<MenuItem key={c.id} value={c.id}>
+																{c.label} · {(c.duracionMs / 1000).toFixed(1)}s
+															</MenuItem>
+														))}
+													</Select>
+												</FormControl>
+												<FormControl fullWidth size="small">
+													<InputLabel>Cierre</InputLabel>
+													<Select value={cierreClip} label="Cierre" onChange={(e) => setCierreClip(e.target.value)}>
+														<MenuItem value="">Sin cierre</MenuItem>
+														{clips.map((c) => (
+															<MenuItem key={c.id} value={c.id}>
+																{c.label} · {(c.duracionMs / 1000).toFixed(1)}s
+															</MenuItem>
+														))}
+													</Select>
+												</FormControl>
+											</Stack>
+										)}
+										{(introClip || cierreClip) && (
+											<Typography variant="caption" color="text.secondary">
+												El logo animado de la app abre y/o cierra el video. Su duración sale del tope de 90s: el post cede ese tiempo.
+											</Typography>
+										)}
+										{audios.length > 0 && (
+											<FormControl fullWidth size="small">
+												<InputLabel>Música</InputLabel>
+												<Select value={audioPista} label="Música" onChange={(e) => setAudioPista(e.target.value)}>
+													<MenuItem value="">Sin música</MenuItem>
+													{audios.map((a) => (
+														<MenuItem key={a.id} value={a.id}>
+															{a.label}
+														</MenuItem>
+													))}
+												</Select>
+											</FormControl>
+										)}
+										<Button
+											variant="contained"
+											fullWidth
+											startIcon={generandoVideo ? <CircularProgress size={16} color="inherit" /> : <VideoPlay size={18} />}
+											disabled={videoEnCurso || excesos.length > 0 || !health?.renderer}
+											onClick={handleVideo}
+										>
+											{generandoVideo ? "Renderizando video…" : "Generar video"}
+										</Button>
+										{generandoVideo && (
+											<Typography variant="caption" color="text.secondary">
+												{progresoRender?.activo
+													? progresoRender.encodeando
+														? `Capturados ${progresoRender.total} frames — armando el video…`
+														: `Capturando ${progresoRender.frames} de ${progresoRender.total} frames (${progresoRender.porcentaje}%) · ${progresoRender.segundos}s`
+													: "El render captura un frame por vez: un video de 30 s tarda ~2 minutos y uno de 90 s, ~3."}
+											</Typography>
+										)}
+										{video && (
+											<Box>
+												<Box
+													component="video"
+													src={`data:video/mp4;base64,${video.video}`}
+													controls
+													autoPlay
+													loop
+													muted
+													playsInline
+													sx={{ width: "100%", display: "block", borderRadius: 1, boxShadow: 3, bgcolor: "#000" }}
+												/>
+												<Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mt: 0.5 }}>
+													<Typography variant="caption" color="text.secondary">
+														{video.width}×{video.height} · {(video.duracionMs / 1000).toFixed(1)}s · {(video.bytes / 1024).toFixed(0)} KB
+													</Typography>
+													<Button
+														size="small"
+														startIcon={<DocumentDownload size={16} />}
+														onClick={() => downloadVideo(video.video, `${templateId}-${video.animacion}`)}
+													>
+														Descargar mp4
+													</Button>
+												</Stack>
+											</Box>
+										)}
+									</Stack>
+								</AccordionDetails>
+							</Accordion>
 
 							{excesos.length > 0 && (
 								<Alert severity="error">

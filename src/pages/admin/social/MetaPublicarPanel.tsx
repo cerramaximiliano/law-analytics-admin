@@ -30,10 +30,11 @@ import {
 	Typography,
 } from "@mui/material";
 import { useSnackbar } from "notistack";
-import { Calendar, CloseCircle, Refresh, Send2 } from "iconsax-react";
+import { Calendar, CloseCircle, Link21, Refresh, Send2 } from "iconsax-react";
 
 import {
 	cancelarProgramacionPost,
+	desvincularRedPost,
 	getMetaWhoami,
 	getPost,
 	programarPost,
@@ -84,6 +85,7 @@ const MetaPublicarPanel = ({ postId, onChange }: Props) => {
 	const [cargando, setCargando] = useState(false);
 	const [accion, setAccion] = useState<"programar" | "publicar" | "cancelar" | null>(null);
 	const [confirmarPublicar, setConfirmarPublicar] = useState(false);
+	const [desvincular, setDesvincular] = useState<DestinoMeta | null>(null);
 	const [destinos, setDestinos] = useState<DestinoMeta[]>(["facebook", "instagram"]);
 	// Caption propio para Facebook. Vacío = el backend usa el de Instagram sin "Link in BIO".
 	const [captionFacebook, setCaptionFacebook] = useState("");
@@ -194,6 +196,24 @@ const MetaPublicarPanel = ({ postId, onChange }: Props) => {
 		}
 	};
 
+	const handleDesvincular = async () => {
+		if (!desvincular) return;
+		const red = desvincular;
+		setDesvincular(null);
+		setAccion("cancelar");
+		try {
+			const p = await desvincularRedPost(postId, red);
+			setPost(p);
+			onChange?.(p);
+			setDestinos((prev) => (prev.includes(red) ? prev : [...prev, red]));
+			enqueueSnackbar(`${red === "facebook" ? "Facebook" : "Instagram"} desvinculado: se puede volver a publicar`, { variant: "success" });
+		} catch (err: any) {
+			enqueueSnackbar(err?.response?.data?.error || "No se pudo desvincular", { variant: "error" });
+		} finally {
+			setAccion(null);
+		}
+	};
+
 	const handlePublicarAhora = async () => {
 		if (!destinos.length) return enqueueSnackbar("Elegí al menos una red", { variant: "warning" });
 		setConfirmarPublicar(false);
@@ -266,7 +286,7 @@ const MetaPublicarPanel = ({ postId, onChange }: Props) => {
 				</Alert>
 			)}
 
-			<FormGroup row>
+			<FormGroup row sx={{ alignItems: "center", columnGap: 1 }}>
 				<FormControlLabel
 					control={
 						<Checkbox
@@ -278,6 +298,22 @@ const MetaPublicarPanel = ({ postId, onChange }: Props) => {
 					}
 					label={yaEnFacebook ? "Facebook (publicado)" : "Facebook"}
 				/>
+				{yaEnFacebook && (
+					<Tooltip title="Si lo borraste en Facebook, desvinculalo para poder publicarlo de nuevo">
+						<span>
+							<Button
+								size="small"
+								variant="text"
+								color="warning"
+								startIcon={<Link21 size={14} />}
+								disabled={ocupado}
+								onClick={() => setDesvincular("facebook")}
+							>
+								Desvincular
+							</Button>
+						</span>
+					</Tooltip>
+				)}
 				<FormControlLabel
 					control={
 						<Checkbox
@@ -289,6 +325,22 @@ const MetaPublicarPanel = ({ postId, onChange }: Props) => {
 					}
 					label={yaEnInstagram ? "Instagram (publicado)" : "Instagram"}
 				/>
+				{yaEnInstagram && (
+					<Tooltip title="Si lo borraste en Instagram, desvinculalo para poder publicarlo de nuevo">
+						<span>
+							<Button
+								size="small"
+								variant="text"
+								color="warning"
+								startIcon={<Link21 size={14} />}
+								disabled={ocupado}
+								onClick={() => setDesvincular("instagram")}
+							>
+								Desvincular
+							</Button>
+						</span>
+					</Tooltip>
+				)}
 			</FormGroup>
 
 			{destinos.includes("facebook") && (
@@ -400,6 +452,21 @@ const MetaPublicarPanel = ({ postId, onChange }: Props) => {
 				</Box>
 			)}
 
+			<Dialog open={desvincular !== null} onClose={() => setDesvincular(null)} maxWidth="xs" fullWidth>
+				<DialogTitle>Desvincular {desvincular === "facebook" ? "Facebook" : "Instagram"}</DialogTitle>
+				<DialogContent>
+					<Typography variant="body2">
+						Se olvida el id de la publicación en {desvincular === "facebook" ? "Facebook" : "Instagram"} para poder volver a publicarla
+						desde acá. No borra nada en la red: si la publicación sigue existiendo allá, va a quedar duplicada.
+					</Typography>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => setDesvincular(null)}>Cancelar</Button>
+					<Button variant="contained" color="warning" onClick={handleDesvincular}>
+						Desvincular
+					</Button>
+				</DialogActions>
+			</Dialog>
 			<Dialog open={confirmarPublicar} onClose={() => setConfirmarPublicar(false)} maxWidth="xs" fullWidth>
 				<DialogTitle>Publicar ahora en Meta</DialogTitle>
 				<DialogContent>
