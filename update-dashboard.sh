@@ -1,8 +1,21 @@
 #!/bin/bash
 
 # Script de actualización para dashboard.lawanalytics.app
-# Actualiza el código y reconstruye la aplicación
-# Puede ejecutarse desde la máquina local O desde el servidor remoto
+# Compila el panel ACÁ y sube el resultado ya hecho al servidor.
+#
+# El build NO corre más en el hub. El 2026-09-16 un `npm run build` remoto tiró
+# producción entera: el hub es un t2.large de 2 vCPU que además sirve nginx,
+# Hydra, Postgres y ~27 procesos PM2, y la fase "rendering chunks" lo dejó
+# aceptando TCP en 22/80/443 sin responder un solo handshake — sin SSH para
+# entrar a arreglarlo. Hubo que reiniciar la instancia desde la consola de AWS.
+# Como el hub emite los JWT de todo el ecosistema, ahogarlo no afecta al panel:
+# los tira a todos.
+#
+# Compilar local cuesta ~35s y sube 2,7 MB. El servidor solo extrae y hace el
+# swap, que es trabajo de disco, no de CPU.
+#
+# Puede ejecutarse desde la máquina local O desde el servidor remoto (en el
+# servidor no queda otra que compilar ahí; ver el aviso del paso 3).
 
 set -e
 
@@ -174,12 +187,16 @@ else
 fi
 
 # 3. Reinstalar dependencias y rebuild
-echo -e "\n${YELLOW}[3/5] Instalando dependencias y recompilando...${NC}"
+echo -e "\n${YELLOW}[3/5] Compilando acá y subiendo el resultado...${NC}"
 if [ "$CODE_CHANGED" = false ]; then
 	echo -e "${YELLOW}⚠ Sin cambios en el código — omitiendo build${NC}"
 else
 	if [ "$IS_REMOTE" = true ]; then
-		# Ejecutando en el servidor
+		# Corriendo DENTRO del servidor no hay a dónde delegar: se compila acá.
+		# Es el camino que tiró producción el 2026-09-16 (ver encabezado), así que
+		# usarlo sólo si no hay manera de correr el script desde una máquina de
+		# desarrollo, y mirando la memoria del box mientras compila.
+		echo -e "${YELLOW}⚠ Compilando EN el servidor: es la vía que ahogó el hub en 2026-09-16${NC}"
 		cd ${REMOTE_PATH}
 		npm install
 		# Compilar a directorio temporal para no borrar el sitio activo durante el build
@@ -216,52 +233,66 @@ else
 			fi
 		fi
 	else
-		# Ejecutando desde local
-		# flock: el candado que evita dos builds pisándose.
+		# Compilar ACÁ. El servidor solo recibe el resultado.
 		#
-		# Un comando remoto SOBREVIVE a la caída del ssh local (verificado: con el
-		# cliente matado a los 3s, el proceso remoto siguió hasta terminar). O sea
-		# que cuando la red corta a mitad del build, el script local reporta falla
-		# pero el build sigue vivo en el servidor. Sin candado, el reintento lanza
-		# un SEGUNDO `npm run build` sobre el mismo directorio: los dos hacen
-		# `rm -rf build.new` y los dos hacen el `mv`, y el swap del que va atrás
-		# encuentra el piso movido. -w 900 espera hasta 15 min al que ya está
-		# corriendo en vez de fallar, que es lo que uno quiere de un reintento.
+		# El artefacto tiene que corresponder al commit que el server acaba de
+		# checkoutear: si el árbol local está sucio o en otro commit, lo que se
+		# publicaría no sería lo que dice el sello, y el deploy quedaría mintiendo
+		# sobre qué versión está en producción.
+		LOCAL_HEAD=$(git rev-parse HEAD)
+		if [ "$LOCAL_HEAD" != "$AFTER" ]; then
+			echo -e "${RED}✗ El repo local está en ${LOCAL_HEAD:0:7} y el servidor en ${AFTER:0:7}${NC}"
+			echo -e "${RED}  Hacé pull/push hasta que coincidan antes de deployar.${NC}"
+			exit 1
+		fi
+		if [ -n "$(git status --porcelain)" ]; then
+			echo -e "${RED}✗ Hay cambios sin commitear: el build no correspondería a ${AFTER:0:7}${NC}"
+			exit 1
+		fi
+
+		# `npm install` en vez de saltarlo: si otra sesión bumpeó una dependencia,
+		# compilar con el node_modules viejo produce un bundle que no es el del
+		# lock, y eso no se ve hasta que rompe en producción. Con todo satisfecho
+		# tarda segundos.
+		npm install
+		rm -rf build
+		if ! npm run build; then
+			echo -e "${RED}✗ El build local falló — no se tocó el servidor${NC}"
+			exit 1
+		fi
+		test -f build/index.html || { echo -e "${RED}✗ El build no dejó index.html${NC}"; exit 1; }
+
+		TARBALL="/tmp/la-admin-build-${AFTER:0:7}.tgz"
+		tar -czf "$TARBALL" -C build .
+		echo -e "${GREEN}✓ Build local listo ($(du -h "$TARBALL" | cut -f1))${NC}"
+
+		scp "${SSH_OPTS[@]:1}" -i "${SSH_KEY}" "$TARBALL" "${SERVER_USER}@${SERVER_IP}:/tmp/" \
+			|| { echo -e "${RED}✗ No se pudo subir el build${NC}"; rm -f "$TARBALL"; exit 1; }
+		rm -f "$TARBALL"
+
+		# El candado sigue haciendo falta: dos deploys simultáneos podrían pisarse
+		# el swap aunque ya no compilen acá.
 		ssh_retry "
 			cd ${REMOTE_PATH}
 			exec 9>.deploy.lock
 			flock -w 900 9 || { echo 'LOCK_TIMEOUT'; exit 1; }
-			npm install
-			rm -rf build.new
-			if npm run build -- --outDir build.new; then
-				rm -rf build.old
-				[ -d 'build' ] && mv build build.old
-				mv build.new build
-				# Conservar assets del build anterior (ver comentario arriba): evita
-				# la pantalla blanca de quien tenga la app abierta durante el deploy.
-				if [ -d build.old/assets ] && [ -d build/assets ]; then
-					cp -pn build.old/assets/* build/assets/ 2>/dev/null || true
-					find build/assets -type f -mtime +7 -delete 2>/dev/null || true
-				fi
-				rm -rf build.old
-				# El sello se escribe SOLO si el build salió bien, y dentro de la
-				# rama de éxito. Estaba después del if/else, así que se escribía
-				# incluso cuando el build fallaba: el deploy reportaba éxito con un
-				# bundle viejo y las corridas siguientes se negaban a recompilar
-				# porque "no hay cambios". Mordió dos veces el 2026-09-02/03.
-				echo '${AFTER}' > build/.built-commit
-				echo 'Build completado'
-			else
-				rm -rf build.new
-				if npm run build; then
-					echo '${AFTER}' > build/.built-commit
-					echo 'Build completado (fallback sin outDir)'
-				else
-					echo 'BUILD_FALLIDO'
-					exit 1
-				fi
+			rm -rf build.new && mkdir build.new
+			tar -xzf /tmp/$(basename "$TARBALL") -C build.new || { echo 'EXTRACCION_FALLIDA'; exit 1; }
+			test -f build.new/index.html || { echo 'PAQUETE_INVALIDO'; exit 1; }
+			rm -rf build.old
+			[ -d build ] && mv build build.old
+			mv build.new build
+			# Conservar assets del build anterior: quien tenga la app abierta sigue
+			# pidiendo chunks con el hash viejo. Se podan a los 7 días.
+			if [ -d build.old/assets ] && [ -d build/assets ]; then
+				cp -pn build.old/assets/* build/assets/ 2>/dev/null || true
+				find build/assets -type f -mtime +7 -delete 2>/dev/null || true
 			fi
-		" || { echo -e "${RED}✗ El build falló en el servidor — el sitio sigue con el bundle anterior${NC}"; exit 1; }
+			rm -rf build.old
+			echo '${AFTER}' > build/.built-commit
+			rm -f /tmp/$(basename "$TARBALL")
+			echo 'SWAP_OK'
+		" || { echo -e "${RED}✗ Falló el swap en el servidor — el sitio sigue con el bundle anterior${NC}"; exit 1; }
 	fi
 	echo -e "${GREEN}✓ Aplicación recompilada${NC}"
 fi
