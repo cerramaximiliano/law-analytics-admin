@@ -201,8 +201,12 @@ const MetaPublicarPanel = ({ postId, onChange }: Props) => {
 	const publicando = post?.publicacion?.estado === "publicando" || accion === "publicar";
 	const configurado = whoami?.configurado === true && !whoami?.error;
 	const ocupado = accion !== null || publicando;
-	const listo = configurado && tienePiezas && tieneCaption && !publicado && !ocupado;
 	const pub = post?.publicacion;
+	// Una red ya publicada no se repite; se puede seguir publicando en la otra.
+	const yaEnFacebook = Boolean(pub?.facebookPostId);
+	const yaEnInstagram = Boolean(pub?.instagramMediaId);
+	const pendientes = destinos.filter((d) => (d === "facebook" ? !yaEnFacebook : !yaEnInstagram));
+	const listo = configurado && tienePiezas && tieneCaption && !ocupado && pendientes.length > 0;
 	const pubInfo = pub?.estado ? PUBLICACION_LABEL[pub.estado] : null;
 
 	return (
@@ -255,10 +259,10 @@ const MetaPublicarPanel = ({ postId, onChange }: Props) => {
 							size="small"
 							checked={destinos.includes("facebook")}
 							onChange={() => toggleDestino("facebook")}
-							disabled={ocupado || publicado}
+							disabled={ocupado || yaEnFacebook}
 						/>
 					}
-					label="Facebook"
+					label={yaEnFacebook ? "Facebook (publicado)" : "Facebook"}
 				/>
 				<FormControlLabel
 					control={
@@ -266,10 +270,10 @@ const MetaPublicarPanel = ({ postId, onChange }: Props) => {
 							size="small"
 							checked={destinos.includes("instagram")}
 							onChange={() => toggleDestino("instagram")}
-							disabled={ocupado || publicado}
+							disabled={ocupado || yaEnInstagram}
 						/>
 					}
-					label="Instagram"
+					label={yaEnInstagram ? "Instagram (publicado)" : "Instagram"}
 				/>
 			</FormGroup>
 
@@ -282,7 +286,7 @@ const MetaPublicarPanel = ({ postId, onChange }: Props) => {
 					minRows={2}
 					value={captionFacebook}
 					onChange={(e) => setCaptionFacebook(e.target.value)}
-					disabled={ocupado || publicado}
+					disabled={ocupado || pendientes.length === 0}
 					placeholder={captionParaFacebook(post?.caption || "") || 'Se usa el caption del post sin la línea "Link in BIO"'}
 					helperText={
 						captionFacebook.trim()
@@ -299,7 +303,7 @@ const MetaPublicarPanel = ({ postId, onChange }: Props) => {
 					size="small"
 					value={fecha}
 					onChange={(e) => setFecha(e.target.value)}
-					disabled={ocupado || publicado}
+					disabled={ocupado || pendientes.length === 0}
 					InputLabelProps={{ shrink: true }}
 					sx={{ minWidth: 220 }}
 				/>
