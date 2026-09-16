@@ -16,6 +16,10 @@ import {
 	Checkbox,
 	Chip,
 	CircularProgress,
+	Dialog,
+	DialogActions,
+	DialogContent,
+	DialogTitle,
 	Divider,
 	FormControlLabel,
 	FormGroup,
@@ -79,6 +83,7 @@ const MetaPublicarPanel = ({ postId, onChange }: Props) => {
 	const [whoami, setWhoami] = useState<MetaWhoami | null>(null);
 	const [cargando, setCargando] = useState(false);
 	const [accion, setAccion] = useState<"programar" | "publicar" | "cancelar" | null>(null);
+	const [confirmarPublicar, setConfirmarPublicar] = useState(false);
 	const [destinos, setDestinos] = useState<DestinoMeta[]>(["facebook", "instagram"]);
 	// Caption propio para Facebook. Vacío = el backend usa el de Instagram sin "Link in BIO".
 	const [captionFacebook, setCaptionFacebook] = useState("");
@@ -90,15 +95,23 @@ const MetaPublicarPanel = ({ postId, onChange }: Props) => {
 		return aInputLocal(d);
 	});
 	const pollRef = useRef<number | null>(null);
+	// Las casillas y la fecha se toman del post una sola vez: si cada consulta
+	// (polling, botón Estado) las pisara, la elección del usuario se perdería.
+	// Eso pasó el 2026-09-16: tras un intento fallido solo en Facebook, el
+	// polling volvió a tildar Instagram y el reintento salió en las dos redes.
+	const formularioInicializado = useRef(false);
 
 	const cargar = useCallback(async () => {
 		setCargando(true);
 		try {
 			const p = await getPost(postId);
 			setPost(p);
-			if (p.destinos?.length) setDestinos(p.destinos);
-			setCaptionFacebook(p.captionFacebook || "");
-			if (p.programadoPara) setFecha(aInputLocal(new Date(p.programadoPara)));
+			if (!formularioInicializado.current) {
+				formularioInicializado.current = true;
+				if (p.destinos?.length) setDestinos(p.destinos);
+				setCaptionFacebook(p.captionFacebook || "");
+				if (p.programadoPara) setFecha(aInputLocal(new Date(p.programadoPara)));
+			}
 			return p;
 		} catch (err: any) {
 			enqueueSnackbar(err?.response?.data?.error || "No se pudo cargar el post", { variant: "error" });
@@ -183,6 +196,7 @@ const MetaPublicarPanel = ({ postId, onChange }: Props) => {
 
 	const handlePublicarAhora = async () => {
 		if (!destinos.length) return enqueueSnackbar("Elegí al menos una red", { variant: "warning" });
+		setConfirmarPublicar(false);
 		setAccion("publicar");
 		try {
 			await publicarPostAhora(postId, { destinos, captionFacebook });
@@ -335,7 +349,7 @@ const MetaPublicarPanel = ({ postId, onChange }: Props) => {
 							size="small"
 							startIcon={publicando ? <CircularProgress size={14} color="inherit" /> : <Send2 size={16} />}
 							disabled={!listo}
-							onClick={handlePublicarAhora}
+							onClick={() => setConfirmarPublicar(true)}
 						>
 							{publicando ? "Publicando…" : "Publicar ahora"}
 						</Button>
@@ -385,6 +399,23 @@ const MetaPublicarPanel = ({ postId, onChange }: Props) => {
 					)}
 				</Box>
 			)}
+
+			<Dialog open={confirmarPublicar} onClose={() => setConfirmarPublicar(false)} maxWidth="xs" fullWidth>
+				<DialogTitle>Publicar ahora en Meta</DialogTitle>
+				<DialogContent>
+					<Typography variant="body2">
+						Se publica en este momento en{" "}
+						<strong>{pendientes.map((d) => (d === "facebook" ? "Facebook" : "Instagram")).join(" e ")}</strong>. No se puede deshacer desde
+						acá: si hay que bajarlo, se borra en la red.
+					</Typography>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => setConfirmarPublicar(false)}>Cancelar</Button>
+					<Button variant="contained" onClick={handlePublicarAhora}>
+						Publicar
+					</Button>
+				</DialogActions>
+			</Dialog>
 		</Stack>
 	);
 };
