@@ -1076,6 +1076,14 @@ const admin: NavItemType = {
 					chip: { label: "Nuevo", color: "primary", variant: "outlined", size: "small" },
 				},
 				{
+					id: "social-promociones",
+					title: "Promociones (Meta Ads)",
+					type: "item",
+					url: "/admin/social/promociones",
+					breadcrumbs: true,
+					chip: { label: "Nuevo", color: "primary", variant: "outlined", size: "small" },
+				},
+				{
 					id: "educativo-articulos",
 					title: "Artículos del Blog",
 					type: "item",

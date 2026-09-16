@@ -805,3 +805,34 @@ export const eliminarPromocion = async (id: string): Promise<SocialPost> => {
 	const res = await mktAxios.delete(`/api/social/posts/${id}/promocion`);
 	return res.data.data;
 };
+
+/** GET /api/social/promociones — todas las campañas de Meta con totales del seguimiento. */
+export interface PromocionResumen {
+	_id: string;
+	titulo: string;
+	templateId: TemplateId;
+	formato: FormatoId;
+	estado: EstadoPost;
+	publicadoEn?: string | null;
+	publicacion?: PublicacionMeta | null;
+	promocion: PromocionMeta;
+	mediaResumen?: { imagenes: number };
+	totales: {
+		impressions: number;
+		reach: number;
+		inlineLinkClicks: number;
+		spend: number;
+		interacciones: number;
+		likes: number;
+		comentarios: number;
+		guardados: number;
+		registros: number;
+		dias: number;
+		ultimaFecha: string;
+	} | null;
+}
+
+export const listPromociones = async (): Promise<PromocionResumen[]> => {
+	const res = await mktAxios.get("/api/social/promociones");
+	return res.data.data;
+};
