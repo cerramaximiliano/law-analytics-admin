@@ -1658,10 +1658,14 @@ const SocialStudio = () => {
 					<Stack direction="row" alignItems="center" spacing={1.5} flexWrap="wrap" useFlexGap sx={{ mb: 1.5 }}>
 						<FormControl size="small" sx={{ minWidth: 220 }}>
 							<InputLabel>Plantilla</InputLabel>
-							<Select value={filtroPlantilla} label="Plantilla" onChange={(e) => {
+							<Select
+								value={filtroPlantilla}
+								label="Plantilla"
+								onChange={(e) => {
 									setFiltroPlantilla(e.target.value as TemplateId | "");
 									setPostsPage(0);
-								}}>
+								}}
+							>
 								<MenuItem value="">Todas las plantillas</MenuItem>
 								{templates.map((t) => (
 									<MenuItem key={t.id} value={t.id}>
@@ -1672,10 +1676,14 @@ const SocialStudio = () => {
 						</FormControl>
 						<FormControl size="small" sx={{ minWidth: 150 }}>
 							<InputLabel>Estado</InputLabel>
-							<Select value={filtroEstado} label="Estado" onChange={(e) => {
+							<Select
+								value={filtroEstado}
+								label="Estado"
+								onChange={(e) => {
 									setFiltroEstado(e.target.value as EstadoPost | "");
 									setPostsPage(0);
-								}}>
+								}}
+							>
 								<MenuItem value="">Todos</MenuItem>
 								<MenuItem value="borrador">Borrador</MenuItem>
 								<MenuItem value="aprobado">Aprobado</MenuItem>
@@ -1685,10 +1693,14 @@ const SocialStudio = () => {
 						</FormControl>
 						<FormControl size="small" sx={{ minWidth: 160 }}>
 							<InputLabel>Orden</InputLabel>
-							<Select value={ordenPosts} label="Orden" onChange={(e) => {
+							<Select
+								value={ordenPosts}
+								label="Orden"
+								onChange={(e) => {
 									setOrdenPosts(e.target.value as OrdenPosts);
 									setPostsPage(0);
-								}}>
+								}}
+							>
 								<MenuItem value="recientes">Más recientes</MenuItem>
 								<MenuItem value="antiguos">Más antiguos</MenuItem>
 							</Select>
