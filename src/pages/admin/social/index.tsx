@@ -43,6 +43,7 @@ import {
 	TableBody,
 	TableCell,
 	TableContainer,
+	TablePagination,
 	TableHead,
 	TableRow,
 	Tabs,
@@ -69,6 +70,7 @@ import {
 
 // project imports
 import MainCard from "components/MainCard";
+import { useTabIndexParam } from "hooks/useTabParam";
 import MetaPublicarPanel from "./MetaPublicarPanel";
 import {
 	guardarMediaPost,
@@ -369,6 +371,9 @@ const CamposPlantilla = ({
 	);
 };
 
+// Slugs del tab en la URL (?tab=...). El orden fija el índice de cada <Tab>.
+const TAB_SLUGS = ["estudio", "guardados"] as const;
+
 // ==============================|| PAGINA ||============================== //
 
 const SocialStudio = () => {
@@ -381,7 +386,9 @@ const SocialStudio = () => {
 	const [loadingCatalogo, setLoadingCatalogo] = useState(true);
 
 	// --- estudio
-	const [tab, setTab] = useState(0);
+	// El tab vive en la URL (?tab=guardados): sobrevive al refresh y deja la
+	// vista compartible, igual que el resto del panel.
+	const [tab, setTab] = useTabIndexParam("tab", TAB_SLUGS);
 	const [templateId, setTemplateId] = useState<TemplateId>("novedad");
 	const [formato, setFormato] = useState<FormatoId>("feed45");
 	const [prompt, setPrompt] = useState("");
@@ -443,11 +450,23 @@ const SocialStudio = () => {
 
 	// --- guardados
 	const [posts, setPosts] = useState<SocialPost[]>([]);
+	// El backend ya pagina (page + limit y devuelve total); la vista pedía 50 de
+	// una y los volcaba todos, sin decir que había un tope.
+	const [postsTotal, setPostsTotal] = useState(0);
+	const [postsPage, setPostsPage] = useState(0);
+	const [postsRowsPerPage, setPostsRowsPerPage] = useState(10);
 	const [loadingPosts, setLoadingPosts] = useState(false);
 	// Filtros tipados del listado: "" = sin filtro (todas/todos).
 	const [filtroPlantilla, setFiltroPlantilla] = useState<TemplateId | "">("");
 	const [filtroEstado, setFiltroEstado] = useState<EstadoPost | "">("");
 	const [ordenPosts, setOrdenPosts] = useState<OrdenPosts>("recientes");
+	// El orden no filtra: no cambia QUÉ posts hay, solo en qué secuencia salen.
+	const hayFiltros = Boolean(filtroPlantilla || filtroEstado);
+	const limpiarFiltros = () => {
+		setFiltroPlantilla("");
+		setFiltroEstado("");
+		setPostsPage(0);
+	};
 	const [aBorrar, setABorrar] = useState<SocialPost | null>(null);
 	// Visor de las piezas guardadas de un post (se abre desde la miniatura de la
 	// tabla). Las URLs vienen firmadas y vencen, así que se piden al abrir.
@@ -573,18 +592,20 @@ const SocialStudio = () => {
 		setLoadingPosts(true);
 		try {
 			const res = await listPosts({
-				limit: 50,
+				page: postsPage + 1,
+				limit: postsRowsPerPage,
 				templateId: filtroPlantilla || undefined,
 				estado: filtroEstado || undefined,
 				orden: ordenPosts,
 			});
 			setPosts(res.posts);
+			setPostsTotal(res.total);
 		} catch (err: any) {
 			enqueueSnackbar(err?.response?.data?.error || "No se pudieron cargar los posts", { variant: "error" });
 		} finally {
 			setLoadingPosts(false);
 		}
-	}, [enqueueSnackbar, filtroPlantilla, filtroEstado, ordenPosts]);
+	}, [enqueueSnackbar, filtroPlantilla, filtroEstado, ordenPosts, postsPage, postsRowsPerPage]);
 
 	useEffect(() => {
 		if (tab === 1) cargarPosts();
@@ -1637,7 +1658,10 @@ const SocialStudio = () => {
 					<Stack direction="row" alignItems="center" spacing={1.5} flexWrap="wrap" useFlexGap sx={{ mb: 1.5 }}>
 						<FormControl size="small" sx={{ minWidth: 220 }}>
 							<InputLabel>Plantilla</InputLabel>
-							<Select value={filtroPlantilla} label="Plantilla" onChange={(e) => setFiltroPlantilla(e.target.value as TemplateId | "")}>
+							<Select value={filtroPlantilla} label="Plantilla" onChange={(e) => {
+									setFiltroPlantilla(e.target.value as TemplateId | "");
+									setPostsPage(0);
+								}}>
 								<MenuItem value="">Todas las plantillas</MenuItem>
 								{templates.map((t) => (
 									<MenuItem key={t.id} value={t.id}>
@@ -1648,7 +1672,10 @@ const SocialStudio = () => {
 						</FormControl>
 						<FormControl size="small" sx={{ minWidth: 150 }}>
 							<InputLabel>Estado</InputLabel>
-							<Select value={filtroEstado} label="Estado" onChange={(e) => setFiltroEstado(e.target.value as EstadoPost | "")}>
+							<Select value={filtroEstado} label="Estado" onChange={(e) => {
+									setFiltroEstado(e.target.value as EstadoPost | "");
+									setPostsPage(0);
+								}}>
 								<MenuItem value="">Todos</MenuItem>
 								<MenuItem value="borrador">Borrador</MenuItem>
 								<MenuItem value="aprobado">Aprobado</MenuItem>
@@ -1658,7 +1685,10 @@ const SocialStudio = () => {
 						</FormControl>
 						<FormControl size="small" sx={{ minWidth: 160 }}>
 							<InputLabel>Orden</InputLabel>
-							<Select value={ordenPosts} label="Orden" onChange={(e) => setOrdenPosts(e.target.value as OrdenPosts)}>
+							<Select value={ordenPosts} label="Orden" onChange={(e) => {
+									setOrdenPosts(e.target.value as OrdenPosts);
+									setPostsPage(0);
+								}}>
 								<MenuItem value="recientes">Más recientes</MenuItem>
 								<MenuItem value="antiguos">Más antiguos</MenuItem>
 							</Select>
@@ -1697,9 +1727,20 @@ const SocialStudio = () => {
 								{!loadingPosts && posts.length === 0 && (
 									<TableRow>
 										<TableCell colSpan={8} align="center" sx={{ py: 4 }}>
-											<Typography variant="body2" color="text.secondary">
-												Todavía no hay posts guardados
-											</Typography>
+											{hayFiltros ? (
+												<Stack spacing={1} alignItems="center">
+													<Typography variant="body2" color="text.secondary">
+														Ningún post guardado coincide con estos filtros
+													</Typography>
+													<Button size="small" onClick={limpiarFiltros}>
+														Limpiar filtros
+													</Button>
+												</Stack>
+											) : (
+												<Typography variant="body2" color="text.secondary">
+													Todavía no hay posts guardados
+												</Typography>
+											)}
 										</TableCell>
 									</TableRow>
 								)}
@@ -1842,6 +1883,18 @@ const SocialStudio = () => {
 							</TableBody>
 						</Table>
 					</TableContainer>
+					<TablePagination
+						component="div"
+						count={postsTotal}
+						page={postsPage}
+						onPageChange={(_, p) => setPostsPage(p)}
+						rowsPerPage={postsRowsPerPage}
+						onRowsPerPageChange={(e) => {
+							setPostsRowsPerPage(parseInt(e.target.value, 10));
+							setPostsPage(0);
+						}}
+						rowsPerPageOptions={[10, 25, 50, 100]}
+					/>
 				</Box>
 			)}
 
