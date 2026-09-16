@@ -268,6 +268,10 @@ export interface InstagramMedia {
 	comentarios: number;
 	permalink: string;
 	titulo: string;
+	/** Medidas de la primera imagen y si Meta la admite como anuncio (4:5 a 1,91:1). null = no se pudo medir. */
+	ancho?: number | null;
+	alto?: number | null;
+	elegible?: boolean | null;
 }
 
 /** GET /api/social/meta/whoami — diagnóstico del token de Meta. */

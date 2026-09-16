@@ -181,13 +181,15 @@ const MetaPromocionPanel = ({ post, onChange }: Props) => {
 						disabled={ocupado || mediaIg === null}
 					>
 						{(mediaIg || []).map((m) => (
-							<MenuItem key={m.id} value={m.id}>
-								{fmt(m.fecha).slice(0, 5)} · {m.tipo} · {m.likes} likes · {m.titulo}
+							<MenuItem key={m.id} value={m.id} disabled={m.elegible === false}>
+								{fmt(m.fecha).slice(0, 5)} · {m.tipo} · {m.likes} likes · {m.ancho && m.alto ? `${m.ancho}×${m.alto}` : "?"}
+								{m.elegible === false ? " · no apta (Meta pide 4:5 a 1,91:1)" : ""} · {m.titulo}
 							</MenuItem>
 						))}
 					</Select>
 					<Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
 						Este post se publicó a mano y el Studio no tiene su id de Instagram: elegilo de la lista y queda vinculado al crear la campaña.
+						Las 3:4 no se pueden promocionar: Meta solo acepta anuncios de 4:5 a 1,91:1.
 					</Typography>
 				</FormControl>
 			)}
