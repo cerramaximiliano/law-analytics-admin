@@ -229,6 +229,8 @@ export interface PromocionMeta {
 	cta?: string | null;
 	creadoEn?: string | null;
 	activadoEn?: string | null;
+	ubicaciones?: "instagram" | "meta" | null;
+	audiencia?: "abogados" | "retargeting" | null;
 }
 
 /** GET /api/social/posts/:id/promocion — estado real en Meta + métricas. */
@@ -791,6 +793,10 @@ export const promocionarPost = async (
 		presupuestoDiarioARS: number;
 		dias: number;
 		objetivo?: "trafico" | "interaccion";
+		/** 'meta' suma Facebook (feed; en reels también Reels y Stories). */
+		ubicaciones?: "instagram" | "meta";
+		/** 'retargeting': quienes ya interactuaron con el Instagram o la página. */
+		audiencia?: "abogados" | "retargeting";
 		url?: string;
 		cta?: "SIGN_UP" | "LEARN_MORE";
 		nombre?: string;

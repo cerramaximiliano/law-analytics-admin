@@ -86,6 +86,8 @@ const MetaPromocionPanel = ({ post, pieza = "post", onChange }: Props) => {
 	const [dias, setDias] = useState("7");
 	const [url, setUrl] = useState(URL_DEFAULT);
 	const [cta, setCta] = useState<"SIGN_UP" | "LEARN_MORE">("SIGN_UP");
+	const [ubicaciones, setUbicaciones] = useState<"instagram" | "meta">("meta");
+	const [audiencia, setAudiencia] = useState<"abogados" | "retargeting">("abogados");
 	const [objetivo, setObjetivo] = useState<"trafico" | "interaccion">("trafico");
 	// Posts publicados a mano (sin id de Instagram): se elige la publicación de la lista.
 	const [mediaIg, setMediaIg] = useState<InstagramMedia[] | null>(null);
@@ -134,6 +136,8 @@ const MetaPromocionPanel = ({ post, pieza = "post", onChange }: Props) => {
 					presupuestoDiarioARS: n,
 					dias: Number(dias) || 7,
 					objetivo,
+					ubicaciones,
+					audiencia,
 					...(esInteraccion ? {} : { url, cta }),
 					...(enInstagram ? {} : { igMediaId }),
 					...(esReel ? { pieza: "reel" } : {}),
@@ -218,9 +222,30 @@ const MetaPromocionPanel = ({ post, pieza = "post", onChange }: Props) => {
 						{esInteraccion
 							? "Meta muestra el post a quien tiende a interactuar; sin botón ni destino. Sirve para prueba social y seguidores."
 							: "Meta muestra el post a quien tiende a hacer clic; botón y destino al sitio con atribución."}{" "}
-						Instagram (feed y Explorar), Argentina, 25 a 60 años, abogados por cargo, estudios e interés. Se crea <strong>en pausa</strong>:
-						no gasta hasta que la actives.
+						Argentina, 25 a 60 años. Se crea <strong>en pausa</strong>: no gasta hasta que la actives.
 					</Typography>
+					<Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+						<FormControl size="small" sx={{ minWidth: 260 }}>
+							<InputLabel>Ubicaciones</InputLabel>
+							<Select value={ubicaciones} label="Ubicaciones" onChange={(e) => setUbicaciones(e.target.value as "instagram" | "meta")} disabled={ocupado}>
+								<MenuItem value="meta">Instagram + Facebook{esReel ? " (feeds, Reels y Stories)" : " (feeds)"}</MenuItem>
+								<MenuItem value="instagram">Solo Instagram{esReel ? " (feed, Explorar, Reels, Stories)" : " (feed y Explorar)"}</MenuItem>
+							</Select>
+						</FormControl>
+						<FormControl size="small" sx={{ minWidth: 300 }}>
+							<InputLabel>Público</InputLabel>
+							<Select value={audiencia} label="Público" onChange={(e) => setAudiencia(e.target.value as "abogados" | "retargeting")} disabled={ocupado}>
+								<MenuItem value="abogados">Abogados (cargo, estudios e interés)</MenuItem>
+								<MenuItem value="retargeting">Retargeting: ya interactuaron con nosotros</MenuItem>
+							</Select>
+						</FormControl>
+					</Stack>
+					{audiencia === "retargeting" && (
+						<Typography variant="caption" color="text.secondary">
+							Personas que en los últimos 90 días visitaron el perfil de Instagram, interactuaron con una publicación o anuncio, o con la
+							página de Facebook. El público se llena solo; mientras sea chico Meta entrega poco.
+						</Typography>
+					)}
 					<Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
 						<TextField
 							label="Presupuesto diario (ARS)"
@@ -289,6 +314,8 @@ const MetaPromocionPanel = ({ post, pieza = "post", onChange }: Props) => {
 							<Chip size="small" variant="outlined" label={cargando ? "Consultando…" : `Local: ${promo?.estado}`} />
 						)}
 						<Chip size="small" variant="outlined" label={promo?.objetivo === "interaccion" ? "Interacción" : "Tráfico"} />
+						<Chip size="small" variant="outlined" label={promo?.ubicaciones === "meta" ? "IG + FB" : "Solo IG"} />
+						{promo?.audiencia === "retargeting" && <Chip size="small" variant="outlined" color="secondary" label="Retargeting" />}
 						<Typography variant="caption" color="text.secondary">
 							{ars(promo?.presupuestoDiarioARS)}/día · {promo?.dias} días · {fmt(promo?.inicio)} →{" "}
 							{fmt(promo?.fin)}
