@@ -87,7 +87,7 @@ const MetaPromocionPanel = ({ post, pieza = "post", onChange }: Props) => {
 	const [url, setUrl] = useState(URL_DEFAULT);
 	const [cta, setCta] = useState<"SIGN_UP" | "LEARN_MORE">("SIGN_UP");
 	const [ubicaciones, setUbicaciones] = useState<"instagram" | "meta">("meta");
-	const [audiencia, setAudiencia] = useState<"abogados" | "retargeting">("abogados");
+	const [audiencia, setAudiencia] = useState<"abogados" | "abogados_estricto" | "retargeting">("abogados_estricto");
 	const [objetivo, setObjetivo] = useState<"trafico" | "interaccion">("trafico");
 	// Posts publicados a mano (sin id de Instagram): se elige la publicación de la lista.
 	const [mediaIg, setMediaIg] = useState<InstagramMedia[] | null>(null);
@@ -234,12 +234,24 @@ const MetaPromocionPanel = ({ post, pieza = "post", onChange }: Props) => {
 						</FormControl>
 						<FormControl size="small" sx={{ minWidth: 300 }}>
 							<InputLabel>Público</InputLabel>
-							<Select value={audiencia} label="Público" onChange={(e) => setAudiencia(e.target.value as "abogados" | "retargeting")} disabled={ocupado}>
-								<MenuItem value="abogados">Abogados (cargo, estudios e interés)</MenuItem>
+							<Select
+								value={audiencia}
+								label="Público"
+								onChange={(e) => setAudiencia(e.target.value as "abogados" | "abogados_estricto" | "retargeting")}
+								disabled={ocupado}
+							>
+								<MenuItem value="abogados_estricto">Abogados (estricto): dos señales legales a la vez</MenuItem>
+								<MenuItem value="abogados">Abogados (amplio): cargo, estudios o interés</MenuItem>
 								<MenuItem value="retargeting">Retargeting: ya interactuaron con nosotros</MenuItem>
 							</Select>
 						</FormControl>
 					</Stack>
+					{audiencia === "abogados_estricto" && (
+						<Typography variant="caption" color="text.secondary">
+							Exige a la vez interés en "Colegio de abogados" y en "estudio jurídico" (además de cargo o estudios). Menos alcance y CPC más
+							alto, pero filtra al público ajeno al rubro que traía la segmentación amplia.
+						</Typography>
+					)}
 					{audiencia === "retargeting" && (
 						<Typography variant="caption" color="text.secondary">
 							Personas que en los últimos 90 días visitaron el perfil de Instagram, interactuaron con una publicación o anuncio, o con la
@@ -316,6 +328,7 @@ const MetaPromocionPanel = ({ post, pieza = "post", onChange }: Props) => {
 						<Chip size="small" variant="outlined" label={promo?.objetivo === "interaccion" ? "Interacción" : "Tráfico"} />
 						<Chip size="small" variant="outlined" label={promo?.ubicaciones === "meta" ? "IG + FB" : "Solo IG"} />
 						{promo?.audiencia === "retargeting" && <Chip size="small" variant="outlined" color="secondary" label="Retargeting" />}
+						{promo?.audiencia === "abogados_estricto" && <Chip size="small" variant="outlined" label="Estricto" />}
 						<Typography variant="caption" color="text.secondary">
 							{ars(promo?.presupuestoDiarioARS)}/día · {promo?.dias} días · {fmt(promo?.inicio)} →{" "}
 							{fmt(promo?.fin)}
