@@ -123,7 +123,7 @@ const PromocionesMeta = () => {
 		setConfirmar(null);
 		setAccion(item._id);
 		try {
-			const p = activar ? await activarPromocion(item._id) : await pausarPromocion(item._id);
+			const p = activar ? await activarPromocion(item._id, item.pieza) : await pausarPromocion(item._id, item.pieza);
 			setDetalle((d) => ({ ...d, [item._id]: p }));
 			enqueueSnackbar(activar ? "Campaña activada" : "Campaña pausada", { variant: "success" });
 			cargar();
@@ -192,7 +192,7 @@ const PromocionesMeta = () => {
 									const est = ESTADO[p.estado || "pausada"] || ESTADO.pausada;
 									const ocupado = accion === it._id;
 									return (
-										<Fragment key={it._id}>
+										<Fragment key={`${it._id}-${it.pieza || "post"}`}>
 											<TableRow hover>
 												<TableCell padding="checkbox">
 													<IconButton size="small" onClick={() => abrirDetalle(it._id)}>
@@ -200,10 +200,19 @@ const PromocionesMeta = () => {
 													</IconButton>
 												</TableCell>
 												<TableCell>
-													<Typography variant="body2">{it.titulo}</Typography>
+													<Stack direction="row" spacing={1} alignItems="center">
+														<Typography variant="body2">{it.titulo}</Typography>
+														{it.pieza === "reel" && <Chip size="small" color="secondary" variant="outlined" label="Reel" />}
+													</Stack>
 													<Typography variant="caption" color="text.secondary">
 														Publicado {fecha(it.publicadoEn)}
-														{it.publicacion?.instagramMediaId ? ` · IG ${it.publicacion.instagramMediaId}` : ""}
+														{it.pieza === "reel"
+															? it.publicacion?.reel?.instagramReelId
+																? ` · Reel IG ${it.publicacion.reel.instagramReelId}`
+																: ""
+															: it.publicacion?.instagramMediaId
+																? ` · IG ${it.publicacion.instagramMediaId}`
+																: ""}
 													</Typography>
 												</TableCell>
 												<TableCell>
@@ -272,6 +281,7 @@ const PromocionesMeta = () => {
 															{detalle[it._id] ? (
 																<MetaPromocionPanel
 																	post={detalle[it._id]}
+																	pieza={it.pieza}
 																	onChange={(np) => {
 																		setDetalle((d) => ({ ...d, [it._id]: np }));
 																		cargar();

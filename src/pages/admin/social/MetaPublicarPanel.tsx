@@ -589,6 +589,17 @@ const MetaPublicarPanel = ({ postId, onChange }: Props) => {
 					}}
 				/>
 			)}
+			{/* El reel publicado tiene su propia campaña (promocionReel), separada de la de la imagen. */}
+			{post?.publicacion?.reel?.instagramReelId && (
+				<MetaPromocionPanel
+					post={post}
+					pieza="reel"
+					onChange={(p) => {
+						cargar();
+						onChange?.(p);
+					}}
+				/>
+			)}
 
 			<Dialog open={desvincular !== null} onClose={() => setDesvincular(null)} maxWidth="xs" fullWidth>
 				<DialogTitle>Desvincular {desvincular === "facebook" ? "Facebook" : "Instagram"}</DialogTitle>

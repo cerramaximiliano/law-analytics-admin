@@ -178,6 +178,8 @@ export interface SocialPost {
 	publicacion?: PublicacionMeta | null;
 	/** Campaña paga creada desde el panel (Marketing API). */
 	promocion?: PromocionMeta | null;
+	/** Campaña del reel del post (segunda campaña, independiente de la de la imagen). */
+	promocionReel?: PromocionMeta | null;
 	/** Animación del video, guardada con el post para que sirva como plantilla. */
 	animacion?: string;
 	/** Estilo visual. Null = el que la plantilla trae por defecto. */
@@ -789,6 +791,8 @@ export const promocionarPost = async (
 		nombre?: string;
 		/** Post publicado a mano: id de la publicación de Instagram a vincular. */
 		igMediaId?: string;
+		/** 'reel' promociona el reel publicado del post en vez de la imagen. */
+		pieza?: PiezaPromo;
 	},
 ): Promise<SocialPost> => {
 	const res = await mktAxios.post(`/api/social/posts/${id}/promocionar`, payload);
@@ -800,25 +804,29 @@ export const getInstagramMedia = async (): Promise<InstagramMedia[]> => {
 	return res.data.data;
 };
 
-export const getEstadoPromocion = async (id: string): Promise<EstadoPromocion | null> => {
-	const res = await mktAxios.get(`/api/social/posts/${id}/promocion`);
+/** Pieza promocionada: la imagen del post o su reel. */
+export type PiezaPromo = "post" | "reel";
+const qPieza = (pieza?: PiezaPromo) => (pieza === "reel" ? "?pieza=reel" : "");
+
+export const getEstadoPromocion = async (id: string, pieza?: PiezaPromo): Promise<EstadoPromocion | null> => {
+	const res = await mktAxios.get(`/api/social/posts/${id}/promocion${qPieza(pieza)}`);
 	return res.data.data;
 };
 
 /** LANZA la campaña: empieza el gasto (Meta la revisa antes de entregar). */
-export const activarPromocion = async (id: string): Promise<SocialPost> => {
-	const res = await mktAxios.post(`/api/social/posts/${id}/promocion/activar`);
+export const activarPromocion = async (id: string, pieza?: PiezaPromo): Promise<SocialPost> => {
+	const res = await mktAxios.post(`/api/social/posts/${id}/promocion/activar${qPieza(pieza)}`);
 	return res.data.data;
 };
 
-export const pausarPromocion = async (id: string): Promise<SocialPost> => {
-	const res = await mktAxios.post(`/api/social/posts/${id}/promocion/pausar`);
+export const pausarPromocion = async (id: string, pieza?: PiezaPromo): Promise<SocialPost> => {
+	const res = await mktAxios.post(`/api/social/posts/${id}/promocion/pausar${qPieza(pieza)}`);
 	return res.data.data;
 };
 
 /** Borra la campaña en Meta y desvincula el post. */
-export const eliminarPromocion = async (id: string): Promise<SocialPost> => {
-	const res = await mktAxios.delete(`/api/social/posts/${id}/promocion`);
+export const eliminarPromocion = async (id: string, pieza?: PiezaPromo): Promise<SocialPost> => {
+	const res = await mktAxios.delete(`/api/social/posts/${id}/promocion${qPieza(pieza)}`);
 	return res.data.data;
 };
 
@@ -831,6 +839,9 @@ export interface PromocionResumen {
 	estado: EstadoPost;
 	publicadoEn?: string | null;
 	publicacion?: PublicacionMeta | null;
+	/** Qué se promociona en esta fila: la imagen ('post') o el reel del post. */
+	pieza?: PiezaPromo;
+	/** La campaña de la fila (para 'reel' es la promocionReel del post). */
 	promocion: PromocionMeta;
 	mediaResumen?: { imagenes: number };
 	totales: {

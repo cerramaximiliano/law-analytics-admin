@@ -47,10 +47,13 @@ import {
 	type EstadoPromocion,
 	type InstagramMedia,
 	type SocialPost,
+	type PiezaPromo,
 } from "api/socialPosts";
 
 interface Props {
 	post: SocialPost;
+	/** 'reel' opera sobre la campaña del reel (promocionReel); default la imagen. */
+	pieza?: PiezaPromo;
 	/** Avisa al padre con el post actualizado. */
 	onChange?: (post: SocialPost) => void;
 }
@@ -71,7 +74,9 @@ const ESTADO_META: Record<string, { label: string; color: "default" | "success" 
 	COMPLETED: { label: "Finalizada", color: "warning" },
 };
 
-const MetaPromocionPanel = ({ post, onChange }: Props) => {
+const MetaPromocionPanel = ({ post, pieza = "post", onChange }: Props) => {
+	const esReel = pieza === "reel";
+	const promo = esReel ? post.promocionReel : post.promocion;
 	const { enqueueSnackbar } = useSnackbar();
 	const [estado, setEstado] = useState<EstadoPromocion | null>(null);
 	const [cargando, setCargando] = useState(false);
@@ -86,8 +91,8 @@ const MetaPromocionPanel = ({ post, onChange }: Props) => {
 	const [mediaIg, setMediaIg] = useState<InstagramMedia[] | null>(null);
 	const [igMediaId, setIgMediaId] = useState("");
 
-	const tieneCampana = Boolean(post.promocion?.campaignId);
-	const enInstagram = Boolean(post.publicacion?.instagramMediaId);
+	const tieneCampana = Boolean(promo?.campaignId);
+	const enInstagram = Boolean(esReel ? post.publicacion?.reel?.instagramReelId : post.publicacion?.instagramMediaId);
 	const esInteraccion = objetivo === "interaccion";
 
 	useEffect(() => {
@@ -98,19 +103,19 @@ const MetaPromocionPanel = ({ post, onChange }: Props) => {
 	}, [enInstagram, tieneCampana, mediaIg]);
 
 	const cargar = useCallback(async () => {
-		if (!post.promocion?.campaignId) {
+		if (!promo?.campaignId) {
 			setEstado(null);
 			return;
 		}
 		setCargando(true);
 		try {
-			setEstado(await getEstadoPromocion(post._id));
+			setEstado(await getEstadoPromocion(post._id, pieza));
 		} catch (err: any) {
 			enqueueSnackbar(err?.response?.data?.error || "No se pudo leer la campaña en Meta", { variant: "error" });
 		} finally {
 			setCargando(false);
 		}
-	}, [post._id, post.promocion?.campaignId, enqueueSnackbar]);
+	}, [post._id, pieza, promo?.campaignId, enqueueSnackbar]);
 
 	useEffect(() => {
 		cargar();
@@ -131,16 +136,17 @@ const MetaPromocionPanel = ({ post, onChange }: Props) => {
 					objetivo,
 					...(esInteraccion ? {} : { url, cta }),
 					...(enInstagram ? {} : { igMediaId }),
+					...(esReel ? { pieza: "reel" } : {}),
 				});
 				enqueueSnackbar("Campaña creada en pausa. Revisala y activala cuando quieras.", { variant: "success" });
 			} else if (que === "activar") {
-				p = await activarPromocion(post._id);
+				p = await activarPromocion(post._id, pieza);
 				enqueueSnackbar("Campaña activada: Meta la revisa antes de entregar", { variant: "success" });
 			} else if (que === "pausar") {
-				p = await pausarPromocion(post._id);
+				p = await pausarPromocion(post._id, pieza);
 				enqueueSnackbar("Campaña pausada", { variant: "success" });
 			} else {
-				p = await eliminarPromocion(post._id);
+				p = await eliminarPromocion(post._id, pieza);
 				enqueueSnackbar("Campaña eliminada en Meta", { variant: "success" });
 			}
 			onChange?.(p);
@@ -160,7 +166,7 @@ const MetaPromocionPanel = ({ post, onChange }: Props) => {
 	const ocupado = accion !== null;
 	const efectivo = estado?.campana?.effectiveStatus || estado?.campana?.status;
 	const chipMeta = efectivo ? ESTADO_META[efectivo] || { label: efectivo, color: "default" as const } : null;
-	const activa = post.promocion?.estado === "activa";
+	const activa = promo?.estado === "activa";
 	const ins = estado?.insights;
 
 	return (
@@ -280,12 +286,12 @@ const MetaPromocionPanel = ({ post, onChange }: Props) => {
 						{chipMeta ? (
 							<Chip size="small" color={chipMeta.color} variant="filled" label={`Meta: ${chipMeta.label}`} />
 						) : (
-							<Chip size="small" variant="outlined" label={cargando ? "Consultando…" : `Local: ${post.promocion?.estado}`} />
+							<Chip size="small" variant="outlined" label={cargando ? "Consultando…" : `Local: ${promo?.estado}`} />
 						)}
-						<Chip size="small" variant="outlined" label={post.promocion?.objetivo === "interaccion" ? "Interacción" : "Tráfico"} />
+						<Chip size="small" variant="outlined" label={promo?.objetivo === "interaccion" ? "Interacción" : "Tráfico"} />
 						<Typography variant="caption" color="text.secondary">
-							{ars(post.promocion?.presupuestoDiarioARS)}/día · {post.promocion?.dias} días · {fmt(post.promocion?.inicio)} →{" "}
-							{fmt(post.promocion?.fin)}
+							{ars(promo?.presupuestoDiarioARS)}/día · {promo?.dias} días · {fmt(promo?.inicio)} →{" "}
+							{fmt(promo?.fin)}
 						</Typography>
 						{estado?.adsManagerUrl && (
 							<Link href={estado.adsManagerUrl} target="_blank" rel="noreferrer" variant="caption">
@@ -306,7 +312,7 @@ const MetaPromocionPanel = ({ post, onChange }: Props) => {
 						</Typography>
 					)}
 
-					{typeof estado?.registros === "number" && post.promocion?.objetivo !== "interaccion" && (
+					{typeof estado?.registros === "number" && promo?.objetivo !== "interaccion" && (
 						<Typography variant="caption" color="text.secondary">
 							Registros atribuidos: <strong>{estado.registros}</strong>
 							{ins?.spend && estado.registros > 0 ? ` · ${ars(Number(ins.spend) / estado.registros)} por registro` : ""}
@@ -324,7 +330,7 @@ const MetaPromocionPanel = ({ post, onChange }: Props) => {
 										<TableCell align="right">CTR</TableCell>
 										<TableCell align="right">CPC</TableCell>
 										<TableCell align="right">Gasto</TableCell>
-										{post.promocion?.objetivo === "interaccion" ? (
+										{promo?.objetivo === "interaccion" ? (
 											<>
 												<TableCell align="right">Interacc.</TableCell>
 												<TableCell align="right">Likes</TableCell>
@@ -344,7 +350,7 @@ const MetaPromocionPanel = ({ post, onChange }: Props) => {
 											<TableCell align="right">{h.ctr === null ? "—" : `${Number(h.ctr).toFixed(2)}%`}</TableCell>
 											<TableCell align="right">{h.cpc === null ? "—" : ars(h.cpc)}</TableCell>
 											<TableCell align="right">{ars(h.spend)}</TableCell>
-											{post.promocion?.objetivo === "interaccion" ? (
+											{promo?.objetivo === "interaccion" ? (
 												<>
 													<TableCell align="right">{h.interacciones ?? 0}</TableCell>
 													<TableCell align="right">{h.likes ?? 0}</TableCell>
@@ -426,8 +432,8 @@ const MetaPromocionPanel = ({ post, onChange }: Props) => {
 				<DialogContent>
 					<Typography variant="body2">
 						{confirmar === "activar"
-							? `A partir de ahora Meta cobra hasta ${ars(post.promocion?.presupuestoDiarioARS)} por día hasta el ${fmt(
-									post.promocion?.fin,
+							? `A partir de ahora Meta cobra hasta ${ars(promo?.presupuestoDiarioARS)} por día hasta el ${fmt(
+									promo?.fin,
 							  )}. El anuncio pasa por revisión antes de mostrarse. Se puede pausar en cualquier momento.`
 							: "Se borra la campaña en Meta con su conjunto y anuncio. El post de Instagram no se toca."}
 					</Typography>
