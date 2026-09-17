@@ -47,10 +47,13 @@ import MainCard from "components/MainCard";
 import MetaPromocionPanel from "./MetaPromocionPanel";
 import {
 	activarPromocion,
+	getOrganicoInstagram,
 	getPost,
 	listPosts,
 	listPromociones,
 	pausarPromocion,
+	type OrganicoCuenta,
+	type OrganicoPieza,
 	type PromocionResumen,
 	type SocialPost,
 } from "api/socialPosts";
@@ -92,6 +95,23 @@ const PromocionesMeta = () => {
 	const [candidatos, setCandidatos] = useState<SocialPost[]>([]);
 	const [nuevoId, setNuevoId] = useState("");
 	const [nuevoPost, setNuevoPost] = useState<SocialPost | null>(null);
+	// Orgánico: vistas/alcance/interacciones de cada pieza publicada (sin contar
+	// el detalle de los anuncios), para tener las dos lecturas en la misma pantalla.
+	const [organico, setOrganico] = useState<{ cuenta: OrganicoCuenta; piezas: OrganicoPieza[] } | null>(null);
+	const [cargandoOrg, setCargandoOrg] = useState(false);
+	const cargarOrganico = useCallback(async (fresco = false) => {
+		setCargandoOrg(true);
+		try {
+			setOrganico(await getOrganicoInstagram(fresco));
+		} catch (err: any) {
+			enqueueSnackbar(err?.response?.data?.error || "No se pudieron leer las métricas orgánicas", { variant: "error" });
+		} finally {
+			setCargandoOrg(false);
+		}
+	}, [enqueueSnackbar]);
+	useEffect(() => {
+		cargarOrganico();
+	}, [cargarOrganico]);
 
 	const cargar = useCallback(async () => {
 		setCargando(true);
@@ -350,6 +370,93 @@ const PromocionesMeta = () => {
 						</Table>
 					</TableContainer>
 				)}
+
+				<MainCard
+					title="Orgánico en Instagram"
+					contentSX={{ p: 0 }}
+					secondary={
+						<Stack direction="row" spacing={1} alignItems="center">
+							{organico?.cuenta && !organico.cuenta.error && (
+								<>
+									<Chip size="small" variant="outlined" label={`${num(organico.cuenta.seguidores)} seguidores`} />
+									<Chip size="small" variant="outlined" label={`Últimos ${organico.cuenta.dias} días: ${num(organico.cuenta.vistas)} vistas · ${num(organico.cuenta.alcance)} alcance`} />
+								</>
+							)}
+							<Button size="small" startIcon={<Refresh size={16} />} onClick={() => cargarOrganico(true)} disabled={cargandoOrg}>
+								Actualizar
+							</Button>
+						</Stack>
+					}
+				>
+					{cargandoOrg && !organico ? (
+						<Stack alignItems="center" sx={{ py: 3 }}>
+							<CircularProgress size={22} />
+						</Stack>
+					) : !organico || organico.piezas.length === 0 ? (
+						<Typography variant="body2" color="text.secondary" sx={{ p: 2 }}>
+							Todavía no hay publicaciones de Instagram vinculadas a posts del Studio.
+						</Typography>
+					) : (
+						<TableContainer>
+							<Table size="small">
+								<TableHead>
+									<TableRow>
+										<TableCell>Pieza</TableCell>
+										<TableCell>Publicada</TableCell>
+										<TableCell align="right">Vistas</TableCell>
+										<TableCell align="right">Alcance</TableCell>
+										<TableCell align="right">Likes</TableCell>
+										<TableCell align="right">Coment.</TableCell>
+										<TableCell align="right">Guardados</TableCell>
+										<TableCell align="right">Compartidos</TableCell>
+										<TableCell align="right">Retención</TableCell>
+									</TableRow>
+								</TableHead>
+								<TableBody>
+									{organico.piezas.map((pz) => {
+										const m = pz.metricas;
+										return (
+											<TableRow key={`${pz.postId}-${pz.pieza}`} hover>
+												<TableCell>
+													<Stack direction="row" spacing={1} alignItems="center">
+														<Typography variant="body2">{pz.titulo}</Typography>
+														{pz.pieza === "reel" && <Chip size="small" color="secondary" variant="outlined" label="Reel" />}
+														{pz.promocionada && <Chip size="small" variant="outlined" label="📣 Ads" />}
+													</Stack>
+													{pz.error && (
+														<Typography variant="caption" color="error" display="block">
+															{pz.error}
+														</Typography>
+													)}
+												</TableCell>
+												<TableCell>{fecha(pz.publicadoEn)}</TableCell>
+												<TableCell align="right">{num(m?.views)}</TableCell>
+												<TableCell align="right">{num(m?.reach)}</TableCell>
+												<TableCell align="right">{num(m?.likes)}</TableCell>
+												<TableCell align="right">{num(m?.comments)}</TableCell>
+												<TableCell align="right">{num(m?.saved)}</TableCell>
+												<TableCell align="right">{num(m?.shares)}</TableCell>
+												<TableCell align="right">
+													{m?.avgWatchMs ? (
+														<Tooltip title={`Tiempo total de visualización: ${(m.totalWatchMs || 0) / 1000 | 0} s`}>
+															<span>{(m.avgWatchMs / 1000).toFixed(1)} s prom.</span>
+														</Tooltip>
+													) : (
+														"—"
+													)}
+												</TableCell>
+											</TableRow>
+										);
+									})}
+								</TableBody>
+							</Table>
+						</TableContainer>
+					)}
+					<Typography variant="caption" color="text.secondary" sx={{ p: 2, display: "block" }}>
+						Métricas de por vida que informa Instagram (orgánico + pago juntos, tal como las muestra la app). Se leen con cache de 10 minutos;
+						"Actualizar" fuerza la lectura.
+					</Typography>
+				</MainCard>
 
 				<MainCard title="Nueva promoción" contentSX={{ p: 2 }}>
 					<Stack spacing={1.5}>

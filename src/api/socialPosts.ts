@@ -804,6 +804,47 @@ export const promocionarPost = async (
 	return res.data.data;
 };
 
+/** GET /api/social/meta/organico — métricas orgánicas de Instagram por pieza publicada. */
+export interface OrganicoMetricas {
+	views: number;
+	reach: number;
+	likes: number;
+	comments: number;
+	saved: number;
+	shares: number;
+	interacciones: number;
+	profileVisits: number | null;
+	follows: number | null;
+	/** Solo reels: tiempo promedio y total de visualización, en ms. */
+	avgWatchMs: number | null;
+	totalWatchMs: number | null;
+	leidoEn: string;
+}
+export interface OrganicoPieza {
+	postId: string;
+	titulo: string;
+	templateId: TemplateId;
+	pieza: PiezaPromo;
+	mediaId: string;
+	publicadoEn?: string | null;
+	promocionada: boolean;
+	metricas: OrganicoMetricas | null;
+	error: string | null;
+}
+export interface OrganicoCuenta {
+	username?: string;
+	seguidores?: number;
+	publicaciones?: number;
+	dias?: number;
+	alcance?: number;
+	vistas?: number;
+	error?: string;
+}
+export const getOrganicoInstagram = async (fresco = false): Promise<{ cuenta: OrganicoCuenta; piezas: OrganicoPieza[] }> => {
+	const res = await mktAxios.get(`/api/social/meta/organico${fresco ? "?fresco=1" : ""}`);
+	return res.data.data;
+};
+
 export const getInstagramMedia = async (): Promise<InstagramMedia[]> => {
 	const res = await mktAxios.get("/api/social/meta/instagram-media");
 	return res.data.data;
