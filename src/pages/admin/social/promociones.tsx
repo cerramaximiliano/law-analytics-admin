@@ -35,6 +35,8 @@ import {
 	TableContainer,
 	TableHead,
 	TableRow,
+	ToggleButton,
+	ToggleButtonGroup,
 	Tooltip,
 	Typography,
 } from "@mui/material";
@@ -57,6 +59,17 @@ const ars = (n?: number | null) =>
 	n === null || n === undefined ? "—" : `ARS ${Number(n).toLocaleString("es-AR", { maximumFractionDigits: 0 })}`;
 const fecha = (iso?: string | null) => (iso ? new Date(iso).toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit" }) : "—");
 const num = (n?: number | null) => (n === null || n === undefined ? "—" : Number(n).toLocaleString("es-AR"));
+const dec = (n?: number | null, d = 1) => (n === null || n === undefined ? "—" : Number(n).toLocaleString("es-AR", { maximumFractionDigits: d }));
+const pct = (n?: number | null) => (n === null || n === undefined ? "—" : `${(n * 100).toFixed(2)} %`);
+/** "1 d 12 h" / "9 h" a partir de horas corridas. */
+const duracion = (horas?: number | null) => {
+	if (horas === null || horas === undefined) return "—";
+	const d = Math.floor(horas / 24);
+	const h = Math.round(horas - d * 24);
+	return d > 0 ? `${d} d ${h} h` : `${h} h`;
+};
+const fechaHora = (iso?: string | null) =>
+	iso ? new Date(iso).toLocaleString("es-AR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "—";
 
 const ESTADO: Record<string, { label: string; color: "success" | "warning" | "info" | "default" }> = {
 	activa: { label: "Activa", color: "success" },
@@ -70,6 +83,9 @@ const PromocionesMeta = () => {
 	const [cargando, setCargando] = useState(true);
 	const [abierto, setAbierto] = useState<string | null>(null);
 	const [detalle, setDetalle] = useState<Record<string, SocialPost>>({});
+	// "porDia" divide los totales por el tiempo corrido de cada campaña: así se
+	// comparan campañas que llevan distinto tiempo (pedido del 2026-09-17).
+	const [vista, setVista] = useState<"totales" | "porDia">("totales");
 	const [accion, setAccion] = useState<string | null>(null);
 	const [confirmar, setConfirmar] = useState<PromocionResumen | null>(null);
 	// Nueva promoción: posts publicados sin campaña.
@@ -148,6 +164,10 @@ const PromocionesMeta = () => {
 				<Stack direction="row" spacing={1} alignItems="center">
 					<Chip size="small" variant="outlined" label={`${totales.activas} activa(s) · ${ars(totales.diario)}/día`} />
 					<Chip size="small" variant="outlined" label={`Gastado: ${ars(totales.gasto)}`} />
+					<ToggleButtonGroup size="small" exclusive value={vista} onChange={(_e, v) => v && setVista(v)}>
+						<ToggleButton value="totales">Totales</ToggleButton>
+						<ToggleButton value="porDia">Por día</ToggleButton>
+					</ToggleButtonGroup>
 					<Button size="small" startIcon={<Refresh size={16} />} onClick={cargar} disabled={cargando}>
 						Actualizar
 					</Button>
@@ -178,9 +198,11 @@ const PromocionesMeta = () => {
 									<TableCell>Objetivo</TableCell>
 									<TableCell>Estado</TableCell>
 									<TableCell>Presupuesto</TableCell>
-									<TableCell align="right">Impresiones</TableCell>
-									<TableCell align="right">Resultado</TableCell>
-									<TableCell align="right">Gasto</TableCell>
+									<TableCell>Corrida</TableCell>
+									<TableCell align="right">{vista === "porDia" ? "Impr./día" : "Impresiones"}</TableCell>
+									<TableCell align="right">{vista === "porDia" ? "Resultado/día" : "Resultado"}</TableCell>
+									<TableCell align="right">CTR · CPC</TableCell>
+									<TableCell align="right">{vista === "porDia" ? "Gasto/día" : "Gasto"}</TableCell>
 									<TableCell align="right">Acciones</TableCell>
 								</TableRow>
 							</TableHead>
@@ -191,6 +213,9 @@ const PromocionesMeta = () => {
 									const interaccion = p.objetivo === "interaccion";
 									const est = ESTADO[p.estado || "pausada"] || ESTADO.pausada;
 									const ocupado = accion === it._id;
+									const porDia = vista === "porDia";
+									const v = porDia ? it.porDia : t;
+									const r = it.ratios;
 									return (
 										<Fragment key={`${it._id}-${it.pieza || "post"}`}>
 											<TableRow hover>
@@ -230,21 +255,45 @@ const PromocionesMeta = () => {
 														{p.dias} días · tope {ars((p.presupuestoDiarioARS || 0) * (p.dias || 0))}
 													</Typography>
 												</TableCell>
-												<TableCell align="right">{num(t?.impressions)}</TableCell>
+												<TableCell>
+													<Tooltip title={it.corrida ? `Activada ${fechaHora(it.corrida.desde)}` : "Nunca se activó"}>
+														<span>{duracion(it.corrida?.horas)}</span>
+													</Tooltip>
+													{it.corrida && (
+														<Typography variant="caption" color="text.secondary" display="block">
+															{dec(it.corrida.dias, 2)} día(s)
+														</Typography>
+													)}
+												</TableCell>
+												<TableCell align="right">{porDia ? dec(v?.impressions, 0) : num(t?.impressions)}</TableCell>
 												<TableCell align="right">
 													{interaccion ? (
 														<Tooltip title={`${num(t?.likes)} likes · ${num(t?.comentarios)} comentarios · ${num(t?.guardados)} guardados`}>
-															<span>{num(t?.interacciones)} interacc.</span>
+															<span>{porDia ? dec(v?.interacciones, 1) : num(t?.interacciones)} interacc.</span>
 														</Tooltip>
 													) : (
 														<Tooltip title={`${num(t?.registros)} registro(s) atribuido(s)`}>
 															<span>
-																{num(t?.inlineLinkClicks)} clics · {num(t?.registros)} reg.
+																{porDia ? dec(v?.inlineLinkClicks, 1) : num(t?.inlineLinkClicks)} clics ·{" "}
+																{porDia ? dec(v?.registros, 2) : num(t?.registros)} reg.
 															</span>
 														</Tooltip>
 													)}
 												</TableCell>
-												<TableCell align="right">{ars(t?.spend)}</TableCell>
+												<TableCell align="right">
+													{interaccion ? (
+														<Tooltip title="Costo por interacción">
+															<span>{r?.costoPorInteraccion ? ars(r.costoPorInteraccion) : "—"}</span>
+														</Tooltip>
+													) : (
+														<Tooltip title={`CTR ${pct(r?.ctr)} · CPC ${r?.cpc ? ars(r.cpc) : "—"} · CPM ${r?.cpm ? ars(r.cpm) : "—"}${r?.costoPorRegistro ? ` · ${ars(r.costoPorRegistro)} por registro` : ""}`}>
+															<span>
+																{pct(r?.ctr)} · {r?.cpc ? ars(r.cpc) : "—"}
+															</span>
+														</Tooltip>
+													)}
+												</TableCell>
+												<TableCell align="right">{porDia ? ars(v?.spend) : ars(t?.spend)}</TableCell>
 												<TableCell align="right">
 													{p.estado === "activa" ? (
 														<Tooltip title="Pausar">
@@ -275,7 +324,7 @@ const PromocionesMeta = () => {
 												</TableCell>
 											</TableRow>
 											<TableRow>
-												<TableCell colSpan={9} sx={{ p: 0, borderBottom: abierto === it._id ? undefined : "none" }}>
+												<TableCell colSpan={11} sx={{ p: 0, borderBottom: abierto === it._id ? undefined : "none" }}>
 													<Collapse in={abierto === it._id} unmountOnExit>
 														<Box sx={{ px: 3, py: 1, bgcolor: "background.default" }}>
 															{detalle[it._id] ? (

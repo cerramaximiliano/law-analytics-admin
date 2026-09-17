@@ -862,6 +862,11 @@ export interface PromocionResumen {
 		dias: number;
 		ultimaFecha: string;
 	} | null;
+	/** Tiempo corrido desde la activación (hasta ahora o hasta el fin). null si nunca se activó. */
+	corrida?: { desde: string; horas: number; dias: number } | null;
+	/** Totales divididos por los días corridos (fracción de día, piso 1 h): comparables entre campañas. */
+	porDia?: { impressions: number; inlineLinkClicks: number; spend: number; interacciones: number; registros: number } | null;
+	ratios?: { ctr: number | null; cpc: number | null; cpm: number | null; costoPorInteraccion: number | null; costoPorRegistro: number | null } | null;
 }
 
 export const listPromociones = async (): Promise<PromocionResumen[]> => {
