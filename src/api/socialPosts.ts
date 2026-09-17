@@ -115,6 +115,8 @@ export interface VideoResponse {
 	height: number;
 	animacion: string;
 	duracionMs: number;
+	/** Milisegundo del fotograma de portada para Instagram (thumb_offset). */
+	portadaMs?: number;
 	/** Clips de marca aplicados (null si el video salió sin ellos). */
 	intro?: string | null;
 	cierre?: string | null;
@@ -639,6 +641,7 @@ export interface MediaVideo {
 	formato?: string;
 	duracionMs?: number | null;
 	fps?: number | null;
+	portadaMs?: number | null;
 	bytes?: number;
 	generadoEn?: string;
 	url: string;
@@ -661,6 +664,8 @@ export interface GuardarMediaPayload {
 	formato?: FormatoId;
 	duracionMs?: number;
 	fps?: number;
+	/** Fotograma de portada del reel (ms); lo devuelve el render del video. */
+	portadaMs?: number;
 	/** Sin esto, si el post ya tiene piezas la API responde 409. */
 	reemplazar?: boolean;
 }

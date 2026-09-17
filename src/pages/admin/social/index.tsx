@@ -442,7 +442,7 @@ const SocialStudio = () => {
 		postId: string;
 		existente: { imagenes: number; video: boolean; actualizadoEn?: string };
 		/** Piezas a reintentar si vienen de fuera del Studio (tabla de Guardados). */
-		otras?: { imagenes?: string[]; video?: string; formato?: FormatoId; duracionMs?: number };
+		otras?: { imagenes?: string[]; video?: string; formato?: FormatoId; duracionMs?: number; portadaMs?: number };
 	} | null>(null);
 	const [guardandoPiezas, setGuardandoPiezas] = useState(false);
 	// Progreso del render de video: la espera puede ser de minutos y un spinner
@@ -840,7 +840,7 @@ const SocialStudio = () => {
 		reemplazar = false,
 		// Piezas de otro origen: el video renderizado desde la tabla de Guardados
 		// no pasa por el estado del Studio.
-		otras?: { imagenes?: string[]; video?: string; formato?: FormatoId; duracionMs?: number },
+		otras?: { imagenes?: string[]; video?: string; formato?: FormatoId; duracionMs?: number; portadaMs?: number },
 	): Promise<"ok" | "confirmar" | "nada" | "error"> => {
 		// "Generar variantes" llena `variantes` y no `images`. Se archivan TODOS
 		// los formatos generados, no solo el que se está viendo: rehacerlos
@@ -862,6 +862,7 @@ const SocialStudio = () => {
 				video: vid,
 				formato: otras?.formato ?? formato,
 				duracionMs: otras?.duracionMs ?? video?.duracionMs,
+				portadaMs: otras?.portadaMs ?? video?.portadaMs,
 				reemplazar: reemplazar || undefined,
 			});
 			const cuantas = lote ? lote.reduce((a, v) => a + v.imagenes.length, 0) : imgs.length;
@@ -1981,6 +1982,7 @@ const SocialStudio = () => {
 									video: videoPost.video.video,
 									formato: videoPost.post.formato,
 									duracionMs: videoPost.video.duracionMs,
+									portadaMs: videoPost.video.portadaMs,
 								});
 								if (r === "ok") {
 									setVideoPost(null);
