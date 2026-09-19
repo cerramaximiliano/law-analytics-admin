@@ -237,12 +237,14 @@ const ServerStatus = () => {
 								// Error con proxy, continuar
 							}
 
-							// Si sabemos que estos servicios funcionan, mostrarlos como online
+							// Si el proxy no contestó, el estado es indeterminado. Antes se
+							// devolvía "online" a ciegas, lo que mostraba en verde servicios
+							// que nunca se habían consultado.
 							return {
 								...service,
-								status: "online" as const,
+								status: "checking" as const,
 								timestamp: new Date().toISOString(),
-								message: "CORS restrictivo - Estado verificado externamente",
+								message: "CORS restrictivo - no se pudo verificar desde el servidor",
 							};
 						}
 					}

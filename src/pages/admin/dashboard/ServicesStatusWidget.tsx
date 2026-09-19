@@ -80,9 +80,13 @@ const ServicesStatusWidget = () => {
 								return { name: service.name, shortName: service.shortName, status: proxyData.online ? "online" : "offline" };
 							}
 						} catch {
-							// proxy fallo, asumir online para servicios CORS restrictivos conocidos
+							// El proxy tampoco pudo: queda indeterminado, ver abajo.
 						}
-						return { name: service.name, shortName: service.shortName, status: "online" };
+						// Antes esto devolvía "online" a ciegas: el endpoint del proxy no
+						// existía, así que cinco de los ocho servicios se mostraban en
+						// verde sin haber sido consultados nunca. Si no se pudo verificar,
+						// el estado es "checking" (ámbar), no un verde inventado.
+						return { name: service.name, shortName: service.shortName, status: "checking" };
 					}
 					return { name: service.name, shortName: service.shortName, status: "offline" };
 				}
