@@ -3,6 +3,7 @@ import Cookies from "js-cookie";
 import authTokenService from "services/authTokenService";
 import secureStorage from "services/secureStorage";
 import { requestQueueService } from "services/requestQueueService";
+import { refrescarSesion, esSesionTerminada } from "services/sessionRefreshService";
 
 // Create a dedicated axios instance for MKT API
 const mktAxios: AxiosInstance = axios.create({
@@ -141,34 +142,25 @@ mktAxios.interceptors.response.use(
 			originalRequest._retry = true;
 
 			try {
-				// Intentar refrescar el token usando la API de autenticación
-				const authBaseURL = import.meta.env.VITE_AUTH_URL || "https://api.lawanalytics.app";
-				console.log("🔄 [mktAxios] Llamando a refresh-token...");
-				const refreshResponse = await axios.post(`${authBaseURL}/api/auth/refresh-token`, {}, { withCredentials: true });
-				console.log("✅ [mktAxios] Refresh exitoso:", refreshResponse.status);
-
-				// Capturar el nuevo token de la respuesta del refresh
-				const newToken =
-					refreshResponse.headers["authorization"]?.replace("Bearer ", "") ||
-					refreshResponse.headers["x-auth-token"] ||
-					refreshResponse.data?.token;
-
-				if (newToken) {
-					console.log("✅ [mktAxios] Nuevo token obtenido");
-					authTokenService.setToken(newToken);
-					secureStorage.setAuthToken(newToken);
-					if (originalRequest.headers) {
-						originalRequest.headers.Authorization = `Bearer ${newToken}`;
-					}
-				} else {
-					console.warn("⚠️ [mktAxios] Refresh exitoso pero no se obtuvo nuevo token");
+				// Un único refresh compartido por todos los clientes: antes cada uno
+				// disparaba el suyo y una carga con varios 401 llegaba al límite de
+				// 30/min del endpoint.
+				const newToken = await refrescarSesion();
+				if (newToken && originalRequest.headers) {
+					originalRequest.headers.Authorization = `Bearer ${newToken}`;
 				}
 
 				// Reintentar la petición original con el nuevo token
 				return mktAxios(originalRequest);
 			} catch (refreshError: any) {
+				// Un 429 del limiter, un 5xx o un corte de red no son una sesión
+				// vencida: la petición falla con su propio error y el usuario sigue
+				// donde estaba, en vez de ver "Sesión Expirada" sin motivo.
+				if (!esSesionTerminada(refreshError)) {
+					return Promise.reject(error);
+				}
+
 				// Si el refresh falla, encolar la petición y mostrar modal de autenticación
-				console.log("❌ [mktAxios] Refresh fallido:", refreshError.response?.status, refreshError.response?.data);
 				console.log("🔓 [mktAxios] Mostrando modal de sesión expirada...");
 
 				// Marcar como encolada para evitar reencolar

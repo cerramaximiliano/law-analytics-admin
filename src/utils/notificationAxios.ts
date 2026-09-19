@@ -1,6 +1,7 @@
 import axios from "axios";
 import Cookies from "js-cookie";
 import authTokenService from "services/authTokenService";
+import { refrescarSesion, esSesionTerminada } from "services/sessionRefreshService";
 
 // Create a dedicated axios instance for Notification API
 const notificationAxios = axios.create({
@@ -86,11 +87,9 @@ notificationAxios.interceptors.response.use(
 			originalRequest._retry = true;
 
 			try {
-				// Try to refresh the token
-				await axios.post(`${import.meta.env.VITE_AUTH_URL}/api/auth/refresh-token`, {}, { withCredentials: true });
-
-				// Get the new token and retry the request
-				const newToken = getAuthToken();
+				// El refresh compartido con el resto de los clientes (ver
+				// sessionRefreshService): uno solo por ráfaga de 401.
+				const newToken = (await refrescarSesion()) || getAuthToken();
 				if (newToken) {
 					originalRequest.headers.Authorization = `Bearer ${newToken}`;
 				}
@@ -98,6 +97,12 @@ notificationAxios.interceptors.response.use(
 				// Retry the original request with updated headers
 				return notificationAxios(originalRequest);
 			} catch (refreshError) {
+				// Solo una sesión realmente terminada justifica sacar al usuario de
+				// donde está: un 429 del limiter o un 5xx dejan que falle la petición.
+				if (!esSesionTerminada(refreshError)) {
+					return Promise.reject(error);
+				}
+
 				// If refresh fails, redirect to login
 				if (!window.location.href.includes("/login")) {
 					window.location.pathname = "/login";

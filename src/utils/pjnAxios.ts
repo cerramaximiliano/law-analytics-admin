@@ -3,7 +3,7 @@ import Cookies from "js-cookie";
 import authTokenService from "services/authTokenService";
 import secureStorage from "services/secureStorage";
 import { requestQueueService } from "services/requestQueueService";
-import authAxios from "utils/authAxios";
+import { refrescarSesion, esSesionTerminada } from "services/sessionRefreshService";
 
 // Instancia de Axios para la API de PJN (aplicación principal)
 const pjnAxios: AxiosInstance = axios.create({
@@ -122,11 +122,9 @@ pjnAxios.interceptors.response.use(
 			originalRequest._retry = true;
 
 			try {
-				// Intentar refrescar el token usando authAxios (withCredentials: true, token storage ya manejado)
-				await authAxios.post("/api/auth/refresh-token", {}, { withCredentials: true });
-
-				// authAxios.interceptors.response ya almacenó el nuevo token — solo leerlo
-				const newToken = getAuthToken();
+				// El refresh compartido con el resto de los clientes (ver
+				// sessionRefreshService), que además guarda el token nuevo.
+				const newToken = (await refrescarSesion()) || getAuthToken();
 				if (newToken && originalRequest.headers) {
 					originalRequest.headers.Authorization = `Bearer ${newToken}`;
 				}
@@ -134,6 +132,13 @@ pjnAxios.interceptors.response.use(
 				// Reintentar la petición original con el nuevo token
 				return pjnAxios(originalRequest);
 			} catch (refreshError) {
+				// Un 429 del limiter, un 5xx o un corte de red no son una sesión
+				// vencida: la petición falla con su propio error y el usuario sigue
+				// donde estaba, en vez de ver "Sesión Expirada" sin motivo.
+				if (!esSesionTerminada(refreshError)) {
+					return Promise.reject(error);
+				}
+
 				// Si el refresh falla, encolar la petición y mostrar modal de autenticación
 				// en lugar de redirigir directamente al login
 

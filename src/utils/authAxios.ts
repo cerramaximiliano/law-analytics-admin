@@ -3,6 +3,7 @@ import Cookies from "js-cookie";
 import authTokenService from "services/authTokenService";
 import secureStorage from "services/secureStorage";
 import { requestQueueService } from "services/requestQueueService";
+import { refrescarSesion, esSesionTerminada } from "services/sessionRefreshService";
 
 // Instancia de Axios para la API de autenticación
 const authAxios: AxiosInstance = axios.create({
@@ -131,11 +132,9 @@ authAxios.interceptors.response.use(
 			originalRequest._retry = true;
 
 			try {
-				// Intentar refrescar el token
-				const refreshResponse = await authAxios.post("/api/auth/refresh-token", {}, { withCredentials: true });
-
-				// Obtener el nuevo token y reintentar la petición original
-				const newToken = getAuthToken();
+				// El refresh compartido con el resto de los clientes (ver
+				// sessionRefreshService), que además guarda el token nuevo.
+				const newToken = (await refrescarSesion()) || getAuthToken();
 				if (newToken && originalRequest.headers) {
 					originalRequest.headers.Authorization = `Bearer ${newToken}`;
 				}
@@ -143,6 +142,13 @@ authAxios.interceptors.response.use(
 				// Reintentar la petición original
 				return authAxios(originalRequest);
 			} catch (refreshError) {
+				// Un 429 del limiter, un 5xx o un corte de red no son una sesión
+				// vencida: la petición falla con su propio error y el usuario sigue
+				// donde estaba, en vez de ver "Sesión Expirada" sin motivo.
+				if (!esSesionTerminada(refreshError)) {
+					return Promise.reject(error);
+				}
+
 				// Si el refresh falla, encolar la petición y mostrar modal de autenticación
 				// en lugar de redirigir directamente al login
 				const queuedPromise = requestQueueService.enqueue(originalRequest);

@@ -2,6 +2,7 @@ import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 
 import Cookies from "js-cookie";
 import authTokenService from "services/authTokenService";
 import secureStorage from "services/secureStorage";
+import { refrescarSesion, esSesionTerminada } from "services/sessionRefreshService";
 import { requestQueueService } from "services/requestQueueService";
 
 // Instancia de Axios para la API de RAG (pjn-rag-api)
@@ -53,16 +54,12 @@ export const getAuthToken = () => {
 	return null;
 };
 
-// Refresh del access token usando el refresh_token cookie (httpOnly)
+// Refresh del access token usando el refresh_token cookie (httpOnly).
+// Se mantiene exportado porque ChatRagTab lo llama antes de abrir el socket;
+// por dentro es el refresh compartido, así que no compite con los interceptores.
 export const refreshAuthToken = async (): Promise<string | null> => {
-	const authBaseURL = import.meta.env.VITE_AUTH_URL || "https://api.lawanalytics.app";
-	const response = await axios.post(`${authBaseURL}/api/auth/refresh-token`, {}, { withCredentials: true });
-	if (response.data?.token) {
-		authTokenService.setToken(response.data.token);
-		secureStorage.setAuthToken(response.data.token);
-		return response.data.token;
-	}
-	return getAuthToken() || null;
+	const token = await refrescarSesion();
+	return token || getAuthToken() || null;
 };
 
 // Request interceptor to add auth token
@@ -113,6 +110,13 @@ ragAxios.interceptors.response.use(
 
 				return ragAxios(originalRequest);
 			} catch (refreshError) {
+				// Un 429 del limiter, un 5xx o un corte de red no son una sesión
+				// vencida: la petición falla con su propio error y el usuario sigue
+				// donde estaba, en vez de ver "Sesión Expirada" sin motivo.
+				if (!esSesionTerminada(refreshError)) {
+					return Promise.reject(error);
+				}
+
 				originalRequest._queued = true;
 				const queuedPromise = requestQueueService.enqueue(originalRequest);
 				window.dispatchEvent(new CustomEvent("showUnauthorizedModal"));

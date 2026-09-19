@@ -2,6 +2,7 @@ import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 
 import Cookies from "js-cookie";
 import authTokenService from "services/authTokenService";
 import secureStorage from "services/secureStorage";
+import { refrescarSesion, esSesionTerminada } from "services/sessionRefreshService";
 import { requestQueueService } from "services/requestQueueService";
 
 // Instancia de Axios para la API de Tasas (admin.lawanalytics.app)
@@ -96,23 +97,22 @@ tasasAxios.interceptors.response.use(
 		if (error.response?.status === 401 && !originalRequest._retry && !originalRequest._queued) {
 			originalRequest._retry = true;
 			try {
-				const authBaseURL = import.meta.env.VITE_AUTH_URL || "https://api.lawanalytics.app";
-				const refreshResponse = await axios.post(`${authBaseURL}/api/auth/refresh-token`, {}, { withCredentials: true });
-
-				const newToken =
-					refreshResponse.headers["authorization"]?.replace("Bearer ", "") ||
-					refreshResponse.headers["x-auth-token"] ||
-					refreshResponse.data?.token;
-
-				if (newToken) {
-					authTokenService.setToken(newToken);
-					secureStorage.setAuthToken(newToken);
-					if (originalRequest.headers) {
-						originalRequest.headers.Authorization = `Bearer ${newToken}`;
-					}
+				// Un único refresh compartido por todos los clientes: antes cada uno
+				// disparaba el suyo y una carga con varios 401 llegaba al límite de
+				// 30/min del endpoint.
+				const newToken = await refrescarSesion();
+				if (newToken && originalRequest.headers) {
+					originalRequest.headers.Authorization = `Bearer ${newToken}`;
 				}
 				return tasasAxios(originalRequest);
-			} catch (_refreshError) {
+			} catch (refreshError) {
+				// Un 429 del limiter, un 5xx o un corte de red no son una sesión
+				// vencida: la petición falla con su propio error y el usuario sigue
+				// donde estaba, en vez de ver "Sesión Expirada" sin motivo.
+				if (!esSesionTerminada(refreshError)) {
+					return Promise.reject(error);
+				}
+
 				originalRequest._queued = true;
 				const queuedPromise = requestQueueService.enqueue(originalRequest);
 				window.dispatchEvent(new CustomEvent("showUnauthorizedModal"));

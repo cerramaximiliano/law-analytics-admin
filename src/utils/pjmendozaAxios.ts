@@ -2,6 +2,7 @@ import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 
 import Cookies from "js-cookie";
 import authTokenService from "services/authTokenService";
 import secureStorage from "services/secureStorage";
+import { refrescarSesion, esSesionTerminada } from "services/sessionRefreshService";
 import { requestQueueService } from "services/requestQueueService";
 
 // Instancia de Axios para la API de PJ Mendoza (portal IOL)
@@ -120,27 +121,24 @@ pjmendozaAxios.interceptors.response.use(
 			originalRequest._retry = true;
 
 			try {
-				// Intentar refrescar el token usando la API de autenticación
-				const authBaseURL = import.meta.env.VITE_AUTH_URL || "https://api.lawanalytics.app";
-				const refreshResponse = await axios.post(`${authBaseURL}/api/auth/refresh-token`, {}, { withCredentials: true });
-
-				// Capturar el nuevo token de la respuesta del refresh
-				const newToken =
-					refreshResponse.headers["authorization"]?.replace("Bearer ", "") ||
-					refreshResponse.headers["x-auth-token"] ||
-					refreshResponse.data?.token;
-
-				if (newToken) {
-					authTokenService.setToken(newToken);
-					secureStorage.setAuthToken(newToken);
-					if (originalRequest.headers) {
-						originalRequest.headers.Authorization = `Bearer ${newToken}`;
-					}
+				// Un único refresh compartido por todos los clientes: antes cada uno
+				// disparaba el suyo y una carga con varios 401 llegaba al límite de
+				// 30/min del endpoint.
+				const newToken = await refrescarSesion();
+				if (newToken && originalRequest.headers) {
+					originalRequest.headers.Authorization = `Bearer ${newToken}`;
 				}
 
 				// Reintentar la petición original con el nuevo token
 				return pjmendozaAxios(originalRequest);
 			} catch (refreshError) {
+				// Un 429 del limiter, un 5xx o un corte de red no son una sesión
+				// vencida: la petición falla con su propio error y el usuario sigue
+				// donde estaba, en vez de ver "Sesión Expirada" sin motivo.
+				if (!esSesionTerminada(refreshError)) {
+					return Promise.reject(error);
+				}
+
 				// Si el refresh falla, encolar la petición y mostrar modal de autenticación
 				originalRequest._queued = true;
 
