@@ -8,6 +8,8 @@ coverage
 
 # Production
 build
+# Copia del build del hub que se baja para comparar contra producción.
+build_hub
 dist
 
 # Misc
