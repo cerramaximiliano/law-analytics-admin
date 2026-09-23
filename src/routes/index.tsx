@@ -114,6 +114,7 @@ const MarketingSuppression = Loadable(lazyWithRetry(() => import("pages/admin/ma
 const SocialStudio = Loadable(lazyWithRetry(() => import("pages/admin/social")));
 const ArticulosBlog = Loadable(lazyWithRetry(() => import("pages/admin/social/articulos")));
 const LinksBio = Loadable(lazyWithRetry(() => import("pages/admin/social/links")));
+const PublicacionesSocial = Loadable(lazyWithRetry(() => import("pages/admin/social/publicaciones")));
 const BannersPublicos = Loadable(lazyWithRetry(() => import("pages/admin/social/banners")));
 const PromocionesMeta = Loadable(lazyWithRetry(() => import("pages/admin/social/promociones")));
 
@@ -788,6 +789,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<MarketingSuppression />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "social/publicaciones",
+							element: (
+								<AdminRoleGuard>
+									<PublicacionesSocial />
 								</AdminRoleGuard>
 							),
 						},
