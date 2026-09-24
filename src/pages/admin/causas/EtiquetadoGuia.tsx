@@ -195,8 +195,9 @@ const SECCIONES: Seccion[] = [
 				<P>
 					<B>Concede prórroga</B>: el pedido de más plazo (de un perito o de una parte) que el juzgado concede → acto{" "}
 					<Codigo>concede_prorroga</Codigo> · decisión · <Codigo>concede</Codigo>. La materia sigue al plazo prorrogado
-					(prueba, ejecución…). Si fija el nuevo plazo con apercibimiento, va como carga (ej. perito → presentar informe
-					· 10 días · "remoción"). Si la deniega: acto <Codigo>otro</Codigo> · decisión · <Codigo>deniega</Codigo>.
+					(prueba, ejecución…). Si además fija el nuevo plazo con apercibimiento, el documento también intima: va{" "}
+					<Codigo>intima</Codigo> como acto secundario y el plazo como carga (ej. perito → presentar informe · 10 días ·
+					"remoción"). Si la deniega: acto <Codigo>otro</Codigo> · decisión · <Codigo>deniega</Codigo>.
 				</P>
 				<P>
 					<B>Decisión implícita</B>: si la dispositiva no dice "rechazo" pero impide lo pedido (remite a otro juez o
