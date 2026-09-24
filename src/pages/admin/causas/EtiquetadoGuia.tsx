@@ -201,6 +201,13 @@ const SECCIONES: Seccion[] = [
 					"remoción"). Si la deniega: acto <Codigo>otro</Codigo> · decisión · <Codigo>deniega</Codigo>.
 				</P>
 				<P>
+					<B>Difiere proveer</B>: providencia simple que no trata lo pedido porque todavía no quedó firme, cumplido o
+					notificado algo anterior ("firme que se encuentre la sentencia, peticiónese y se proveerá"; "trabada la litis
+					con todos, se proveerá lo demás") → acto <Codigo>difiere_proveimiento</Codigo> · ordenación · no aplica; la
+					materia sigue a lo pedido. Si es todo el proveído, va como acto principal; si acompaña a otro acto (tiene por
+					presentado, intima, corre traslado), como secundario. No es un rechazo: no lleva fila de decisión implícita.
+				</P>
+				<P>
 					<B>Decisión implícita</B>: si la dispositiva no dice "rechazo" pero impide lo pedido (remite a otro juez o
 					proceso, "estése a lo dispuesto", "no ha lugar por ahora", un "previo…" que posterga sin plazo), la{" "}
 					<B>Función sigue la forma</B> del proveído (ordenación / impulso) y el <B>sentido material</B> va en una fila

@@ -244,6 +244,7 @@ const ACTOS_PROCESALES_BASE: [string, string][] = [
 	["da_vista", "Da vista (Ministerio Público / organismo)"],
 	["intima", "Intima"],
 	["concede_prorroga", "Concede prórroga (de un plazo pedido)"],
+	["difiere_proveimiento", "Difiere proveer (hasta firmeza, notificación o traba de litis)"],
 	["fija_audiencia", "Fija audiencia"],
 	["celebra_audiencia", "Celebra audiencia (acta)"],
 	["ordena_notificacion", "Ordena notificación"],
@@ -316,6 +317,10 @@ export const ACTO_AUTOFILL: Record<
 	// Hace lugar a un pedido de más plazo (perito, parte): decide sobre una petición.
 	// La materia sigue al plazo prorrogado (prueba, ejecución…).
 	concede_prorroga: { tipoResolucion: "providencia_simple", funcion: "decision", resultado: "concede" },
+	// No trata lo pedido porque todavía no quedó firme / cumplido / notificado algo
+	// anterior ("firme que se encuentre…, peticiónese y se proveerá"). La materia
+	// sigue a lo pedido.
+	difiere_proveimiento: { tipoResolucion: "providencia_simple", funcion: "ordenacion", resultado: "no_aplica" },
 	fija_audiencia: { tipoResolucion: "providencia_simple", funcion: "ordenacion", resultado: "no_aplica" },
 	// Acta que documenta la audiencia (celebrada o fracasada): tipo propio "acta"
 	// (no es una resolución, pero es un acto del tribunal y puede resolver cosas,
