@@ -56,6 +56,7 @@ import {
 	VarianteTipo,
 	createPublicacion,
 	deletePublicacion,
+	getVistaPrevia,
 	listPublicaciones,
 	updatePublicacion,
 } from "api/publicaciones";
@@ -175,6 +176,21 @@ const Publicaciones = () => {
 			enqueueSnackbar(err?.response?.data?.error || "No se pudo guardar", { variant: "error" });
 		} finally {
 			setGuardando(false);
+		}
+	};
+
+	// Una publicación reservada da 404 sin token: se pide uno de un día y se
+	// abre la URL real, que es lo que va a ver quien la reciba.
+	const abrirPieza = async (p: Publicacion, url: string, tipo?: string) => {
+		if (p.listada) {
+			window.open(url, "_blank", "noopener");
+			return;
+		}
+		try {
+			const { url: conToken } = await getVistaPrevia(p._id, tipo);
+			window.open(conToken, "_blank", "noopener");
+		} catch (err: any) {
+			enqueueSnackbar(err?.response?.data?.error || "No se pudo abrir la vista previa", { variant: "error" });
 		}
 	};
 
@@ -313,26 +329,22 @@ const Publicaciones = () => {
 											size="small"
 											variant={v.principal ? "contained" : "outlined"}
 											endIcon={<ExportSquare size={13} />}
-											href={v.url}
-											target="_blank"
-											rel="noopener noreferrer"
+											onClick={() => abrirPieza(p, v.url, v.url.split("/").pop()?.split("?")[0])}
 											sx={{ textTransform: "none", py: 0.25 }}
 										>
 											{v.label || TIPOS.find((t) => t.id === v.tipo)?.label}
 										</Button>
 									))}
-									{p.pdf?.url && (
+									{(p.pdf?.url || p.pdf?.bytes) && (
 										<Button
 											size="small"
 											variant="outlined"
 											color="secondary"
 											endIcon={<ExportSquare size={13} />}
-											href={p.pdf.url}
-											target="_blank"
-											rel="noopener noreferrer"
+											onClick={() => abrirPieza(p, p.pdf?.url || "", "pdf")}
 											sx={{ textTransform: "none", py: 0.25 }}
 										>
-											PDF
+											PDF{p.pdf?.paginas ? ` · ${p.pdf.paginas} p.` : ""}
 										</Button>
 									)}
 									{(p.variantes || []).length === 0 && !p.pdf?.url && (

@@ -181,6 +181,17 @@ export const vincularMedia = async (id: string): Promise<{ instagramMediaId: str
 	return res.data.data;
 };
 
+/**
+ * Enlace de vista previa. Una publicación reservada no se abre sin token ni
+ * desde el admin: en vez de hacer una excepción —otra puerta que cuidar— se
+ * emite un acceso de un día y se abre la URL real. Se ve lo mismo que verá
+ * la persona, por el mismo camino.
+ */
+export const getVistaPrevia = async (id: string, pieza?: string): Promise<{ url: string }> => {
+	const res = await mktAxios.get(`/api/publicaciones/${id}/vista-previa`, { params: pieza ? { pieza } : undefined });
+	return res.data.data;
+};
+
 export const getConfigFlujo = async (): Promise<ConfiguracionFlujo> => {
 	const res = await mktAxios.get("/api/publicaciones/flujo-config");
 	return res.data.data;
