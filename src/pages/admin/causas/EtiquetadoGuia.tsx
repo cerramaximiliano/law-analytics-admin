@@ -168,6 +168,25 @@ const SECCIONES: Seccion[] = [
 						terminación, aunque medie allanamiento.
 					</LI>
 					<LI>
+						<B>Ejecución de sentencia</B> (arts. 499-516 CPCCN, incluida la de honorarios): tiene articulado propio y
+						se marca distinto del juicio ejecutivo. No hay mandamiento de intimación: primero se embarga (art. 502 →{" "}
+						<Codigo>ordena_embargo</Codigo> · ejecución) y, trabada la medida, se <B>cita de venta</B> para oponer
+						excepciones (art. 505) → <Codigo>cita_venta</Codigo> · ejecución · impulso (carga solo si el despacho indica
+						el apercibimiento). Si el mismo auto embarga y ordena citar, el embargo es el principal y{" "}
+						<Codigo>cita_venta</Codigo> va como secundario. La sentencia del <B>art. 508</B> (resuelve las excepciones y
+						manda continuar la ejecución) → <Codigo>resuelve_ejecucion_sentencia</Codigo> · interlocutoria · ejecución ·
+						decisión · <Codigo>hace_lugar</Codigo> (no prosperan o no se opusieron) o <Codigo>rechaza</Codigo>{" "}
+						(prosperan), con fila de Decisiones de objeto <Codigo>ejecucion</Codigo>; nunca es terminación.
+					</LI>
+					<LI>
+						<B>Recurso «mal concedido»</B>: la alzada revisa la admisibilidad aunque el juez lo haya concedido. Si
+						declara que no debió concederse (monto inferior al mínimo del art. 242, resolución inapelable,
+						extemporáneo), NO trata el recurso → <Codigo>resuelve_recurso</Codigo> · segunda instancia · decisión ·{" "}
+						<Codigo>deniega</Codigo> (la contracara de <Codigo>concede</Codigo>), con fila «recurso_apelacion → deniega:
+						mal concedido (…)». No es <Codigo>confirma</Codigo> (no revisó lo resuelto) ni <Codigo>rechaza</Codigo> (no
+						lo trató). Lo resuelto en primera instancia queda firme.
+					</LI>
+					<LI>
 						<B>Allanamiento con varios demandados</B>: el modo <Codigo>allanamiento</Codigo> solo corresponde si se
 						allanan todos y la sentencia cierra el proceso. Si se allana uno y contra los otros el juicio sigue (o se
 						ejecuta), no hay terminación por allanamiento.

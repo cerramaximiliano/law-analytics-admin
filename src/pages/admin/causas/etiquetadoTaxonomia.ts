@@ -242,6 +242,7 @@ const ACTOS_PROCESALES_BASE: [string, string][] = [
 	["ninguno", "Ninguno — no es resolución"],
 	["corre_traslado", "Corre traslado"],
 	["intima_pago_cita_remate", "Intima de pago y cita de remate (auto inicial del ejecutivo)"],
+	["cita_venta", "Cita de venta (ejecución de sentencia, art. 505 CPCCN)"],
 	["da_vista", "Da vista (Ministerio Público / organismo)"],
 	["intima", "Intima"],
 	["concede_prorroga", "Concede prórroga (de un plazo pedido)"],
@@ -280,6 +281,7 @@ const ACTOS_PROCESALES_BASE: [string, string][] = [
 	["resuelve_recurso", "Resuelve recurso (no-fondo)"],
 	["aclara_rectifica", "Aclara / rectifica error material (de oficio)"],
 	["acepta_desistimiento", "Tiene por desistido (recurso / prueba / proceso)"],
+	["resuelve_ejecucion_sentencia", "Resuelve la ejecución de sentencia (art. 508 CPCCN)"],
 	["resuelve_fondo", "Resuelve el fondo"],
 	["homologa_acuerdo", "Homologa acuerdo"],
 	["registra_pago", "Registra pago / dación en pago"],
@@ -320,6 +322,15 @@ export const ACTO_AUTOFILL: Record<
 	// demanda del ordinario → impulso (regla de oro 3). El embargo va como
 	// secundario + fila de Decisiones.
 	intima_pago_cita_remate: { tipoResolucion: "providencia_simple", materia: "fondo", funcion: "impulso", resultado: "no_aplica" },
+	// Ejecución de sentencia (arts. 499-516 CPCCN, también la de honorarios): trabado el
+	// embargo (art. 502), se cita de venta al ejecutado para oponer excepciones (art. 505).
+	cita_venta: {
+		tipoResolucion: "providencia_simple",
+		materia: "ejecucion",
+		contexto: "ejecucion",
+		funcion: "impulso",
+		resultado: "no_aplica",
+	},
 	intima: { tipoResolucion: "providencia_simple", funcion: "ordenacion", resultado: "no_aplica" },
 	// Hace lugar a un pedido de más plazo (perito, parte): decide sobre una petición.
 	// La materia sigue al plazo prorrogado (prueba, ejecución…).
@@ -386,6 +397,16 @@ export const ACTO_AUTOFILL: Record<
 	// (recurso/prueba). Si desiste EL PROCESO: funcion=terminacion + modo
 	// desistimiento_del_proceso o _del_derecho.
 	acepta_desistimiento: { tipoResolucion: "providencia_simple", funcion: "decision", resultado: "declara" },
+	// Sentencia del art. 508 CPCCN: resuelve las excepciones y, si no prosperan (o no se
+	// opusieron), manda continuar la ejecución → hace_lugar; si prosperan → rechaza.
+	// Nunca es terminación (como el remate del ejecutivo).
+	resuelve_ejecucion_sentencia: {
+		tipoResolucion: "sentencia_interlocutoria",
+		materia: "ejecucion",
+		contexto: "ejecucion",
+		funcion: "decision",
+		resultado: "hace_lugar",
+	},
 	resuelve_fondo: { tipoResolucion: "sentencia_definitiva", materia: "fondo", funcion: "terminacion", modoTerminacion: "sentencia_sobre_fondo" },
 	homologa_acuerdo: { tipoResolucion: "sentencia_homologatoria", funcion: "terminacion", modoTerminacion: "homologacion_de_acuerdo", resultado: "homologa" },
 	registra_pago: { tipoResolucion: "providencia_simple", materia: "ejecucion", contexto: "ejecucion", funcion: "ordenacion", resultado: "no_aplica" },
