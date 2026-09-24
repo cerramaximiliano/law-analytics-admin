@@ -212,6 +212,14 @@ const SECCIONES: Seccion[] = [
 						parciales, las daciones en pago y los giros siguen siendo impulso/ordenación: no terminan. El archivo por
 						inactividad sigue siendo modo <Codigo>archivo</Codigo>. La etapa de ejecución de sentencia de un proceso de
 						conocimiento no usa este modo: ese proceso ya terminó con la sentencia.
+						<br />
+						<B>Cumplimiento ≠ desistimiento</B>: son modos distintos. Si el juez concluye el proceso sobre el pago
+						denunciado («informa pago», «carta de pago… por concluidas») → <Codigo>cumplimiento</Codigo>. Si provee un{" "}
+						<B>desistimiento</B> (escrito «desiste»; «téngase presente el desistimiento de la acción y del derecho»),
+						aunque mencione una carta de pago → <Codigo>acepta_desistimiento</Codigo> · modo{" "}
+						<Codigo>desistimiento_del_derecho</Codigo> (o <Codigo>desistimiento_del_proceso</Codigo> si solo desiste de
+						la acción, art. 304), con <Codigo>registra_pago</Codigo> como secundario. Si el actor pide el archivo sin
+						causa visible → modo <Codigo>archivo</Codigo>. Mirar el título del escrito que se provee.
 					</LI>
 					<LI>
 						<B>Recurso «mal concedido»</B>: la alzada revisa la admisibilidad aunque el juez lo haya concedido. Si
