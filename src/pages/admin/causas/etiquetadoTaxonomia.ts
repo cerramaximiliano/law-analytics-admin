@@ -411,6 +411,7 @@ const OBJETOS_DECIDIDOS_BASE: [string, string][] = [
 	["desistimiento_accion_derecho", "Desistimiento de la acción y del derecho"],
 	["falta_legitimacion", "Falta de legitimación (activa / pasiva)"],
 	["ejecucion", "Ejecución / cobro en este proceso"],
+	["pacto_cuota_litis", "Pacto de cuota litis"],
 	["inconstitucionalidad", "Inconstitucionalidad (planteo o de oficio)"],
 ];
 
@@ -446,6 +447,7 @@ export const RESULTADOS_POR_OBJETO: Record<string, string[]> = {
 	desistimiento_accion_derecho: ["declara", "homologa", "rechaza", "confirma", "revoca"],
 	falta_legitimacion: ["hace_lugar", "rechaza", "confirma", "revoca"],
 	ejecucion: ["hace_lugar", "rechaza", "confirma", "revoca"],
+	pacto_cuota_litis: ["homologa", "rechaza", "confirma", "revoca"],
 	inconstitucionalidad: ["declara", "hace_lugar", "rechaza", "confirma", "revoca"],
 };
 
