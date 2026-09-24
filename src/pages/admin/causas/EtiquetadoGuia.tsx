@@ -169,6 +169,20 @@ const SECCIONES: Seccion[] = [
 						terminación, aunque medie allanamiento.
 					</LI>
 					<LI>
+						<B>Ejecución fiscal</B> (AFIP/ARCA, art. 92 ley 11.683, y cobros análogos): el juez tiene por promovida la
+						demanda y decreta el embargo, pero el mandamiento de intimación lo diligencia el agente fiscal u oficial ad
+						hoc. Ese auto igual va como <Codigo>intima_pago_cita_remate</Codigo> · fondo · impulso (es el auto inicial
+						de la ejecución), con el embargo como secundario y fila de Decisiones. La sentencia que «declara expedita la
+						vía de ejecución» es el remate → <Codigo>resuelve_fondo</Codigo> · decisión.
+					</LI>
+					<LI>
+						<B>Medidas cautelares distintas del embargo</B> (inhibición general de bienes, secuestro, anotación de
+						litis, prohibición de innovar o de contratar, intervención) → <Codigo>ordena_medida_cautelar</Codigo> ·
+						cautelar · decisión, con fila <Codigo>medida_cautelar</Codigo>. El embargo sigue siendo{" "}
+						<Codigo>ordena_embargo</Codigo>. Si el auto ordena ambas, el principal es la que responde al pedido y la
+						otra va como secundario.
+					</LI>
+					<LI>
 						<B>Preparación de la vía ejecutiva</B> (arts. 525-526 CPCCN): si el instrumento es privado y la firma no
 						está certificada (contrato de locación, pagaré, reconocimiento de deuda), todavía no hay título: el juez
 						cita al deudor a reconocer la firma en lugar de librar el mandamiento → <Codigo>cita_reconocimiento_firma</Codigo>{" "}
