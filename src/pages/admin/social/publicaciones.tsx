@@ -47,6 +47,7 @@ import { Add, DocumentText, Edit2, ExportSquare, Refresh, Trash } from "iconsax-
 
 // project imports
 import MainCard from "components/MainCard";
+import PanelFlujo from "./PanelFlujo";
 import {
 	Publicacion,
 	PublicacionEstado,
@@ -340,6 +341,8 @@ const Publicaciones = () => {
 										</Typography>
 									)}
 								</Stack>
+
+								<PanelFlujo publicacion={p} onCambio={cargar} />
 							</Box>
 						</Grid>
 					))}

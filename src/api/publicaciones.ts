@@ -104,3 +104,79 @@ export const updatePublicacion = async (id: string, payload: PublicacionPayload)
 export const deletePublicacion = async (id: string): Promise<void> => {
 	await mktAxios.delete(`/api/publicaciones/${id}`);
 };
+
+// ==================== Flujo ====================
+// contenido → PDF → post → automatización. Cada paso es independiente:
+// nada se encadena solo, un informe se publica cuando alguien lo decide.
+
+export interface PasoContenido {
+	ok: boolean;
+	secciones: number;
+	placas: number;
+	errores: string[];
+}
+
+export interface FlujoEstado {
+	contenido: PasoContenido;
+	pdf: { ok: boolean; paginas: number | null; bytes: number | null; generadoEn: string | null };
+	post: { ok: boolean; id?: string; titulo?: string; estado?: string; publicadoEn?: string | null; instagramMediaId?: string | null };
+	trigger: {
+		ok: boolean;
+		id?: string;
+		palabras?: string[];
+		activo?: boolean;
+		/** Sin el media id el webhook no sabe a qué post pertenece un comentario. */
+		vinculado?: boolean;
+		metricas?: { comentarios: number; respondidos: number; abrieron: number; emails: number; errores: number };
+	};
+}
+
+export interface ConfiguracionFlujo {
+	post: { templateId: string; formato: string; estilo: string; cierre: string; hashtags: string[]; llamado: string };
+	trigger: {
+		estrategiaPalabra: "titulo" | "fija";
+		palabraFija: string;
+		exacta: boolean;
+		activarAlCrear: boolean;
+		pedirEmail: boolean;
+		mensajeInicial: { texto: string; boton: string };
+		mensajeMaterial: { texto: string; boton: string };
+		mensajeEmail: { texto: string; confirmacion: string };
+	};
+	publicacion: { listadaPorDefecto: boolean; piezaPrincipal: string; piezas: string[] };
+}
+
+export const getFlujo = async (id: string): Promise<FlujoEstado> => {
+	const res = await mktAxios.get(`/api/publicaciones/${id}/flujo`);
+	return res.data.data;
+};
+
+export const generarPdf = async (id: string, pieza?: string): Promise<{ paginas: number | null; bytes: number }> => {
+	const res = await mktAxios.post(`/api/publicaciones/${id}/pdf`, { pieza });
+	return res.data.data;
+};
+
+export const crearPostDesdePublicacion = async (id: string, palabra?: string): Promise<{ _id: string; titulo: string }> => {
+	const res = await mktAxios.post(`/api/publicaciones/${id}/post`, { palabra });
+	return res.data.data;
+};
+
+export const crearTriggerDesdePublicacion = async (id: string, palabra?: string): Promise<{ _id: string; palabras: string[] }> => {
+	const res = await mktAxios.post(`/api/publicaciones/${id}/trigger`, { palabra });
+	return res.data.data;
+};
+
+export const vincularMedia = async (id: string): Promise<{ instagramMediaId: string }> => {
+	const res = await mktAxios.post(`/api/publicaciones/${id}/vincular-media`);
+	return res.data.data;
+};
+
+export const getConfigFlujo = async (): Promise<ConfiguracionFlujo> => {
+	const res = await mktAxios.get("/api/publicaciones/flujo-config");
+	return res.data.data;
+};
+
+export const updateConfigFlujo = async (payload: Partial<ConfiguracionFlujo>): Promise<ConfiguracionFlujo> => {
+	const res = await mktAxios.put("/api/publicaciones/flujo-config", payload);
+	return res.data.data;
+};
