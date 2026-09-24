@@ -1084,6 +1084,22 @@ const admin: NavItemType = {
 					chip: { label: "Nuevo", color: "primary", variant: "outlined", size: "small" },
 				},
 				{
+					id: "comment-triggers",
+					title: "Automatizaciones IG",
+					type: "item",
+					url: "/admin/social/triggers",
+					breadcrumbs: true,
+					chip: { label: "Nuevo", color: "primary", variant: "outlined", size: "small" },
+				},
+				{
+					id: "publicaciones",
+					title: "Publicaciones",
+					type: "item",
+					url: "/admin/social/publicaciones",
+					breadcrumbs: true,
+					chip: { label: "Nuevo", color: "primary", variant: "outlined", size: "small" },
+				},
+				{
 					id: "educativo-articulos",
 					title: "Artículos del Blog",
 					type: "item",
