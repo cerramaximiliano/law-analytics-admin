@@ -64,7 +64,8 @@ const Theme5 = (mode: ThemeMode): PaletteThemeProps => {
 			main: warningColors[2],
 			dark: warningColors[3],
 			darker: warningColors[4],
-			contrastText: secondaryColors[5],
+			// Texto oscuro sobre ocre: blanco o gris claro no se leen en chips y botones warning.
+			contrastText: "#1D2630",
 		},
 		info: {
 			lighter: infoColors[0],
