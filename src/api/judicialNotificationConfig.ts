@@ -178,6 +178,19 @@ export interface JudicialNotificationConfig {
 		showWithOtherBanners?: boolean;
 	};
 	movementPolicies?: MovementPolicies | null;
+	/**
+	 * Plantillas de WhatsApp (Meta) del aviso de novedades. No son secretos:
+	 * son nombres de plantillas creadas y aprobadas en la WABA. Vacío = se usan
+	 * las variables de entorno de la-notification como respaldo.
+	 */
+	whatsappTemplates?: {
+		/** Plantilla única (2 variables: cantidad de carpetas + lista en una línea) */
+		digest?: string | null;
+		/** Prefijo de la familia "una carpeta por línea" (<familia>_1|2|3); "" = no usarla */
+		digestFamily?: string | null;
+		/** Idioma aprobado en Meta (p. ej. es_AR) */
+		lang?: string | null;
+	};
 	stats?: {
 		lastNotificationSentAt: string | null;
 		totalNotificationsSent: number;
@@ -220,6 +233,7 @@ export type JudicialNotificationConfigUpdate = Partial<
 		| "bannerPolicy"
 		| "postalNotifications"
 		| "movementPolicies"
+		| "whatsappTemplates"
 	>
 >;
 
@@ -481,6 +495,29 @@ export function resolveEffectivePolicy(
 // webhook de Evolution (connection.update); desde la admin se puede forzar.
 // ----------------------------------------------------------------------
 
+/** Estado de una plantilla en Meta. PENDING = en revisión, no se puede usar. */
+export type WhatsAppTemplateStatus = "APPROVED" | "PENDING" | "REJECTED" | "PAUSED" | "DISABLED" | string;
+export type WhatsAppTemplateCategory = "UTILITY" | "MARKETING" | "AUTHENTICATION" | string;
+
+export interface WhatsAppTemplate {
+	name: string;
+	status: WhatsAppTemplateStatus;
+	category: WhatsAppTemplateCategory;
+	/** Si Meta le cambió la categoría, la anterior (p. ej. tras una apelación) */
+	previousCategory: WhatsAppTemplateCategory | null;
+	language: string;
+	rejectedReason: string | null;
+}
+
+export interface WhatsAppTemplatesData {
+	templates: WhatsAppTemplate[];
+	/** Nombres vigentes (config de la admin, o las env de la-notification como respaldo) */
+	current: { digest: string; family: string | null; lang: string };
+	wabaId: string | null;
+	/** Mensaje si no se pudo consultar Meta (la tarjeta lo muestra tal cual) */
+	error: string | null;
+}
+
 export interface WhatsAppConversationsQuery {
 	limit?: number;
 	/** Filtra por sufijo del teléfono (se ignoran separadores) */
@@ -608,6 +645,12 @@ const JudicialNotificationConfigService = {
 
 	async resetStats(): Promise<JudicialNotificationConfig["stats"]> {
 		const response = await adminAxios.post(`${BASE}/reset-stats`);
+		return response.data.data;
+	},
+
+	/** Plantillas de la WABA con su estado en Meta + las que usa hoy el canal */
+	async getWhatsappTemplates(): Promise<WhatsAppTemplatesData> {
+		const response = await adminAxios.get(`${BASE}/whatsapp-templates`);
 		return response.data.data;
 	},
 
