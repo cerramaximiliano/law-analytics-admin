@@ -166,7 +166,10 @@ const SECCIONES: Seccion[] = [
 						remate) NO es terminación: cierra la etapa de conocimiento y, si manda llevar adelante la ejecución, el
 						proceso sigue con la liquidación, la subasta y el pago → <Codigo>resuelve_fondo</Codigo> · interlocutoria ·
 						decisión · <Codigo>hace_lugar</Codigo> (estimatoria) o <Codigo>rechaza</Codigo> (desestimatoria), sin modo de
-						terminación, aunque medie allanamiento.
+						terminación, aunque medie allanamiento. Excepción: el rechazo <B>total</B> de la ejecución (remate
+						desestimatorio o rechazo in límine de la demanda ejecutiva) no deja nada que ejecutar y cierra el proceso →
+						terminación · <Codigo>sentencia_sobre_fondo</Codigo> · <Codigo>rechaza</Codigo>, aunque después la alzada lo
+						revoque. El rechazo parcial (sigue contra otro codemandado) sigue siendo decisión.
 					</LI>
 					<LI>
 						<B>Ejecución fiscal</B> (AFIP/ARCA, art. 92 ley 11.683, y cobros análogos): el juez tiene por promovida la
