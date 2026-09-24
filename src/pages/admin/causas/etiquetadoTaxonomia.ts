@@ -30,6 +30,7 @@ export const DIM_LABELS: Record<DimKey, DimDef> = {
 			["sentencia_interlocutoria", "Sent. interlocutoria"],
 			["sentencia_definitiva", "Sent. definitiva"],
 			["sentencia_homologatoria", "Sent. homologatoria"],
+			["acta", "Acta de audiencia"],
 			["otra_resolucion", "Otra resolución"],
 			["no_es_resolucion", "No es resolución"],
 		],
@@ -312,10 +313,12 @@ export const ACTO_AUTOFILL: Record<
 	da_vista: { tipoResolucion: "providencia_simple", funcion: "impulso", resultado: "no_aplica" },
 	intima: { tipoResolucion: "providencia_simple", funcion: "ordenacion", resultado: "no_aplica" },
 	fija_audiencia: { tipoResolucion: "providencia_simple", funcion: "ordenacion", resultado: "no_aplica" },
-	// Acta que documenta la audiencia (celebrada o fracasada). Si en la audiencia
-	// se decide algo (homologación, acuerdo), ESE acto es el principal y el acta
-	// va como secundario.
-	celebra_audiencia: { tipoResolucion: "otra_resolucion", funcion: "ordenacion", resultado: "no_aplica" },
+	// Acta que documenta la audiencia (celebrada o fracasada): tipo propio "acta"
+	// (no es una resolución, pero es un acto del tribunal y puede resolver cosas,
+	// que van en función/resultado/decisiones). Si el acta incorpora una
+	// sentencia (p. ej. homologatoria), manda la sentencia y el acta va como
+	// acto secundario.
+	celebra_audiencia: { tipoResolucion: "acta", funcion: "ordenacion", resultado: "no_aplica" },
 	ordena_notificacion: { tipoResolucion: "providencia_simple", materia: "tramite", funcion: "ordenacion", resultado: "no_aplica" },
 	ordena_oficio: { tipoResolucion: "providencia_simple", funcion: "ordenacion", resultado: "no_aplica" },
 	ordena_cedula: { tipoResolucion: "providencia_simple", materia: "tramite", funcion: "ordenacion", resultado: "no_aplica" },

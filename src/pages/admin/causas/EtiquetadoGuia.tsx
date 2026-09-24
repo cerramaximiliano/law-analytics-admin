@@ -80,8 +80,9 @@ const SECCIONES: Seccion[] = [
 					(constancias, sorteos, listados) — bloquea y resuelve el resto.
 				</LI>
 				<LI>
-					<B>Tipo</B>: forma de la resolución. Providencia simple (trámite, sin fundamentos), sentencia interlocutoria
-					(resuelve cuestión controvertida con fundamentos), sentencia definitiva (el fondo), otra, o no-es-resolución.
+					<B>Tipo</B>: forma del documento. Providencia simple (trámite, sin fundamentos), sentencia interlocutoria
+					(resuelve cuestión controvertida con fundamentos), sentencia definitiva (el fondo), sentencia homologatoria,{" "}
+					<B>acta de audiencia</B> (no es resolución, pero es un acto del tribunal), otra, o no-es-resolución.
 					El tipo se juzga por ESTRUCTURA y fundamentación, no por lo que resuelve: la reposición desestimada en
 					despacho breve ("no ha lugar, presente la apelación") es providencia simple; solo es interlocutoria con
 					AUTOS Y VISTOS / considerandos o fundamentación desarrollada. Un auto de apertura a prueba: providencia
@@ -233,19 +234,26 @@ const SECCIONES: Seccion[] = [
 						(art. 63 LO) — no se inventan sanciones que el documento no menciona.
 					</LI>
 					<LI>
-						<B>Acta de audiencia</B> (celebrada O fracasada por incomparecencia): acto{" "}
-						<Codigo>celebra_audiencia</Codigo> · tipo <B>Otra resolución</B> — NUNCA "no es resolución": el acta
-						documenta un acto del tribunal y casi siempre dispone algo ("OÍDO LO CUAL SS RESUELVE…"). Materia por el
-						fin (prueba / conciliación).
+						<B>Acta de audiencia</B> (celebrada O fracasada por incomparecencia): tipo <Codigo>acta</Codigo> · acto{" "}
+						<Codigo>celebra_audiencia</Codigo>. El acta no es una resolución, pero documenta un acto del tribunal: el tipo
+						dice la forma y el acto dice que hubo audiencia. Materia por el fin (prueba / conciliación / audiencia 360).
+						Lo que el acta resuelve ("OÍDO LO CUAL SS RESUELVE…") va en función, resultado y decisiones: si solo
+						declararon testigos → ordenación; si declara caídos testigos, tiene por desistida prueba o la declara
+						inoficiosa → decisión, con una fila por cada cosa resuelta.
 					</LI>
 					<LI>
-						<B>Acta con acuerdo homologado</B>: manda la homologación — acto principal{" "}
-						<Codigo>homologa_acuerdo</Codigo> · tipo <Codigo>sentencia_homologatoria</Codigo> · terminación + modo
-						homologación · <Codigo>celebra_audiencia</Codigo> como secundario.
+						<B>Si el acta incorpora una sentencia</B> (p. ej. homologa el acuerdo que cierra el pleito): manda la
+						sentencia — acto principal el de la sentencia (<Codigo>homologa_acuerdo</Codigo>), tipo el de la
+						sentencia (<Codigo>sentencia_homologatoria</Codigo>), terminación + modo, y{" "}
+						<Codigo>celebra_audiencia</Codigo> como acto secundario. Lo que se decide dentro del acta sin ser una
+						sentencia (homologar un pacto de cuota litis, tener por desistida una prueba) sigue siendo tipo{" "}
+						<Codigo>acta</Codigo>.
 					</LI>
 					<LI>
-						<B>Constancias de secretaría</B> sin dispositiva del juez (sorteos, certificados, listados): acto{" "}
-						<Codigo>ninguno</Codigo> — la frontera es el contenido dispositivo, no el formato de acta.
+						<B>Las constancias siguen como</B> <Codigo>ninguno</Codigo>: certificados (de prueba, de elevación), la
+						orden de certificar o de librar un certificado, notas de secretaría (presentación de alegatos, reserva de
+						documentación, retiro de oficios), oficios firmados y observaciones de confronte. No documentan un acto con
+						contenido propio — la frontera es el contenido, no el formato.
 					</LI>
 				</Box>
 			</>
@@ -290,7 +298,7 @@ const SECCIONES: Seccion[] = [
 				<LI>Función decisión → resultado real obligatorio (no "no aplica").</LI>
 				<LI>Impulso / ordenación / suspensión / reanudación → resultado solo "no aplica" (o vacío).</LI>
 				<LI>Modo de terminación únicamente con función terminación.</LI>
-				<LI>"No es resolución" solo admite acto "ninguno"; y "ninguno" exige ese tipo (el flujo lo arma solo).</LI>
+				<LI>"No es resolución" solo admite acto "ninguno"; y "ninguno" exige ese tipo (el flujo lo arma solo). Un acta de audiencia NO es "no es resolución": va con tipo "acta".</LI>
 				<LI>Decisiones con objeto → con resultado; cargas con datos → con acción.</LI>
 			</Box>
 		),
