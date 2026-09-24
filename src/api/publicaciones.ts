@@ -51,6 +51,8 @@ export interface Publicacion {
 	estado: PublicacionEstado;
 	publicadoEn: string | null;
 	destacada: boolean;
+	/** false = se llega sólo con el link: no aparece en el listado ni se indexa. */
+	listada: boolean;
 	orden: number;
 	postId: string | null;
 	fuente: PublicacionFuente;
@@ -70,6 +72,7 @@ export interface PublicacionPayload {
 	pdf?: PublicacionPdf;
 	estado?: PublicacionEstado;
 	destacada?: boolean;
+	listada?: boolean;
 	orden?: number;
 	postId?: string | null;
 	fuente?: PublicacionFuente;

@@ -81,6 +81,7 @@ const VACIA: PublicacionPayload & { titulo: string; slug: string; bajada: string
 	fuero: "",
 	estado: "borrador",
 	destacada: false,
+	listada: false,
 	orden: 0,
 	variantes: [],
 	base: { descripcion: "", periodo: "" },
@@ -142,6 +143,7 @@ const Publicaciones = () => {
 			fuero: p.fuero || "",
 			estado: p.estado,
 			destacada: p.destacada,
+			listada: p.listada,
 			orden: p.orden,
 			variantes: p.variantes || [],
 			base: p.base || {},
@@ -268,6 +270,9 @@ const Publicaciones = () => {
 											<Chip size="small" label={p.estado} color={ESTADO_COLOR[p.estado]} sx={{ height: 20, fontSize: 11 }} />
 											{p.categoria && <Chip size="small" variant="outlined" label={p.categoria} sx={{ height: 20, fontSize: 11 }} />}
 											{p.destacada && <Chip size="small" color="primary" label="destacada" sx={{ height: 20, fontSize: 11 }} />}
+											{p.estado === "publicada" && !p.listada && (
+												<Chip size="small" variant="outlined" label="sólo con el link" sx={{ height: 20, fontSize: 11 }} />
+											)}
 										</Stack>
 										<Typography variant="subtitle1" sx={{ lineHeight: 1.25 }}>
 											{p.titulo}
@@ -394,10 +399,18 @@ const Publicaciones = () => {
 								</Select>
 							</FormControl>
 						</Grid>
-						<Grid item xs={6} md={4}>
+						<Grid item xs={6} md={2}>
 							<Stack direction="row" spacing={1} alignItems="center" sx={{ height: "100%" }}>
 								<Switch checked={!!form.destacada} onChange={(e) => setForm({ ...form, destacada: e.target.checked })} />
 								<Typography variant="body2">Destacada</Typography>
+							</Stack>
+						</Grid>
+						<Grid item xs={12} md={5}>
+							<Stack direction="row" spacing={1} alignItems="center" sx={{ height: "100%" }}>
+								<Switch checked={!!form.listada} onChange={(e) => setForm({ ...form, listada: e.target.checked })} />
+								<Tooltip title="Apagado: la publicación existe y se abre con su link, pero no figura en /informes ni la indexan los buscadores. Es lo que corresponde cuando el link se reparte por privado y no querés que se pueda recorrer el resto de las campañas.">
+									<Typography variant="body2">Aparece en el listado público</Typography>
+								</Tooltip>
 							</Stack>
 						</Grid>
 
