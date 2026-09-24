@@ -159,6 +159,20 @@ const SECCIONES: Seccion[] = [
 						demanda; declara caducidad).
 					</LI>
 					<LI>
+						<B>Juicio ejecutivo</B>: el auto inicial (mandamiento de intimación de pago y citación de remate, art. 531)
+						→ <Codigo>intima_pago_cita_remate</Codigo> · fondo · impulso (cumple la función del traslado de demanda); el
+						embargo preventivo va como secundario y fila de Decisiones. La <B>sentencia de remate</B> (o de trance y
+						remate) NO es terminación: cierra la etapa de conocimiento y, si manda llevar adelante la ejecución, el
+						proceso sigue con la liquidación, la subasta y el pago → <Codigo>resuelve_fondo</Codigo> · interlocutoria ·
+						decisión · <Codigo>hace_lugar</Codigo> (estimatoria) o <Codigo>rechaza</Codigo> (desestimatoria), sin modo de
+						terminación, aunque medie allanamiento.
+					</LI>
+					<LI>
+						<B>Allanamiento con varios demandados</B>: el modo <Codigo>allanamiento</Codigo> solo corresponde si se
+						allanan todos y la sentencia cierra el proceso. Si se allana uno y contra los otros el juicio sigue (o se
+						ejecuta), no hay terminación por allanamiento.
+					</LI>
+					<LI>
 						<B>Llegada a la alzada</B>: el primer proveído de la Sala (hace saber la Sala que va a conocer, el{" "}
 						<B>orden de votación</B> o la <B>integración</B>) → <Codigo>recibe_autos_alzada</Codigo> · segunda instancia ·
 						recurso · recursiva · impulso, aunque no diga "por recibido".

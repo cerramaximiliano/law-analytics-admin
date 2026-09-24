@@ -241,6 +241,7 @@ const ACTOS_PROCESALES_BASE: [string, string][] = [
 	// listados…): fija tipo = no_es_resolucion y las demás dimensiones no aplican.
 	["ninguno", "Ninguno — no es resolución"],
 	["corre_traslado", "Corre traslado"],
+	["intima_pago_cita_remate", "Intima de pago y cita de remate (auto inicial del ejecutivo)"],
 	["da_vista", "Da vista (Ministerio Público / organismo)"],
 	["intima", "Intima"],
 	["concede_prorroga", "Concede prórroga (de un plazo pedido)"],
@@ -314,6 +315,11 @@ export const ACTO_AUTOFILL: Record<
 > = {
 	corre_traslado: { tipoResolucion: "providencia_simple", funcion: "impulso", resultado: "no_aplica" },
 	da_vista: { tipoResolucion: "providencia_simple", funcion: "impulso", resultado: "no_aplica" },
+	// Auto inicial del juicio ejecutivo (art. 531 CPCCN): mandamiento de intimación
+	// de pago y citación para oponer excepciones. Cumple la función del traslado de
+	// demanda del ordinario → impulso (regla de oro 3). El embargo va como
+	// secundario + fila de Decisiones.
+	intima_pago_cita_remate: { tipoResolucion: "providencia_simple", materia: "fondo", funcion: "impulso", resultado: "no_aplica" },
 	intima: { tipoResolucion: "providencia_simple", funcion: "ordenacion", resultado: "no_aplica" },
 	// Hace lugar a un pedido de más plazo (perito, parte): decide sobre una petición.
 	// La materia sigue al plazo prorrogado (prueba, ejecución…).
