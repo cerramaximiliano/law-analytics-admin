@@ -115,7 +115,8 @@ const SECCIONES: Seccion[] = [
 				</LI>
 				<LI>
 					<B>Modo de terminación</B>: solo con función terminación (cómo terminó: sentencia sobre fondo, conciliación,
-					caducidad, archivo…).
+					caducidad, archivo…). Manda la vía real: la sentencia que se dicta por allanamiento (art. 307 CPCCN) lleva
+					modo <Codigo>allanamiento</Codigo>, no "sentencia sobre fondo".
 				</LI>
 				<LI>
 					<B>Firmeza</B>: dejala VACÍA salvo que el propio documento declare la firmeza o dé cuenta del recurso — el

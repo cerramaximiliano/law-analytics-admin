@@ -416,6 +416,7 @@ const OBJETOS_DECIDIDOS_BASE: [string, string][] = [
 	["falta_legitimacion", "Falta de legitimación (activa / pasiva)"],
 	["ejecucion", "Ejecución / cobro en este proceso"],
 	["pacto_cuota_litis", "Pacto de cuota litis"],
+	["dacion_en_pago", "Dación en pago"],
 	["inconstitucionalidad", "Inconstitucionalidad (planteo o de oficio)"],
 ];
 
@@ -452,6 +453,7 @@ export const RESULTADOS_POR_OBJETO: Record<string, string[]> = {
 	falta_legitimacion: ["hace_lugar", "rechaza", "confirma", "revoca"],
 	ejecucion: ["hace_lugar", "rechaza", "confirma", "revoca"],
 	pacto_cuota_litis: ["homologa", "rechaza", "confirma", "revoca"],
+	dacion_en_pago: ["hace_lugar", "rechaza", "confirma", "revoca"],
 	inconstitucionalidad: ["declara", "hace_lugar", "rechaza", "confirma", "revoca"],
 };
 
