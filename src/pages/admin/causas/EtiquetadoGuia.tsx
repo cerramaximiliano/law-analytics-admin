@@ -187,6 +187,15 @@ const SECCIONES: Seccion[] = [
 					("Otro" siempre disponible).
 				</P>
 				<P>
+					<B>Decisión implícita</B>: si la dispositiva no dice "rechazo" pero impide lo pedido (remite a otro juez o
+					proceso, "estése a lo dispuesto", "no ha lugar por ahora", un "previo…" que posterga sin plazo), la{" "}
+					<B>Función sigue la forma</B> del proveído (ordenación / impulso) y el <B>sentido material</B> va en una fila
+					de Decisiones: objeto = lo pedido, resultado = el efecto real (<Codigo>rechaza</Codigo>), y el detalle empieza
+					con <Codigo>implícito:</Codigo> + la razón. En Notas citá la petición que responde (el título del escrito).
+					Ejemplo: "peticione ante el juez del proceso liquidatorio" frente a un pedido de intimación de pago →{" "}
+					<Codigo>ejecucion → rechaza</Codigo> "implícito: remite al proceso liquidatorio (fuero de atracción)".
+				</P>
+				<P>
 					<B>Pares de alzada</B>: si el movimiento parece una revisión de segunda instancia y antes hubo una decisión con
 					objetos decididos seguida de concesión/elevación de recurso, aparece el aviso "✦ Posible par de alzada" con un
 					botón para agregar la fila espejo (mismo objeto, resultado confirma/revoca/modifica). Es sugerencia: el par
@@ -564,7 +573,9 @@ const DetalleMateria = () => (
 			</LI>
 			<LI>
 				<B>Otras específicas</B>: excepción o declaración de incompetencia → <Codigo>competencia</Codigo>; formación de
-				incidente de recusación → <Codigo>recusacion</Codigo>; apercibimiento efectivizado → la materia de la carga
+				incidente de recusación → <Codigo>recusacion</Codigo>; todo el episodio de <B>caducidad de instancia</B>{" "}
+				(planteo, traslado, declaración o rechazo, de 1ª o 2ª instancia o de un incidente) →{" "}
+				<Codigo>caducidad</Codigo>, nunca <Codigo>otro</Codigo>; apercibimiento efectivizado → la materia de la carga
 				incumplida (bono → trámite; prueba → prueba).
 			</LI>
 		</Box>

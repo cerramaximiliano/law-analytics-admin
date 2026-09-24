@@ -65,6 +65,7 @@ export const DIM_LABELS: Record<DimKey, DimDef> = {
 			["recurso", "Recurso"],
 			["nulidad", "Nulidad"],
 			["recusacion", "Recusación"],
+			["caducidad", "Caducidad de instancia"],
 			["tramite", "Trámite (sin materia)"],
 			["otro", "Otro"],
 		],
@@ -344,7 +345,7 @@ export const ACTO_AUTOFILL: Record<
 	aprueba_liquidacion: { materia: "liquidacion", contexto: "ejecucion", funcion: "decision", resultado: "hace_lugar" },
 	designa_perito: { tipoResolucion: "providencia_simple", materia: "prueba", funcion: "ordenacion", resultado: "no_aplica" },
 	declara_rebeldia: { tipoResolucion: "sentencia_interlocutoria", funcion: "decision" },
-	declara_caducidad: { tipoResolucion: "sentencia_interlocutoria", funcion: "terminacion", modoTerminacion: "caducidad_de_instancia" },
+	declara_caducidad: { tipoResolucion: "sentencia_interlocutoria", materia: "caducidad", funcion: "terminacion", modoTerminacion: "caducidad_de_instancia" },
 	declara_incompetencia: { tipoResolucion: "sentencia_interlocutoria", materia: "competencia", funcion: "terminacion", resultado: "declara" },
 	resuelve_excepcion: { tipoResolucion: "sentencia_interlocutoria", contexto: "incidental", funcion: "decision" },
 	concede_recurso: { tipoResolucion: "providencia_simple", materia: "recurso", funcion: "decision", resultado: "concede" },
@@ -405,6 +406,8 @@ const OBJETOS_DECIDIDOS_BASE: [string, string][] = [
 	["embargo", "Embargo"],
 	["beneficio_litigar_sin_gastos", "Beneficio de litigar sin gastos"],
 	["desistimiento_accion_derecho", "Desistimiento de la acción y del derecho"],
+	["falta_legitimacion", "Falta de legitimación (activa / pasiva)"],
+	["ejecucion", "Ejecución / cobro en este proceso"],
 	["inconstitucionalidad", "Inconstitucionalidad (planteo o de oficio)"],
 ];
 
@@ -438,6 +441,8 @@ export const RESULTADOS_POR_OBJETO: Record<string, string[]> = {
 	embargo: ["hace_lugar", "rechaza", "confirma", "revoca", "modifica"],
 	beneficio_litigar_sin_gastos: ["hace_lugar", "hace_lugar_parcialmente", "rechaza", "confirma", "revoca", "modifica"],
 	desistimiento_accion_derecho: ["declara", "homologa", "rechaza", "confirma", "revoca"],
+	falta_legitimacion: ["hace_lugar", "rechaza", "confirma", "revoca"],
+	ejecucion: ["hace_lugar", "rechaza", "confirma", "revoca"],
 	inconstitucionalidad: ["declara", "hace_lugar", "rechaza", "confirma", "revoca"],
 };
 
