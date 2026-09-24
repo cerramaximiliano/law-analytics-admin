@@ -290,6 +290,7 @@ const ACTOS_PROCESALES_BASE: [string, string][] = [
 	["ordena_giro", "Ordena/libra giro"],
 	["ordena_embargo", "Ordena embargo"],
 	["ordena_medida_cautelar", "Ordena medida cautelar (inhibición, secuestro, anotación de litis, no innovar…)"],
+	["ordena_subasta", "Ordena (decreta) la subasta"],
 	["levanta_embargo", "Levanta embargo"],
 	["suspende_proceso", "Suspende el proceso"],
 	["reanuda_proceso", "Reanuda el proceso"],
@@ -427,6 +428,15 @@ export const ACTO_AUTOFILL: Record<
 	// Cualquier medida cautelar distinta del embargo (inhibición general de bienes, secuestro,
 	// anotación de litis, prohibición de innovar/contratar, intervención). Fila medida_cautelar.
 	ordena_medida_cautelar: { tipoResolucion: "providencia_simple", materia: "cautelar", funcion: "decision", resultado: "hace_lugar" },
+	// Decreto de subasta en la etapa de ejecución (bienes embargados): fija modalidad, base y
+	// martillero. La designación del martillero va como secundario (designa_perito).
+	ordena_subasta: {
+		tipoResolucion: "providencia_simple",
+		materia: "ejecucion",
+		contexto: "ejecucion",
+		funcion: "decision",
+		resultado: "hace_lugar",
+	},
 	levanta_embargo: { tipoResolucion: "sentencia_interlocutoria", materia: "cautelar", funcion: "decision" },
 	suspende_proceso: { funcion: "suspension" },
 	reanuda_proceso: { funcion: "reanudacion" },

@@ -192,6 +192,25 @@ const SECCIONES: Seccion[] = [
 						libra el mandamiento sigue siendo <Codigo>intima_pago_cita_remate</Codigo>.
 					</LI>
 					<LI>
+						<B>Ampliación posterior a la sentencia</B> (art. 541 CPCCN, típico de expensas): la intimación por los nuevos
+						períodos vencidos («presenten los documentos que acrediten la extinción… bajo apercibimiento de hacer
+						extensiva la sentencia») → <Codigo>intima_pago_cita_remate</Codigo> · fondo · impulso, con carga; la
+						resolución que hace extensiva la sentencia a los nuevos períodos → <Codigo>resuelve_fondo</Codigo> ·
+						decisión · <Codigo>hace_lugar</Codigo> (como el remate, nunca terminación).
+					</LI>
+					<LI>
+						<B>Subasta</B>: el decreto que ordena la subasta de los bienes embargados (modalidad, base, martillero) →{" "}
+						<Codigo>ordena_subasta</Codigo> · ejecución · decisión · <Codigo>hace_lugar</Codigo>, con{" "}
+						<Codigo>designa_perito</Codigo> como secundario por el martillero. Los previos (oficios del art. 576,
+						título, constatación) siguen siendo oficios, intimaciones o mandamientos.
+					</LI>
+					<LI>
+						<B>Rechazo de la conexidad o del fuero de atracción</B> (el juzgado al que llegó la causa por conexidad o
+						por la sucesión del deudor la devuelve para su sorteo, antes de radicarse) →{" "}
+						<Codigo>declara_incompetencia</Codigo> · competencia · decisión · <Codigo>declara</Codigo>, sin
+						terminación: es un paso de asignación y la causa sigue en otro juzgado.
+					</LI>
+					<LI>
 						<B>Ejecución de sentencia</B> (arts. 499-516 CPCCN, incluida la de honorarios): tiene articulado propio y
 						se marca distinto del juicio ejecutivo. No hay mandamiento de intimación: primero se embarga (art. 502 →{" "}
 						<Codigo>ordena_embargo</Codigo> · ejecución) y, trabada la medida, se <B>cita de venta</B> para oponer
