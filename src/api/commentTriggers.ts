@@ -118,3 +118,16 @@ export const updateTrigger = async (id: string, payload: CommentTriggerPayload):
 export const deleteTrigger = async (id: string): Promise<void> => {
 	await mktAxios.delete(`/api/comment-triggers/${id}`);
 };
+
+/** Los hallazgos de coherencia de una automatización, sin intentar guardar. */
+export interface HallazgoTrigger {
+	nivel: "error" | "aviso";
+	codigo: string;
+	mensaje: string;
+	arreglo: string;
+}
+
+export const revisarTrigger = async (id: string): Promise<HallazgoTrigger[]> => {
+	const res = await mktAxios.get(`/api/comment-triggers/${id}/revision`);
+	return res.data.data;
+};

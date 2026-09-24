@@ -116,7 +116,17 @@ export interface PasoContenido {
 	errores: string[];
 }
 
+/** Un problema de coherencia del flujo. Ver validaciones.js en el backend. */
+export interface Hallazgo {
+	nivel: "error" | "aviso";
+	codigo: string;
+	mensaje: string;
+	arreglo: string;
+}
+
 export interface FlujoEstado {
+	/** Lo que el post promete tiene que existir de verdad. */
+	validaciones: Hallazgo[];
 	contenido: PasoContenido;
 	pdf: { ok: boolean; paginas: number | null; bytes: number | null; generadoEn: string | null };
 	post: { ok: boolean; id?: string; titulo?: string; estado?: string; publicadoEn?: string | null; instagramMediaId?: string | null };

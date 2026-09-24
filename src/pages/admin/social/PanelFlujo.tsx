@@ -12,13 +12,33 @@
 import { useCallback, useEffect, useState } from "react";
 
 // material-ui
-import { Alert, Box, Button, Chip, CircularProgress, Divider, Stack, Tooltip, Typography, alpha, useTheme } from "@mui/material";
+import {
+	Alert,
+	AlertTitle,
+	Box,
+	Button,
+	Chip,
+	CircularProgress,
+	Dialog,
+	DialogActions,
+	DialogContent,
+	DialogTitle,
+	Divider,
+	Stack,
+	Switch,
+	TextField,
+	Tooltip,
+	Typography,
+	alpha,
+	useTheme,
+} from "@mui/material";
 
 // third-party
 import { useSnackbar } from "notistack";
 import { DocumentText1, Instagram, Messages2, Refresh, TickCircle } from "iconsax-react";
 
 // project imports
+import { CommentTrigger, listTriggers, updateTrigger } from "api/commentTriggers";
 import {
 	FlujoEstado,
 	Publicacion,
@@ -41,6 +61,9 @@ const PanelFlujo = ({ publicacion, onCambio }: Props) => {
 	const [cargando, setCargando] = useState(true);
 	// Qué paso está corriendo, para deshabilitar sólo ese botón.
 	const [corriendo, setCorriendo] = useState<string | null>(null);
+	// Edición de los mensajes sin salir del panel: es lo que más se retoca.
+	const [editando, setEditando] = useState<CommentTrigger | null>(null);
+	const [form, setForm] = useState<any>(null);
 
 	const cargar = useCallback(async () => {
 		setCargando(true);
@@ -67,6 +90,49 @@ const PanelFlujo = ({ publicacion, onCambio }: Props) => {
 		} catch (err: any) {
 			const d = err?.response?.data;
 			enqueueSnackbar(d?.error || "No se pudo completar el paso", { variant: "error" });
+		} finally {
+			setCorriendo(null);
+		}
+	};
+
+	const abrirMensajes = async () => {
+		try {
+			const todos = await listTriggers();
+			const t = todos.find((x) => x._id === estado?.trigger.id);
+			if (!t) return;
+			setForm({
+				palabras: (t.palabras || []).join(", "),
+				mensajeInicial: { ...t.mensajeInicial },
+				mensajeMaterial: { ...t.mensajeMaterial },
+				mensajeEmail: { ...(t.mensajeEmail || {}) },
+				pedirEmail: t.pedirEmail,
+				activo: t.activo,
+			});
+			setEditando(t);
+		} catch (err: any) {
+			enqueueSnackbar("No se pudieron cargar los mensajes", { variant: "error" });
+		}
+	};
+
+	const guardarMensajes = async () => {
+		if (!editando) return;
+		setCorriendo("mensajes");
+		try {
+			await updateTrigger(editando._id, {
+				...form,
+				palabras: String(form.palabras)
+					.split(",")
+					.map((x: string) => x.trim())
+					.filter(Boolean),
+			});
+			enqueueSnackbar("Mensajes guardados", { variant: "success" });
+			setEditando(null);
+			await cargar();
+		} catch (err: any) {
+			const d = err?.response?.data;
+			// La guarda de activación devuelve 409 con el motivo: se muestra tal cual,
+			// porque explica qué falta en vez de decir sólo que no se pudo.
+			enqueueSnackbar(d?.error || "No se pudo guardar", { variant: "error", autoHideDuration: 8000 });
 		} finally {
 			setCorriendo(null);
 		}
@@ -150,6 +216,19 @@ const PanelFlujo = ({ publicacion, onCambio }: Props) => {
 					</Button>
 				</Tooltip>
 			</Stack>
+
+			{(estado.validaciones || []).length > 0 && (
+				<Stack spacing={0.75} sx={{ mb: 1 }}>
+					{estado.validaciones.map((h) => (
+						<Alert key={h.codigo} severity={h.nivel === "error" ? "error" : "warning"} sx={{ py: 0.25 }}>
+							<AlertTitle sx={{ fontSize: 13, mb: 0.25 }}>{h.mensaje}</AlertTitle>
+							<Typography variant="caption" color="text.secondary">
+								{h.arreglo}
+							</Typography>
+						</Alert>
+					))}
+				</Stack>
+			)}
 
 			{!estado.contenido.ok && estado.contenido.errores.length > 0 && (
 				<Alert severity="warning" sx={{ mb: 1, py: 0.25 }}>
@@ -245,9 +324,121 @@ const PanelFlujo = ({ publicacion, onCambio }: Props) => {
 				}
 			/>
 
+			{estado.trigger.ok && (
+				<Button size="small" onClick={abrirMensajes} sx={{ textTransform: "none", mt: 0.5 }}>
+					Editar palabra y mensajes
+				</Button>
+			)}
+
 			{estado.trigger.ok && estado.trigger.vinculado && !estado.trigger.activo && (
 				<Chip size="small" color="warning" variant="outlined" label="La automatización está inactiva" sx={{ mt: 0.5, height: 20, fontSize: 11 }} />
 			)}
+			{/* ---------- mensajes ---------- */}
+			<Dialog open={!!editando} onClose={() => setEditando(null)} maxWidth="sm" fullWidth>
+				<DialogTitle>Palabra y mensajes</DialogTitle>
+				<DialogContent dividers>
+					{form && (
+						<Stack spacing={2} sx={{ mt: 0.5 }}>
+							<TextField
+								label="Palabras que disparan"
+								size="small"
+								fullWidth
+								value={form.palabras}
+								onChange={(e) => setForm({ ...form, palabras: e.target.value })}
+								helperText="Separadas por coma. Tiene que aparecer en el caption del post."
+							/>
+							<Divider textAlign="left">
+								<Typography variant="caption" color="text.secondary">
+									Paso 1 · respuesta al comentario
+								</Typography>
+							</Divider>
+							<TextField
+								label="Mensaje"
+								size="small"
+								fullWidth
+								multiline
+								minRows={3}
+								value={form.mensajeInicial?.texto || ""}
+								onChange={(e) => setForm({ ...form, mensajeInicial: { ...form.mensajeInicial, texto: e.target.value } })}
+							/>
+							<TextField
+								label="Botón"
+								size="small"
+								inputProps={{ maxLength: 20 }}
+								value={form.mensajeInicial?.boton || ""}
+								onChange={(e) => setForm({ ...form, mensajeInicial: { ...form.mensajeInicial, boton: e.target.value } })}
+								helperText="Máx. 20 caracteres"
+							/>
+							<Divider textAlign="left">
+								<Typography variant="caption" color="text.secondary">
+									Paso 2 · al tocar el botón
+								</Typography>
+							</Divider>
+							<TextField
+								label="Mensaje"
+								size="small"
+								fullWidth
+								multiline
+								minRows={2}
+								value={form.mensajeMaterial?.texto || ""}
+								onChange={(e) => setForm({ ...form, mensajeMaterial: { ...form.mensajeMaterial, texto: e.target.value } })}
+							/>
+							<Stack direction="row" spacing={1}>
+								<TextField
+									label="Botón"
+									size="small"
+									inputProps={{ maxLength: 20 }}
+									value={form.mensajeMaterial?.boton || ""}
+									onChange={(e) => setForm({ ...form, mensajeMaterial: { ...form.mensajeMaterial, boton: e.target.value } })}
+								/>
+								<TextField
+									label="Link del material"
+									size="small"
+									fullWidth
+									value={form.mensajeMaterial?.url || ""}
+									onChange={(e) => setForm({ ...form, mensajeMaterial: { ...form.mensajeMaterial, url: e.target.value } })}
+								/>
+							</Stack>
+							<Divider textAlign="left">
+								<Typography variant="caption" color="text.secondary">
+									Paso 3 · pedido de mail
+								</Typography>
+							</Divider>
+							<Stack direction="row" spacing={1} alignItems="center">
+								<Switch checked={!!form.pedirEmail} onChange={(e) => setForm({ ...form, pedirEmail: e.target.checked })} />
+								<Typography variant="body2">Pedir mail</Typography>
+							</Stack>
+							<TextField
+								label="Cómo se lo pedimos"
+								size="small"
+								fullWidth
+								disabled={!form.pedirEmail}
+								value={form.mensajeEmail?.texto || ""}
+								onChange={(e) => setForm({ ...form, mensajeEmail: { ...form.mensajeEmail, texto: e.target.value } })}
+							/>
+							<TextField
+								label="Confirmación"
+								size="small"
+								fullWidth
+								disabled={!form.pedirEmail}
+								value={form.mensajeEmail?.confirmacion || ""}
+								onChange={(e) => setForm({ ...form, mensajeEmail: { ...form.mensajeEmail, confirmacion: e.target.value } })}
+								helperText="Prometer sólo lo que el sistema cumple: hoy el mail se guarda como contacto, no se envía nada."
+							/>
+							<Stack direction="row" spacing={1} alignItems="center">
+								<Switch checked={!!form.activo} onChange={(e) => setForm({ ...form, activo: e.target.checked })} />
+								<Typography variant="body2">Activa</Typography>
+							</Stack>
+						</Stack>
+					)}
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => setEditando(null)}>Cancelar</Button>
+					<Button variant="contained" onClick={guardarMensajes} disabled={corriendo === "mensajes"}>
+						{corriendo === "mensajes" ? "Guardando…" : "Guardar"}
+					</Button>
+				</DialogActions>
+			</Dialog>
 		</Box>
 	);
 };
