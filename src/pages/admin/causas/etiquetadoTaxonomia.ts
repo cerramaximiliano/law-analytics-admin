@@ -404,6 +404,8 @@ const OBJETOS_DECIDIDOS_BASE: [string, string][] = [
 	["tasa_justicia", "Tasa de justicia"],
 	["embargo", "Embargo"],
 	["beneficio_litigar_sin_gastos", "Beneficio de litigar sin gastos"],
+	["desistimiento_accion_derecho", "Desistimiento de la acción y del derecho"],
+	["inconstitucionalidad", "Inconstitucionalidad (planteo o de oficio)"],
 ];
 
 // Resultados coherentes por objeto decidido: al elegir el objeto, el selector
@@ -435,6 +437,8 @@ export const RESULTADOS_POR_OBJETO: Record<string, string[]> = {
 	tasa_justicia: ["hace_lugar", "rechaza", "confirma", "revoca"],
 	embargo: ["hace_lugar", "rechaza", "confirma", "revoca", "modifica"],
 	beneficio_litigar_sin_gastos: ["hace_lugar", "hace_lugar_parcialmente", "rechaza", "confirma", "revoca", "modifica"],
+	desistimiento_accion_derecho: ["declara", "homologa", "rechaza", "confirma", "revoca"],
+	inconstitucionalidad: ["declara", "hace_lugar", "rechaza", "confirma", "revoca"],
 };
 
 // Normaliza un objeto decidido creado a mano: minúsculas, sin acentos,

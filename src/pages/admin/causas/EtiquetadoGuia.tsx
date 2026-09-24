@@ -129,7 +129,8 @@ const SECCIONES: Seccion[] = [
 			<>
 				<P>
 					<B>Decisión</B> = se pronuncia sobre el mérito de una cuestión (hace lugar, rechaza, confirma…) sin cerrar el
-					proceso. <B>Terminación</B> = clausura el proceso, con o sin pronunciamiento de mérito (sentencia definitiva,
+					proceso. <B>Terminación</B> = TODA forma de terminación del proceso, normal o anormal: con o sin
+					pronunciamiento de mérito (sentencia definitiva,
 					homologación que pone fin, caducidad, archivo de trámite vivo).
 				</P>
 				<Box component="ul" sx={{ pl: 2.25, m: 0 }}>
@@ -377,7 +378,8 @@ const DetalleFuncion = () => (
 				proceso.
 			</LI>
 			<LI>
-				<B>Terminación</B>: ESE documento clausura el proceso (sentencia definitiva, homologación que pone fin,
+				<B>Terminación</B>: ESE documento clausura el proceso, por cualquier vía — normal (sentencia definitiva) o
+				anormal (homologación que pone fin,
 				caducidad, incompetencia que archiva). Sin lookahead: si después lo revocan, no se reescribe.
 			</LI>
 			<LI>
