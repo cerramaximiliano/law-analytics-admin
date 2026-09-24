@@ -116,7 +116,8 @@ const SECCIONES: Seccion[] = [
 				<LI>
 					<B>Modo de terminación</B>: solo con función terminación (cómo terminó: sentencia sobre fondo, conciliación,
 					caducidad, archivo…). Manda la vía real: la sentencia que se dicta por allanamiento (art. 307 CPCCN) lleva
-					modo <Codigo>allanamiento</Codigo>, no "sentencia sobre fondo".
+					modo <Codigo>allanamiento</Codigo>, no "sentencia sobre fondo". La ejecución termina por{" "}
+					<Codigo>cumplimiento</Codigo> (pago total), no por sentencia.
 				</LI>
 				<LI>
 					<B>Firmeza</B>: dejala VACÍA salvo que el propio documento declare la firmeza o dé cuenta del recurso — el
@@ -177,6 +178,17 @@ const SECCIONES: Seccion[] = [
 						manda continuar la ejecución) → <Codigo>resuelve_ejecucion_sentencia</Codigo> · interlocutoria · ejecución ·
 						decisión · <Codigo>hace_lugar</Codigo> (no prosperan o no se opusieron) o <Codigo>rechaza</Codigo>{" "}
 						(prosperan), con fila de Decisiones de objeto <Codigo>ejecucion</Codigo>; nunca es terminación.
+					</LI>
+					<LI>
+						<B>Terminación por cumplimiento</B> (modo <Codigo>cumplimiento</Codigo>): el proceso de conocimiento
+						termina con la sentencia; la <B>ejecución</B> (ejecutivo, ejecuciones especiales) termina con el{" "}
+						<B>cumplimiento</B>. Va en el documento que tiene por satisfecho el crédito y cierra la ejecución: levanta
+						las medidas o cancela la garantía por pago total, tiene por cumplida la ejecución o archiva por pago →
+						función terminación · modo <Codigo>cumplimiento</Codigo> (acto según lo que dispone:{" "}
+						<Codigo>levanta_embargo</Codigo>, <Codigo>archiva</Codigo>, <Codigo>registra_pago</Codigo>). Los pagos
+						parciales, las daciones en pago y los giros siguen siendo impulso/ordenación: no terminan. El archivo por
+						inactividad sigue siendo modo <Codigo>archivo</Codigo>. La etapa de ejecución de sentencia de un proceso de
+						conocimiento no usa este modo: ese proceso ya terminó con la sentencia.
 					</LI>
 					<LI>
 						<B>Recurso «mal concedido»</B>: la alzada revisa la admisibilidad aunque el juez lo haya concedido. Si

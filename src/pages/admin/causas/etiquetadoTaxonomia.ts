@@ -108,6 +108,7 @@ export const DIM_LABELS: Record<DimKey, DimDef> = {
 			["conciliacion", "Conciliación"],
 			["caducidad_de_instancia", "Caducidad de instancia"],
 			["homologacion_de_acuerdo", "Homologación"],
+			["cumplimiento", "Cumplimiento (pago en la ejecución)"],
 			["sustraccion_de_materia", "Sustracción de materia"],
 			["declaracion_de_abstraccion", "Abstracción"],
 			["archivo", "Archivo"],
