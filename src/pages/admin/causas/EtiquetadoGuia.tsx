@@ -157,6 +157,11 @@ const SECCIONES: Seccion[] = [
 						terminación el documento de alzada que clausura de nuevo cuño algo vivo (revoca la sentencia y rechaza la
 						demanda; declara caducidad).
 					</LI>
+					<LI>
+						<B>Llegada a la alzada</B>: el primer proveído de la Sala (hace saber la Sala que va a conocer, el{" "}
+						<B>orden de votación</B> o la <B>integración</B>) → <Codigo>recibe_autos_alzada</Codigo> · segunda instancia ·
+						recurso · recursiva · impulso, aunque no diga "por recibido".
+					</LI>
 				</Box>
 			</>
 		),
@@ -186,6 +191,12 @@ const SECCIONES: Seccion[] = [
 					normaliza a <Codigo>snake_case</Codigo> y reaparece como opción en la causa. En la mayoría de los documentos la
 					sección queda vacía. El resultado de cada fila se limita a los sentidos coherentes con el objeto elegido
 					("Otro" siempre disponible).
+				</P>
+				<P>
+					<B>Concede prórroga</B>: el pedido de más plazo (de un perito o de una parte) que el juzgado concede → acto{" "}
+					<Codigo>concede_prorroga</Codigo> · decisión · <Codigo>concede</Codigo>. La materia sigue al plazo prorrogado
+					(prueba, ejecución…). Si fija el nuevo plazo con apercibimiento, va como carga (ej. perito → presentar informe
+					· 10 días · "remoción"). Si la deniega: acto <Codigo>otro</Codigo> · decisión · <Codigo>deniega</Codigo>.
 				</P>
 				<P>
 					<B>Decisión implícita</B>: si la dispositiva no dice "rechazo" pero impide lo pedido (remite a otro juez o
