@@ -258,6 +258,7 @@ const ACTOS_PROCESALES_BASE: [string, string][] = [
 	["medida_mejor_proveer", "Medida para mejor proveer"],
 	["declara_causa_puro_derecho", "Declara puro derecho"],
 	["declara_desistida_prueba", "Tiene por desistida la prueba (efectiviza apercibimiento)"],
+	["declara_negligencia", "Declara (o rechaza) la negligencia en la prueba (art. 384 CPCCN)"],
 	["efectiviza_apercibimiento", "Hace efectivo un apercibimiento (incumplimiento de carga)"],
 	["pone_autos_para_alegar", "Pone autos para alegar"],
 	["pone_autos_agravios", "Pone autos para expresar agravios (alzada)"],
@@ -344,6 +345,10 @@ export const ACTO_AUTOFILL: Record<
 	// Efectiviza el apercibimiento de una carga de prueba incumplida (desenlace
 	// negativo del episodio de carga — señal de fricción).
 	declara_desistida_prueba: { tipoResolucion: "providencia_simple", materia: "prueba", funcion: "decision", resultado: "declara" },
+	// Resuelve el acuse de negligencia de la contraria (art. 384 CPCCN): hace lugar
+	// (pierde el derecho a producir esa prueba) o lo rechaza. El tipo sigue a la
+	// estructura (suele venir con "autos y vistos").
+	declara_negligencia: { tipoResolucion: "sentencia_interlocutoria", materia: "prueba", funcion: "decision" },
 	// Genérico: ejecuta el apercibimiento de cualquier carga incumplida (bono →
 	// CPACF, multas, tener por no presentado…). La materia sigue a la carga.
 	efectiviza_apercibimiento: { tipoResolucion: "providencia_simple", funcion: "decision", resultado: "declara" },

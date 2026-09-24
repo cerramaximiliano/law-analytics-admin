@@ -208,6 +208,14 @@ const SECCIONES: Seccion[] = [
 					presentado, intima, corre traslado), como secundario. No es un rechazo: no lleva fila de decisión implícita.
 				</P>
 				<P>
+					<B>Declara negligencia</B>: resuelve el acuse de negligencia en la producción de la prueba de la contraria
+					(art. 384 CPCCN) → acto <Codigo>declara_negligencia</Codigo> · materia prueba · decisión. Resultado{" "}
+					<Codigo>hace_lugar</Codigo> si la declara (pierde el derecho a producir esa prueba), <Codigo>rechaza</Codigo> si
+					no, <Codigo>hace_lugar_parcialmente</Codigo> si es mixta; una fila por medio probatorio y las costas. El tipo
+					sigue a la estructura (suele ser interlocutoria). El traslado del acuse es <Codigo>corre_traslado</Codigo>.
+					Distinto de <Codigo>declara_desistida_prueba</Codigo>: ese efectiviza un apercibimiento ya impuesto, sin acuse.
+				</P>
+				<P>
 					<B>Decisión implícita</B>: si la dispositiva no dice "rechazo" pero impide lo pedido (remite a otro juez o
 					proceso, "estése a lo dispuesto", "no ha lugar por ahora", un "previo…" que posterga sin plazo), la{" "}
 					<B>Función sigue la forma</B> del proveído (ordenación / impulso) y el <B>sentido material</B> va en una fila
