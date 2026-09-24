@@ -48,6 +48,7 @@ import { Add, DocumentText, Edit2, ExportSquare, Refresh, Trash } from "iconsax-
 // project imports
 import MainCard from "components/MainCard";
 import PanelFlujo from "./PanelFlujo";
+import ConfigFlujoDialog from "./ConfigFlujoDialog";
 import {
 	Publicacion,
 	PublicacionEstado,
@@ -113,6 +114,7 @@ const Publicaciones = () => {
 	const [editando, setEditando] = useState<Publicacion | "nueva" | null>(null);
 	const [form, setForm] = useState(VACIA);
 	const [aEliminar, setAEliminar] = useState<Publicacion | null>(null);
+	const [configAbierta, setConfigAbierta] = useState(false);
 
 	const cargar = useCallback(async () => {
 		setCargando(true);
@@ -238,6 +240,9 @@ const Publicaciones = () => {
 						<ToggleButton value="borrador">Borradores</ToggleButton>
 						<ToggleButton value="archivada">Archivadas</ToggleButton>
 					</ToggleButtonGroup>
+					<Button size="small" onClick={() => setConfigAbierta(true)} sx={{ textTransform: "none" }}>
+						Configuración del flujo
+					</Button>
 					<Tooltip title="Recargar">
 						<IconButton onClick={cargar} size="small">
 							<Refresh size={18} />
@@ -566,6 +571,8 @@ const Publicaciones = () => {
 					</Button>
 				</DialogActions>
 			</Dialog>
+
+			<ConfigFlujoDialog open={configAbierta} onClose={() => setConfigAbierta(false)} />
 
 			{/* ---------- confirmar borrado ---------- */}
 			<Dialog open={!!aEliminar} onClose={() => setAEliminar(null)} maxWidth="xs" fullWidth>

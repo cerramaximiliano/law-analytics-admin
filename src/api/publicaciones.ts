@@ -153,7 +153,13 @@ export interface ConfiguracionFlujo {
 		mensajeMaterial: { texto: string; boton: string };
 		mensajeEmail: { texto: string; confirmacion: string };
 	};
-	publicacion: { listadaPorDefecto: boolean; piezaPrincipal: string; piezas: string[] };
+	publicacion: {
+		listadaPorDefecto: boolean;
+		piezaPrincipal: string;
+		piezas: string[];
+		/** Vigencia del enlace personal. 0 = sin vencimiento. */
+		diasValidezEnlace: number;
+	};
 }
 
 export const getFlujo = async (id: string): Promise<FlujoEstado> => {

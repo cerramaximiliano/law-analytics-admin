@@ -37,6 +37,7 @@ import {
 import { useSnackbar } from "notistack";
 import DocumentosTab from "./components/DocumentosTab";
 import ConfiguracionTab from "./components/ConfiguracionTab";
+import VinculosPjnTab from "./components/VinculosPjnTab";
 import MainCard from "components/MainCard";
 import {
 	Refresh,
@@ -153,7 +154,8 @@ const Jurisprudencia = () => {
 	const { enqueueSnackbar } = useSnackbar();
 
 	// Tab state
-	const [tabValue, setTabValue] = useState(0);
+	// ?tab=vinculos abre directo la cola de revisión de vínculos con causas PJN
+	const [tabValue, setTabValue] = useState(() => (new URLSearchParams(window.location.search).get("tab") === "vinculos" ? 3 : 0));
 
 	const handleTabChange = (_event: SyntheticEvent, newValue: number) => {
 		setTabValue(newValue);
@@ -429,6 +431,7 @@ const Jurisprudencia = () => {
 						<Tab label="Fallos" {...a11yProps(0)} />
 						<Tab label="Documentos" {...a11yProps(1)} />
 						<Tab label="Configuración" {...a11yProps(2)} />
+						<Tab label="Vínculos PJN" {...a11yProps(3)} />
 					</Tabs>
 				</Box>
 
@@ -714,6 +717,11 @@ const Jurisprudencia = () => {
 				{/* Tab Configuración */}
 				<TabPanel value={tabValue} index={2}>
 					<ConfiguracionTab />
+				</TabPanel>
+
+				{/* Tab Vínculos PJN — cola de revisión El Dial ↔ causas */}
+				<TabPanel value={tabValue} index={3}>
+					<VinculosPjnTab />
 				</TabPanel>
 			</MainCard>
 

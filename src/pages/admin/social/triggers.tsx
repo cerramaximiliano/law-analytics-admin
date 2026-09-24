@@ -53,6 +53,7 @@ import MainCard from "components/MainCard";
 import {
 	CommentTrigger,
 	CommentTriggerPayload,
+	HallazgoTrigger,
 	LeadEstado,
 	TriggerEstado,
 	TriggerLeads,
@@ -61,6 +62,7 @@ import {
 	getTriggerEstado,
 	getTriggerLeads,
 	listTriggers,
+	revisarTrigger,
 	updateTrigger,
 } from "api/commentTriggers";
 import { InstagramMedia, getInstagramMedia } from "api/socialPosts";
@@ -107,6 +109,10 @@ const Triggers = () => {
 	const [aEliminar, setAEliminar] = useState<CommentTrigger | null>(null);
 	const [verLeads, setVerLeads] = useState<CommentTrigger | null>(null);
 	const [leads, setLeads] = useState<TriggerLeads | null>(null);
+	// Los hallazgos de coherencia por automatización. Son los mismos que muestra
+	// el panel de flujo: se piden acá para que quien entra por esta vista no se
+	// pierda un error que impide entregar.
+	const [hallazgos, setHallazgos] = useState<Record<string, HallazgoTrigger[]>>({});
 
 	const cargar = useCallback(async () => {
 		setCargando(true);
@@ -114,6 +120,10 @@ const Triggers = () => {
 			const [t, e] = await Promise.all([listTriggers(), getTriggerEstado().catch(() => null)]);
 			setTriggers(t);
 			setEstado(e);
+			// En paralelo y tolerante: un fallo acá no debe impedir ver la lista.
+			Promise.all(t.map((x) => revisarTrigger(x._id).then((h) => [x._id, h] as const).catch(() => [x._id, []] as const))).then((pares) =>
+				setHallazgos(Object.fromEntries(pares)),
+			);
 			// Los medias son para el selector: si falla, se puede pegar el id igual.
 			getInstagramMedia()
 				.then(setMedias)
@@ -200,7 +210,14 @@ const Triggers = () => {
 			await updateTrigger(t._id, { activo: !t.activo });
 			setTriggers((prev) => prev.map((x) => (x._id === t._id ? { ...x, activo: !t.activo } : x)));
 		} catch (err: any) {
-			enqueueSnackbar(err?.response?.data?.error || "No se pudo cambiar el estado", { variant: "error" });
+			// 409 = la guarda de activación. El motivo explica qué falta, así que
+			// se muestra entero y por más tiempo.
+			const d = err?.response?.data;
+			enqueueSnackbar(d?.error || "No se pudo cambiar el estado", {
+				variant: "error",
+				autoHideDuration: d?.bloqueos ? 9000 : 5000,
+			});
+			cargar();
 		}
 	};
 
@@ -318,6 +335,21 @@ const Triggers = () => {
 											<>media {t.instagramMediaId || "—"}</>
 										)}
 									</Typography>
+
+									{(hallazgos[t._id] || []).length > 0 && (
+										<Stack spacing={0.5} sx={{ mt: 1 }}>
+											{(hallazgos[t._id] || []).map((h) => (
+												<Alert key={h.codigo} severity={h.nivel === "error" ? "error" : "warning"} sx={{ py: 0 }}>
+													<Typography variant="caption" sx={{ display: "block", fontWeight: 600 }}>
+														{h.mensaje}
+													</Typography>
+													<Typography variant="caption" color="text.secondary">
+														{h.arreglo}
+													</Typography>
+												</Alert>
+											))}
+										</Stack>
+									)}
 
 									<Divider sx={{ my: 1.25 }} />
 
