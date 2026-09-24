@@ -169,6 +169,15 @@ const SECCIONES: Seccion[] = [
 						terminación, aunque medie allanamiento.
 					</LI>
 					<LI>
+						<B>Preparación de la vía ejecutiva</B> (arts. 525-526 CPCCN): si el instrumento es privado y la firma no
+						está certificada (contrato de locación, pagaré, reconocimiento de deuda), todavía no hay título: el juez
+						cita al deudor a reconocer la firma en lugar de librar el mandamiento → <Codigo>cita_reconocimiento_firma</Codigo>{" "}
+						· fondo · impulso (cumple la función del traslado de demanda), con carga «reconocer_desconocer_documental»
+						si indica plazo y apercibimiento. Si en el mismo auto posterga el embargo por no estar preparada la vía,
+						va una fila <Codigo>embargo → rechaza</Codigo>. Reconocida la firma (o tenida por reconocida), el auto que
+						libra el mandamiento sigue siendo <Codigo>intima_pago_cita_remate</Codigo>.
+					</LI>
+					<LI>
 						<B>Ejecución de sentencia</B> (arts. 499-516 CPCCN, incluida la de honorarios): tiene articulado propio y
 						se marca distinto del juicio ejecutivo. No hay mandamiento de intimación: primero se embarga (art. 502 →{" "}
 						<Codigo>ordena_embargo</Codigo> · ejecución) y, trabada la medida, se <B>cita de venta</B> para oponer

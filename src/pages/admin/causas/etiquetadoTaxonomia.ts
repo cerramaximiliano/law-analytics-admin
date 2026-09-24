@@ -243,6 +243,7 @@ const ACTOS_PROCESALES_BASE: [string, string][] = [
 	["ninguno", "Ninguno — no es resolución"],
 	["corre_traslado", "Corre traslado"],
 	["intima_pago_cita_remate", "Intima de pago y cita de remate (auto inicial del ejecutivo)"],
+	["cita_reconocimiento_firma", "Cita a reconocer firma (prepara la vía ejecutiva, arts. 525-526 CPCCN)"],
 	["cita_venta", "Cita de venta (ejecución de sentencia, art. 505 CPCCN)"],
 	["da_vista", "Da vista (Ministerio Público / organismo)"],
 	["intima", "Intima"],
@@ -325,6 +326,15 @@ export const ACTO_AUTOFILL: Record<
 	intima_pago_cita_remate: { tipoResolucion: "providencia_simple", materia: "fondo", funcion: "impulso", resultado: "no_aplica" },
 	// Ejecución de sentencia (arts. 499-516 CPCCN, también la de honorarios): trabado el
 	// embargo (art. 502), se cita de venta al ejecutado para oponer excepciones (art. 505).
+	// Preparación de la vía ejecutiva (arts. 525-526 CPCCN): el instrumento privado sin firma
+	// certificada no es título hasta que el deudor reconoce la firma. Reemplaza al auto inicial
+	// del ejecutivo y cumple la función del traslado → impulso.
+	cita_reconocimiento_firma: {
+		tipoResolucion: "providencia_simple",
+		materia: "fondo",
+		funcion: "impulso",
+		resultado: "no_aplica",
+	},
 	cita_venta: {
 		tipoResolucion: "providencia_simple",
 		materia: "ejecucion",
