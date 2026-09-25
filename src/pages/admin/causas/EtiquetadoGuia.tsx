@@ -299,6 +299,13 @@ const SECCIONES: Seccion[] = [
 					"remoción"). Si la deniega: acto <Codigo>otro</Codigo> · decisión · <Codigo>deniega</Codigo>.
 				</P>
 				<P>
+					<B>Remoción del perito y citación de terceros</B>: no tienen acto propio. La remoción que se efectiviza va como{" "}
+					<Codigo>efectiviza_apercibimiento</Codigo> con fila <Codigo>remocion_perito</Codigo>; la citación de terceros
+					(arts. 90-94 CPCCN) que el juez admite o rechaza va como acto <Codigo>otro</Codigo> · decisión, con fila{" "}
+					<Codigo>citacion_tercero</Codigo> y el sentido que corresponda. Si la citación se vuelve frecuente, se evaluará un
+					acto propio.
+				</P>
+				<P>
 					<B>Difiere proveer</B>: providencia simple que no trata lo pedido porque todavía no quedó firme, cumplido o
 					notificado algo anterior ("firme que se encuentre la sentencia, peticiónese y se proveerá"; "trabada la litis
 					con todos, se proveerá lo demás") → acto <Codigo>difiere_proveimiento</Codigo> · ordenación · no aplica; la

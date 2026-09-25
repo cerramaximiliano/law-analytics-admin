@@ -480,6 +480,8 @@ const OBJETOS_DECIDIDOS_BASE: [string, string][] = [
 	["pacto_cuota_litis", "Pacto de cuota litis"],
 	["dacion_en_pago", "Dación en pago"],
 	["inconstitucionalidad", "Inconstitucionalidad (planteo o de oficio)"],
+	["remocion_perito", "Remoción del perito"],
+	["citacion_tercero", "Citación / intervención de terceros (arts. 90-94)"],
 ];
 
 // Resultados coherentes por objeto decidido: al elegir el objeto, el selector
@@ -517,6 +519,8 @@ export const RESULTADOS_POR_OBJETO: Record<string, string[]> = {
 	pacto_cuota_litis: ["homologa", "rechaza", "confirma", "revoca"],
 	dacion_en_pago: ["hace_lugar", "rechaza", "confirma", "revoca"],
 	inconstitucionalidad: ["declara", "hace_lugar", "rechaza", "confirma", "revoca"],
+	remocion_perito: ["hace_lugar", "rechaza", "confirma", "revoca"],
+	citacion_tercero: ["hace_lugar", "rechaza", "confirma", "revoca"],
 };
 
 // Normaliza un objeto decidido creado a mano: minúsculas, sin acentos,
