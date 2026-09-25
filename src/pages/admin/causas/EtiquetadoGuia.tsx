@@ -356,7 +356,10 @@ const SECCIONES: Seccion[] = [
 					<Codigo>ordena_lanzamiento</Codigo> · ejecución · decisión · <Codigo>hace_lugar</Codigo>; la desocupación inmediata
 					del art. 684 bis, como <Codigo>ordena_medida_cautelar</Codigo> con carga <Codigo>prestar_caucion</Codigo>. La
 					entrega del inmueble no es una segunda terminación: la ejecución de una sentencia de conocimiento no usa el modo{" "}
-					<Codigo>cumplimiento</Codigo>.
+					<Codigo>cumplimiento</Codigo>. Sin sentencia: si el demandado restituye el inmueble y el juez da por concluido el
+					proceso, terminación · modo <Codigo>cumplimiento</Codigo>; si se allana y el juez lo tiene por concluido,
+					terminación · modo <Codigo>allanamiento</Codigo>. El lanzamiento dictado sin sentencia previa lleva contexto{" "}
+					<Codigo>principal</Codigo>.
 				</P>
 				<P>
 					<B>Quiebra</B>: la sentencia de quiebra va como <Codigo>declara_quiebra</Codigo> · fondo · decisión (abre el
@@ -368,7 +371,10 @@ const SECCIONES: Seccion[] = [
 				<P>
 					<B>Sucesión</B>: el auto de apertura va como <Codigo>tiene_por_presentado</Codigo> · fondo · impulso; la
 					declaratoria de herederos, como <Codigo>resuelve_fondo</Codigo> · interlocutoria · decisión ·{" "}
-					<Codigo>declara</Codigo> (la sucesión sigue con inscripción y partición).
+					<Codigo>declara</Codigo> (la sucesión sigue con inscripción y partición). En la testamentaria, el auto que declara
+					válido el testamento en sus formas (art. 2339 CCCN) va igual, con fila <Codigo>validez_testamento</Codigo>; la
+					partición o adjudicación de bienes es <Codigo>otro</Codigo> · decisión con fila <Codigo>particion</Codigo>{" "}
+					(<Codigo>homologa</Codigo> si la presentan los herederos, <Codigo>hace_lugar</Codigo> si la decide el juez).
 				</P>
 				<P>
 					<B>Contencioso administrativo y cobro contra el Estado</B>: la habilitación de la instancia va como fila{" "}

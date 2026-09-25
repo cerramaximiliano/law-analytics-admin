@@ -508,6 +508,8 @@ const OBJETOS_DECIDIDOS_BASE: [string, string][] = [
 	["inhabilitacion", "Inhabilitación del fallido"],
 	["clausura_quiebra", "Clausura del procedimiento de quiebra"],
 	["conclusion_quiebra", "Conclusión de la quiebra"],
+	["validez_testamento", "Validez del testamento (art. 2339 CCCN)"],
+	["particion", "Partición / adjudicación de bienes"],
 ];
 
 // Resultados coherentes por objeto decidido: al elegir el objeto, el selector
@@ -554,6 +556,8 @@ export const RESULTADOS_POR_OBJETO: Record<string, string[]> = {
 	inhabilitacion: ["declara", "confirma", "revoca"],
 	clausura_quiebra: ["declara", "confirma", "revoca"],
 	conclusion_quiebra: ["declara", "confirma", "revoca"],
+	validez_testamento: ["declara", "rechaza", "confirma", "revoca"],
+	particion: ["hace_lugar", "homologa", "rechaza", "confirma", "revoca", "modifica"],
 };
 
 // Normaliza un objeto decidido creado a mano: minúsculas, sin acentos,
