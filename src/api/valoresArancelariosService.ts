@@ -89,13 +89,13 @@ export interface SyncResultado {
 
 /** Dispara la sincronización de una jurisdicción contra su fuente oficial. */
 export const syncJurisdiccion = async (clave: string): Promise<SyncResultado> => {
-	const res = await adminAxios.post(`/api/valores-arancelarios/sync/${clave}`, null, { timeout: 120000 });
+	const res = await adminAxios.post(`/api/valores-arancelarios/sync/${clave}`, {}, { timeout: 120000 });
 	return res.data;
 };
 
 /** Dispara la sincronización de todas las jurisdicciones, en serie. */
 export const syncTodas = async (): Promise<{ ok: boolean; total: number; fallidas: number; resultados: SyncResultado[] }> => {
-	const res = await adminAxios.post("/api/valores-arancelarios/sync", null, { timeout: 300000 });
+	const res = await adminAxios.post("/api/valores-arancelarios/sync", {}, { timeout: 300000 });
 	return res.data;
 };
 
