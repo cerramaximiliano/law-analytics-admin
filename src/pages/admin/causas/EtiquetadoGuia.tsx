@@ -346,6 +346,12 @@ const SECCIONES: Seccion[] = [
 					<Codigo>resuelve_recurso</Codigo>.
 				</P>
 				<P>
+					<B>Rogatoria u oficio ley 22.172 recibido como causa</B> (otro juzgado pide diligenciar una prueba): todos los
+					actos van con contexto <Codigo>otro</Codigo> y el acto que corresponda a lo que hacen (el auto de inicio suele ser{" "}
+					<Codigo>designa_perito</Codigo> u <Codigo>ordena_oficio</Codigo>). La devolución al juzgado oficiante cierra la
+					causa en este juzgado → terminación · modo <Codigo>otro</Codigo>.
+				</P>
+				<P>
 					<B>Amparo desestimado</B>: la sentencia que desestima la vía de amparo por existir una vía ordinaria idónea (o lo
 					rechaza in límine) cierra el amparo → terminación · modo <Codigo>otro</Codigo> · <Codigo>resuelve_fondo</Codigo>{" "}
 					· <Codigo>rechaza</Codigo>, aunque después la parte intente ordinarizar el reclamo en el mismo expediente.
