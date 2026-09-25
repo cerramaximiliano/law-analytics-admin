@@ -390,7 +390,10 @@ const SECCIONES: Seccion[] = [
 					modo <Codigo>desistimiento_del_proceso</Codigo>: es un desistimiento tácito que no extingue el derecho. Si la parte
 					lo pide, es <Codigo>acepta_desistimiento</Codigo> (addendum 32). <B>Prescripción admitida como defensa previa</B>{" "}
 					→ terminación · <Codigo>resuelve_excepcion</Codigo> · <Codigo>hace_lugar</Codigo> · modo{" "}
-					<Codigo>sentencia_sobre_fondo</Codigo>. <B>Homologación de un pacto de cuota litis</B> como acto propio →{" "}
+					<Codigo>sentencia_sobre_fondo</Codigo>. <B>Cosa juzgada</B> que cierra la causa (declarada de oficio o
+					admitida como excepción) → terminación · <Codigo>resuelve_excepcion</Codigo> · <Codigo>declara</Codigo> · modo{" "}
+					<Codigo>cosa_juzgada</Codigo>: no se juzga el mérito, lo impide una decisión anterior. Si la excepción se
+					rechaza o se declara abstracta, es decisión. <B>Homologación de un pacto de cuota litis</B> como acto propio →{" "}
 					<Codigo>otro</Codigo> · honorarios · decisión · <Codigo>homologa</Codigo> con fila{" "}
 					<Codigo>pacto_cuota_litis</Codigo>; <Codigo>homologa_acuerdo</Codigo> queda para el acuerdo que termina el pleito.
 				</P>

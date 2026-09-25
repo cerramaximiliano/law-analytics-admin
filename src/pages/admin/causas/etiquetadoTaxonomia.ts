@@ -115,6 +115,7 @@ export const DIM_LABELS: Record<DimKey, DimDef> = {
 			["incompetencia_con_remision", "Incompetencia c/remisión"],
 			["incompetencia_sin_remision", "Incompetencia s/remisión (archivo)"],
 			["inhabilidad_de_instancia", "Inhabilidad de instancia"],
+			["cosa_juzgada", "Cosa juzgada (lo impide una decisión anterior)"],
 			["otro", "Otro"],
 		],
 	},
