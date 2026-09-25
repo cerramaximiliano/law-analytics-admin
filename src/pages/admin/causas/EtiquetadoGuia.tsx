@@ -321,6 +321,24 @@ const SECCIONES: Seccion[] = [
 					Distinto de <Codigo>declara_desistida_prueba</Codigo>: ese efectiviza un apercibimiento ya impuesto, sin acuse.
 				</P>
 				<P>
+					<B>Desistimiento de prueba propia</B>: si la parte renuncia voluntariamente a una prueba que ella ofreció («a
+					pedido de la actora, por desistida la pericial…») → <Codigo>acepta_desistimiento</Codigo> · prueba · decisión ·{" "}
+					<Codigo>declara</Codigo>. <Codigo>declara_desistida_prueba</Codigo> queda solo para la sanción: el juez la tiene
+					por desistida por silencio o por no cumplir una intimación. En un acta, el desistimiento voluntario va como
+					secundario <Codigo>acepta_desistimiento</Codigo>.
+				</P>
+				<P>
+					<B>Demanda interruptiva de prescripción</B>: el auto que la tiene por iniciada «al solo efecto de interrumpir la
+					prescripción», sin traslado → <Codigo>tiene_por_presentado</Codigo> · fondo · impulso (intimaciones de tasa o
+					bono como secundario y carga si hay plazo). Si después se corre traslado, la causa sigue las reglas de
+					conocimiento.
+				</P>
+				<P>
+					<B>Amparo desestimado</B>: la sentencia que desestima la vía de amparo por existir una vía ordinaria idónea (o lo
+					rechaza in límine) cierra el amparo → terminación · modo <Codigo>otro</Codigo> · <Codigo>resuelve_fondo</Codigo>{" "}
+					· <Codigo>rechaza</Codigo>, aunque después la parte intente ordinarizar el reclamo en el mismo expediente.
+				</P>
+				<P>
 					<B>Decisión implícita</B>: si la dispositiva no dice "rechazo" pero impide lo pedido (remite a otro juez o
 					proceso, "estése a lo dispuesto", "no ha lugar por ahora", un "previo…" que posterga sin plazo), la{" "}
 					<B>Función sigue la forma</B> del proveído (ordenación / impulso) y el <B>sentido material</B> va en una fila
