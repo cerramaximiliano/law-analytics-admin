@@ -291,6 +291,8 @@ const ACTOS_PROCESALES_BASE: [string, string][] = [
 	["ordena_embargo", "Ordena embargo"],
 	["ordena_medida_cautelar", "Ordena medida cautelar (inhibición, secuestro, anotación de litis, no innovar…)"],
 	["ordena_subasta", "Ordena (decreta) la subasta"],
+	["ordena_lanzamiento", "Ordena el lanzamiento (desalojo)"],
+	["declara_quiebra", "Declara la quiebra"],
 	["levanta_embargo", "Levanta embargo"],
 	["suspende_proceso", "Suspende el proceso"],
 	["reanuda_proceso", "Reanuda el proceso"],
@@ -437,6 +439,22 @@ export const ACTO_AUTOFILL: Record<
 		funcion: "decision",
 		resultado: "hace_lugar",
 	},
+	// Orden de lanzamiento en la ejecución de la sentencia de desalojo (mandamiento con
+	// auxilio de la fuerza pública). La entrega del inmueble no es terminación (addendum 29).
+	ordena_lanzamiento: {
+		tipoResolucion: "providencia_simple",
+		materia: "ejecucion",
+		contexto: "ejecucion",
+		funcion: "decision",
+		resultado: "hace_lugar",
+	},
+	// Sentencia de quiebra (art. 88 LCQ): abre el proceso universal, no lo termina.
+	declara_quiebra: {
+		tipoResolucion: "sentencia_definitiva",
+		materia: "fondo",
+		funcion: "decision",
+		resultado: "hace_lugar",
+	},
 	levanta_embargo: { tipoResolucion: "sentencia_interlocutoria", materia: "cautelar", funcion: "decision" },
 	suspende_proceso: { funcion: "suspension" },
 	reanuda_proceso: { funcion: "reanudacion" },
@@ -482,6 +500,13 @@ const OBJETOS_DECIDIDOS_BASE: [string, string][] = [
 	["inconstitucionalidad", "Inconstitucionalidad (planteo o de oficio)"],
 	["remocion_perito", "Remoción del perito"],
 	["citacion_tercero", "Citación / intervención de terceros (arts. 90-94)"],
+	["habilitacion_instancia", "Habilitación de la instancia (contencioso administrativo)"],
+	["consignacion", "Consignación (liberación / distribución de lo consignado)"],
+	["verificacion_credito", "Verificación de crédito (concursos)"],
+	["cesacion_de_pagos", "Fecha de cesación de pagos"],
+	["inhabilitacion", "Inhabilitación del fallido"],
+	["clausura_quiebra", "Clausura del procedimiento de quiebra"],
+	["conclusion_quiebra", "Conclusión de la quiebra"],
 ];
 
 // Resultados coherentes por objeto decidido: al elegir el objeto, el selector
@@ -521,6 +546,13 @@ export const RESULTADOS_POR_OBJETO: Record<string, string[]> = {
 	inconstitucionalidad: ["declara", "hace_lugar", "rechaza", "confirma", "revoca"],
 	remocion_perito: ["hace_lugar", "rechaza", "confirma", "revoca"],
 	citacion_tercero: ["hace_lugar", "rechaza", "confirma", "revoca"],
+	habilitacion_instancia: ["declara", "rechaza", "confirma", "revoca"],
+	consignacion: ["hace_lugar", "rechaza", "declara", "confirma", "revoca"],
+	verificacion_credito: ["hace_lugar", "hace_lugar_parcialmente", "rechaza", "confirma", "revoca", "modifica"],
+	cesacion_de_pagos: ["declara", "confirma", "revoca", "modifica"],
+	inhabilitacion: ["declara", "confirma", "revoca"],
+	clausura_quiebra: ["declara", "confirma", "revoca"],
+	conclusion_quiebra: ["declara", "confirma", "revoca"],
 };
 
 // Normaliza un objeto decidido creado a mano: minúsculas, sin acentos,

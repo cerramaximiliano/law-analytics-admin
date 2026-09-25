@@ -352,6 +352,39 @@ const SECCIONES: Seccion[] = [
 					causa en este juzgado → terminación · modo <Codigo>otro</Codigo>.
 				</P>
 				<P>
+					<B>Desalojo</B>: la sentencia de desalojo es la terminación. El decreto de lanzamiento va como{" "}
+					<Codigo>ordena_lanzamiento</Codigo> · ejecución · decisión · <Codigo>hace_lugar</Codigo>; la desocupación inmediata
+					del art. 684 bis, como <Codigo>ordena_medida_cautelar</Codigo> con carga <Codigo>prestar_caucion</Codigo>. La
+					entrega del inmueble no es una segunda terminación: la ejecución de una sentencia de conocimiento no usa el modo{" "}
+					<Codigo>cumplimiento</Codigo>.
+				</P>
+				<P>
+					<B>Quiebra</B>: la sentencia de quiebra va como <Codigo>declara_quiebra</Codigo> · fondo · decisión (abre el
+					proceso, no lo termina). La resolución verificatoria (art. 36) es <Codigo>resuelve_fondo</Codigo> con una fila{" "}
+					<Codigo>verificacion_credito</Codigo> por acreedor; la clausura por falta de activo (art. 232) es{" "}
+					<Codigo>suspension</Codigo> (puede reabrirse); la conclusión es terminación · modo <Codigo>otro</Codigo>. El síndico
+					sorteado se designa con <Codigo>designa_perito</Codigo>.
+				</P>
+				<P>
+					<B>Sucesión</B>: el auto de apertura va como <Codigo>tiene_por_presentado</Codigo> · fondo · impulso; la
+					declaratoria de herederos, como <Codigo>resuelve_fondo</Codigo> · interlocutoria · decisión ·{" "}
+					<Codigo>declara</Codigo> (la sucesión sigue con inscripción y partición).
+				</P>
+				<P>
+					<B>Contencioso administrativo y cobro contra el Estado</B>: la habilitación de la instancia va como fila{" "}
+					<Codigo>habilitacion_instancia</Codigo> en el auto que provee la demanda; si se declara no habilitada, terminación ·
+					modo <Codigo>inhabilidad_de_instancia</Codigo>. El pedido de liquidación al organismo es{" "}
+					<Codigo>ordena_oficio</Codigo> con carga al organismo; el pago del Estado no es terminación.
+				</P>
+				<P>
+					<B>Recurso directo contra un organismo</B> (p. ej. multas de la SRT ante la Cámara Comercial): la Cámara actúa
+					como <Codigo>instancia_unica</Codigo>; su sentencia es terminación · <Codigo>resuelve_recurso</Codigo> con fila{" "}
+					<Codigo>multa</Codigo>. <B>Acuerdo transaccional ANSES</B> (ley 27.260): un único acto homologatorio →
+					terminación · modo <Codigo>transaccion</Codigo>. <B>Consignación</B>: el auto que tiene por consignado y corre
+					traslado es <Codigo>corre_traslado</Codigo>; la liberación o distribución de los fondos lleva fila{" "}
+					<Codigo>consignacion</Codigo>.
+				</P>
+				<P>
 					<B>Amparo desestimado</B>: la sentencia que desestima la vía de amparo por existir una vía ordinaria idónea (o lo
 					rechaza in límine) cierra el amparo → terminación · modo <Codigo>otro</Codigo> · <Codigo>resuelve_fondo</Codigo>{" "}
 					· <Codigo>rechaza</Codigo>, aunque después la parte intente ordinarizar el reclamo en el mismo expediente.
