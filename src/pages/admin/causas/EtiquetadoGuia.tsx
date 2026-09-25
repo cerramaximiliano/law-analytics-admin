@@ -404,6 +404,17 @@ const SECCIONES: Seccion[] = [
 					<Codigo>pacto_cuota_litis</Codigo>; <Codigo>homologa_acuerdo</Codigo> queda para el acuerdo que termina el pleito.
 				</P>
 				<P>
+					<B>Acuerdos, mediación y beneficio de litigar sin gastos</B>: el acuerdo celebrado ante el juez en una audiencia y
+					después ejecutado como título, aunque no haya auto homologatorio, termina el proceso en la propia acta (modo{" "}
+					<Codigo>conciliacion</Codigo>); si se presentó por escrito y ningún acto le dio efecto, la terminación es el archivo.
+					El rechazo in límine por no cumplir la mediación previa obligatoria es terminación · modo{" "}
+					<Codigo>inhabilidad_de_instancia</Codigo> con fila <Codigo>habilitacion_instancia</Codigo>. El «allanamiento» de
+					la actora a la contestación es <Codigo>desistimiento_del_derecho</Codigo>: se anota por lo que pasa, no por la
+					etiqueta. El beneficio de litigar sin gastos es un incidente (contexto <Codigo>incidental</Codigo>); la resolución
+					que lo concede o deniega es su terminación · <Codigo>resuelve_fondo</Codigo> con fila{" "}
+					<Codigo>beneficio_litigar_sin_gastos</Codigo>.
+				</P>
+				<P>
 					<B>Amparo desestimado</B>: la sentencia que desestima la vía de amparo por existir una vía ordinaria idónea (o lo
 					rechaza in límine) cierra el amparo → terminación · modo <Codigo>otro</Codigo> · <Codigo>resuelve_fondo</Codigo>{" "}
 					· <Codigo>rechaza</Codigo>, aunque después la parte intente ordinarizar el reclamo en el mismo expediente.
