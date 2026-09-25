@@ -385,6 +385,16 @@ const SECCIONES: Seccion[] = [
 					<Codigo>consignacion</Codigo>.
 				</P>
 				<P>
+					<B>Sanción del art. 67 LO que cierra la causa</B> (demanda tenida por no presentada o actora tenida por
+					desistida por no cumplir la intimación) → <Codigo>efectiviza_apercibimiento</Codigo> · fondo · terminación ·
+					modo <Codigo>desistimiento_del_proceso</Codigo>: es un desistimiento tácito que no extingue el derecho. Si la parte
+					lo pide, es <Codigo>acepta_desistimiento</Codigo> (addendum 32). <B>Prescripción admitida como defensa previa</B>{" "}
+					→ terminación · <Codigo>resuelve_excepcion</Codigo> · <Codigo>hace_lugar</Codigo> · modo{" "}
+					<Codigo>sentencia_sobre_fondo</Codigo>. <B>Homologación de un pacto de cuota litis</B> como acto propio →{" "}
+					<Codigo>otro</Codigo> · honorarios · decisión · <Codigo>homologa</Codigo> con fila{" "}
+					<Codigo>pacto_cuota_litis</Codigo>; <Codigo>homologa_acuerdo</Codigo> queda para el acuerdo que termina el pleito.
+				</P>
+				<P>
 					<B>Amparo desestimado</B>: la sentencia que desestima la vía de amparo por existir una vía ordinaria idónea (o lo
 					rechaza in límine) cierra el amparo → terminación · modo <Codigo>otro</Codigo> · <Codigo>resuelve_fondo</Codigo>{" "}
 					· <Codigo>rechaza</Codigo>, aunque después la parte intente ordinarizar el reclamo en el mismo expediente.
