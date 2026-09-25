@@ -118,6 +118,7 @@ const PublicacionesSocial = Loadable(lazyWithRetry(() => import("pages/admin/soc
 const TriggersSocial = Loadable(lazyWithRetry(() => import("pages/admin/social/triggers")));
 const BannersPublicos = Loadable(lazyWithRetry(() => import("pages/admin/social/banners")));
 const PromocionesMeta = Loadable(lazyWithRetry(() => import("pages/admin/social/promociones")));
+const GoogleAdsImagenes = Loadable(lazyWithRetry(() => import("pages/admin/social/google-ads")));
 
 // Plans page
 const PlansManagement = Loadable(lazyWithRetry(() => import("pages/admin/plans")));
@@ -846,6 +847,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<PromocionesMeta />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "social/google-ads",
+							element: (
+								<AdminRoleGuard>
+									<GoogleAdsImagenes />
 								</AdminRoleGuard>
 							),
 						},

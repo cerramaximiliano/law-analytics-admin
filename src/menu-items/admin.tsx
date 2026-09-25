@@ -1084,6 +1084,14 @@ const admin: NavItemType = {
 					chip: { label: "Nuevo", color: "primary", variant: "outlined", size: "small" },
 				},
 				{
+					id: "google-ads-imagenes",
+					title: "Imágenes Google Ads",
+					type: "item",
+					url: "/admin/social/google-ads",
+					breadcrumbs: true,
+					chip: { label: "Nuevo", color: "primary", variant: "outlined", size: "small" },
+				},
+				{
 					id: "comment-triggers",
 					title: "Automatizaciones IG",
 					type: "item",
