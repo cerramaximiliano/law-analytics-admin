@@ -334,6 +334,18 @@ const SECCIONES: Seccion[] = [
 					conocimiento.
 				</P>
 				<P>
+					<B>La función sigue a lo que resuelve el acto al dictarse</B>, no a lo que pasa después: una sentencia que la
+					Cámara revoca sigue siendo terminación, y una incompetencia con remisión que el otro juzgado rechaza (contienda
+					negativa) sigue siendo terminación · <Codigo>incompetencia_con_remision</Codigo>; el auto que reasume la causa va
+					como <Codigo>reanuda_proceso</Codigo>.
+				</P>
+				<P>
+					<B>Recurso ley 27.348</B> (contra la Comisión Médica): se tramita como juicio completo en el juzgado, así que su
+					sentencia es terminación · <Codigo>sentencia_sobre_fondo</Codigo> · <Codigo>resuelve_fondo</Codigo>, con el
+					resultado según prospere el reclamo (confirmar a la Comisión = <Codigo>rechaza</Codigo>), no{" "}
+					<Codigo>resuelve_recurso</Codigo>.
+				</P>
+				<P>
 					<B>Amparo desestimado</B>: la sentencia que desestima la vía de amparo por existir una vía ordinaria idónea (o lo
 					rechaza in límine) cierra el amparo → terminación · modo <Codigo>otro</Codigo> · <Codigo>resuelve_fondo</Codigo>{" "}
 					· <Codigo>rechaza</Codigo>, aunque después la parte intente ordinarizar el reclamo en el mismo expediente.
