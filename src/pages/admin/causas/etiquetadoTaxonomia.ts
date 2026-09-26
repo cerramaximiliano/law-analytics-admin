@@ -294,6 +294,8 @@ const ACTOS_PROCESALES_BASE: [string, string][] = [
 	["ordena_subasta", "Ordena (decreta) la subasta"],
 	["ordena_lanzamiento", "Ordena el lanzamiento (desalojo)"],
 	["declara_quiebra", "Declara la quiebra"],
+	["abre_concurso", "Abre el concurso preventivo"],
+	["dirime_competencia", "Dirime una contienda de competencia (tribunal superior)"],
 	["levanta_embargo", "Levanta embargo"],
 	["suspende_proceso", "Suspende el proceso"],
 	["reanuda_proceso", "Reanuda el proceso"],
@@ -449,6 +451,10 @@ export const ACTO_AUTOFILL: Record<
 		funcion: "decision",
 		resultado: "hace_lugar",
 	},
+	// Apertura del concurso preventivo (art. 14 LCQ): abre el proceso universal, no lo termina.
+	abre_concurso: { tipoResolucion: "sentencia_interlocutoria", materia: "fondo", funcion: "decision", resultado: "hace_lugar" },
+	// Tribunal superior (Cámara, CSJN) que dirime una contienda negativa de competencia: asigna el juez, no revisa un recurso.
+	dirime_competencia: { materia: "competencia", funcion: "decision", resultado: "declara" },
 	// Sentencia de quiebra (art. 88 LCQ): abre el proceso universal, no lo termina.
 	declara_quiebra: {
 		tipoResolucion: "sentencia_definitiva",
@@ -510,6 +516,12 @@ const OBJETOS_DECIDIDOS_BASE: [string, string][] = [
 	["conclusion_quiebra", "Conclusión de la quiebra"],
 	["validez_testamento", "Validez del testamento (art. 2339 CCCN)"],
 	["particion", "Partición / adjudicación de bienes"],
+	["certificacion_colectivo", "Certificación del colectivo / clase (Ac. CSJN 12/2016)"],
+	["categorizacion_acreedores", "Categorización de acreedores (concurso)"],
+	["propuesta_acuerdo", "Propuesta de acuerdo preventivo"],
+	["continuidad_contratos", "Continuidad de contratos en curso (art. 20 LCQ)"],
+	["administracion_sucesion", "Administración de la sucesión (administrador provisorio)"],
+	["vacancia_herencia", "Vacancia de la herencia / curador"],
 ];
 
 // Resultados coherentes por objeto decidido: al elegir el objeto, el selector
@@ -558,6 +570,12 @@ export const RESULTADOS_POR_OBJETO: Record<string, string[]> = {
 	conclusion_quiebra: ["declara", "confirma", "revoca"],
 	validez_testamento: ["declara", "rechaza", "confirma", "revoca"],
 	particion: ["hace_lugar", "homologa", "rechaza", "confirma", "revoca", "modifica"],
+	certificacion_colectivo: ["declara", "modifica", "rechaza", "confirma", "revoca"],
+	categorizacion_acreedores: ["declara", "modifica", "confirma", "revoca"],
+	propuesta_acuerdo: ["declara", "hace_lugar", "rechaza", "modifica"],
+	continuidad_contratos: ["hace_lugar", "rechaza", "confirma", "revoca"],
+	administracion_sucesion: ["hace_lugar", "rechaza", "revoca", "modifica"],
+	vacancia_herencia: ["declara", "revoca", "confirma"],
 };
 
 // Normaliza un objeto decidido creado a mano: minúsculas, sin acentos,

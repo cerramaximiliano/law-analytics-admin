@@ -415,6 +415,53 @@ const SECCIONES: Seccion[] = [
 					<Codigo>beneficio_litigar_sin_gastos</Codigo>.
 				</P>
 				<P>
+					<B>Contienda de competencia</B>: el tribunal superior que la dirime → <Codigo>dirime_competencia</Codigo> ·
+					competencia · decisión · <Codigo>declara</Codigo>, con fila <Codigo>competencia</Codigo>; el que no la dirime y la
+					eleva → <Codigo>eleva_autos</Codigo> · decisión; el que devuelve o declina antes de radicarse (incluido el
+					ofrecimiento entre Salas) → <Codigo>declara_incompetencia</Codigo> · decisión, sin terminación. La remisión
+					hacia adelante aceptada sigue siendo terminación · <Codigo>incompetencia_con_remision</Codigo>.
+				</P>
+				<P>
+					<B>Medida cautelar autónoma</B> (la cautelar es el proceso): contexto <Codigo>cautelar</Codigo> en todo;
+					concederla = decisión · <Codigo>ordena_medida_cautelar</Codigo>; rechazarla y archivar = terminación · modo{" "}
+					<Codigo>otro</Codigo>. <B>Incidente con expediente propio</B> (ejecución de sentencia, tercería, BLSG) → contexto{" "}
+					<Codigo>incidental</Codigo>. <B>Homologación parcial</B> de un acuerdo → decisión, sin terminación.{" "}
+					<B>Prueba anticipada o diligencia preliminar rechazada</B> como única pretensión → terminación · modo{" "}
+					<Codigo>otro</Codigo>.
+				</P>
+				<P>
+					<B>Acción colectiva de consumo</B>: certificación de la clase e inscripción en el Registro → <Codigo>otro</Codigo>{" "}
+					· fondo · decisión con fila <Codigo>certificacion_colectivo</Codigo>; la desestimación por falta de legitimación de
+					la asociación, admitida como previa → terminación · <Codigo>resuelve_excepcion</Codigo> ·{" "}
+					<Codigo>sentencia_sobre_fondo</Codigo>.
+				</P>
+				<P>
+					<B>Concurso preventivo</B>: apertura → <Codigo>abre_concurso</Codigo> · fondo · decisión (espejo de{" "}
+					<Codigo>declara_quiebra</Codigo>); categorización, continuidad de contratos y propuesta de acuerdo → <Codigo>otro</Codigo>{" "}
+					· decisión con filas <Codigo>categorizacion_acreedores</Codigo>, <Codigo>continuidad_contratos</Codigo> y{" "}
+					<Codigo>propuesta_acuerdo</Codigo>; homologación del acuerdo preventivo → terminación ·{" "}
+					<Codigo>homologa_acuerdo</Codigo>. Lo demás sigue las reglas de la quiebra.
+				</P>
+				<P>
+					<B>Sucesiones</B>: administrador provisorio → fila <Codigo>administracion_sucesion</Codigo>; vacancia y curador →{" "}
+					<Codigo>resuelve_fondo</Codigo> · decisión con fila <Codigo>vacancia_herencia</Codigo>; toma de posesión por el curador
+					→ <Codigo>ordena_lanzamiento</Codigo>. <B>Recursos genuinos ante un juzgado o Cámara contra un tribunal
+					administrativo</B> (ley 26.844, art. 62 LAS, laudos) → <Codigo>instancia_unica</Codigo> · recursiva; sentencia =
+					terminación · <Codigo>resuelve_recurso</Codigo>. <B>Rechazo in límine de la vía elegida</B> → terminación ·{" "}
+					<Codigo>inhabilidad_de_instancia</Codigo>. <B>Ejecución especial ley 24.441</B>: traslado art. 54, excepciones del
+					art. 64 como <Codigo>resuelve_excepcion</Codigo>, sin terminación judicial salvo pago acreditado.
+				</P>
+				<P>
+					<B>Acuerdo «tenido presente» con cita del art. 1641/1642 o 308</B>: si el mismo auto le da efecto (cita el artículo,
+					distribuye costas, regula o archiva) → terminación · <Codigo>homologa_acuerdo</Codigo> · <Codigo>transaccion</Codigo>;
+					si solo dice «téngase presente», sin terminación (rige el archivo). <B>Procesos urgentes y voluntarios</B> (daño
+					temido, reparaciones urgentes, asamblea judicial): auto inicial según lo que ordena; cierre por obra o asamblea
+					realizada → terminación · <Codigo>cumplimiento</Codigo>. <B>Rendición de cuentas</B>: la condena a rendir es la
+					terminación; la aprobación de cuentas, decisión en ejecución. <B>Abstracción vs. sustracción</B>: abstracción
+					cuando el juez declara que no hay caso; sustracción cuando el objeto desapareció por un hecho ajeno al proceso; si
+					recalifica, se anota lo que resuelve.
+				</P>
+				<P>
 					<B>Amparo desestimado</B>: la sentencia que desestima la vía de amparo por existir una vía ordinaria idónea (o lo
 					rechaza in límine) cierra el amparo → terminación · modo <Codigo>otro</Codigo> · <Codigo>resuelve_fondo</Codigo>{" "}
 					· <Codigo>rechaza</Codigo>, aunque después la parte intente ordinarizar el reclamo en el mismo expediente.
