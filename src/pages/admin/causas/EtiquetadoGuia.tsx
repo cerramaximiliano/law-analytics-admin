@@ -415,6 +415,40 @@ const SECCIONES: Seccion[] = [
 					<Codigo>beneficio_litigar_sin_gastos</Codigo>.
 				</P>
 				<P>
+					<B>Competencia (cierre fase B)</B>: rechazo de conexidad o de asignación y desprendimiento por conexidad o fuero de
+					atracción <B>antes de radicarse</B> (primer auto) → <Codigo>declara_incompetencia</Codigo> · decisión; incompetencia con la
+					causa <B>ya radicada</B>, por materia de oficio en el primer auto, acumulación que remite una causa radicada o remisión al
+					juez de la quiebra/concurso/sucesorio a su pedido → terminación · <Codigo>incompetencia_con_remision</Codigo> al dictarse,
+					aunque el receptor la rechace o la Sala la revoque (la remisión <em>ad effectum videndi</em> sigue siendo ordenación). El juzgado o
+					la Cámara que <B>declara o acepta expresamente su competencia</B> → <Codigo>declara_competencia</Codigo> · competencia ·
+					decisión · declara (el «hágase saber el juez» es <Codigo>tiene_presente</Codigo> con fila <Codigo>competencia</Codigo>).
+					Recursos directos ante un juzgado o Cámara contra organismos administrativos (Comisión Médica, SRT, IGJ, Casas
+					Particulares, MTEySS) → <Codigo>instancia_unica</Codigo> + contexto <Codigo>principal</Codigo>.
+				</P>
+				<P>
+					<B>Vía reconducida y acuerdos (cierre fase B)</B>: vía especial rechazada cuando el mismo auto ordena seguir por otra
+					vía en el expediente → decisión, no terminación (36 b solo si cierra el expediente). Inhabilidad de instancia → resultado{" "}
+					<Codigo>rechaza</Codigo>. Acta de audiencia que suspende por tratativas → <Codigo>celebra_audiencia</Codigo> principal +{" "}
+					<Codigo>suspende_proceso</Codigo> secundario. <B>Modo del acuerdo</B>: manda la cita — arts. 308 / 1641 / 1642 o «transacción» →{" "}
+					<Codigo>transaccion</Codigo>; sin cita (mediación prejudicial, art. 15 LCT, escrito) → <Codigo>homologacion_de_acuerdo</Codigo>;
+					nacido en audiencia sin cita → <Codigo>conciliacion</Codigo>. El convenio homologado o alcanzado en audiencia que resuelve la
+					pretensión es terminación; el lanzamiento posterior es ejecución. Cautelar absorbida por la sentencia firme del principal
+					conexo → terminación · <Codigo>declaracion_de_abstraccion</Codigo>; toda cautelar dentro del principal (incluido el 684 bis)
+					lleva contexto <Codigo>cautelar</Codigo>.
+				</P>
+				<P>
+					<B>Coherencia (cierre fase B)</B>: «mal concedido» / inadmisible / inapelable → <Codigo>deniega_recurso</Codigo>; acuse de
+					caducidad rechazado → <Codigo>declara_caducidad</Codigo> · rechaza; adelanto de gastos del perito → decisión; ejecución
+					autónoma (acuerdo, honorarios, convenio) → contexto <Codigo>ejecucion</Codigo>, auto inicial con embargo →{" "}
+					<Codigo>ordena_embargo</Codigo> · decisión + <Codigo>cita_venta</Codigo> secundario, cierre por pago →{" "}
+					<Codigo>cumplimiento</Codigo>; <Codigo>recibe_autos_devueltos</Codigo> → contexto <Codigo>recursiva</Codigo>; excepción diferida a
+					la sentencia → <Codigo>resuelve_excepcion</Codigo> · <Codigo>otro</Codigo> con fila y detalle «diferida»; declaratoria de
+					herederos → fila <Codigo>fondo → declara</Codigo>. Usá siempre los objetos curados (<Codigo>revocatoria</Codigo>,{" "}
+					<Codigo>excepcion</Codigo>, <Codigo>falta_legitimacion</Codigo>, <Codigo>prueba</Codigo>, <Codigo>recurso_apelacion</Codigo>,{" "}
+					<Codigo>competencia</Codigo>, <Codigo>reconvencion</Codigo>, <Codigo>recusacion</Codigo>); si no hay uno, <Codigo>otro</Codigo> con
+					el detalle.
+				</P>
+				<P>
 					<B>Contienda de competencia</B>: el tribunal superior que la dirime → <Codigo>dirime_competencia</Codigo> ·
 					competencia · decisión · <Codigo>declara</Codigo>, con fila <Codigo>competencia</Codigo>; el que no la dirime y la
 					eleva → <Codigo>eleva_autos</Codigo> · decisión; el que devuelve o declina antes de radicarse (incluido el

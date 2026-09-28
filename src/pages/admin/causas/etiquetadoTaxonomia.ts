@@ -296,6 +296,7 @@ const ACTOS_PROCESALES_BASE: [string, string][] = [
 	["declara_quiebra", "Declara la quiebra"],
 	["abre_concurso", "Abre el concurso preventivo"],
 	["dirime_competencia", "Dirime una contienda de competencia (tribunal superior)"],
+	["declara_competencia", "Declara o acepta expresamente su propia competencia / radicación"],
 	["levanta_embargo", "Levanta embargo"],
 	["suspende_proceso", "Suspende el proceso"],
 	["reanuda_proceso", "Reanuda el proceso"],
@@ -455,6 +456,7 @@ export const ACTO_AUTOFILL: Record<
 	abre_concurso: { tipoResolucion: "sentencia_interlocutoria", materia: "fondo", funcion: "decision", resultado: "hace_lugar" },
 	// Tribunal superior (Cámara, CSJN) que dirime una contienda negativa de competencia: asigna el juez, no revisa un recurso.
 	dirime_competencia: { materia: "competencia", funcion: "decision", resultado: "declara" },
+	declara_competencia: { materia: "competencia", funcion: "decision", resultado: "declara" },
 	// Sentencia de quiebra (art. 88 LCQ): abre el proceso universal, no lo termina.
 	declara_quiebra: {
 		tipoResolucion: "sentencia_definitiva",
@@ -522,6 +524,9 @@ const OBJETOS_DECIDIDOS_BASE: [string, string][] = [
 	["continuidad_contratos", "Continuidad de contratos en curso (art. 20 LCQ)"],
 	["administracion_sucesion", "Administración de la sucesión (administrador provisorio)"],
 	["vacancia_herencia", "Vacancia de la herencia / curador"],
+	["competencia", "Competencia (contienda, radicación, aceptación)"],
+	["reconvencion", "Reconvención"],
+	["recusacion", "Recusación / excusación"],
 ];
 
 // Resultados coherentes por objeto decidido: al elegir el objeto, el selector
@@ -529,28 +534,28 @@ const OBJETOS_DECIDIDOS_BASE: [string, string][] = [
 // para ese objeto ("otro" siempre disponible como escape). Objetos creados a
 // mano o sin entrada acá ofrecen la lista completa.
 export const RESULTADOS_POR_OBJETO: Record<string, string[]> = {
-	fondo: ["hace_lugar", "hace_lugar_parcialmente", "rechaza", "confirma", "revoca", "modifica"],
+	fondo: ["hace_lugar", "hace_lugar_parcialmente", "rechaza", "declara", "confirma", "revoca", "modifica"],
 	revocatoria: ["hace_lugar", "rechaza"],
 	apelacion_subsidiaria: ["concede", "deniega"],
-	recurso_apelacion: ["concede", "deniega", "desierto", "hace_lugar", "hace_lugar_parcialmente", "rechaza"],
+	recurso_apelacion: ["concede", "deniega", "desierto", "hace_lugar", "hace_lugar_parcialmente", "rechaza", "confirma", "revoca", "modifica"],
 	recurso_extraordinario: ["concede", "deniega", "hace_lugar", "rechaza"],
 	recurso_queja: ["concede", "deniega", "hace_lugar", "rechaza"],
 	aclaratoria: ["hace_lugar", "rechaza"],
-	nulidad: ["hace_lugar", "rechaza", "confirma", "revoca"],
+	nulidad: ["hace_lugar", "rechaza", "declara", "confirma", "revoca"],
 	excepcion_incompetencia: ["hace_lugar", "rechaza", "confirma", "revoca", "modifica"],
 	excepcion: ["hace_lugar", "hace_lugar_parcialmente", "rechaza", "confirma", "revoca", "modifica"],
 	incompetencia_de_oficio: ["declara", "confirma", "revoca"],
 	rebeldia: ["declara", "confirma", "revoca"],
 	caducidad_instancia: ["hace_lugar", "rechaza", "declara", "confirma", "revoca"],
 	medida_cautelar: ["hace_lugar", "hace_lugar_parcialmente", "rechaza", "confirma", "revoca", "modifica"],
-	prueba: ["hace_lugar", "hace_lugar_parcialmente", "rechaza", "confirma", "revoca", "modifica"],
+	prueba: ["hace_lugar", "hace_lugar_parcialmente", "rechaza", "declara", "confirma", "revoca", "modifica"],
 	homologacion: ["homologa", "rechaza", "confirma", "revoca"],
 	liquidacion: ["hace_lugar", "hace_lugar_parcialmente", "rechaza", "modifica", "confirma", "revoca"],
 	costas: ["impone", "confirma", "revoca", "modifica"],
-	honorarios: ["regula", "rechaza", "confirma", "revoca", "modifica"],
+	honorarios: ["regula", "hace_lugar", "rechaza", "confirma", "revoca", "modifica"],
 	intereses: ["hace_lugar", "rechaza", "confirma", "revoca", "modifica"],
-	multa: ["hace_lugar", "rechaza", "confirma", "revoca", "modifica"],
-	tasa_justicia: ["hace_lugar", "rechaza", "confirma", "revoca"],
+	multa: ["impone", "hace_lugar", "rechaza", "confirma", "revoca", "modifica"],
+	tasa_justicia: ["hace_lugar", "impone", "rechaza", "confirma", "revoca"],
 	embargo: ["hace_lugar", "rechaza", "confirma", "revoca", "modifica"],
 	beneficio_litigar_sin_gastos: ["hace_lugar", "hace_lugar_parcialmente", "rechaza", "confirma", "revoca", "modifica"],
 	desistimiento_accion_derecho: ["declara", "homologa", "rechaza", "confirma", "revoca"],
@@ -560,7 +565,7 @@ export const RESULTADOS_POR_OBJETO: Record<string, string[]> = {
 	dacion_en_pago: ["hace_lugar", "rechaza", "confirma", "revoca"],
 	inconstitucionalidad: ["declara", "hace_lugar", "rechaza", "confirma", "revoca"],
 	remocion_perito: ["hace_lugar", "rechaza", "confirma", "revoca"],
-	citacion_tercero: ["hace_lugar", "rechaza", "confirma", "revoca"],
+	citacion_tercero: ["hace_lugar", "rechaza", "declara", "confirma", "revoca"],
 	habilitacion_instancia: ["declara", "rechaza", "confirma", "revoca"],
 	consignacion: ["hace_lugar", "rechaza", "declara", "confirma", "revoca"],
 	verificacion_credito: ["hace_lugar", "hace_lugar_parcialmente", "rechaza", "confirma", "revoca", "modifica"],
@@ -576,6 +581,9 @@ export const RESULTADOS_POR_OBJETO: Record<string, string[]> = {
 	continuidad_contratos: ["hace_lugar", "rechaza", "confirma", "revoca"],
 	administracion_sucesion: ["hace_lugar", "rechaza", "revoca", "modifica"],
 	vacancia_herencia: ["declara", "revoca", "confirma"],
+	competencia: ["declara", "rechaza", "confirma", "revoca", "modifica"],
+	reconvencion: ["hace_lugar", "hace_lugar_parcialmente", "rechaza", "confirma", "revoca", "modifica"],
+	recusacion: ["hace_lugar", "rechaza", "declara", "confirma", "revoca"],
 };
 
 // Normaliza un objeto decidido creado a mano: minúsculas, sin acentos,
