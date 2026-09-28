@@ -1,5 +1,5 @@
 import { CausaUserViewEntry, UserViewGate, UserViewList } from "api/pjnCredentials";
-import { baseFolder, okView } from "./CausaUserViewDialog";
+import { baseFolder, okView, PJN_CRED_ERROR_LABEL, PJN_CRED_ERROR_PUBLIC_COPY, PJN_CRED_ERROR_RESERVED_COPY } from "./CausaUserViewDialog";
 
 /**
  * Casuística de la lista de carpetas PJN del usuario, derivada de leer TODOS
@@ -75,6 +75,24 @@ const credOk = [
 	},
 ];
 
+// Credencial con rechazo de contraseña confirmado (pjn-mis-causas markInvalid):
+// syncStatus=error + CREDENTIAL_INVALID y espejo usuarios.pjnCredentialState.requiresAction=true.
+const credBroken = [{ ...credOk[0], credentialValid: false, credentialSyncStatus: "error", credentialLastErrorCode: "CREDENTIAL_INVALID" }];
+
+// Estado `cred_error` del front (2026-09-28): pill/chip ámbar sin badge de verificación.
+const credErrorPill = { label: PJN_CRED_ERROR_LABEL, accent: "amber" as const, badge: "cred_error" };
+const credErrorView = (reserved: boolean, gate: UserViewGate = null, extra: V = {}): V => ({
+	list: "cred_error",
+	expanded: credErrorPill,
+	detail: { chip: credErrorPill, gate },
+	credError: {
+		code: "CREDENTIAL_INVALID",
+		message: reserved ? PJN_CRED_ERROR_RESERVED_COPY : PJN_CRED_ERROR_PUBLIC_COPY,
+		requiresAction: true,
+	},
+	...extra,
+});
+
 export const PJN_GROUPS: GuideGroup[] = [
 	{
 		row: "ok",
@@ -139,15 +157,15 @@ export const PJN_GROUPS: GuideGroup[] = [
 	},
 	{
 		row: "ok_cred_error",
-		title: "OK con credencial rechazada — warning ámbar",
+		title: "OK con credencial rechazada — warning ámbar (fila del servidor; en el front reemplazada por cred_error)",
 		whatUserSees:
-			"Carátula normal pero el tilde azul se reemplaza por un warning ámbar (tooltip “PJN — Sincronización pausada: tus credenciales fueron rechazadas…”). Solo en carpetas source=pjn-login.",
+			"Hasta el 2026-09-28: carátula normal con warning ámbar (tooltip “PJN — Sincronización pausada: tus credenciales fueron rechazadas…”), solo en carpetas source=pjn-login. Desde 80f1b785 el front ya NO muestra este estado para PJN: lo reemplaza `cred_error` (fila siguiente), que abarca cualquier source y distingue pública/reservada. La fila se conserva porque admin-api computeListRowAny todavía clasifica así a las pjn-login con credencial en error (Distribución real).",
 		cases: [
 			{
 				key: "ok_cred_error.global",
-				title: "Credencial del usuario en error",
+				title: "Credencial del usuario en error (clasificación del admin-api)",
 				producer:
-					"front usePjnCredentialError: credencial syncStatus='error' + lastError.code ∈ {CREDENTIAL_INVALID, REQUIRED_ACTION} (lo escribe pjn-mis-causas pjn-credentials.js recordError/markInvalid). Es GLOBAL por usuario, no por carpeta",
+					"admin-api computeListRowAny: credencial pjn-credentials syncStatus='error' + lastError.code ∈ {CREDENTIAL_INVALID, REQUIRED_ACTION} (lo escribe pjn-mis-causas pjn-credentials.js recordError/markInvalid) y folder source=pjn-login. Es GLOBAL por usuario, no por carpeta",
 				fields: "source=pjn-login · credencial syncStatus=error",
 				entry: entry(
 					{ source: "pjn-login" },
@@ -155,9 +173,84 @@ export const PJN_GROUPS: GuideGroup[] = [
 						list: "ok_cred_error",
 						credError: { code: "CREDENTIAL_INVALID", message: "Error de login: CUIT/CUIL o contraseña incorrectos." },
 					},
-					[{ ...credOk[0], credentialValid: false, credentialSyncStatus: "error", credentialLastErrorCode: "CREDENTIAL_INVALID" }],
+					credBroken,
 				),
-				warn: "Ni la fila expandida ni el detalle muestran este warning (solo la lista). Las carpetas source=auto del mismo usuario no lo muestran nunca.",
+				warn: "El usuario ya no ve esto: ve la fila cred_error (warning ámbar “Credencial requiere acción” en todas sus carpetas PJN, incluidas las source=auto). Pendiente actualizar computeListRowAny/computeUserView del admin-api para que lean usuarios.pjnCredentialState.requiresAction y devuelvan cred_error.",
+			},
+		],
+	},
+	{
+		row: "cred_error",
+		title: "Credencial requiere acción — warning ámbar en TODAS las carpetas PJN",
+		whatUserSees:
+			"Carátula + warning ámbar clickeable (→ Integraciones → PJN) con tooltip según la carpeta: pública “El portal rechazó tu credencial PJN. Esta causa es pública: se sigue actualizando y te avisamos sus novedades…”; reservada “…esta causa es reservada: no se puede actualizar hasta que renueves la contraseña…”. Fila expandida y detalle: pill ámbar “PJN — Credencial requiere acción” sin badge de verificación (clic → perfil). Banner ámbar con CTA “Actualizar credencial” arriba de la lista y del detalle. Detalle sin gate si la causa es pública; gate “El portal rechazó tu credencial PJN” si causaCredentialCovered=false (reservada/revocada). GLOBAL por usuario y para cualquier source (auto, pjn-login, manual con pjn=true): sale del espejo usuarios.pjnCredentialState.requiresAction que escribe pjn-mis-causas con el rechazo confirmado (el hub lo expone como requiresAction en GET /api/pjn-credentials; el admin lo ve como “requiresAction” en la lista de credenciales). Prioridad (getPjnBindingState): gana sobre revoked / reserved_covered / reserved / list_removed; cede ante pending_selection / failed / pending (tienen una acción propia más urgente).",
+		cases: [
+			{
+				key: "cred_error.public",
+				title: "Causa pública: se sigue actualizando y avisando",
+				producer:
+					"pjn-mis-causas: rechazo de contraseña confirmado → pjn-credentials markInvalid + usuarios.pjnCredentialState {requiresAction:true, reason, since}. Hub GET /api/pjn-credentials → requiresAction; front usePjnCredentialError().requiresAction → getPjnBindingState(folder, {credError}) = 'cred_error'. La causa pública la sigue actualizando app-update-worker y sus movimientos se notifican igual",
+				fields:
+					"source=auto|pjn-login · verified=true · isValid=true · causaIsPrivate≠true · causaCredentialCovered≠false · requiresAction=true",
+				entry: entry({}, credErrorView(false), credBroken),
+				warn: "admin-api computeListRowAny todavía no conoce este estado: en “Distribución real” estas carpetas se cuentan como ok (source=auto) u ok_cred_error (pjn-login) hasta actualizar el servidor.",
+			},
+			{
+				key: "cred_error.reserved",
+				title: "Reservada sin cobertura (source≠pjn-login): gate cred_error",
+				producer:
+					"Mismo espejo requiresAction sobre una carpeta reservada por el privacy-checker / handoff con causaCredentialCovered=false. details.tsx: gate 'cred_error' (PendingVerificationView) con CTA “Actualizar credencial PJN”; el server sigue respondiendo 403 CAUSA_RESERVED",
+				fields: "source=auto · causaIsPrivate=true · causaCredentialCovered=false · requiresAction=true",
+				entry: entry(
+					{ causaIsPrivate: true, causaCredentialCovered: false },
+					credErrorView(true, "cred_error", { contentBlocked: true }),
+					credBroken,
+				),
+				warn: "Gana sobre reserved: mientras la credencial requiera acción el usuario no ve el warning rojo ni el gate “El tribunal reservó este expediente” — el motivo real es la contraseña. Al renovarla vuelve el estado propio de la carpeta.",
+			},
+			{
+				key: "cred_error.revoked",
+				title: "Acceso revocado (pjn-login, covered=false): gate cred_error",
+				producer:
+					"Carpeta de Mis Causas con linkedCredentials removedFromSync + access:'revoked' (causaCredentialCovered=false) y la credencial del usuario con requiresAction=true. La causa privada no se puede reconsultar sin credencial válida",
+				fields: "source=pjn-login · causaCredentialCovered=false · requiresAction=true",
+				entry: entry({ source: "pjn-login", causaCredentialCovered: false }, credErrorView(true, "cred_error", { contentBlocked: true }), [
+					{ ...credBroken[0], removedFromSync: true, access: "revoked" },
+				]),
+				warn: "Gana sobre revoked (candado ámbar “Acceso restringido” + gate reserved_revoked). El 403 en movimientos/PDFs se mantiene.",
+			},
+			{
+				key: "cred_error.covered",
+				title: "Reservada con acceso (covered=true): pill ámbar, sin gate",
+				producer:
+					"Causa privada cubierta por la credencial (causaCredentialCovered=true) cuando esa misma credencial pasa a requiresAction=true. El gate solo aplica con covered=false, así que el detalle abre con lo ya sincronizado; el copy es el de reservada (isPjnCredDependent: causaIsPrivate=true)",
+				fields: "source=pjn-login|auto · causaIsPrivate=true · causaCredentialCovered=true · requiresAction=true",
+				entry: entry(
+					{ source: "pjn-login", causaIsPrivate: true, causaCredentialCovered: true },
+					credErrorView(true, null, { isPjnPrivateCovered: true }),
+					credBroken,
+				),
+				warn: "Gana sobre reserved_covered (candado verde). No se bloquea el detalle pero la causa privada solo la actualiza private-causas-update-worker con esa credencial → sin novedades hasta renovar la contraseña.",
+			},
+			{
+				key: "cred_error.list_removed",
+				title: "Ya no en la lista (pjn-login): cred_error gana",
+				producer: "Carpeta pjn-login con listRemoved=true / pjnNotFound=true y la credencial con requiresAction=true",
+				fields: "source=pjn-login · listRemoved=true · requiresAction=true",
+				entry: entry({ source: "pjn-login", listRemoved: true, listRemovedSource: "pjn" }, credErrorView(false), credBroken),
+				warn: "Gana sobre list_removed: el aviso “Ya no en la lista” queda oculto mientras la credencial requiera acción (no se puede saber si sigue en Mis Causas sin loguear).",
+			},
+			{
+				key: "cred_error.yields",
+				title: "Cede ante pending_selection / failed / pending",
+				producer:
+					"getPjnBindingState: si la carpeta está en pending_selection, failed (o verified+isValid=false) o pending, esos estados ganan — tienen una acción propia más urgente (elegir expediente, revisar datos, esperar al worker). Solo el banner global avisa de la credencial",
+				fields: "assoc=pending_selection|failed|pending · requiresAction=true",
+				entry: entry(
+					{ causaVerified: false, causaIsValid: false, causaAssociationStatus: "failed" },
+					failedView({ credError: { code: "CREDENTIAL_INVALID", message: PJN_CRED_ERROR_PUBLIC_COPY, requiresAction: true } }),
+					credBroken,
+				),
 			},
 		],
 	},
@@ -630,6 +723,16 @@ export const PJN_FINDINGS: GuideFinding[] = [
 		detail:
 			"Reportado desde /admin/users/resources (FERRARI 11548/2026 CCF, DAYAN 19721/2026, D'AGATA 59787/2025, entre otras: 4 carpetas pjn-login de 3 usuarios del 08 al 10/09, más 2 'auto' de marzo). La vista muestra folder.causaVerified / folder.causaIsValid: la causa estaba verified:true con movimientos al día (update/app cada 2 h) pero la carpeta seguía causaVerified:false / 'pending'. Causa: en processCausasBatch, cuando la causa NO existía en BD, upsertCausa la creaba ya verified:true (importada del caché o confirmada por el login) pero ensureFolder se llamaba con existingCausa=null → causaVerified = null?.verified || false. Nadie la corregía después: los workers públicos excluyen los folders pjn-login (F8/F11) y el privado sólo escribe progreso. Impacto para el usuario: la carpeta salía del listado principal a 'Pendientes de verificación' y el detalle mostraba PendingVerificationView (bloqueado) aunque los movimientos ya se sincronizaban. Fix: se relee la causa recién creada y se pasa a ensureFolder (pjn-mis-causas 0fbb645, cloud-02). Backfill: 6 carpetas → success/verified/valid con historial 'F20 backfill'.",
 		where: "pjn-mis-causas src/services/causa-sync-service.js processCausasBatch → ensureFolder (0fbb645) · admin UserResourcesTab.tsx (columnas Verificada/Válida)",
+	},
+	{
+		id: "F21",
+		severity: "media",
+		title:
+			"[RESUELTO 2026-09-28] Credencial PJN rechazada: el aviso solo salía en pjn-login, decía 'Sincronización pausada' y no distinguía pública de reservada",
+		detail:
+			"Era (F14): cred_error aplicaba solo a carpetas source=pjn-login, iba después de todos los estados propios de la carpeta y usaba un único copy 'PJN — Sincronización pausada' que sugería que se suspendían los avisos. Ahora el estado sale del espejo usuarios.pjnCredentialState.requiresAction (lo escribe pjn-mis-causas con el rechazo confirmado; el hub lo expone como requiresAction / pjnCredentialState en GET /api/pjn-credentials y admin-api como requiresAction en getCredentials, visible en la lista de credenciales) y aplica a TODAS las carpetas PJN del usuario: label 'PJN — Credencial requiere acción', pill/chip ámbar sin badge (clic → Integraciones → PJN), copy pública (se sigue actualizando y avisando) / reservada (no se actualiza hasta renovar la contraseña), banner con CTA 'Actualizar credencial' en lista y detalle, gate cred_error para reservadas sin cobertura y chip en preferencias. Prioridad: gana sobre revoked / reserved_covered / reserved / list_removed y cede ante pending_selection / failed / pending. PENDIENTE admin-api: computeListRowAny / computeUserView siguen devolviendo ok_cred_error solo para pjn-login (leen pjn-credentials syncStatus=error, no el espejo), así que 'Distribución real' y la vista de usuario del admin no reflejan cred_error hasta actualizar el servidor; esta guía y el catálogo ya lo documentan.",
+		where:
+			"law-analytics-front src/utils/pjnBindingState.ts · folders.tsx · FolderView.tsx · details.tsx · PendingVerificationView.tsx · hooks/usePjnCredentialError.ts · TabSettings.tsx (80f1b785) · hub controllers/pjnCredentialsController.js getCredentialsStatus (requiresAction) · admin-api pjnCredentialsController.js getCredentials (requiresAction) · pendiente: computeListRowAny / computeUserView",
 	},
 ];
 

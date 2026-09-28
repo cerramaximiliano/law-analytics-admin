@@ -26,6 +26,18 @@ export interface PjnCredential {
 	credentialInvalid: boolean;
 	credentialInvalidAt: string | null;
 	credentialInvalidReason: string | null;
+	/** Motivo derivado por el hub (services/pjnCredentialStatusService.js), mismo que ve el usuario. */
+	statusReason?: string | null;
+	/**
+	 * Espejo `usuarios.pjnCredentialState.requiresAction` (2026-09-28): lo escribe
+	 * pjn-mis-causas cuando el portal rechazó la contraseña de forma confirmada.
+	 * Mientras esté en true el usuario ve “PJN — Credencial requiere acción” en
+	 * TODAS sus carpetas PJN (cualquier source); las públicas se siguen
+	 * actualizando y avisando, las reservadas no hasta renovar la contraseña.
+	 * admin-api getCredentials lo devuelve junto con `requiresActionSince`.
+	 */
+	requiresAction?: boolean;
+	requiresActionSince?: string | null;
 	errorHistory?: Array<{
 		message: string;
 		code: string;
@@ -308,7 +320,17 @@ export interface SyncedCausa {
 	};
 }
 
-export type UserViewGate = "archived" | "pending_selection" | "reserved" | "reserved_revoked" | "failed" | "invalid" | "pending" | null;
+export type UserViewGate =
+	| "archived"
+	| "pending_selection"
+	| "reserved"
+	| "reserved_revoked"
+	| "failed"
+	| "invalid"
+	| "pending"
+	// Credencial PJN rechazada sobre una causa sin cobertura (PendingVerificationView gateMeta.cred_error, 2026-09-28)
+	| "cred_error"
+	| null;
 
 export type UserViewList =
 	| "plain"
@@ -322,6 +344,9 @@ export type UserViewList =
 	| "invalid"
 	| "ok"
 	| "ok_cred_error"
+	// Credencial PJN que requiere acción (usuarios.pjnCredentialState.requiresAction):
+	// warning ámbar en TODAS las carpetas PJN del usuario, con copy pública/reservada (2026-09-28)
+	| "cred_error"
 	| "cred_status"
 	// Desvinculada (previousSyncSource sin flag de fuente): carátula + ícono ámbar
 	| "unlinked";
@@ -393,7 +418,8 @@ export interface CausaUserViewEntry {
 		hiddenFromList: boolean;
 		inAttentionTable: boolean;
 		contentBlocked: boolean;
-		credError: { code: string; message: string | null } | null;
+		/** `requiresAction`: espejo usuarios.pjnCredentialState (rechazo confirmado) → estado `cred_error` del front. */
+		credError: { code: string; message: string | null; requiresAction?: boolean } | null;
 		isPjnPrivateCovered: boolean;
 	};
 }

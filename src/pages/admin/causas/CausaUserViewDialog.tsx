@@ -77,6 +77,31 @@ const MiniChip = ({ color, text, dot = true }: { color: string; text: string; do
 	);
 };
 
+// ---------- CREDENCIAL PJN QUE REQUIERE ACCIÓN (front utils/pjnBindingState.ts, 2026-09-28) ----------
+// Estado `cred_error`: no sale de la carpeta sino del espejo
+// usuarios.pjnCredentialState.requiresAction, que escribe pjn-mis-causas cuando el
+// portal rechazó la contraseña de forma confirmada (el hub lo expone como
+// `requiresAction` en GET /api/pjn-credentials; admin-api getCredentials lo
+// devuelve con el mismo nombre en la lista de credenciales). Aplica a TODAS las
+// carpetas PJN del usuario (cualquier source): gana sobre revoked /
+// reserved_covered / reserved / list_removed y cede ante pending_selection /
+// failed / pending (getPjnBindingState). Copy distinto para pública (se sigue
+// actualizando y avisando) y reservada (no se actualiza hasta renovar la
+// contraseña). Pill/chip ámbar sin badge de verificación, clic → Integraciones → PJN.
+export const PJN_CRED_ERROR_LABEL = "PJN — Credencial requiere acción";
+export const PJN_CRED_ERROR_PUBLIC_COPY =
+	"El portal rechazó tu credencial PJN. Esta causa es pública: se sigue actualizando y te avisamos sus novedades. Actualizá la contraseña en Integraciones → PJN para recuperar el acceso a tus causas reservadas.";
+export const PJN_CRED_ERROR_RESERVED_COPY =
+	"El portal rechazó tu credencial PJN y esta causa es reservada: no se puede actualizar hasta que renueves la contraseña en Integraciones → PJN.";
+export const PJN_CRED_ERROR_BANNER_COPY =
+	"Tu credencial PJN requiere acción: el portal rechazó tu contraseña. Te seguimos avisando las novedades de tus causas públicas; las reservadas no se actualizan hasta que la renueves.";
+/** Causa que depende de la credencial para actualizarse (isPjnCredDependent del front): reservada o sin cobertura. */
+export const isPjnCredDependent = (f: Pick<CausaUserViewEntry["folder"], "causaIsPrivate" | "causaCredentialCovered">): boolean =>
+	f.causaIsPrivate === true || f.causaCredentialCovered === false;
+/** Tooltip de `cred_error` según la carpeta (pjnCredErrorCopy del front): pública (sigue) o reservada (no se actualiza). */
+export const pjnCredErrorCopy = (f: Pick<CausaUserViewEntry["folder"], "causaIsPrivate" | "causaCredentialCovered">): string =>
+	isPjnCredDependent(f) ? PJN_CRED_ERROR_RESERVED_COPY : PJN_CRED_ERROR_PUBLIC_COPY;
+
 export const LIST_TOOLTIPS: Record<string, string> = {
 	reserved: "Causa reservada — el tribunal restringió la consulta web pública. El sistema sigue verificando si vuelve a estar accesible.",
 	reserved_covered: "Causa reservada por el tribunal — accedés a sus movimientos a través de tu credencial PJN vinculada.",
@@ -90,6 +115,8 @@ export const LIST_TOOLTIPS: Record<string, string> = {
 	invalid: "Causa inválida - No se pudo verificar en el Poder Judicial",
 	ok: "Causa vinculada a PJN",
 	ok_cred_error: "PJN — Sincronización pausada: tus credenciales fueron rechazadas. Actualizalas desde Perfil → Cuentas Judiciales.",
+	// Default (causa pública); listTooltip() elige el copy de reservada según la carpeta.
+	cred_error: PJN_CRED_ERROR_PUBLIC_COPY,
 	cred_status: "Credencial MEV: cargala/actualizala en tu perfil → Integraciones → MEV.",
 	unlinked: "Desvinculada de MEV — conserva todos sus datos pero ya no se sincroniza. Hacé clic para volver a vincularla desde la carpeta.",
 };
@@ -114,6 +141,8 @@ export function folderJurisdiction(folder: CausaUserViewEntry["folder"]): string
 export function listTooltip(list: string, folder: CausaUserViewEntry["folder"]): string {
 	const jur = folderJurisdiction(folder);
 	if (list === "ok") return `Causa vinculada a ${JURISDICTION_LABEL[jur || "pjn"]}`;
+	// folders.tsx (2026-09-28): el ícono ámbar lleva al perfil; copy pública / reservada por carpeta.
+	if (list === "cred_error") return pjnCredErrorCopy(folder);
 	if (list === "unlinked") {
 		const src = folder.previousSyncSource || "";
 		const name = JURISDICTION_LABEL[src] || src.toUpperCase();
@@ -154,6 +183,9 @@ export function ListRowReplica({ entry }: { entry: CausaUserViewEntry }) {
 			case "ok":
 				return <TickCircle size={16} variant="Bold" color={BRAND_BLUE} />;
 			case "ok_cred_error":
+				return <Warning2 size={16} variant="Bold" color={STALE_AMBER} />;
+			case "cred_error":
+				// folders.tsx renderPrivacyRow: carátula + Warning2 ámbar clickeable (→ Integraciones → PJN)
 				return <Warning2 size={16} variant="Bold" color={STALE_AMBER} />;
 			case "cred_status":
 				return <Warning2 size={16} variant="Bold" color={STALE_AMBER} />;
@@ -284,7 +316,8 @@ const BADGE_META: Record<string, { icon: JSX.Element; tooltip: string }> = {
 	pending: { icon: <InfoCircle size={14} variant="Bold" color={STALE_AMBER} />, tooltip: "Pendiente de verificación" },
 	valid: { icon: <TickCircle size={14} variant="Bold" color={LIVE_GREEN} />, tooltip: "Causa válida" },
 	invalid: { icon: <CloseCircle size={14} variant="Bold" color={RED} />, tooltip: "Causa inválida" },
-	// pending_selection / unlinked / cred_status: la pill entera cambia (ámbar + Warning2), sin badge superpuesto
+	// pending_selection / unlinked / cred_status / cred_error: la pill entera cambia (ámbar + Warning2), sin badge superpuesto
+	// (cred_error: FolderView.tsx no muestra el badge de verificación — la causa es válida, lo que falla es la credencial)
 	pending_selection: { icon: <Warning2 size={14} variant="Bulk" color={STALE_AMBER} />, tooltip: "Seleccionar expediente" },
 };
 
@@ -419,7 +452,41 @@ export const GATE_META: Record<
 		icon: <Lock1 size={20} variant="Bulk" />,
 		note: "El sistema revisa a diario si la causa reaparece en el listado de tu credencial; si vuelve, el acceso se restablece automáticamente.",
 	},
+	// PendingVerificationView.tsx gateMeta.cred_error (2026-09-28): credencial PJN
+	// rechazada sobre una causa sin cobertura (causaCredentialCovered=false). El
+	// motivo es la contraseña, no el tribunal; las públicas no pasan por este gate.
+	cred_error: {
+		label: "Credencial requiere acción",
+		title: "El portal rechazó tu credencial PJN",
+		description: PJN_CRED_ERROR_RESERVED_COPY,
+		tone: "amber",
+		icon: <Warning2 size={20} variant="Bulk" />,
+		cta: "Actualizar credencial PJN",
+		note: "Tus causas públicas siguen actualizándose y te avisamos sus novedades; solo las reservadas esperan la credencial.",
+	},
 };
+
+/**
+ * Banner ámbar con CTA que el front muestra arriba de la lista de carpetas
+ * (folders.tsx) y del detalle (details.tsx) mientras
+ * usePjnCredentialError().requiresAction sea true. Global por usuario.
+ */
+export function CredErrorBannerReplica() {
+	return (
+		<Alert
+			severity="warning"
+			icon={<Warning2 variant="Bold" />}
+			action={
+				<Button color="warning" size="small" variant="outlined" sx={{ textTransform: "none", whiteSpace: "nowrap", fontWeight: 600 }}>
+					Actualizar credencial
+				</Button>
+			}
+			sx={{ alignItems: "center", mb: 1 }}
+		>
+			<Typography variant="body2">{PJN_CRED_ERROR_BANNER_COPY}</Typography>
+		</Alert>
+	);
+}
 
 export function GateReplica({ gate, folderName }: { gate: Exclude<UserViewGate, null>; folderName?: string }) {
 	const theme = useTheme();
@@ -536,9 +603,13 @@ export function EntryPanel({ entry }: { entry: CausaUserViewEntry }) {
 	const { folder, view, links, user } = entry;
 	const chipAccent = accentHex(view.detail.chip.accent);
 	const expAccent = accentHex(view.expanded.accent);
+	// Credencial PJN que requiere acción: banner global (lista + detalle) y pill/chip ámbar con copy por carpeta.
+	const credRequiresAction = folder.pjn === true && view.credError?.requiresAction === true;
 	const chipTooltip =
 		view.detail.chip.badge === "cred_status"
 			? `${LIST_TOOLTIPS.cred_status} Hacé clic para ir a tu perfil.`
+			: view.detail.chip.badge === "cred_error"
+			? pjnCredErrorCopy(folder)
 			: view.detail.chip.label === "PJN — Causa reservada"
 			? "Esta causa fue marcada como reservada — el tribunal restringió la consulta web pública. El sistema sigue verificando si vuelve a estar accesible."
 			: view.detail.chip.label === "PJN — Reservada (con acceso)"
@@ -563,7 +634,13 @@ export function EntryPanel({ entry }: { entry: CausaUserViewEntry }) {
 					sx={{ fontFamily: "monospace" }}
 				/>
 				{view.contentBlocked && <Chip size="small" color="error" label="403 CAUSA_RESERVED en movimientos/PDFs" />}
-				{view.credError && <Chip size="small" color="warning" label={`credencial: ${view.credError.code}`} />}
+				{view.credError && (
+					<Chip
+						size="small"
+						color="warning"
+						label={`credencial: ${view.credError.code}${view.credError.requiresAction ? " · requiresAction" : ""}`}
+					/>
+				)}
 			</Stack>
 
 			<Section
@@ -576,6 +653,7 @@ export function EntryPanel({ entry }: { entry: CausaUserViewEntry }) {
 						: "aparece en la tabla principal"
 				}
 			>
+				{credRequiresAction && <CredErrorBannerReplica />}
 				<Box sx={{ opacity: view.hiddenFromList ? 0.45 : 1 }}>
 					<ListRowReplica entry={entry} />
 				</Box>
@@ -600,6 +678,8 @@ export function EntryPanel({ entry }: { entry: CausaUserViewEntry }) {
 							tooltip={
 								view.expanded.badge === "cred_status"
 									? LIST_TOOLTIPS.cred_status
+									: view.expanded.badge === "cred_error"
+									? pjnCredErrorCopy(folder)
 									: view.expanded.accent === "red"
 									? LIST_TOOLTIPS.reserved
 									: view.expanded.accent === "amber"
@@ -615,6 +695,7 @@ export function EntryPanel({ entry }: { entry: CausaUserViewEntry }) {
 				title="3 · Detalle de la carpeta"
 				hint={view.detail.gate ? `gate: ${view.detail.gate} (bloquea el contenido)` : "sin gate: ve el detalle completo"}
 			>
+				{credRequiresAction && <CredErrorBannerReplica />}
 				{view.detail.gate ? (
 					<GateReplica gate={view.detail.gate} folderName={folder.folderName} />
 				) : (
@@ -867,6 +948,57 @@ export const CATALOG_CASES: CatalogCase[] = [
 				removedAt: null,
 				access: "full",
 				accessChangedAt: null,
+				credentialEnabled: true,
+				credentialValid: false,
+				credentialSyncStatus: "error",
+				credentialLastErrorCode: "CREDENTIAL_INVALID",
+			},
+		],
+	),
+	mk(
+		"cred_error_public",
+		"Credencial requiere acción — causa pública (se sigue actualizando)",
+		"pjn-mis-causas: rechazo de contraseña confirmado → usuarios.pjnCredentialState.requiresAction:true (el hub lo expone como requiresAction en GET /api/pjn-credentials; el admin lo ve como requiresAction en la lista de credenciales). El front pinta ámbar TODAS las carpetas PJN del usuario, cualquier source; la pública sigue por scraping y se avisan sus novedades",
+		{ source: "auto" },
+		okView({
+			list: "cred_error",
+			expanded: { label: PJN_CRED_ERROR_LABEL, accent: "amber", badge: "cred_error" },
+			detail: { chip: { label: PJN_CRED_ERROR_LABEL, accent: "amber", badge: "cred_error" }, gate: null },
+			credError: { code: "CREDENTIAL_INVALID", message: PJN_CRED_ERROR_PUBLIC_COPY, requiresAction: true },
+		}),
+		[
+			{
+				credentialId: "abcdef",
+				removedFromSync: false,
+				removedAt: null,
+				access: "full",
+				accessChangedAt: null,
+				credentialEnabled: true,
+				credentialValid: false,
+				credentialSyncStatus: "error",
+				credentialLastErrorCode: "CREDENTIAL_INVALID",
+			},
+		],
+	),
+	mk(
+		"cred_error_reserved",
+		"Credencial requiere acción — causa reservada sin cobertura (gate)",
+		"Mismo espejo requiresAction sobre una carpeta con causaCredentialCovered:false (reservada o revocada): cred_error gana sobre revoked/reserved y el detalle muestra el gate cred_error con CTA a Integraciones → PJN; no se actualiza hasta renovar la contraseña (el 403 CAUSA_RESERVED del server sigue)",
+		{ source: "pjn-login", causaIsPrivate: true, causaCredentialCovered: false },
+		okView({
+			list: "cred_error",
+			expanded: { label: PJN_CRED_ERROR_LABEL, accent: "amber", badge: "cred_error" },
+			detail: { chip: { label: PJN_CRED_ERROR_LABEL, accent: "amber", badge: "cred_error" }, gate: "cred_error" },
+			contentBlocked: true,
+			credError: { code: "CREDENTIAL_INVALID", message: PJN_CRED_ERROR_RESERVED_COPY, requiresAction: true },
+		}),
+		[
+			{
+				credentialId: "abcdef",
+				removedFromSync: true,
+				removedAt: new Date().toISOString(),
+				access: "revoked",
+				accessChangedAt: new Date().toISOString(),
 				credentialEnabled: true,
 				credentialValid: false,
 				credentialSyncStatus: "error",

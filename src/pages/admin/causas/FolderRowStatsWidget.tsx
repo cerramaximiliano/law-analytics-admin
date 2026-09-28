@@ -59,6 +59,7 @@ const JUR_LABEL: Record<string, string> = {
 const ROW_LABEL: Record<string, string> = {
 	ok: "OK",
 	ok_cred_error: "OK · credencial rechazada",
+	cred_error: "Credencial requiere acción",
 	pending: "Pendiente de verificación",
 	pending_selection: "Seleccionar expediente",
 	failed: "Asociación fallida",
@@ -76,6 +77,7 @@ const ROW_LABEL: Record<string, string> = {
 const ROW_ORDER = [
 	"ok",
 	"ok_cred_error",
+	"cred_error",
 	"pending",
 	"pending_selection",
 	"cred_status",
@@ -93,6 +95,7 @@ const ROW_TONE: Record<string, Tone> = {
 	reserved_covered: "ok",
 	revoked: "warn",
 	ok_cred_error: "warn",
+	cred_error: "warn",
 	pending: "warn",
 	pending_selection: "warn",
 	cred_status: "warn",

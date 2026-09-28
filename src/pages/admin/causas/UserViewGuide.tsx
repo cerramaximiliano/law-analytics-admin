@@ -48,6 +48,7 @@ import { GUIDE_BY_JURISDICTION, JURISDICTIONS, GuideJurisdiction } from "./userV
 const ROW_LABEL: Record<string, string> = {
 	ok: "OK — carátula + tilde azul",
 	ok_cred_error: "OK con credencial rechazada — warning ámbar",
+	cred_error: "Credencial requiere acción — warning ámbar (todas las carpetas PJN)",
 	pending: "Pendiente de verificación (chip ámbar)",
 	pending_selection: "Seleccionar expediente (chip ámbar)",
 	failed: "Asociación fallida (chip rojo)",
@@ -72,6 +73,7 @@ const GATE_LABEL: Record<string, string> = {
 	invalid: "Gate: inválida",
 	reserved: "Gate: reservada (sin credencial)",
 	reserved_revoked: "Gate: acceso restringido",
+	cred_error: "Gate: credencial requiere acción (reservada sin cobertura)",
 };
 
 const fmtField = (v: unknown) => (v === null || v === undefined ? "—" : String(v));

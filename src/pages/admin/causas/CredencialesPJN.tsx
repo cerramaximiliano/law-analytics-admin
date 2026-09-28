@@ -1508,6 +1508,23 @@ const CredencialesPJN = () => {
 																sx={{ fontWeight: 700, fontSize: "0.65rem", height: 20, cursor: "help" }}
 															/>
 														</Tooltip>
+													) : cred.requiresAction ? (
+														// Espejo usuarios.pjnCredentialState.requiresAction (2026-09-28): el usuario ve
+														// "PJN — Credencial requiere acción" en todas sus carpetas PJN.
+														<Tooltip
+															title={`Requiere acción — el portal rechazó la contraseña (espejo usuarios.pjnCredentialState.requiresAction${
+																cred.requiresActionSince ? `, desde ${formatDate(cred.requiresActionSince)}` : ""
+															}). El usuario ve “PJN — Credencial requiere acción” en todas sus carpetas PJN: las públicas se siguen actualizando y avisando; las reservadas no hasta renovar la contraseña.`}
+															arrow
+														>
+															<Chip
+																label="REQUIERE ACCIÓN"
+																size="small"
+																color="warning"
+																variant="filled"
+																sx={{ fontWeight: 700, fontSize: "0.65rem", height: 20, cursor: "help" }}
+															/>
+														</Tooltip>
 													) : (
 														<Chip label="OK" size="small" color="success" variant="outlined" sx={{ fontSize: "0.65rem", height: 20 }} />
 													)}
