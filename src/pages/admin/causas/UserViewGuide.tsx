@@ -31,7 +31,7 @@ import { ArrowDown2, ArrowUp2, Refresh, UserSquare, Warning2 } from "iconsax-rea
 import MainCard from "components/MainCard";
 import { BRAND_BLUE, STALE_AMBER } from "themes/dashboardTokens";
 import pjnCredentialsService, { CausaUserViewEntry, UserViewStatsCombo, UserViewStatsData } from "api/pjnCredentials";
-import CausaUserViewDialog, { ListRowReplica, GATE_META, baseFolder } from "./CausaUserViewDialog";
+import CausaUserViewDialog, { ListRowReplica, GATE_META, baseFolder, formatPjnAccessCutoff } from "./CausaUserViewDialog";
 import FolderRowStatsWidget from "./FolderRowStatsWidget";
 import { GUIDE_BY_JURISDICTION, JURISDICTIONS, GuideJurisdiction } from "./userViewGuideData";
 
@@ -293,6 +293,15 @@ export default function UserViewGuide() {
 												/>
 												{c.entry.view.contentBlocked && (
 													<Chip size="small" color="error" label="403 en movimientos/PDFs" sx={{ height: 20, fontSize: "0.66rem" }} />
+												)}
+												{c.entry.view.accessCutoffAt && (
+													<Chip
+														size="small"
+														color="warning"
+														variant="outlined"
+														label={`movimientos hasta el ${formatPjnAccessCutoff(c.entry.view.accessCutoffAt)}`}
+														sx={{ height: 20, fontSize: "0.66rem" }}
+													/>
 												)}
 											</Stack>
 											<Box sx={{ opacity: c.entry.view.hiddenFromList ? 0.45 : 1 }}>

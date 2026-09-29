@@ -383,6 +383,8 @@ export interface CausaUserViewEntry {
 		causaAssociationStatus?: string;
 		causaAssociationError?: string | null;
 		searchTerm?: string | null;
+		/** Corte de acceso (2026-09-28): la credencial del usuario cubría la reservada y cayó; el hub sirve hasta esta fecha. */
+		causaAccessCutoffAt?: string | null;
 		listRemoved?: boolean;
 		listRemovedSource?: string | null;
 		listRemovedAt?: string | null;
@@ -418,6 +420,8 @@ export interface CausaUserViewEntry {
 		hiddenFromList: boolean;
 		inAttentionTable: boolean;
 		contentBlocked: boolean;
+		/** Reservada sin cobertura CON corte: sin gate ni 403; movimientos hasta esta fecha (computeUserView). */
+		accessCutoffAt: string | null;
 		/** `requiresAction`: espejo usuarios.pjnCredentialState (rechazo confirmado) → estado `cred_error` del front. */
 		credError: { code: string; message: string | null; requiresAction?: boolean } | null;
 		isPjnPrivateCovered: boolean;

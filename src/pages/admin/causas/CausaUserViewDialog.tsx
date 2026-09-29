@@ -99,8 +99,28 @@ export const PJN_CRED_ERROR_BANNER_COPY =
 export const isPjnCredDependent = (f: Pick<CausaUserViewEntry["folder"], "causaIsPrivate" | "causaCredentialCovered">): boolean =>
 	f.causaIsPrivate === true || f.causaCredentialCovered === false;
 /** Tooltip de `cred_error` según la carpeta (pjnCredErrorCopy del front): pública (sigue) o reservada (no se actualiza). */
-export const pjnCredErrorCopy = (f: Pick<CausaUserViewEntry["folder"], "causaIsPrivate" | "causaCredentialCovered">): string =>
-	isPjnCredDependent(f) ? PJN_CRED_ERROR_RESERVED_COPY : PJN_CRED_ERROR_PUBLIC_COPY;
+export const pjnCredErrorCopy = (
+	f: Pick<CausaUserViewEntry["folder"], "causaIsPrivate" | "causaCredentialCovered" | "causaAccessCutoffAt">,
+): string => {
+	if (!isPjnCredDependent(f)) return PJN_CRED_ERROR_PUBLIC_COPY;
+	const fecha = formatPjnAccessCutoff(f.causaAccessCutoffAt);
+	return fecha ? pjnCredErrorReservedCutoffCopy(fecha) : PJN_CRED_ERROR_RESERVED_COPY;
+};
+
+// ---------- CORTE DE ACCESO (front utils/pjnBindingState.ts, 2026-09-28) ----------
+// folder.causaAccessCutoffAt: la credencial del usuario cubría la causa reservada y
+// cayó. El hub deja de responder 403 y sirve los movimientos que esa credencial
+// alcanzó a traer (hasta la fecha); sin gate, con aviso y CTA en el viewer.
+export const formatPjnAccessCutoff = (cutoff: string | null | undefined): string | null => {
+	if (!cutoff) return null;
+	const d = new Date(cutoff);
+	return Number.isNaN(d.getTime()) ? null : d.toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit", year: "numeric" });
+};
+export const pjnCredErrorReservedCutoffCopy = (fecha: string): string =>
+	`El portal rechazó tu credencial PJN y esta causa es reservada: ves lo actualizado hasta el ${fecha}. No se actualiza ni te avisamos novedades hasta que renueves la contraseña en Integraciones → PJN.`;
+export const pjnAccessCutoffNotice = (fecha: string): string =>
+	`Mostrando movimientos hasta el ${fecha}: renová tu credencial PJN para ver los nuevos.`;
+export const PJN_ACCESS_CUTOFF_CTA_LABEL = "Actualizar credencial";
 
 export const LIST_TOOLTIPS: Record<string, string> = {
 	reserved: "Causa reservada — el tribunal restringió la consulta web pública. El sistema sigue verificando si vuelve a estar accesible.",
@@ -634,6 +654,14 @@ export function EntryPanel({ entry }: { entry: CausaUserViewEntry }) {
 					sx={{ fontFamily: "monospace" }}
 				/>
 				{view.contentBlocked && <Chip size="small" color="error" label="403 CAUSA_RESERVED en movimientos/PDFs" />}
+				{view.accessCutoffAt && (
+					<Chip
+						size="small"
+						color="warning"
+						variant="outlined"
+						label={`movimientos hasta el ${formatPjnAccessCutoff(view.accessCutoffAt)}`}
+					/>
+				)}
 				{view.credError && (
 					<Chip
 						size="small"
@@ -712,8 +740,24 @@ export function EntryPanel({ entry }: { entry: CausaUserViewEntry }) {
 								tooltip={chipTooltip}
 							/>
 						</Stack>
+						{view.accessCutoffAt && formatPjnAccessCutoff(view.accessCutoffAt) ? (
+							// PjnMovementsViewerSection (2026-09-28): Alert ámbar con CTA arriba del listado; sin "sincronizado hace X".
+							<Alert
+								severity="warning"
+								sx={{ mt: 1, py: 0.5, fontSize: "0.8rem" }}
+								action={
+									<Button size="small" color="inherit" sx={{ fontSize: "0.72rem" }}>
+										{PJN_ACCESS_CUTOFF_CTA_LABEL}
+									</Button>
+								}
+							>
+								{pjnAccessCutoffNotice(formatPjnAccessCutoff(view.accessCutoffAt) as string)}
+							</Alert>
+						) : null}
 						<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1 }}>
-							Tabs Movimientos / Tareas / Notas / Documentos visibles con contenido.
+							{view.accessCutoffAt
+								? "Tab Movimientos: solo los que su credencial alcanzó a traer (firstSeenAt ≤ corte; sembrados por fecha). Sin avisos de novedades."
+								: "Tabs Movimientos / Tareas / Notas / Documentos visibles con contenido."}
 						</Typography>
 					</Box>
 				)}
@@ -737,6 +781,7 @@ export function EntryPanel({ entry }: { entry: CausaUserViewEntry }) {
 					<span>causaAssociationStatus = {flag(folder.causaAssociationStatus)}</span>
 					<span>causaIsPrivate = {flag(folder.causaIsPrivate)}</span>
 					<span>causaCredentialCovered = {flag(folder.causaCredentialCovered)}</span>
+					<span>causaAccessCutoffAt = {folder.causaAccessCutoffAt ? fmt(folder.causaAccessCutoffAt) : "—"}</span>
 					<span>
 						listRemoved = {flag(folder.listRemoved)} {folder.listRemovedAt ? `(${fmt(folder.listRemovedAt)})` : ""}
 					</span>
@@ -800,10 +845,13 @@ export const okView = (over: Partial<CausaUserViewEntry["view"]> = {}): CausaUse
 	hiddenFromList: false,
 	inAttentionTable: false,
 	contentBlocked: false,
+	accessCutoffAt: null,
 	credError: null,
 	isPjnPrivateCovered: false,
 	...over,
 });
+
+const CUTOFF_SAMPLE = "2026-07-04T15:45:52.448Z";
 
 export const CATALOG_CASES: CatalogCase[] = [
 	mk(
@@ -982,8 +1030,8 @@ export const CATALOG_CASES: CatalogCase[] = [
 	),
 	mk(
 		"cred_error_reserved",
-		"Credencial requiere acción — causa reservada sin cobertura (gate)",
-		"Mismo espejo requiresAction sobre una carpeta con causaCredentialCovered:false (reservada o revocada): cred_error gana sobre revoked/reserved y el detalle muestra el gate cred_error con CTA a Integraciones → PJN; no se actualiza hasta renovar la contraseña (el 403 CAUSA_RESERVED del server sigue)",
+		"Credencial requiere acción — causa reservada sin cobertura y SIN corte (gate)",
+		"Mismo espejo requiresAction sobre una carpeta con causaCredentialCovered:false pero sin causaAccessCutoffAt: el link fue revocado por el tribunal con la credencial sana, o la carpeta nunca tuvo link (pjn-mis-causas no escribe corte en esos casos). cred_error gana sobre revoked/reserved y el detalle muestra el gate cred_error con CTA a Integraciones → PJN; el 403 CAUSA_RESERVED del server sigue",
 		{ source: "pjn-login", causaIsPrivate: true, causaCredentialCovered: false },
 		okView({
 			list: "cred_error",
@@ -999,6 +1047,37 @@ export const CATALOG_CASES: CatalogCase[] = [
 				removedAt: new Date().toISOString(),
 				access: "revoked",
 				accessChangedAt: new Date().toISOString(),
+				credentialEnabled: true,
+				credentialValid: false,
+				credentialSyncStatus: "error",
+				credentialLastErrorCode: "CREDENTIAL_INVALID",
+			},
+		],
+	),
+	mk(
+		"cred_error_reserved_cutoff",
+		"Credencial requiere acción — causa reservada CON corte de acceso (ve hasta la fecha)",
+		"pjn-mis-causas recomputeFolderCoverage / reconcile: la carpeta tiene link de una credencial NO activa (caída, deshabilitada o borrada) → causaCredentialCovered:false + causaAccessCutoffAt = max(pjnCredentialState.since, causa.privateDetectedAt). El hub deja de responder 403 (isCausaReservedForFolder=false): sirve los movimientos con firstSeenAt ≤ corte (sembrados por fecha) y el viewer avisa “Mostrando movimientos hasta el …” con CTA. Sin gate. la-notification NO manda avisos de esta causa (usuariosSinCobertura)",
+		{ source: "pjn-login", causaIsPrivate: true, causaCredentialCovered: false, causaAccessCutoffAt: CUTOFF_SAMPLE },
+		okView({
+			list: "cred_error",
+			expanded: { label: PJN_CRED_ERROR_LABEL, accent: "amber", badge: "cred_error" },
+			detail: { chip: { label: PJN_CRED_ERROR_LABEL, accent: "amber", badge: "cred_error" }, gate: null },
+			contentBlocked: false,
+			accessCutoffAt: CUTOFF_SAMPLE,
+			credError: {
+				code: "CREDENTIAL_INVALID",
+				message: pjnCredErrorReservedCutoffCopy(formatPjnAccessCutoff(CUTOFF_SAMPLE) as string),
+				requiresAction: true,
+			},
+		}),
+		[
+			{
+				credentialId: "abcdef",
+				removedFromSync: false,
+				removedAt: null,
+				access: "full",
+				accessChangedAt: null,
 				credentialEnabled: true,
 				credentialValid: false,
 				credentialSyncStatus: "error",
