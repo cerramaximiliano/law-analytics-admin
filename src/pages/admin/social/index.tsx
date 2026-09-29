@@ -1440,8 +1440,15 @@ const SocialStudio = () => {
 											<Select value={formatoVideo} label="Destino" onChange={(e) => setFormatoVideo(e.target.value as FormatoId)}>
 												<MenuItem value="reel">Reel — hasta 90s</MenuItem>
 												<MenuItem value="story">Story — se corta cada 15s</MenuItem>
+												<MenuItem value="horizontal">Horizontal 16:9 — YouTube / Google Ads</MenuItem>
 											</Select>
 										</FormControl>
+										{formatoVideo === "horizontal" && (
+											<Typography variant="caption" color="text.secondary">
+												Para descargar y subir a Google Ads. Si lo guardás en el post reemplaza al reel, y el reel no se puede publicar
+												hasta volver a generarlo.
+											</Typography>
+										)}
 										<FormControl fullWidth size="small">
 											<InputLabel>Animación</InputLabel>
 											<Select value={animacion} label="Animación" onChange={(e) => setAnimacion(e.target.value)}>

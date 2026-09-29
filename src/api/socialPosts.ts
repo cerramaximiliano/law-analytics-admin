@@ -16,7 +16,7 @@ export type TemplateId =
 	| "ranking"
 	| "efemeride"
 	| "planes";
-export type FormatoId = "feed34" | "feed45" | "square" | "story" | "reel";
+export type FormatoId = "feed34" | "feed45" | "square" | "story" | "reel" | "horizontal";
 export type EstadoPost = "borrador" | "aprobado" | "programado" | "publicado";
 /** Redes donde se publica vía Graph API (services/social/metaPublisher.js). */
 export type DestinoMeta = "facebook" | "instagram";
