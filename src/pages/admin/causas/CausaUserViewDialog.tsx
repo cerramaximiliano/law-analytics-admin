@@ -16,7 +16,19 @@ import {
 	alpha,
 	useTheme,
 } from "@mui/material";
-import { Archive, Clock, CloseCircle, ExportSquare, InfoCircle, Lock1, Refresh, SearchNormal1, TickCircle, Warning2 } from "iconsax-react";
+import {
+	Archive,
+	Clock,
+	CloseCircle,
+	ExportSquare,
+	InfoCircle,
+	Link21,
+	Lock1,
+	Refresh,
+	SearchNormal1,
+	TickCircle,
+	Warning2,
+} from "iconsax-react";
 import dayjs from "utils/dayjs-config";
 import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER } from "themes/dashboardTokens";
 import pjnCredentialsService, { CausaUserViewData, CausaUserViewEntry, UserViewGate } from "api/pjnCredentials";
@@ -180,6 +192,109 @@ const MEV_CRED_LABEL: Record<string, string> = {
 	disabled: "Credencial desactivada",
 };
 
+// ---------- NOVEDADES Y RELACIONES (front FolderNovedadesIndicators.tsx, 2026-09-29) ----------
+/** ⛓ de la carátula: ámbar si la causa se acumuló a otra, azul si tiene relaciones. Clic → pestaña. */
+export function RelacionesIconReplica({ relaciones }: { relaciones?: CausaUserViewEntry["relaciones"] }) {
+	if (!relaciones) return null;
+	return (
+		<Tooltip title={`${relaciones.texto} · Ver expedientes relacionados`}>
+			<Box sx={{ display: "inline-flex", width: 18, height: 18, alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+				<Link21 size={16} variant="Bold" color={relaciones.tipo === "acumulada" ? STALE_AMBER : BRAND_BLUE} />
+			</Box>
+		</Tooltip>
+	);
+}
+/** "N sin ver" junto a la fecha de Último movimiento (se resetea al abrir Actividad). */
+export function SinVerReplica({ count }: { count?: number | null }) {
+	if (!count || count <= 0) return null;
+	return (
+		<Tooltip title={`${count} ${count === 1 ? "movimiento nuevo" : "movimientos nuevos"} desde la última visita a Actividad`}>
+			<Box component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 0.5, ml: 0.75, whiteSpace: "nowrap" }}>
+				<Box component="span" sx={{ width: 7, height: 7, borderRadius: "50%", bgcolor: BRAND_BLUE }} />
+				<Typography component="span" variant="caption" sx={{ color: BRAND_BLUE, fontWeight: 600 }}>
+					{count > 99 ? "99+" : count} sin ver
+				</Typography>
+			</Box>
+		</Tooltip>
+	);
+}
+const fechaCorta = (iso: string | null | undefined) => (iso ? dayjs.utc(iso).format("DD/MM/YYYY") : null);
+/** Réplica de la pestaña "Expedientes relacionados" (ExpedientesRelacionadosTab.tsx del front). */
+export function RelacionesTabReplica({ detalle }: { detalle?: CausaUserViewEntry["relacionesDetalle"] }) {
+	const ac = detalle?.acumulacion || null;
+	const acumuladas = detalle?.acumuladas || [];
+	const principal = detalle?.principal || null;
+	if (!ac && !acumuladas.length && !principal) {
+		return (
+			<Typography variant="caption" color="text.secondary">
+				Sin acumulación ni principal. La pestaña muestra igual la tabla de expedientes vinculados del portal (si el principal los tiene).
+			</Typography>
+		);
+	}
+	return (
+		<Stack spacing={1}>
+			{ac && (
+				<Alert
+					severity={ac.rol === "acumulada" ? "warning" : "info"}
+					action={
+						ac.otra ? (
+							<Button color="inherit" size="small">
+								{ac.otra.carpeta ? "Ver carpeta" : `Seguir ${ac.otra.number}/${ac.otra.year}`}
+							</Button>
+						) : undefined
+					}
+				>
+					<Typography sx={{ fontWeight: 600, fontSize: "0.85rem" }}>
+						{ac.rol === "acumulada"
+							? `Esta causa se acumuló ${ac.otra ? `al expte. ${ac.otra.number}/${ac.otra.year}` : "a otra causa"}${
+									fechaCorta(ac.fecha) ? ` el ${fechaCorta(ac.fecha)}` : ""
+							  }`
+							: `Acumulación${ac.otra ? ` con el expte. ${ac.otra.number}/${ac.otra.year}` : ""}${
+									fechaCorta(ac.fecha) ? ` (${fechaCorta(ac.fecha)})` : ""
+							  }`}
+					</Typography>
+					<Typography variant="body2" sx={{ fontSize: "0.8rem" }}>
+						{ac.rol === "acumulada"
+							? "Las novedades siguen en esa causa. Esta carpeta conserva los movimientos hasta la acumulación."
+							: ac.detalle || ""}
+						{ac.resync && ac.resync.incorporados > 0
+							? ` El portal reorganizó el historial: se incorporaron ${ac.resync.incorporados} y se retiraron ${ac.resync.retirados} actuaciones.`
+							: ""}
+					</Typography>
+				</Alert>
+			)}
+			{acumuladas.map((a) => (
+				<Alert
+					key={`${a.number}/${a.year}/${a.incidente || ""}`}
+					severity="info"
+					action={
+						a.carpeta ? (
+							<Button color="inherit" size="small">
+								Ver carpeta
+							</Button>
+						) : undefined
+					}
+				>
+					<Typography sx={{ fontWeight: 600, fontSize: "0.85rem" }}>
+						Se acumuló a esta causa: {a.number}/{a.year}
+						{a.incidente ? `/${a.incidente}` : ""}
+						{fechaCorta(a.fecha) ? ` (${fechaCorta(a.fecha)})` : ""}
+					</Typography>
+					<Typography variant="body2" sx={{ fontSize: "0.8rem" }}>
+						Sus actuaciones se incorporan a esta causa con sus fechas originales.
+					</Typography>
+				</Alert>
+			))}
+			{principal && (
+				<Typography variant="body2" sx={{ fontSize: "0.82rem" }}>
+					Incidente /{principal.incidente} de {principal.fuero} {principal.number}/{principal.year}
+					{principal.carpeta ? " · Ir al principal" : " · (sin carpeta del principal)"}
+				</Typography>
+			)}
+		</Stack>
+	);
+}
+
 export function ListRowReplica({ entry }: { entry: CausaUserViewEntry }) {
 	const { folder, view } = entry;
 	const name = <span style={{ flex: 1 }}>{formatFolderName(folder.folderName, 50)}</span>;
@@ -277,13 +392,16 @@ export function ListRowReplica({ entry }: { entry: CausaUserViewEntry }) {
 		>
 			<Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1} sx={{ minWidth: 0 }}>
 				<Box sx={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{left}</Box>
-				{right && (
-					<Tooltip title={listTooltip(view.list, folder)}>
-						<Box sx={{ display: "inline-flex", width: 18, height: 18, alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-							{right}
-						</Box>
-					</Tooltip>
-				)}
+				<Stack direction="row" alignItems="center" spacing={0.5} sx={{ flexShrink: 0 }}>
+					{right && (
+						<Tooltip title={listTooltip(view.list, folder)}>
+							<Box sx={{ display: "inline-flex", width: 18, height: 18, alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+								{right}
+							</Box>
+						</Tooltip>
+					)}
+					<RelacionesIconReplica relaciones={entry.relaciones} />
+				</Stack>
 			</Stack>
 			<Typography variant="body2" sx={{ fontSize: "0.8rem" }} noWrap>
 				{folder.materia || "-"}
@@ -291,9 +409,17 @@ export function ListRowReplica({ entry }: { entry: CausaUserViewEntry }) {
 			{lastMov ? (
 				<Stack direction="row" alignItems="center" spacing={0.5}>
 					{isToday && <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: LIVE_GREEN }} />}
-					<Typography variant="body2" sx={{ fontSize: "0.8rem", fontWeight: isToday ? 600 : 400, color: isToday ? LIVE_GREEN : "inherit" }}>
+					<Typography
+						variant="body2"
+						sx={{
+							fontSize: "0.8rem",
+							fontWeight: isToday || (entry.novedades?.unseenCount || 0) > 0 ? 600 : 400,
+							color: isToday ? LIVE_GREEN : "inherit",
+						}}
+					>
 						{lastMov.format("DD/MM/YYYY")}
 					</Typography>
+					<SinVerReplica count={entry.novedades?.unseenCount} />
 				</Stack>
 			) : (
 				<Typography variant="body2" sx={{ fontSize: "0.8rem" }}>
@@ -763,6 +889,15 @@ export function EntryPanel({ entry }: { entry: CausaUserViewEntry }) {
 				)}
 			</Section>
 
+			{folder.pjn === true && (
+				<Section
+					title="4 · Expedientes relacionados"
+					hint={entry.relaciones ? `pestaña del detalle · ⛓ en la lista: ${entry.relaciones.texto}` : "pestaña del detalle (solo PJN)"}
+				>
+					<RelacionesTabReplica detalle={entry.relacionesDetalle} />
+				</Section>
+			)}
+
 			<Section title="Por qué" hint="campos que determinan el render">
 				<Box
 					sx={{
@@ -781,6 +916,10 @@ export function EntryPanel({ entry }: { entry: CausaUserViewEntry }) {
 					<span>causaAssociationStatus = {flag(folder.causaAssociationStatus)}</span>
 					<span>causaIsPrivate = {flag(folder.causaIsPrivate)}</span>
 					<span>causaCredentialCovered = {flag(folder.causaCredentialCovered)}</span>
+					<span>
+						sin ver = {entry.novedades?.unseenCount ?? "—"} · lastViewedAt ={" "}
+						{entry.novedades?.lastViewedAt ? fmt(entry.novedades.lastViewedAt) : "—"}
+					</span>
 					<span>causaAccessCutoffAt = {folder.causaAccessCutoffAt ? fmt(folder.causaAccessCutoffAt) : "—"}</span>
 					<span>
 						listRemoved = {flag(folder.listRemoved)} {folder.listRemovedAt ? `(${fmt(folder.listRemovedAt)})` : ""}
@@ -831,11 +970,12 @@ const mk = (
 	folder: Partial<CausaUserViewEntry["folder"]>,
 	view: CausaUserViewEntry["view"],
 	links: CausaUserViewEntry["links"] = [],
+	extra: Partial<Pick<CausaUserViewEntry, "novedades" | "relaciones" | "relacionesDetalle">> = {},
 ): CatalogCase => ({
 	key,
 	title,
 	producer,
-	entry: { user: { id: "u", email: "usuario@ejemplo.com", name: null }, folder: baseFolder(folder), links, view },
+	entry: { user: { id: "u", email: "usuario@ejemplo.com", name: null }, folder: baseFolder(folder), links, view, ...extra },
 });
 
 export const okView = (over: Partial<CausaUserViewEntry["view"]> = {}): CausaUserViewEntry["view"] => ({
@@ -1084,6 +1224,79 @@ export const CATALOG_CASES: CatalogCase[] = [
 				credentialLastErrorCode: "CREDENTIAL_INVALID",
 			},
 		],
+	),
+	mk(
+		"sin_ver",
+		"Novedades sin ver (N sin ver)",
+		"hub folderNovedadesService.enriquecerListado: movimientos del espejo pjn-movements con firstSeenAt posterior a folder.lastViewedAt (POST /api/folders/:id/visto al abrir Actividad; sin visita previa, desde hace 7 días). Solo PJN",
+		{ lastMovementDate: new Date(Date.now() - 3 * 86400000).toISOString() },
+		okView(),
+		[],
+		{ novedades: { unseenCount: 3, lastViewedAt: new Date(Date.now() - 5 * 86400000).toISOString() } },
+	),
+	mk(
+		"acumulada",
+		"Acumulada a otra causa (⛓ ámbar)",
+		"pjn-workers / pjn-mis-causas detectan la decisión de acumular (evento 'ACUMULA LA CAUSA A OTRA') → causa.acumulacion {rol:'acumulada', otra}; el portal suele cerrar su historia. La lista muestra ⛓ ámbar y la pestaña Expedientes relacionados el aviso con Ver carpeta / Seguir",
+		{ lastMovementDate: "2024-12-23T00:00:00.000Z" },
+		okView(),
+		[],
+		{
+			relaciones: { tipo: "acumulada", texto: "Acumulada al expte. 6300/2019", total: 1 },
+			relacionesDetalle: {
+				acumulacion: {
+					rol: "acumulada",
+					fecha: "2024-12-23T00:00:00.000Z",
+					tipo: "EVENTO",
+					detalle: "ACUMULA LA CAUSA A OTRA",
+					otra: { number: 6300, year: 2019, carpeta: null },
+					resync: null,
+				},
+				acumuladas: [],
+				principal: null,
+			},
+		},
+	),
+	mk(
+		"receptora",
+		"Receptora de una acumulación (⛓ azul)",
+		"Otra causa nombró a ésta al acumularse → causa.acumulacionRelacionadas. El portal incorpora sus actuaciones con la FECHA ORIGINAL: pjn-workers / pjn-mis-causas hacen 3 relecturas 'solo agregar' (cada 24 h) y avisan un resumen ('Se incorporaron N actuaciones…')",
+		{},
+		okView(),
+		[],
+		{
+			relaciones: { tipo: "relacionada", texto: "1 causa acumulada a ésta", total: 1 },
+			relacionesDetalle: {
+				acumulacion: null,
+				acumuladas: [
+					{
+						number: 3359,
+						year: 2023,
+						incidente: null,
+						fecha: "2024-12-23T00:00:00.000Z",
+						rol: "acumulada",
+						carpeta: { folderId: "x", archived: false },
+					},
+				],
+				principal: null,
+			},
+		},
+	),
+	mk(
+		"incidente_principal",
+		"Carpeta de un incidente (⛓ azul → principal)",
+		"Incidente seguido desde Vinculados o traído por lista: la pestaña muestra 'Incidente /k de n/y · Ir al principal' (carpeta del usuario sobre el principal, si existe)",
+		{ judFolder: { numberJudFolder: "6788/2026/1" } as never },
+		okView(),
+		[],
+		{
+			relaciones: { tipo: "relacionada", texto: "Incidente /1 de 6788/2026", total: 1 },
+			relacionesDetalle: {
+				acumulacion: null,
+				acumuladas: [],
+				principal: { number: 6788, year: 2026, fuero: "CNT", incidente: "1", carpeta: { folderId: "y", archived: false } },
+			},
+		},
 	),
 	mk(
 		"archived",

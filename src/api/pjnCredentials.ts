@@ -426,6 +426,36 @@ export interface CausaUserViewEntry {
 		credError: { code: string; message: string | null; requiresAction?: boolean } | null;
 		isPjnPrivateCovered: boolean;
 	};
+	/** "N sin ver" del listado (espejo firstSeenAt vs última visita a Actividad). Solo PJN. */
+	novedades?: { unseenCount: number | null; lastViewedAt: string | null };
+	/** Resumen del ícono ⛓ de la lista (acumulación / acumuladas / incidentes). */
+	relaciones?: { tipo: "acumulada" | "relacionada"; texto: string; total: number } | null;
+	/** Pestaña "Expedientes relacionados" del detalle. */
+	relacionesDetalle?: RelacionesDetalle | null;
+}
+
+export interface CarpetaRef {
+	folderId: string;
+	archived: boolean;
+}
+export interface RelacionesDetalle {
+	acumulacion: null | {
+		rol: "acumulada" | null;
+		fecha: string | null;
+		tipo: string | null;
+		detalle: string | null;
+		otra: null | { number: number; year: number; carpeta: CarpetaRef | null };
+		resync: null | { at: string; retirados: number; incorporados: number };
+	};
+	acumuladas: Array<{
+		number: number;
+		year: number;
+		incidente: string | null;
+		fecha: string | null;
+		rol: string | null;
+		carpeta: CarpetaRef | null;
+	}>;
+	principal: null | { number: number; year: number; fuero: string; incidente: string; carpeta: CarpetaRef | null };
 }
 
 export interface CausaUserViewData {

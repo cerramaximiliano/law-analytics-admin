@@ -180,6 +180,89 @@ export const PJN_GROUPS: GuideGroup[] = [
 		],
 	},
 	{
+		row: "ok",
+		title: "Novedades y expedientes relacionados — “N sin ver” y ⛓ (2026-09-29)",
+		whatUserSees:
+			"Se suman a cualquier estado de fila. (1) Último movimiento: además del verde de HOY, “● N sin ver” en azul = movimientos que el sistema vio por primera vez desde la última visita del usuario a la pestaña Actividad (se resetea al abrirla; sin visita previa cuenta desde hace 7 días; solo PJN, sale del espejo pjn-movements). (2) Carátula: ⛓ con tooltip a la derecha del ícono de estado — ámbar si la causa se ACUMULÓ a otra, azul si tiene causas acumuladas, expedientes vinculados en el portal o es un incidente; clic → pestaña nueva “Expedientes relacionados” del detalle (acumulación con Ver carpeta / Seguir, acumuladas a ésta, acceso al principal y la tabla de vinculados con Seguir, que antes estaba al pie de Actividad).",
+		cases: [
+			{
+				key: "novedades.sin_ver",
+				title: "3 movimientos sin ver",
+				producer:
+					"hub folderNovedadesService.enriquecerListado (GET /api/folders/user/:id): espejo firstSeenAt > folder.lastViewedAt; POST /api/folders/:id/visto al abrir Actividad",
+				fields: "pjn=true · causaId · lastViewedAt · pjn-movements.firstSeenAt",
+				entry: {
+					...entry({ lastMovementDate: new Date(Date.now() - 3 * 86400000).toISOString() }, {}),
+					novedades: { unseenCount: 3, lastViewedAt: new Date(Date.now() - 5 * 86400000).toISOString() },
+				},
+			},
+			{
+				key: "relaciones.acumulada",
+				title: "Acumulada a otra causa (⛓ ámbar)",
+				producer:
+					"pjn-workers / pjn-mis-causas: evento 'ACUMULA LA CAUSA A OTRA' → causa.acumulacion {rol:'acumulada', otra}; aviso 'ACUMULACIÓN' al usuario; el portal suele cerrar la historia de la acumulada",
+				fields: "causa.acumulacion.rol='acumulada' · acumulacion.otra {number, year, causaId}",
+				entry: {
+					...entry({ lastMovementDate: "2024-12-23T00:00:00.000Z" }, {}),
+					relaciones: { tipo: "acumulada", texto: "Acumulada al expte. 6300/2019", total: 1 },
+					relacionesDetalle: {
+						acumulacion: {
+							rol: "acumulada",
+							fecha: "2024-12-23T00:00:00.000Z",
+							tipo: "EVENTO",
+							detalle: "ACUMULA LA CAUSA A OTRA",
+							otra: { number: 6300, year: 2019, carpeta: null },
+							resync: null,
+						},
+						acumuladas: [],
+						principal: null,
+					},
+				},
+			},
+			{
+				key: "relaciones.receptora",
+				title: "Receptora (⛓ azul): se le acumuló otra causa",
+				producer:
+					"causa.acumulacionRelacionadas (vínculo inverso). El portal incorpora las actuaciones de la acumulada con su fecha original → 3 relecturas 'solo agregar' cada 24 h y un aviso de resumen",
+				fields: "causa.acumulacionRelacionadas[] · acumulacion.relecturasPendientes",
+				entry: {
+					...entry({}, {}),
+					relaciones: { tipo: "relacionada", texto: "1 causa acumulada a ésta", total: 1 },
+					relacionesDetalle: {
+						acumulacion: null,
+						acumuladas: [
+							{
+								number: 3359,
+								year: 2023,
+								incidente: null,
+								fecha: "2024-12-23T00:00:00.000Z",
+								rol: "acumulada",
+								carpeta: { folderId: "x", archived: false },
+							},
+						],
+						principal: null,
+					},
+				},
+			},
+			{
+				key: "relaciones.incidente",
+				title: "Carpeta de un incidente (⛓ azul → principal)",
+				producer:
+					"incidente seguido desde Vinculados o traído por lista; la pestaña ofrece 'Ir al principal' si el usuario tiene su carpeta",
+				fields: "causa.incidente · parentCausaId",
+				entry: {
+					...entry({}, {}),
+					relaciones: { tipo: "relacionada", texto: "Incidente /1 de 6788/2026", total: 1 },
+					relacionesDetalle: {
+						acumulacion: null,
+						acumuladas: [],
+						principal: { number: 6788, year: 2026, fuero: "CNT", incidente: "1", carpeta: { folderId: "y", archived: false } },
+					},
+				},
+			},
+		],
+	},
+	{
 		row: "cred_error",
 		title: "Credencial requiere acción — warning ámbar en TODAS las carpetas PJN",
 		whatUserSees:
@@ -710,7 +793,8 @@ export const PJN_FINDINGS: GuideFinding[] = [
 	{
 		id: "F19",
 		severity: "baja",
-		title: "[RESUELTO 2026-09-09] Carpeta nueva sobre una causa PJN ya verificada mostraba 'Iniciando descarga de movimientos PJN…' hasta 4 h",
+		title:
+			"[RESUELTO 2026-09-09] Carpeta nueva sobre una causa PJN ya verificada mostraba 'Iniciando descarga de movimientos PJN…' hasta 4 h",
 		detail:
 			"Reportado con una carpeta creada el 09/09 14:51 UTC (alta pública, causa CNT ya verificada con 184 movimientos y compartida con otro usuario): la pestaña Actividad mostraba el banner 'Iniciando descarga' con barra indeterminada aunque los 184 movimientos ya estaban listados. No era polling ni WebSocket (Socket.IO conectado y autenticado; el banner se alimenta por polling de /movements/folder cada 30 s). Causa: al vincular a una causa existente el hub no escribía scrapingProgress en el folder y quedaba el default del schema {isComplete:false, 0, 0} sin status ni startedAt; movementController tomaba isComplete:false como 'el worker está actualizando' y no pisaba con el progreso completed de la causa, el detector de stale exige startedAt, y el guard del front sólo ignoraba status === 'pending'. Se curaba solo cuando el app-update-worker copiaba el progreso de la causa en su próximo ciclo (~4 h). Sólo afectaba a altas del flujo público sobre causa existente (las carpetas de Mis Causas nacen con progreso + startedAt; 62/62 de los últimos 14 días). Fix en tres capas: el hub escribe scrapingProgress al vincular (copia el de la causa, o pending explícito si está sin verificar); /movements/folder sólo respeta el progreso del folder si tiene status activo y descarta el progreso vacío; el front trata status ausente como pending. Test tests/pjn-folders/scraping-progress.test.js.",
 		where:
@@ -719,10 +803,12 @@ export const PJN_FINDINGS: GuideFinding[] = [
 	{
 		id: "F20",
 		severity: "alta",
-		title: "[RESUELTO 2026-09-10] Carpetas de Mis Causas nacían 'Pendiente de verificación' con la causa ya verificada (Verificada: No / Válida: Sí en el admin)",
+		title:
+			"[RESUELTO 2026-09-10] Carpetas de Mis Causas nacían 'Pendiente de verificación' con la causa ya verificada (Verificada: No / Válida: Sí en el admin)",
 		detail:
 			"Reportado desde /admin/users/resources (FERRARI 11548/2026 CCF, DAYAN 19721/2026, D'AGATA 59787/2025, entre otras: 4 carpetas pjn-login de 3 usuarios del 08 al 10/09, más 2 'auto' de marzo). La vista muestra folder.causaVerified / folder.causaIsValid: la causa estaba verified:true con movimientos al día (update/app cada 2 h) pero la carpeta seguía causaVerified:false / 'pending'. Causa: en processCausasBatch, cuando la causa NO existía en BD, upsertCausa la creaba ya verified:true (importada del caché o confirmada por el login) pero ensureFolder se llamaba con existingCausa=null → causaVerified = null?.verified || false. Nadie la corregía después: los workers públicos excluyen los folders pjn-login (F8/F11) y el privado sólo escribe progreso. Impacto para el usuario: la carpeta salía del listado principal a 'Pendientes de verificación' y el detalle mostraba PendingVerificationView (bloqueado) aunque los movimientos ya se sincronizaban. Fix: se relee la causa recién creada y se pasa a ensureFolder (pjn-mis-causas 0fbb645, cloud-02). Backfill: 6 carpetas → success/verified/valid con historial 'F20 backfill'.",
-		where: "pjn-mis-causas src/services/causa-sync-service.js processCausasBatch → ensureFolder (0fbb645) · admin UserResourcesTab.tsx (columnas Verificada/Válida)",
+		where:
+			"pjn-mis-causas src/services/causa-sync-service.js processCausasBatch → ensureFolder (0fbb645) · admin UserResourcesTab.tsx (columnas Verificada/Válida)",
 	},
 	{
 		id: "F21",
@@ -1268,7 +1354,8 @@ export const MEV_FINDINGS: GuideFinding[] = [
 	{
 		id: "MV2",
 		severity: "alta",
-		title: "[RESUELTO 2026-09-09, deployado] Desvincular vía mev-api dejaba al usuario como destinatario si otro usuario conservaba una carpeta",
+		title:
+			"[RESUELTO 2026-09-09, deployado] Desvincular vía mev-api dejaba al usuario como destinatario si otro usuario conservaba una carpeta",
 		detail:
 			"dissociate-folder podaba userCausaIds/userUpdatesEnabled sólo si la causa quedaba sin NINGUNA carpeta (hasOtherFolders = folderIds.length > 0), sin mirar de quién eran. Con otra carpeta ajena, el que se iba seguía recibiendo los movimientos (notification-sync arma destinatarios con userUpdatesEnabled, fallback userCausaIds). Ahora cuenta las carpetas restantes del propio usuario en folders y poda si no tiene ninguna. El hub ya podaba en su fallback local (N7), pero el camino normal es la API. Paridad IOL N7 / PJN F16.",
 		where: "mev-api src/controllers/folderAssociationController.js dissociateFolder (1babc81)",
@@ -1279,20 +1366,24 @@ export const MEV_FINDINGS: GuideFinding[] = [
 		title: "[RESUELTO 2026-09-09, deployado] Borrar una carpeta MEV (sola o en lote) llamaba a mev-api sin timeout ni fallback local",
 		detail:
 			"deleteFolderById y el borrado masivo hacían el POST dissociate-folder y, si fallaba, 'continuaban' sin tocar la causa: quedaba la carpeta borrada en folderIds (update:true, el updater seguía scrapeando) y el usuario en userCausaIds/userUpdatesEnabled. Ahora ambos usan desasociarCausa de folderUnlinkService (timeout 15 s; fallback local con $pull de folderIds, update según restantes y poda N7 del usuario si no conserva otra carpeta). Es el mismo camino que ya usaba unlink-causa.",
-		where: "law-analytics-server controllers/folderController.js deleteFolderById + bulk (92946d5) · services/folderUnlinkService.js destino MEV",
+		where:
+			"law-analytics-server controllers/folderController.js deleteFolderById + bulk (92946d5) · services/folderUnlinkService.js destino MEV",
 	},
 	{
 		id: "MV4",
 		severity: "media",
-		title: "[RESUELTO 2026-09-09, pausa verificada E2E] Borrar la credencial MEV dejaba al usuario recibiendo notificaciones de causas compartidas",
+		title:
+			"[RESUELTO 2026-09-09, pausa verificada E2E] Borrar la credencial MEV dejaba al usuario recibiendo notificaciones de causas compartidas",
 		detail:
 			"deleteCredentials borraba el doc, marcaba las carpetas mevCredentialStatus:'missing' y reseteaba elegibilidad, pero no tocaba las causas: el usuario seguía en userCausaIds/userUpdatesEnabled y, si otro usuario con credencial las mantenía vivas, seguía recibiendo movimientos. Decisión de producto (2026-09-09): sin credencial no hay notificaciones. Implementación: CausasMEV.notificationsPausedUserIds; deleteCredentials hace $addToSet del usuario en sus causas no cubiertas (sólo si no queda credencial global); saveCredentials (alta y actualización) hace $pull; mev-workers notification-sync excluye a los pausados también del fallback a userCausaIds; dissociate de mev-api limpia la pausa del usuario que se va. La carpeta sigue mev:true con causaId ('pausada'), no se desvincula. Test tests/mev-credentials/pause-notifications.test.js.",
-		where: "law-analytics-server controllers/mevCredentialsController.js pause/resumeMevNotifications + models/CausasMEV.js · mev-workers notification-sync.js getEnabledUsers (06df478) · mev-api folderAssociationController.js (5d1cf60)",
+		where:
+			"law-analytics-server controllers/mevCredentialsController.js pause/resumeMevNotifications + models/CausasMEV.js · mev-workers notification-sync.js getEnabledUsers (06df478) · mev-api folderAssociationController.js (5d1cf60)",
 	},
 	{
 		id: "MV5",
 		severity: "media",
-		title: "[RESUELTO 2026-09-09, deployado] El email 'carpeta verificada' iba al último usuario de la causa y se mandaba por cada carpeta, incluidas ajenas y desvinculadas",
+		title:
+			"[RESUELTO 2026-09-09, deployado] El email 'carpeta verificada' iba al último usuario de la causa y se mandaba por cada carpeta, incluidas ajenas y desvinculadas",
 		detail:
 			"verify-worker buscaba la causa por number solamente (podía ser otra causa con el mismo número en otra jurisdicción), tomaba el ÚLTIMO userCausaIds como destinatario y mandaba un email por cada folderId de la causa sin filtrar por usuario ni por causaId. Ahora manda un email por carpeta que siga apuntando a la causa, al dueño de esa carpeta; si el dueño no tiene email se omite.",
 		where: "mev-workers src/tasks/verify-worker.js (bloque emailNotification, 3004481)",
@@ -1308,10 +1399,12 @@ export const MEV_FINDINGS: GuideFinding[] = [
 	{
 		id: "MV7",
 		severity: "baja",
-		title: "[RESUELTO 2026-09-09, deployado] Al vincular a una causa existente el hub no escribía scrapingProgress (F19); el updater nunca cierra isComplete tras una verificación 'partial'",
+		title:
+			"[RESUELTO 2026-09-09, deployado] Al vincular a una causa existente el hub no escribía scrapingProgress (F19); el updater nunca cierra isComplete tras una verificación 'partial'",
 		detail:
 			"createFolder y linkFolderToCausa dejaban el default del schema ({isComplete:false} sin status). El síntoma ('Iniciando descarga') ya estaba mitigado por F19 en el endpoint de movimientos (pisa con el progreso de la causa y descarta el vacío); ahora además el hub escribe pjnFolderProgressFromCausa(result) al vincular. Queda como nota: update-worker nunca toca scrapingProgress, así que una verificación que terminó 'partial' deja la carpeta isComplete:false aunque esté al día — inocuo con F19.",
-		where: "law-analytics-server controllers/folderController.js createFolder/linkFolderToCausa MEV (92946d5) · mev-workers update-worker.js",
+		where:
+			"law-analytics-server controllers/folderController.js createFolder/linkFolderToCausa MEV (92946d5) · mev-workers update-worker.js",
 	},
 	{
 		id: "MV8",
@@ -1319,12 +1412,14 @@ export const MEV_FINDINGS: GuideFinding[] = [
 		title: "[RESUELTO 2026-09-10, deploy pendiente] mev-api aceptaba userId crudo sin schema ni cruce con el JWT en associate/dissociate",
 		detail:
 			"Sin Joi/zod; userId opcional del body sin comparar con req.userId. Un usuario autenticado puede desvincular una carpeta ajena pasando _id + folderId. Las llamadas legítimas vienen del hub con el token del usuario. Fix propuesto: si el token no es admin/api-key, userId = req.userId y folderId debe pertenecerle. Fix (paridad pjn-api): el middleware acepta x-api-key = MEV_API_KEY → actor 'service'; en associate/dissociate un usuario común actúa siempre como él mismo (403 si manda otro userId) y sólo servicio/admin pueden indicar userId. El hub manda la API key desde folderUnlinkService si MEV_API_KEY está configurada (hoy sigue usando el JWT del usuario, que también es válido).",
-		where: "mev-api src/middlewares/authMiddleware.js · src/controllers/folderAssociationController.js resolveActorUserId (708013e) · law-analytics-server services/folderUnlinkService.js destino MEV (6062d52)",
+		where:
+			"mev-api src/middlewares/authMiddleware.js · src/controllers/folderAssociationController.js resolveActorUserId (708013e) · law-analytics-server services/folderUnlinkService.js destino MEV (6062d52)",
 	},
 	{
 		id: "MV9",
 		severity: "baja",
-		title: "[RESUELTO 2026-09-10, deploy pendiente] DELETE /api/causas/:id dejaba folder.causaId colgado y PUT /api/causas/:id permitía pisar folderIds/userCausaIds",
+		title:
+			"[RESUELTO 2026-09-10, deploy pendiente] DELETE /api/causas/:id dejaba folder.causaId colgado y PUT /api/causas/:id permitía pisar folderIds/userCausaIds",
 		detail:
 			"deleteCausa/updateCausa/verifyCausa/reVerifyCausa no tocan carpetas; PUT acepta el body entero. Sólo rutas admin; sin uso desde el front de usuario. Fix: PUT ignora folderIds, userCausaIds, userUpdatesEnabled, notificationsPausedUserIds, movimiento, movimientosCount y updateHistory (log de aviso); DELETE desvincula las carpetas como el hub (manual + 'unlinked' + previousSyncSource 'mev', historial 'Causa eliminada por administración') y devuelve foldersDesvinculados.",
 		where: "mev-api src/controllers/causasController.js updateCausa/deleteCausa (708013e)",
@@ -1335,7 +1430,8 @@ export const MEV_FINDINGS: GuideFinding[] = [
 		title: "[RESUELTO 2026-09-10, deploy pendiente] El guard de duplicados MEV no filtraba por organismo",
 		detail:
 			"Clave número/año (numberJudFolder o searchTerm) filtrada por fuero si viene; mismo número y año en dos organismos con igual fuero → 409 falso. En MEV folderFuero suele venir vacío en el alta (se infiere después). Fix propuesto: incluir navigationCode/organismo en la clave cuando el alta lo trae. Fix: la clave pasa a número/año + organismo: el guard compara navigationCode de la carpeta o, en las viejas, el de su causa (mismo número/año en otro organismo del mismo fuero ya no da 409; sin dato se sigue tratando como duplicado). Además Folder declara navigationCode: createFolder/linkFolderToCausa lo escribían pero el schema lo descartaba (1 de 50 carpetas MEV lo tenía). Test en tests/eje/eje-folders.test.js.",
-		where: "law-analytics-server controllers/folderController.js findDuplicatePortalFolder · models/Folder.js · models/CausasMEV.js (6062d52, 264265f)",
+		where:
+			"law-analytics-server controllers/folderController.js findDuplicatePortalFolder · models/Folder.js · models/CausasMEV.js (6062d52, 264265f)",
 	},
 	{
 		id: "MV12",
@@ -1343,15 +1439,18 @@ export const MEV_FINDINGS: GuideFinding[] = [
 		title: "[RESUELTO 2026-09-09, deployado] Carpetas MEV en 'pending' para siempre sobre causas ya verificadas (33 en prod)",
 		detail:
 			"Caso FRANQUET 46817/2020 de la cuenta de test: carpeta creada el 23/07 con causaVerified:false / 'pending' aunque la causa estaba verificada desde 2025-10 con 148 movimientos; el mismo estado en 32 carpetas de otro usuario. Dos causas: (a) el 409-recovery de createFolder (mev-api responde 409 con causaId) escribía 'pending' sin mirar el estado real de la causa; (b) update-worker sólo llama a updateAssociatedFolders cuando hay movimientos nuevos, así que una carpeta vinculada a una causa quieta nunca se refrescaba. Fix: el 409-recovery lee verified/isValid/scrapingProgress del espejo local y escribe success/failed; update-worker detecta carpetas desincronizadas (causaVerified o causaAssociationStatus distintos a los de la causa) y las refresca aunque no haya movimientos. Las 33 carpetas se autocorrigen en el primer ciclo tras el deploy (~2 h).",
-		where: "law-analytics-server controllers/folderController.js createFolder MEV 409-recovery (5f2233e) · mev-workers src/tasks/update-worker.js PASO 7.5 (830cba8)",
+		where:
+			"law-analytics-server controllers/folderController.js createFolder MEV 409-recovery (5f2233e) · mev-workers src/tasks/update-worker.js PASO 7.5 (830cba8)",
 	},
 	{
 		id: "MV13",
 		severity: "alta",
-		title: "[RESUELTO 2026-09-09, deployado] Notificaciones y actualización MEV atadas al plan: el usuario free no recibía y la causa dejaba de scrapearse",
+		title:
+			"[RESUELTO 2026-09-09, deployado] Notificaciones y actualización MEV atadas al plan: el usuario free no recibía y la causa dejaba de scrapearse",
 		detail:
 			"En la asociación (hub mevAssociateService y mev-api associate) userUpdatesEnabled.enabled = hasPaidSubscription y update = enabled de alguno; al desvincular, update = alguno enabled. Efecto visto en la E2E: al irse el usuario de prueba, la causa quedó update:false porque el usuario restante es free (enabled:false) → ni se actualiza ni se notifica. Regla de producto (2026-09-09): se notifica a todo usuario con carpeta sin importar el plan, y la causa se actualiza mientras tenga alguna carpeta; sí dejan de recibir los que borran/desvinculan (N7/MV2) o borran la credencial (MV4). Fix: enabled siempre true y update = folderIds.length > 0 en associate y dissociate. Pendiente backfill (con consentimiento): 43 causas con algún enabled:false y 2 causas verificadas con carpetas y update:false.",
-		where: "law-analytics-server services/mevAssociateService.js (5f2233e) · mev-api folderAssociationController.js associate/dissociate (03b5c7c)",
+		where:
+			"law-analytics-server services/mevAssociateService.js (5f2233e) · mev-api folderAssociationController.js associate/dissociate (03b5c7c)",
 	},
 	{
 		id: "MV14",
@@ -1364,18 +1463,22 @@ export const MEV_FINDINGS: GuideFinding[] = [
 	{
 		id: "MV15",
 		severity: "alta",
-		title: "[RESUELTO 2026-09-09, deployado] Sólo se notifica a los usuarios con credencial MEV cargada; los que no la cargaron recuperan el seguimiento al cargarla",
+		title:
+			"[RESUELTO 2026-09-09, deployado] Sólo se notifica a los usuarios con credencial MEV cargada; los que no la cargaron recuperan el seguimiento al cargarla",
 		detail:
 			"Contexto (usuario, 2026-09-09): muchas causas quedaron sin seguimiento porque los usuarios no cargaron su credencial tras la migración de la credencial de sistema (41 de las 43 causas con enabled:false pertenecen a 8 usuarios sin ninguna credencial). Regla: esas causas no están 'pendientes'; el seguimiento y las novedades se restablecen cuando el usuario carga su credencial, y en causas compartidas sigue recibiendo el usuario que sí la tiene. Implementación: notification-sync.getEnabledUsers (async) cruza mev-credentials y excluye a quien no tenga una credencial habilitada que cubra la causa (global o por causa), además de los pausados por MV4; al guardar la credencial, resumeMevNotifications vuelve a poner enabled:true al usuario en sus causas y lo saca de la pausa. Verificado contra prod (lectura): un doc sintético con 4 usuarios sólo devuelve al que tiene credencial. Con esto el backfill de MV13 queda reducido a normalizar enabled:true (el filtro real es la credencial) y update:true donde haya carpetas.",
-		where: "mev-workers src/utils/notification-sync.js getEnabledUsers (dfc1122) · law-analytics-server controllers/mevCredentialsController.js resumeMevNotifications (83e2f6f)",
+		where:
+			"mev-workers src/utils/notification-sync.js getEnabledUsers (dfc1122) · law-analytics-server controllers/mevCredentialsController.js resumeMevNotifications (83e2f6f)",
 	},
 	{
 		id: "MV16",
 		severity: "alta",
-		title: "[RESUELTO 2026-09-09, deployado] Fallo de credencial MEV: propagación a todas las carpetas, prioridad de credenciales sanas y destinatarios válidos",
+		title:
+			"[RESUELTO 2026-09-09, deployado] Fallo de credencial MEV: propagación a todas las carpetas, prioridad de credenciales sanas y destinatarios válidos",
 		detail:
 			"Relevamiento del flujo completo (worker → credencial → carpetas → causa → email). Lo que ya estaba bien: el fallo definitivo (rechazo explícito, contraseña expirada, auto-deshabilitada a los 5 rechazos espaciados) marca mevCredentialStatus invalid/expired/disabled y manda UN email por credencial (claim de notifiedStatus; se vuelve a avisar sólo si el estado cambia); las carpetas muestran 'Credencial inválida / Contraseña expirada / Credencial desactivada / Credencial requerida'; el hub prueba la credencial contra el portal al cargarla y al recargarla resetea elegibilidad, carpetas a pendiente y notifiedStatus. Huecos cerrados: (a) el estado sólo se escribía en las carpetas de la causa que falló y las demás iban cayendo a 'missing' con back-off de 6/24 h → ahora, con credencial global, el fallo y la recuperación se propagan a todas las carpetas MEV del usuario; (b) en causas compartidas el resolver elegía la credencial fallida mientras siguiera enabled → las credenciales con fallo definitivo conocido van al final y se usa la sana de otro usuario; (c) un usuario con credencial expirada o ya avisada seguía recibiendo notificaciones → destinatario sólo con credencial válida (enabled, no expirada, sin fallo definitivo notificado); (d) el login exitoso no limpiaba isExpired/expiredAt → ahora sí. Backfill MV13 aplicado (43 causas enabled:true, 2 update:true) una vez cerrado esto.",
-		where: "mev-workers src/services/user-credential-notifier.js · src/utils/credentials-resolver.js · src/utils/notification-sync.js (a8ab9b0)",
+		where:
+			"mev-workers src/services/user-credential-notifier.js · src/utils/credentials-resolver.js · src/utils/notification-sync.js (a8ab9b0)",
 	},
 	{
 		id: "MV17",
@@ -1383,7 +1486,8 @@ export const MEV_FINDINGS: GuideFinding[] = [
 		title: "[RESUELTO 2026-09-10, deployado] Carpeta con causa fallida y usuario sin credencial MEV no mostraba la relación",
 		detail:
 			"Auditoría del 09/09 (credencial real de cada usuario vs. lo que ven sus carpetas): los 10 usuarios sin credencial veían 'Credencial requerida', el expirado 'Contraseña expirada' y el de credencial válida con causa inválida 'Asociación fallida' — todo correcto — salvo 2 carpetas de 2 usuarios sin credencial con mevCredentialStatus vacío y 'Asociación fallida': el worker nunca procesa causas inválidas (no las marca 'missing') y esos usuarios nunca borraron una credencial (el otro camino que marca 'missing'). Backfill: las 2 marcadas 'missing'. Front: en la fila, bajo 'Asociación fallida' aparece 'Sin credencial MEV — cargala para volver a verificar' (link a Integraciones → MEV), el tooltip suma esa nota al motivo del portal y el detalle (PendingVerificationView, gate failed) la muestra bajo la descripción. La lógica de prioridad no cambia: 'missing' sigue sin tapar el diagnóstico real de la causa.",
-		where: "law-analytics-front utils/mevCredential.ts (MEV_CRED_MISSING_ON_FAILED, isMevCredMissing) · pages/apps/folders/folders.tsx · sections/apps/folders/PendingVerificationView.tsx (5922755f)",
+		where:
+			"law-analytics-front utils/mevCredential.ts (MEV_CRED_MISSING_ON_FAILED, isMevCredMissing) · pages/apps/folders/folders.tsx · sections/apps/folders/PendingVerificationView.tsx (5922755f)",
 	},
 	{
 		id: "MV18",
@@ -1391,28 +1495,34 @@ export const MEV_FINDINGS: GuideFinding[] = [
 		title: "[RESUELTO 2026-09-10, deployado] Al recargar la credencial, las causas inválidas o sin decidir no volvían a verificarse nunca",
 		detail:
 			"Censo del 10/09 (13 usuarios con carpetas MEV): 10 sin credencial (sus causas están elegibles y el update-worker las toma cada ~24 h, no encuentra credencial y las deja en 'Credencial requerida' sin scrapear — lastUpdate detenido en la fecha en que se retiró la credencial de sistema, 2026-06-19), 1 con contraseña expirada ('Contraseña expirada'), 1 con credencial válida y causa inválida ('Asociación fallida'), y la cuenta de test pausada. Flujo de recarga verificado en código: sonda de login → resetMevEligibility (lastCheckedDate/skipUntil/lock) → resumeMevNotifications (MV4/MV15: saca la pausa y enabled:true) → resetMevFolders (carpetas missing/invalid/expired/disabled → 'pending') → el update-worker toma la causa en el siguiente loop, reportCredentialSuccess, notifyCredentialResult('valid') marca todas las carpetas (MV16), updateAssociatedFolders vuelve a 'success' (MV12 refresca aunque no haya movimientos), email 'credencial validada' una vez. HUECO: 3 causas verified:true con isValid false/null no las toma ningún worker (update-worker exige isValid:true, verify-worker verified:false); tras resetMevFolders la carpeta quedaba 'Pendiente de verificación' para siempre. Fix: saveCredentials (alta y actualización) llama a reverifyUndecidedMevCausas → verified:false, isValid:null, estado 'pendiente', elegibilidad limpia → el verify-worker re-evalúa con la credencial nueva. El modelo del hub ahora declara verified e isValid de primer nivel (antes se descartaban silenciosamente en filtros/escrituras). Test en pause-notifications.test.js.",
-		where: "law-analytics-server controllers/mevCredentialsController.js reverifyUndecidedMevCausas (dc7239b) · models/CausasMEV.js (3193451)",
+		where:
+			"law-analytics-server controllers/mevCredentialsController.js reverifyUndecidedMevCausas (dc7239b) · models/CausasMEV.js (3193451)",
 	},
 	{
 		id: "MV19",
 		severity: "media",
-		title: "[RESUELTO 2026-09-10, deployado] Al recargar la credencial, las carpetas de causas ya verificadas caían a 'Pendientes de verificación'",
+		title:
+			"[RESUELTO 2026-09-10, deployado] Al recargar la credencial, las carpetas de causas ya verificadas caían a 'Pendientes de verificación'",
 		detail:
 			"E2E 10/09 con cerramaximiliano: al cargar la credencial (sonda OK → la card dice 'Validada' en el acto, correcto) resetMevFolders mandaba las 3 carpetas a causaVerified:false / 'pending', y el listado las sacaba de la tabla principal a 'Pendientes de verificación' como si nunca se hubieran verificado — aunque sus causas están verificadas y con movimientos. Inconsistente con PJN, donde una credencial caída/desvinculada deja la carpeta en el listado principal con el aviso ámbar. Fix: si la causa está verified+isValid, sólo se resetea el eje credencial (mevCredentialStatus 'valid' con la sonda OK, si no 'pending') y la asociación queda en success; el worker la refresca en su próximo ciclo (MV12). Las causas no verificadas/inválidas siguen yendo a pendiente y MV18 las devuelve a verificación. Datos: las 3 carpetas de la cuenta de test devueltas a success/valid a mano. Observación operativa: los update-workers MEV tienen active_hours 06–22 (America/Argentina/Buenos_Aires); una recarga fuera de ese horario (la E2E fue 05:30 ART) no se refleja en las carpetas hasta las 06:00 ART, otro motivo para no degradarlas a 'pendiente' mientras tanto.",
-		where: "law-analytics-server controllers/mevCredentialsController.js resetMevFolders (22e870d) · configuracion-verificacion-mev.schedule.active_hours",
+		where:
+			"law-analytics-server controllers/mevCredentialsController.js resetMevFolders (22e870d) · configuracion-verificacion-mev.schedule.active_hours",
 	},
 	{
 		id: "MV20",
 		severity: "media",
-		title: "[RESUELTO 2026-09-10, verificado E2E] El email 'credencial MEV validada' llegaba horas después, cuando el update-worker la usaba, y con el número de una causa en el asunto",
+		title:
+			"[RESUELTO 2026-09-10, verificado E2E] El email 'credencial MEV validada' llegaba horas después, cuando el update-worker la usaba, y con el número de una causa en el asunto",
 		detail:
 			"E2E 10/09: credencial recargada 05:30 ART (la card dijo 'Validada' en el acto por la sonda del hub), pero el email '✅ Credencial MEV validada — 61804/2022' recién salió 08:02 ART, cuando el update-cluster (ventana 08–20 ART del worker-manager) la usó por primera vez: el aviso lo mandaba el worker en su primer login exitoso, con la causa de turno en el asunto. Ahora saveCredentials (alta y actualización) manda el email en el acto al confirmar la sonda (template mevCredentialValidatedAccount / mevCredentialValidatedCausa, sin causa en el asunto) y deja notifiedStatus:'valid' para que el worker no duplique; si la sonda no concluye (red), el worker sigue avisando en el primer éxito. El email de 'carpeta verificada' queda sólo para causas nuevas (verify-worker); una recarga de credencial no lo dispara.",
-		where: "law-analytics-server controllers/mevCredentialsController.js notifyMevCredentialValidated (9ad11ec) · mev-workers user-credential-notifier.js (claim notifiedStatus, sin cambios)",
+		where:
+			"law-analytics-server controllers/mevCredentialsController.js notifyMevCredentialValidated (9ad11ec) · mev-workers user-credential-notifier.js (claim notifiedStatus, sin cambios)",
 	},
 	{
 		id: "MV21",
 		severity: "baja",
-		title: "[RESUELTO 2026-09-10, deployado] La card MEV mostraba los snackbars abajo a la izquierda y decía 'la validaremos' aunque la sonda ya la había validado",
+		title:
+			"[RESUELTO 2026-09-10, deployado] La card MEV mostraba los snackbars abajo a la izquierda y decía 'la validaremos' aunque la sonda ya la había validado",
 		detail:
 			"MevAccountConnect usaba enqueueSnackbar (notistack) sin anchorOrigin, y el provider no fija uno → notistack los pone abajo a la izquierda; el resto de la app usa abajo a la derecha (reducer snackbar y demás llamadas). Ahora los 5 snackbars de la card usan bottom-right. Además, al guardar con la sonda OK (MV20) el mensaje dice 'Credencial MEV validada. Ya sincronizamos tus causas.' en vez de 'La validaremos al consultar tus causas'. E2E 10/09 13:39 UTC: recarga → verifiedAt y email 'Credencial MEV validada' (hub-probe) en el mismo segundo, pausa levantada, 3 carpetas valid/success sin pasar por pendientes (MV19); 'Validada' en la card es real: el hub hace login HTTP contra el portal antes de guardar.",
 		where: "law-analytics-front sections/apps/profiles/account/MevAccountConnect.tsx (6d49910b)",
@@ -1423,15 +1533,18 @@ export const MEV_FINDINGS: GuideFinding[] = [
 		title: "[RESUELTO 2026-09-11, deployado] La primera actualización tras verificar notificaba movimientos históricos",
 		detail:
 			"Reportado por el usuario y confirmado en la E2E: la candidata 100/2020 (Necochea) generó un JudicialMovement a las 19:28 y el email 'Nuevos movimientos en 1 expediente(s)' a las 19:30 por un movimiento de 2021. Causas: (1) el guard de primera sincronización del update-worker sólo aplicaba firstSyncPolicy (silent-baseline en MEV) cuando la causa no tenía NINGÚN movimiento; si la verificación o el pivote habían guardado una parte, la primera pasada notificaba el resto como novedad. (2) pivot-helpers descartaba el texto del movimiento (descripcion del scraper) y guardaba detalle vacío: la dedup fecha|detalle nunca empataba, el save fallaba por campo requerido y caía al fallback atómico, que no persistía los movimientos, así que cada corrida volvía a detectar el mismo movimiento como nuevo (frenado sólo por el límite de 24 h por expediente). Fix: la política de primera sincronización se aplica también cuando la causa nunca pasó por el update-worker (updateStats.count 0; verify-worker nunca lo escribe — en prod 48 de 50 causas ya tenían actualizaciones, sólo las 2 candidatas de prueba no); las candidatas guardan detalle; el fallback atómico persiste movimiento/movimientosCount e incrementa updateStats.count. Datos: las 2 candidatas de prueba quedaron sin movimientos para que una futura selección arranque con primera sincronización silenciosa.",
-		where: "mev-workers src/tasks/update-worker.js (PASO 1 esPrimeraActualizacion, PASO 7 fallback, PASO 8 guard) · src/utils/pivot-helpers.js movimientosDesde (86f85ac)",
+		where:
+			"mev-workers src/tasks/update-worker.js (PASO 1 esPrimeraActualizacion, PASO 7 fallback, PASO 8 guard) · src/utils/pivot-helpers.js movimientosDesde (86f85ac)",
 	},
 	{
 		id: "MV24",
 		severity: "media",
-		title: "[RESUELTO 2026-09-11, deployado y verificado] Causa recién verificada: la primera actualización no notifica y no espera el horario del update",
+		title:
+			"[RESUELTO 2026-09-11, deployado y verificado] Causa recién verificada: la primera actualización no notifica y no espera el horario del update",
 		detail:
 			"Pedido de producto. Antes, una causa verificada fuera de 08–20 ART esperaba hasta las 08:00: la carpeta mostraba lo que había traído la verificación y la primera actualización llegaba horas después, porque el worker-manager apaga mev-update-cluster fuera de su ventana (el verify corre 24 h). Ahora verify-worker marca firstUpdatePending cuando verifica una causa que el update-worker nunca actualizó (una re-verificación de una causa que ya se venía actualizando no se marca), y las candidatas del pivote nacen con el flag. Con el flag: (1) esa primera pasada nunca notifica, sea cual sea la política (todo lo que trae es línea de base; MV23 queda como respaldo para causas anteriores al flag); (2) el worker-manager deja un worker de update vivo fuera de horario mientras haya causas con flag elegibles o en proceso y con credencial, y el update-worker, fuera de ventana, toma sólo esas. Las causas con flag van primero también dentro del horario. El flag se borra en la primera actualización exitosa (save, retry y fallback atómico); si falla (credencial, portal) queda y se reintenta con el back-off habitual. Para el usuario: la carpeta nueva se completa en minutos a cualquier hora y no recibe el email 'Nuevos movimientos' por el histórico. En prod no había causas sin actualizar, sin backfill. E2E en prod 11/09 07:32 ART (fuera de ventana) con la cuenta de test: causa 47946/2023 con flag y un movimiento quitado → el worker-manager levantó el update-cluster para esa sola causa, el movimiento volvió sin aviso ('Primera actualización: 1 movimientos sin notificar'), flag borrado, 0 notificaciones y el cluster se apagó de nuevo a los 2 minutos. Alta real desde la UI el mismo día: la cuenta de test importó 74388/2022 (La Plata, Juzgado Contencioso Administrativo 2); la verificación la marcó con el flag, la carpeta pasó a la tabla principal, el primer intento de actualización falló por timeout del portal (el flag se conserva y se reintenta a los 30 minutos) y el reintento terminó bien: flag borrado y 0 notificaciones. Una causa que MEV no encuentra ('Asociación fallida') no se marca.",
-		where: "mev-workers src/tasks/verify-worker.js · src/utils/pivot-helpers.js · src/tasks/update-worker.js (ventana, query/sort, PASO 6-8) · src/monitors/worker-manager.js countFirstUpdatePending · src/utils/update-window.js · src/models/CausasMEV.js (170242a)",
+		where:
+			"mev-workers src/tasks/verify-worker.js · src/utils/pivot-helpers.js · src/tasks/update-worker.js (ventana, query/sort, PASO 6-8) · src/monitors/worker-manager.js countFirstUpdatePending · src/utils/update-window.js · src/models/CausasMEV.js (170242a)",
 	},
 	{
 		id: "MV22",
@@ -1439,15 +1552,18 @@ export const MEV_FINDINGS: GuideFinding[] = [
 		title: "[RESUELTO 2026-09-10] E2E del pivote desde la UI: 4 bugs que impedían armarlo y elegir la candidata",
 		detail:
 			"E2E con cerramaximiliano sobre Necochea (Juzgado Civil y Comercial N°1, 100/2020: 2 resultados sin año; Tribunal de Trabajo N°1, 2544/2010: resultados de distintos años, desambigua por año). (1) mev-workers c4ad7e7: el historial del pivote usaba source 'verify-worker', fuera del enum → el save() fallaba por validación cada ~6 min en producción y la carpeta nunca pasaba a selección. (2) mev-workers ae3cb3f: con varios resultados, los callbacks tempranos/incrementales del scraper escribían carátula, objeto y movimientos del primer resultado en la causa y marcaban las carpetas verificadas antes de decidir; ahora llevan multipleResult y el verify-worker los ignora hasta elegir o armar el pivote. (3) hub b15f9f2: el enum de historial del modelo del hub rechazaba 'verificacion'/'update-worker' → elegir candidata daba ValidationError. (4) hub ffb5ca9: el modelo del hub no declaraba update → la candidata elegida quedaba update:false y el update-worker nunca la tomaba. Verificado desde la UI: detalle 'Hay varias coincidencias', selector con las 2 candidatas, 'Causa vinculada exitosamente', pivote resolved con folderIds vacío, usuario destinatario; y desvincular desde el pill (carpeta manual/unlinked, causa sin carpeta ni usuario).",
-		where: "mev-workers src/utils/pivot-helpers.js · src/controllers/mev-scraper.js · src/tasks/verify-worker.js (c4ad7e7, ae3cb3f) · law-analytics-server models/CausasMEV.js (b15f9f2, ffb5ca9)",
+		where:
+			"mev-workers src/utils/pivot-helpers.js · src/controllers/mev-scraper.js · src/tasks/verify-worker.js (c4ad7e7, ae3cb3f) · law-analytics-server models/CausasMEV.js (b15f9f2, ffb5ca9)",
 	},
 	{
 		id: "MV11",
 		severity: "media",
-		title: "[RESUELTO 2026-09-10, deploy pendiente] Selección múltiple (pivote) en MEV sobre las coincidencias que devuelve la búsqueda dentro del organismo",
+		title:
+			"[RESUELTO 2026-09-10, deploy pendiente] Selección múltiple (pivote) en MEV sobre las coincidencias que devuelve la búsqueda dentro del organismo",
 		detail:
 			"Antes: la búsqueda por número en el organismo puede devolver varios expedientes; el verify-worker filtraba por año y, si quedaban varios (variantes/incidentes con otra carátula), tomaba el primero y creaba los demás como docs sueltos sin carpeta (y chocaban con el índice único); el hub ni siquiera podía resolver una selección ('Modelo MEV no encontrado'). Ahora, como en EJE/IOL: (workers 820cb7b) con varias coincidencias del mismo año el doc pasa a PIVOTE (isPivot, pivotCausaIds, isValid:null, update:false), cada resultado se persiste como candidata (isVariante, varianteIndex 1..N, verificada, con sus movimientos) y las carpetas del pivote pasan a 'pending_selection' con pendingCausaType 'MEV'; verify y update excluyen pivotes; al re-buscar, el resultado se elige por año y, en candidatas, por carátula (pick-result). Índice único migrado en prod a number+year+jurisdiccion+organismo+varianteIndex (62 docs, 10/09). (hub c83fab7) selección y cancelación tratan MEV como EJE/IOL ($pull del folder en el pivote, resolved al vaciarse), la carpeta elegida queda como carpeta MEV normal (mev, navigationCode, judFolder, credencial valid), las candidatas viajan al selector con numero/anio/juzgado, y un alta sobre un pivote existente nace en selección (mev-api 04d17a8 devuelve isPivot). (front 13d991c7) pill 'MEV — Elegir expediente' en header y detalle; el gate y CausaSelector ya eran genéricos. Verificación E2E pendiente de que aparezca un caso real con varias coincidencias del mismo año (no se puede provocar).",
-		where: "mev-workers src/utils/pivot-helpers.js · pick-result.js · folder-updater.js updateFoldersOnPivot · verify-worker.js · update-worker.js · scripts/migrate-unique-index-variante.js (820cb7b) · law-analytics-server services/causaService.js · controllers/folderController.js · services/mevAssociateService.js (c83fab7) · mev-api folderAssociationController.js (04d17a8) · front FolderView.tsx / details.tsx (13d991c7)",
+		where:
+			"mev-workers src/utils/pivot-helpers.js · pick-result.js · folder-updater.js updateFoldersOnPivot · verify-worker.js · update-worker.js · scripts/migrate-unique-index-variante.js (820cb7b) · law-analytics-server services/causaService.js · controllers/folderController.js · services/mevAssociateService.js (c83fab7) · mev-api folderAssociationController.js (04d17a8) · front FolderView.tsx / details.tsx (13d991c7)",
 	},
 ];
 
@@ -2218,10 +2334,12 @@ export const SCBA_FINDINGS: GuideFinding[] = [
 	{
 		id: "S27",
 		severity: "media",
-		title: "[RESUELTO 2026-09-11, deployado y verificado] Causa nueva: la primera actualización tras la captura inicial no notifica y no espera la ventana 15–19 ART",
+		title:
+			"[RESUELTO 2026-09-11, deployado y verificado] Causa nueva: la primera actualización tras la captura inicial no notifica y no espera la ventana 15–19 ART",
 		detail:
 			"Auditoría del 11/09: 145 de 739 avisos SCBA de movimientos eran de trámites con más de 30 días. Los volcados reales vinieron de capturas iniciales incompletas (9243/2026 pasó de 1 a 54 movimientos, 824/2023 de 5 a 145, 9775/2021 de 28 a 75) que el update completó y notificó enteras, porque el guard de primera sincronización sólo aplicaba cuando la causa no tenía ningún movimiento. Además la primera actualización de una causa nueva esperaba la ventana del update (15–19 ART). Ahora el initial-scraping marca firstUpdatePending al completar una causa que nunca tuvo un update. Con el flag: (1) la primera pasada del update nunca notifica, sea cual sea la política (today-only en SCBA), y el flag se borra en el mismo guardado; si falla, queda marcado; (2) fuera de la ventana el manager deja un worker de update vivo mientras haya causas con flag y ese worker procesa sólo esas. Respeta la frecuencia mínima (1 h en prod), así que la primera actualización llega ~1 h después de la captura a cualquier hora. Para el usuario: la carpeta nueva se completa aunque sea de noche y no recibe el email de 'Nuevos movimientos' por el histórico que faltaba. E2E en prod 11/09 07:23 ART con la cuenta de test: causa con flag y un movimiento quitado → worker levantado fuera de horario, 1 movimiento recuperado sin aviso, flag borrado, 0 notificaciones, manager de vuelta a 0.",
-		where: "scba-workers src/workers/initial-scraping-worker.ts · src/workers/update-worker.ts (folderStageMatch, onlyFirstUpdate, notificación) · src/workers/scba-manager.ts countFirstUpdatePending (1f71783)",
+		where:
+			"scba-workers src/workers/initial-scraping-worker.ts · src/workers/update-worker.ts (folderStageMatch, onlyFirstUpdate, notificación) · src/workers/scba-manager.ts countFirstUpdatePending (1f71783)",
 	},
 ];
 
@@ -2603,7 +2721,8 @@ const iolFindings = (jur: "pjsalta" | "pjcatamarca" | "pjmendoza", prefix: strin
 		{
 			id: `${prefix}12`,
 			severity: "alta",
-			title: "[RESUELTO 2026-09-09] Regresión de N1: el dedupe del verifier dejaba la carpeta en 'pending' apuntando a un doc borrado (N1b)",
+			title:
+				"[RESUELTO 2026-09-09] Regresión de N1: el dedupe del verifier dejaba la carpeta en 'pending' apuntando a un doc borrado (N1b)",
 			detail:
 				"Vista en la E2E de Salta del 09/09 (alta pública de EXP 905878/25, causa ya existente): el verifier encontró la causa existente, la fusionó (folderIds/userCausaIds) y borró el doc PENDING, pero el guard N1 de resolveFolderIds filtró la carpeta ('ya apunta a otra causa') porque su causaId todavía era el doc PENDING. Resultado: carpeta 'pending' para siempre con causaId inexistente, y al borrarla el hub no podía desasociarla (dejaba folderIds/userCausaIds viejos en la causa real). Fix: resolveFolderIds/updateFoldersOnSingleResult aceptan fromCausaIds (los docs que se fusionan) y el dedupe pasa el id del PENDING. Deployado en cloud-01 y verificado con una segunda alta: success apuntando a la causa existente, con carátula/juzgado/materia. Sólo la carpeta de prueba quedó afectada en prod (barrido de las 3 jurisdicciones desde el deploy de N1).",
 			where: `${workers} folder-updater.js (resolveFolderIds fromCausaIds) · verifier.js (single_result_existing) · ${jur}-api folder-updater.js (misma copia)`,
@@ -2611,7 +2730,8 @@ const iolFindings = (jur: "pjsalta" | "pjcatamarca" | "pjmendoza", prefix: strin
 		{
 			id: `${prefix}13`,
 			severity: "media",
-			title: "[RESUELTO 2026-09-09, verificado E2E] Desvincular o borrar la carpeta dejaba al usuario como destinatario de notificaciones (N7, paridad PJN F16)",
+			title:
+				"[RESUELTO 2026-09-09, verificado E2E] Desvincular o borrar la carpeta dejaba al usuario como destinatario de notificaciones (N7, paridad PJN F16)",
 			detail:
 				"dissociate-folder de la API sacaba la carpeta de folderIds y apagaba update si no quedaban carpetas, pero nunca tocaba userCausaIds ni userUpdatesEnabled; el hub además no mandaba userId en DELETE /api/folders ni en unlink-causa. Como notification-sync arma los destinatarios con userUpdatesEnabled (fallback userCausaIds), el usuario seguía recibiendo los movimientos mientras otro usuario mantuviera la causa viva. Verificado en la E2E de Salta: tras unlink-causa la causa seguía con el usuario de test en ambas listas (limpiado a mano). Fix: la API poda al usuario si no conserva otra carpeta sobre la causa (countDocuments sobre los folderIds restantes); el hub manda userId y su fallback local (unlink y las 3 ramas de delete) hace la misma poda. Verificado tras el deploy (18:42 UTC): alta Salta + unlink-causa → la causa quedó sin el usuario en userCausaIds/userUpdatesEnabled; log de pjsalta-api 'desvinculado … · usuario podado de destinatarios'.",
 			where: `${jur}-api causasService.js dissociateFolderFromCausa · law-analytics-server folderUnlinkService.js · folderController.js (deleteFolderById ramas IOL)`,
