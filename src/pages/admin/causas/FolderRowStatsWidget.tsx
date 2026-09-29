@@ -19,9 +19,9 @@ import {
 	useTheme,
 } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
-import { Refresh, Book1 } from "iconsax-react";
+import { Refresh, Book1, Link21 } from "iconsax-react";
 import pjnCredentialsService, { FolderRowStatsData } from "api/pjnCredentials";
-import { LIVE_GREEN, STALE_AMBER, headerBorder } from "themes/dashboardTokens";
+import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER, headerBorder } from "themes/dashboardTokens";
 import { JURISDICTIONS } from "./userViewGuideData";
 
 /**
@@ -324,6 +324,69 @@ export default function FolderRowStatsWidget({ onSelectJurisdiction, selectedJur
 							</TableBody>
 						</Table>
 					</Box>
+					{data.pjnExtras && (
+						<Stack spacing={0.75}>
+							<Typography
+								variant="caption"
+								sx={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "text.secondary" }}
+							>
+								PJN · Novedades y expedientes relacionados ({data.pjnExtras.carpetasPjn} carpetas)
+							</Typography>
+							<Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
+								<Tooltip title="Carpetas con movimientos que el sistema vio por primera vez desde la última visita del usuario a Actividad (“N sin ver” en la lista)">
+									<Chip
+										size="small"
+										icon={
+											<Box component="span" sx={{ width: 7, height: 7, borderRadius: "50%", bgcolor: BRAND_BLUE, ml: "8px !important" }} />
+										}
+										label={`${data.pjnExtras.conSinVer} con novedades sin ver · ${data.pjnExtras.movimientosSinVer} movimientos`}
+										sx={{ fontWeight: 600, color: BRAND_BLUE, bgcolor: "rgba(58,123,255,0.08)" }}
+									/>
+								</Tooltip>
+								<Tooltip title="⛓ ámbar en la lista: la causa se acumuló a otra (evento del sistema)">
+									<Chip
+										size="small"
+										icon={<Link21 size={14} variant="Bold" color={STALE_AMBER} />}
+										label={`${data.pjnExtras.acumuladaAOtra} acumuladas a otra`}
+										variant="outlined"
+									/>
+								</Tooltip>
+								<Tooltip title="⛓ azul: otra causa se acumuló a ésta">
+									<Chip
+										size="small"
+										icon={<Link21 size={14} variant="Bold" color={BRAND_BLUE} />}
+										label={`${data.pjnExtras.receptora} receptoras`}
+										variant="outlined"
+									/>
+								</Tooltip>
+								<Tooltip title="⛓ azul: acumulación registrada sin rol afirmado (el despacho no dice la dirección)">
+									<Chip
+										size="small"
+										icon={<Link21 size={14} variant="Bold" color={BRAND_BLUE} />}
+										label={`${data.pjnExtras.acumulacion - data.pjnExtras.acumuladaAOtra} acumulación sin rol`}
+										variant="outlined"
+									/>
+								</Tooltip>
+								<Tooltip title="⛓ azul: carpeta de un incidente (acceso al principal)">
+									<Chip
+										size="small"
+										icon={<Link21 size={14} variant="Bold" color={BRAND_BLUE} />}
+										label={`${data.pjnExtras.incidente} incidentes`}
+										variant="outlined"
+									/>
+								</Tooltip>
+								<Tooltip title="⛓ azul: el principal tiene expedientes vinculados en el portal (pestaña Vinculados)">
+									<Chip
+										size="small"
+										icon={<Link21 size={14} variant="Bold" color={BRAND_BLUE} />}
+										label={`${data.pjnExtras.conVinculados} con vinculados`}
+										variant="outlined"
+									/>
+								</Tooltip>
+								<Chip size="small" label={`${data.pjnExtras.conRelaciones} con ⛓ en total`} sx={{ fontWeight: 600 }} />
+							</Stack>
+						</Stack>
+					)}
 					<Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
 						<Chip
 							size="small"

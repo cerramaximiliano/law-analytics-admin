@@ -522,6 +522,18 @@ export interface FolderRowStatsData {
 	filters: { archived: string };
 	byRow: Array<{ row: string; n: number; pct: number }>;
 	jurisdictions: Array<{ jurisdiction: string; total: number; pct: number; rows: Array<{ row: string; n: number; pct: number }> }>;
+	/** PJN: novedades sin ver y relaciones (⛓) con la lógica de la lista del usuario (folderNovedadesService). */
+	pjnExtras?: {
+		carpetasPjn: number;
+		conSinVer: number;
+		movimientosSinVer: number;
+		conRelaciones: number;
+		acumuladaAOtra: number;
+		acumulacion: number;
+		receptora: number;
+		incidente: number;
+		conVinculados: number;
+	} | null;
 }
 
 export type DailySyncState = "ok" | "no_run_today" | "incomplete" | "error" | "invalid" | "interrupted" | "running" | "inactive_user";
