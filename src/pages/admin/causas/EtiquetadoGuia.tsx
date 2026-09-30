@@ -457,7 +457,11 @@ const SECCIONES: Seccion[] = [
 					<B>Deserción del recurso ley 27.348</B> que cierra el proceso → terminación · <Codigo>resuelve_recurso</Codigo> · modo{" "}
 					<Codigo>inhabilidad_de_instancia</Codigo> · <Codigo>rechaza</Codigo>, con filas <Codigo>recurso_apelacion → desierto</Codigo>{" "}
 					y <Codigo>habilitacion_instancia → rechaza</Codigo>. La apelación común declarada desierta por la Cámara sigue siendo
-					terminación · <Codigo>otro</Codigo> · <Codigo>desierto</Codigo>.
+					terminación · <Codigo>otro</Codigo> · <Codigo>desierto</Codigo>. Si además confirma el dictamen de la CM, resolvió el
+					mérito: <Codigo>sentencia_sobre_fondo</Codigo> · rechaza con fila <Codigo>recurso_apelacion → desierto</Codigo>. (d) <B>Sentencia anulada por la Cámara para producir
+					prueba</B> (la Sala la deja sin efecto y remite a otro juzgado o al de origen): la anulada <B>conserva</B> terminación y{" "}
+					<Codigo>sentencia_primera</Codigo> (37 b); la Sala va como <Codigo>resuelve_recurso</Codigo> · decisión ·{" "}
+					<Codigo>revoca</Codigo>, y la nueva sentencia o el acuerdo es otra terminación.
 				</P>
 				<P>
 					<B>Coherencia (cierre fase B)</B>: «mal concedido» / inadmisible / inapelable → <Codigo>deniega_recurso</Codigo>; acuse de
