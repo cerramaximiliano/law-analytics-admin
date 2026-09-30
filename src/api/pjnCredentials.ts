@@ -523,6 +523,8 @@ export interface FolderRowStatsData {
 	byRow: Array<{ row: string; n: number; pct: number }>;
 	jurisdictions: Array<{ jurisdiction: string; total: number; pct: number; rows: Array<{ row: string; n: number; pct: number }> }>;
 	/** PJN: novedades sin ver y relaciones (⛓) con la lógica de la lista del usuario (folderNovedadesService). */
+	// "Sin ver" por jurisdicción (todas las carpetas con causa; total sin el recorte del plan free).
+	sinVerPorJurisdiccion?: Array<{ jurisdiccion: string; carpetas: number; conSinVer: number; movimientosSinVer: number }> | null;
 	pjnExtras?: {
 		carpetasPjn: number;
 		conSinVer: number;

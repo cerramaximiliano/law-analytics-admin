@@ -324,6 +324,43 @@ export default function FolderRowStatsWidget({ onSelectJurisdiction, selectedJur
 							</TableBody>
 						</Table>
 					</Box>
+					{data.sinVerPorJurisdiccion && data.sinVerPorJurisdiccion.length > 0 && (
+						<Stack spacing={0.75}>
+							<Typography
+								variant="caption"
+								sx={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "text.secondary" }}
+							>
+								Novedades sin ver por jurisdicción
+							</Typography>
+							<Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
+								{data.sinVerPorJurisdiccion.map((j) => (
+									<Tooltip
+										key={j.jurisdiccion}
+										title={`${j.jurisdiccion}: ${j.conSinVer} de ${j.carpetas} carpetas con movimientos vistos por primera vez desde la última visita a Actividad (${j.movimientosSinVer} movimientos). Total, sin el recorte del plan free.`}
+									>
+										<Chip
+											size="small"
+											icon={
+												<Box
+													component="span"
+													sx={{
+														width: 7,
+														height: 7,
+														borderRadius: "50%",
+														bgcolor: j.conSinVer > 0 ? BRAND_BLUE : "text.disabled",
+														ml: "8px !important",
+													}}
+												/>
+											}
+											label={`${j.jurisdiccion} · ${j.conSinVer}/${j.carpetas} carpetas · ${j.movimientosSinVer} mov.`}
+											variant={j.conSinVer > 0 ? "filled" : "outlined"}
+											sx={j.conSinVer > 0 ? { fontWeight: 600, color: BRAND_BLUE, bgcolor: "rgba(58,123,255,0.08)" } : undefined}
+										/>
+									</Tooltip>
+								))}
+							</Stack>
+						</Stack>
+					)}
 					{data.pjnExtras && (
 						<Stack spacing={0.75}>
 							<Typography
