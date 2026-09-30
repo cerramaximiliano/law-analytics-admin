@@ -247,6 +247,17 @@ export default function UserViewGuide() {
 					</Stack>
 				}
 			>
+				{/* Rediseño del listado del usuario (2026-09-30): las descripciones de estados más viejas
+				    pueden mencionar íconos a la derecha de la carátula que ya no existen. */}
+				<Alert severity="info" sx={{ mb: 2 }}>
+					Desde el 30-09 el estado de cada fila lo muestra un solo ícono: el logo de la jurisdicción a la izquierda de la carátula, con un
+					indicador superpuesto — ✓ verde (vinculada), ! ámbar (requiere atención: credencial, selección, verificando, fuera de la lista), !
+					rojo (fallida, inválida o reservada sin acceso) y candado (reservada: verde con acceso, ámbar revocada). Su tooltip trae el
+					detalle y, si hay algo que resolver (credencial PJN/SCBA/MEV), el clic lleva a Integraciones. Los íconos que iban a la derecha de
+					la carátula se quitaron; los chips (“Seleccionar expediente”, “Asociación fallida”, “Pendiente de verificación”, credencial MEV)
+					se mantienen, y “desvinculada” conserva su ícono ámbar a la derecha. Donde una descripción de abajo diga “a la derecha”, leé
+					“indicador del ícono de la jurisdicción”.
+				</Alert>
 				{guide.note && guide.groups.length === 0 && (
 					<Alert severity="info" sx={{ mb: 2 }}>
 						{guide.note}

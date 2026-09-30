@@ -24,12 +24,12 @@ import {
 	InfoCircle,
 	Link21,
 	Lock1,
-	Refresh,
 	SearchNormal1,
 	TickCircle,
 	Warning2,
 } from "iconsax-react";
 import dayjs from "utils/dayjs-config";
+import { JURISDICTION_LOGOS } from "assets/images/logos/jurisdictions";
 import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER } from "themes/dashboardTokens";
 import pjnCredentialsService, { CausaUserViewData, CausaUserViewEntry, UserViewGate } from "api/pjnCredentials";
 
@@ -295,41 +295,89 @@ export function RelacionesTabReplica({ detalle }: { detalle?: CausaUserViewEntry
 	);
 }
 
+// Réplica del FolderSourceBadge del front (2026-09-30): logo del portal con el estado superpuesto,
+// a la IZQUIERDA de la carátula. Es la única señal de estado de la fila (los íconos que iban a la
+// derecha se quitaron); los chips (seleccionar / fallida / pendiente / credencial MEV) se mantienen.
+const LOGO_BG: Record<string, string> = { pjn: "#222E43", mev: "#f8f8f8", scba: "#f8f8f8" };
+function estadoBadge(list: string): { color: string; glyph: "ok" | "warn" | "lock" } | null {
+	switch (list) {
+		case "ok":
+			return { color: LIVE_GREEN, glyph: "ok" };
+		case "reserved_covered":
+			return { color: LIVE_GREEN, glyph: "lock" };
+		case "revoked":
+			return { color: STALE_AMBER, glyph: "lock" };
+		case "reserved":
+		case "failed":
+		case "invalid":
+			return { color: RED, glyph: "warn" };
+		case "unlinked":
+			return null;
+		default:
+			return { color: STALE_AMBER, glyph: "warn" };
+	}
+}
+function SourceBadgeReplica({ folder, list }: { folder: CausaUserViewEntry["folder"]; list: string }) {
+	const theme = useTheme();
+	const f = folder as any;
+	const kind = (["pjn", "mev", "eje", "scba", "pjsalta", "pjcatamarca", "pjmendoza"] as const).find((k) => f[k] === true);
+	const st = estadoBadge(list);
+	if (!kind || !st) return null;
+	return (
+		<Box sx={{ position: "relative", display: "inline-flex", flexShrink: 0 }}>
+			<Box
+				sx={{
+					width: 28,
+					height: 28,
+					borderRadius: "50%",
+					overflow: "hidden",
+					bgcolor: LOGO_BG[kind] || "#ffffff",
+					border: `1px solid ${alpha(BRAND_BLUE, theme.palette.mode === "dark" ? 0.4 : 0.25)}`,
+					display: "flex",
+					alignItems: "center",
+					justifyContent: "center",
+				}}
+			>
+				<Box component="img" src={JURISDICTION_LOGOS[kind]} alt="" sx={{ width: "74%", height: "74%", objectFit: "contain" }} />
+			</Box>
+			<Box
+				aria-hidden
+				sx={{
+					position: "absolute",
+					bottom: -3,
+					right: -4,
+					width: 18,
+					height: 18,
+					borderRadius: "50%",
+					bgcolor: st.color,
+					border: `2px solid ${theme.palette.background.paper}`,
+					display: "flex",
+					alignItems: "center",
+					justifyContent: "center",
+				}}
+			>
+				{st.glyph === "lock" ? (
+					<Lock1 size={11} variant="Bold" color="#fff" />
+				) : st.glyph === "ok" ? (
+					<svg width={11} height={11} viewBox="0 0 12 12" aria-hidden>
+						<path d="M2.6 6.3l2.2 2.2 4.6-4.9" fill="none" stroke="#fff" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+					</svg>
+				) : (
+					<svg width={11} height={11} viewBox="0 0 12 12" aria-hidden>
+						<path d="M6 2.4v4.4" stroke="#fff" strokeWidth={2.2} strokeLinecap="round" />
+						<circle cx="6" cy="9.4" r="1.2" fill="#fff" />
+					</svg>
+				)}
+			</Box>
+		</Box>
+	);
+}
+
 export function ListRowReplica({ entry }: { entry: CausaUserViewEntry }) {
 	const { folder, view } = entry;
 	const name = <span style={{ flex: 1 }}>{formatFolderName(folder.folderName, 50)}</span>;
-	const right = (() => {
-		switch (view.list) {
-			case "reserved":
-				return <Warning2 size={16} variant="Bold" color={RED} />;
-			case "reserved_covered":
-				return <Lock1 size={16} variant="Bold" color={LIVE_GREEN} />;
-			case "revoked":
-				return <Lock1 size={16} variant="Bold" color={STALE_AMBER} />;
-			case "list_removed":
-				return <Warning2 size={16} variant="Bold" color={STALE_AMBER} />;
-			case "pending_selection":
-				return <Warning2 size={16} variant="Bold" color={STALE_AMBER} />;
-			case "failed":
-			case "invalid":
-				return <CloseCircle size={16} variant="Bold" color={RED} />;
-			case "pending":
-				return <Refresh size={16} />;
-			case "ok":
-				return <TickCircle size={16} variant="Bold" color={BRAND_BLUE} />;
-			case "ok_cred_error":
-				return <Warning2 size={16} variant="Bold" color={STALE_AMBER} />;
-			case "cred_error":
-				// folders.tsx renderPrivacyRow: carátula + Warning2 ámbar clickeable (→ Integraciones → PJN)
-				return <Warning2 size={16} variant="Bold" color={STALE_AMBER} />;
-			case "cred_status":
-				return <Warning2 size={16} variant="Bold" color={STALE_AMBER} />;
-			case "unlinked":
-				return <Warning2 size={16} variant="Bold" color={STALE_AMBER} />;
-			default:
-				return null;
-		}
-	})();
+	// Solo "desvinculada" conserva un ícono a la derecha (no tiene fuente activa → sin badge).
+	const right = view.list === "unlinked" ? <Warning2 size={16} variant="Bold" color={STALE_AMBER} /> : null;
 	const left = (() => {
 		switch (view.list) {
 			case "pending_selection":
@@ -391,7 +439,14 @@ export function ListRowReplica({ entry }: { entry: CausaUserViewEntry }) {
 			}}
 		>
 			<Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1} sx={{ minWidth: 0 }}>
-				<Box sx={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{left}</Box>
+				<Stack direction="row" alignItems="center" spacing={1} sx={{ minWidth: 0 }}>
+					<Tooltip title={listTooltip(view.list, folder)}>
+						<Box sx={{ display: "inline-flex" }}>
+							<SourceBadgeReplica folder={folder} list={view.list} />
+						</Box>
+					</Tooltip>
+					<Box sx={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{left}</Box>
+				</Stack>
 				<Stack direction="row" alignItems="center" spacing={0.5} sx={{ flexShrink: 0 }}>
 					{right && (
 						<Tooltip title={listTooltip(view.list, folder)}>

@@ -96,9 +96,9 @@ const credErrorView = (reserved: boolean, gate: UserViewGate = null, extra: V = 
 export const PJN_GROUPS: GuideGroup[] = [
 	{
 		row: "ok",
-		title: "OK — carátula + tilde azul",
+		title: "OK — ícono de la jurisdicción con tilde verde",
 		whatUserSees:
-			"Carátula normal, tilde azul a la derecha (tooltip “Causa vinculada a PJN”). Fila expandida y detalle: pill verde “Vinculado con PJN”.",
+			"Ícono de PJN a la izquierda de la carátula con tilde verde superpuesto (tooltip “PJN — Causa válida”). Desde el 30-09 no hay ícono a la derecha. Fila expandida y detalle: pill verde “Vinculado con PJN”.",
 		cases: [
 			{
 				key: "ok.verify",
@@ -183,7 +183,7 @@ export const PJN_GROUPS: GuideGroup[] = [
 		row: "ok",
 		title: "Novedades y expedientes relacionados — “N sin ver” y ⛓ (2026-09-29)",
 		whatUserSees:
-			"Se suman a cualquier estado de fila. (1) Último movimiento: además del verde de HOY, “● N sin ver” en azul = movimientos que el sistema vio por primera vez desde la última visita del usuario a la pestaña Actividad (se resetea al abrirla; sin visita previa cuenta desde hace 7 días; solo PJN, sale del espejo pjn-movements). (2) Carátula: ⛓ con tooltip a la derecha del ícono de estado — ámbar si la causa se ACUMULÓ a otra, azul si tiene causas acumuladas, expedientes vinculados en el portal o es un incidente; clic → pestaña nueva “Expedientes relacionados” del detalle (acumulación con Ver carpeta / Seguir, acumuladas a ésta, acceso al principal y la tabla de vinculados con Seguir, que antes estaba al pie de Actividad).",
+			"Se suman a cualquier estado de fila. (1) Último movimiento: además del verde de HOY, “● N sin ver” en azul = movimientos que el sistema vio por primera vez desde la última visita del usuario a la pestaña Actividad (se resetea al abrirla; sin visita previa cuenta desde hace 7 días; todas las jurisdicciones desde el 30-09: espejos pjn/eje/pjsalta/pjcatamarca/pjmendoza/scba-movements y, en MEV, la fecha del _id del movimiento; plan free: solo cuenta lo nuevo dentro de los 5 movimientos visibles, el resto va como “+” en el tooltip o candado gris “N nuevos”). (2) Carátula: ⛓ con tooltip a la derecha — ámbar si la causa se ACUMULÓ a otra, azul si tiene causas acumuladas, expedientes vinculados en el portal o es un incidente; clic → pestaña nueva “Expedientes relacionados” del detalle (acumulación con Ver carpeta / Seguir, acumuladas a ésta, acceso al principal y la tabla de vinculados con Seguir, que antes estaba al pie de Actividad).",
 		cases: [
 			{
 				key: "novedades.sin_ver",
@@ -861,9 +861,9 @@ const mevUnlinkedView = (): V => ({
 export const MEV_GROUPS: GuideGroup[] = [
 	{
 		row: "ok",
-		title: "OK — carátula + tilde azul",
+		title: "OK — ícono de la jurisdicción con tilde verde",
 		whatUserSees:
-			"Carátula + tilde azul (tooltip “Causa vinculada a MEV”). Fila expandida y detalle: pill verde “Vinculado con MEV” con badge según causaIsValid (valid / invalid / nada si es null). Tabla principal.",
+			"Ícono de MEV a la izquierda con tilde verde (tooltip “MEV — Vinculado con MEV”). Fila expandida y detalle: pill verde “Vinculado con MEV” con badge según causaIsValid (valid / invalid / nada si es null). Tabla principal.",
 		cases: [
 			{
 				key: "mev.ok.valid",
@@ -1578,8 +1578,9 @@ const ejePill = (badge: string) => ({ label: "Vinculado con EJE", accent: "green
 export const EJE_GROUPS: GuideGroup[] = [
 	{
 		row: "ok",
-		title: "OK — carátula + tilde azul",
-		whatUserSees: "Carátula + tilde azul (“Causa vinculada a EJE”). Fila expandida: pill verde “Vinculado con EJE”.",
+		title: "OK — ícono de la jurisdicción con tilde verde",
+		whatUserSees:
+			"Ícono de EJE a la izquierda con tilde verde (tooltip “EJE — Vinculado con EJE”). Fila expandida: pill verde “Vinculado con EJE”.",
 		cases: [
 			{
 				key: "eje.ok.single",
@@ -1881,9 +1882,9 @@ const scbaPill = (label: string, accent: "green" | "amber", badge: string) => ({
 export const SCBA_GROUPS: GuideGroup[] = [
 	{
 		row: "ok",
-		title: "OK — carátula + tilde azul",
+		title: "OK — ícono de la jurisdicción con tilde verde",
 		whatUserSees:
-			"Carátula + tilde azul (“Causa vinculada a SCBA”). Fila expandida/detalle: pill verde “Vinculado con SCBA”. Un rechazo de login todavía no confirmado NO cambia la fila (sólo la card de Integraciones).",
+			"Ícono de SCBA a la izquierda con tilde verde (tooltip “SCBA — Vinculado con SCBA”). Fila expandida/detalle: pill verde “Vinculado con SCBA”. Un rechazo de login todavía no confirmado NO cambia la fila (sólo la card de Integraciones).",
 		cases: [
 			{
 				key: "scba.ok.synced",
@@ -2355,8 +2356,8 @@ const iolGroups = (jur: "pjsalta" | "pjcatamarca" | "pjmendoza", label: string):
 	return [
 		{
 			row: "ok",
-			title: "OK — carátula + tilde azul",
-			whatUserSees: `Carátula + tilde azul (“Causa vinculada a ${label}”). Fila expandida: pill verde “Vinculado con ${label}” — SIEMPRE verde para IOL, sin importar el estado (solo cambia el ícono chico).`,
+			title: "OK — ícono de la jurisdicción con tilde verde",
+			whatUserSees: `Ícono de ${label} a la izquierda con tilde verde (tooltip “${label} — Vinculado con ${label}”). Fila expandida: pill verde “Vinculado con ${label}” — SIEMPRE verde para IOL, sin importar el estado (solo cambia el ícono chico).`,
 			cases: [
 				{
 					key: `${jur}.ok.single`,
