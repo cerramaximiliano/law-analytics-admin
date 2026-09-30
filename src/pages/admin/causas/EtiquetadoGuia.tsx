@@ -415,6 +415,15 @@ const SECCIONES: Seccion[] = [
 					<Codigo>beneficio_litigar_sin_gastos</Codigo>.
 				</P>
 				<P>
+					<B>Impulso u ordenación (addendum 50)</B>: en las providencias de trámite la función es <B>la típica del acto</B>, la que
+					propone el formulario al elegirlo; no la cambies. Impulso: traslados, vistas, «téngase presente», «agréguese», tener por
+					presentado o contestada, pases a autos, elevación y recepción de autos. Ordenación: intimaciones, audiencias, apertura a
+					prueba, peritos, notificaciones, oficios, giros, pagos, archivo. <Codigo>agrega_documentacion</Codigo> cuando el despacho
+					incorpora documentos o constancias (cédulas, oficios, informes); <Codigo>tiene_presente</Codigo> cuando solo toma nota de una
+					manifestación o hecho; si hace las dos cosas, manda la incorporación. Con acto <Codigo>otro</Codigo>: impulso si hace avanzar
+					el proceso al paso siguiente, ordenación si ordena una tarea material.
+				</P>
+				<P>
 					<B>Competencia (cierre fase B)</B>: rechazo de conexidad o de asignación y desprendimiento por conexidad o fuero de
 					atracción <B>antes de radicarse</B> (primer auto) → <Codigo>declara_incompetencia</Codigo> · decisión; incompetencia con la
 					causa <B>ya radicada</B>, por materia de oficio en el primer auto, acumulación que remite una causa radicada o remisión al
