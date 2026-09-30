@@ -446,6 +446,20 @@ const SECCIONES: Seccion[] = [
 					lleva contexto <Codigo>cautelar</Codigo>.
 				</P>
 				<P>
+					<B>Addendum 51 (2026-09-30)</B>: (a) <B>conciliación vs. homologación, siempre por el origen</B>: el acuerdo que nace en la
+					audiencia (las partes comparecen y acuerdan en el acta) → <Codigo>conciliacion</Codigo>; el acuerdo presentado por escrito
+					y después ratificado (por comparecencia, en audiencia o por pieza postal) → <Codigo>homologacion_de_acuerdo</Codigo>. El
+					título «acuerdo conciliatorio» y la cita del art. 15 LCT o del 309 CPCCN no cambian nada; la cita de los arts. 308 / 1641 /
+					1642, o el auto que califica el acuerdo de «transacción» o «transaccional», sigue mandando <Codigo>transaccion</Codigo>
+					(el título que la parte le da a su escrito no cuenta). (b) <B>Dictamen de la Comisión Médica no recurrido</B> («cosa
+					juzgada administrativa»): se anota lo que declara el juez; si admite la cosa juzgada → <Codigo>cosa_juzgada</Codigo>; si
+					declara la vía no habilitada o la falta de aptitud jurisdiccional → <Codigo>inhabilidad_de_instancia</Codigo>. (c){" "}
+					<B>Deserción del recurso ley 27.348</B> que cierra el proceso → terminación · <Codigo>resuelve_recurso</Codigo> · modo{" "}
+					<Codigo>inhabilidad_de_instancia</Codigo> · <Codigo>rechaza</Codigo>, con filas <Codigo>recurso_apelacion → desierto</Codigo>{" "}
+					y <Codigo>habilitacion_instancia → rechaza</Codigo>. La apelación común declarada desierta por la Cámara sigue siendo
+					terminación · <Codigo>otro</Codigo> · <Codigo>desierto</Codigo>.
+				</P>
+				<P>
 					<B>Coherencia (cierre fase B)</B>: «mal concedido» / inadmisible / inapelable → <Codigo>deniega_recurso</Codigo>; acuse de
 					caducidad rechazado → <Codigo>declara_caducidad</Codigo> · rechaza; adelanto de gastos del perito → decisión; ejecución
 					autónoma (acuerdo, honorarios, convenio) → contexto <Codigo>ejecucion</Codigo>, auto inicial con embargo →{" "}
