@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import { Box, Card, CardContent, Grid, Typography, Switch, TextField, Button, Stack, Chip, Divider, useTheme, alpha } from "@mui/material";
+import { Box, Card, CardContent, Grid, Typography, Switch, TextField, Button, Stack, Chip, useTheme, alpha } from "@mui/material";
 import { TickCircle, CloseCircle } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { CausasUpdateConfig, CausasUpdateService } from "api/causasUpdate";
+import VinculadosConfigCard from "./VinculadosConfigCard";
 
 interface Props {
 	config: CausasUpdateConfig;
@@ -76,6 +77,7 @@ const CausasUpdateConfigTab: React.FC<Props> = ({ config, onConfigUpdate }) => {
 
 	return (
 		<Stack spacing={3}>
+			<VinculadosConfigCard foco="misCausas" />
 			{/* Worker General */}
 			<Card variant="outlined">
 				<CardContent>

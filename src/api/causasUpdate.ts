@@ -189,7 +189,47 @@ export interface IncidentStats {
 
 // ====== Service ======
 
+export interface VinculadosAppUpdate {
+	capturarEnAppUpdate: boolean;
+	leerIncidentes: boolean;
+	refreshDays: number;
+	maxPaginas: number;
+	documentos?: number;
+	uniforme?: boolean;
+}
+export interface VinculadosMisCausas {
+	enabled: boolean;
+	refreshDays: number;
+	maxPaginas: number;
+}
+export interface VinculadosConfig {
+	appUpdate: VinculadosAppUpdate;
+	misCausas: VinculadosMisCausas;
+}
+
 export class CausasUpdateService {
+	/** Pestaña Vinculados en pjn-workers (app-update) y pjn-mis-causas (2026-09-30). */
+	static async getVinculadosConfig(): Promise<ApiResponse<VinculadosConfig>> {
+		try {
+			const response = await adminAxios.get("/api/causas-update/vinculados");
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	static async updateVinculadosConfig(body: {
+		appUpdate?: Partial<VinculadosAppUpdate>;
+		misCausas?: Partial<VinculadosMisCausas>;
+	}): Promise<ApiResponse<VinculadosConfig>> {
+		try {
+			const response = await adminAxios.patch("/api/causas-update/vinculados", body);
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
 	// Config
 	static async getConfig(): Promise<ApiResponse<CausasUpdateConfig>> {
 		try {

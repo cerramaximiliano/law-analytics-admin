@@ -1,3 +1,4 @@
+import VinculadosConfigCard from "./VinculadosConfigCard";
 import React from "react";
 import { useState, useEffect } from "react";
 import {
@@ -569,6 +570,7 @@ const AppUpdateWorker = () => {
 
 					{activeTab === 0 && <ManagerContent />}
 					{activeTab === 1 && <WorkersContent />}
+					{activeTab === 1 && <VinculadosConfigCard foco="appUpdate" />}
 					{activeTab === 2 && <WorkerStatistics />}
 					{activeTab === 3 && <PjnHtmlDriftPanel />}
 					{activeTab === 4 && <HelpContent />}
