@@ -175,7 +175,7 @@ export const PJN_GROUPS: GuideGroup[] = [
 					},
 					credBroken,
 				),
-				warn: "El usuario ya no ve esto: ve la fila cred_error (warning ámbar “Credencial requiere acción” en todas sus carpetas PJN, incluidas las source=auto). Pendiente actualizar computeListRowAny/computeUserView del admin-api para que lean usuarios.pjnCredentialState.requiresAction y devuelvan cred_error.",
+				warn: "El usuario ya no ve esto: ve la fila cred_error (indicador ámbar “Credencial requiere acción” en todas sus carpetas PJN, incluidas las source=auto). Pendiente actualizar computeListRowAny/computeUserView del admin-api para que lean usuarios.pjnCredentialState.requiresAction y devuelvan cred_error.",
 			},
 		],
 	},
@@ -264,9 +264,9 @@ export const PJN_GROUPS: GuideGroup[] = [
 	},
 	{
 		row: "cred_error",
-		title: "Credencial requiere acción — warning ámbar en TODAS las carpetas PJN",
+		title: "Credencial requiere acción — indicador ámbar en TODAS las carpetas PJN",
 		whatUserSees:
-			"Carátula + warning ámbar clickeable (→ Integraciones → PJN) con tooltip según la carpeta: pública “El portal rechazó tu credencial PJN. Esta causa es pública: se sigue actualizando y te avisamos sus novedades…”; reservada “…esta causa es reservada: no se puede actualizar hasta que renueves la contraseña…”. Fila expandida y detalle: pill ámbar “PJN — Credencial requiere acción” sin badge de verificación (clic → perfil). Banner ámbar con CTA “Actualizar credencial” arriba de la lista y del detalle. Detalle sin gate si la causa es pública; gate “El portal rechazó tu credencial PJN” si causaCredentialCovered=false (reservada/revocada). GLOBAL por usuario y para cualquier source (auto, pjn-login, manual con pjn=true): sale del espejo usuarios.pjnCredentialState.requiresAction que escribe pjn-mis-causas con el rechazo confirmado (el hub lo expone como requiresAction en GET /api/pjn-credentials; el admin lo ve como “requiresAction” en la lista de credenciales). Prioridad (getPjnBindingState): gana sobre revoked / reserved_covered / reserved / list_removed; cede ante pending_selection / failed / pending (tienen una acción propia más urgente).",
+			"Carátula sin ícono a la derecha; el logo PJN a la izquierda lleva el indicador ámbar (!) y es clickeable (→ Integraciones → PJN), con tooltip según la carpeta: pública “El portal rechazó tu credencial PJN. Esta causa es pública: se sigue actualizando y te avisamos sus novedades…”; reservada “…esta causa es reservada: no se puede actualizar hasta que renueves la contraseña…”. Fila expandida y detalle: pill ámbar “PJN — Credencial requiere acción” sin badge de verificación (clic → perfil). Banner ámbar con CTA “Actualizar credencial” arriba de la lista y del detalle. Detalle sin gate si la causa es pública; gate “El portal rechazó tu credencial PJN” si causaCredentialCovered=false (reservada/revocada). GLOBAL por usuario y para cualquier source (auto, pjn-login, manual con pjn=true): sale del espejo usuarios.pjnCredentialState.requiresAction que escribe pjn-mis-causas con el rechazo confirmado (el hub lo expone como requiresAction en GET /api/pjn-credentials; el admin lo ve como “requiresAction” en la lista de credenciales). Prioridad (getPjnBindingState): gana sobre revoked / reserved_covered / reserved / list_removed; cede ante pending_selection / failed / pending (tienen una acción propia más urgente).",
 		cases: [
 			{
 				key: "cred_error.public",
@@ -289,7 +289,7 @@ export const PJN_GROUPS: GuideGroup[] = [
 					credErrorView(true, "cred_error", { contentBlocked: true }),
 					credBroken,
 				),
-				warn: "Gana sobre reserved: mientras la credencial requiera acción el usuario no ve el warning rojo ni el gate “El tribunal reservó este expediente” — el motivo real es la contraseña. Al renovarla vuelve el estado propio de la carpeta.",
+				warn: "Gana sobre reserved: mientras la credencial requiera acción el usuario no ve el indicador rojo ni el gate “El tribunal reservó este expediente” — el motivo real es la contraseña. Al renovarla vuelve el estado propio de la carpeta.",
 			},
 			{
 				key: "cred_error.revoked",
@@ -403,7 +403,7 @@ export const PJN_GROUPS: GuideGroup[] = [
 		row: "pending_selection",
 		title: "Seleccionar expediente — chip ámbar clickeable",
 		whatUserSees:
-			"Chip ámbar “Seleccionar expediente” (abre el selector) + warning. Tabla de atención. Detalle: gate “Encontramos más de un expediente”.",
+			"Chip ámbar “Seleccionar expediente” (abre el selector) con “Buscaste … · N coincidencias” debajo; el logo PJN lleva el indicador ámbar (!) “Elegí el expediente correcto”. Tabla de atención. Detalle: gate “Encontramos más de un expediente”.",
 		cases: [
 			{
 				key: "pending_selection.pivot",
@@ -428,7 +428,7 @@ export const PJN_GROUPS: GuideGroup[] = [
 		row: "failed",
 		title: "Asociación fallida — chip rojo",
 		whatUserSees:
-			"Chip rojo “Asociación fallida” + ícono rojo (tooltip “No se pudo vincular la causa - Verifique los datos ingresados”). Tabla de atención. Detalle: gate “No pudimos encontrar este expediente” con reintento (máx 2).",
+			"Chip rojo “Asociación fallida” con “Buscaste …” debajo; el motivo va en el tooltip del chip (ya no hay ícono rojo a la derecha) y el logo PJN lleva el indicador rojo (!) “Vinculación fallida”. Tabla de atención. Detalle: gate “No pudimos encontrar este expediente” con reintento (máx 2).",
 		cases: [
 			{
 				key: "failed.notfound",
@@ -468,7 +468,7 @@ export const PJN_GROUPS: GuideGroup[] = [
 		row: "invalid",
 		title: "Causa inválida — chip rojo",
 		whatUserSees:
-			"Chip rojo “Causa inválida” + ícono rojo (tooltip “Causa inválida - No se pudo verificar en el Poder Judicial”). Tabla de atención. Detalle: gate “El expediente no es accesible”.",
+			"En la lista es la misma fila que “Asociación fallida” (F7/F10: verified=true + isValid=false se trata igual): chip rojo “Asociación fallida” + indicador rojo (!) sobre el logo PJN; el chip “Causa inválida” ya no existe en la lista. Tabla de atención. Detalle: gate “El expediente no es accesible”.",
 		cases: [
 			{
 				key: "invalid.verify",
@@ -496,9 +496,9 @@ export const PJN_GROUPS: GuideGroup[] = [
 	},
 	{
 		row: "reserved",
-		title: "Causa reservada — warning rojo",
+		title: "Causa reservada — indicador rojo",
 		whatUserSees:
-			"Carátula + warning ROJO a la derecha (tooltip “Causa reservada — el tribunal restringió la consulta web pública…”). Solo en carpetas source≠pjn-login con causaIsPrivate=true. Fila expandida: pill roja “PJN — Causa reservada”.",
+			"Carátula sola; el logo PJN lleva el indicador rojo (!) con tooltip “Causa reservada — el tribunal restringió la consulta web pública…”. Solo en carpetas source≠pjn-login con causaIsPrivate=true. Fila expandida: pill roja “PJN — Causa reservada”.",
 		cases: [
 			{
 				key: "reserved.checker",
@@ -566,9 +566,9 @@ export const PJN_GROUPS: GuideGroup[] = [
 	},
 	{
 		row: "list_removed",
-		title: "Ya no en la lista — warning ámbar",
+		title: "Ya no en la lista — indicador ámbar",
 		whatUserSees:
-			"Carátula + warning ÁMBAR (tooltip “Esta causa ya no aparece en tu lista de Mis Causas del portal PJN…”). Solo en carpetas source=pjn-login. Fila expandida: pill ámbar “PJN — Ya no en la lista”. No bloquea el detalle.",
+			"Carátula sola; el logo PJN lleva el indicador ámbar (!) con tooltip “Esta causa ya no aparece en tu lista de Mis Causas del portal PJN…”. Solo en carpetas source=pjn-login. Fila expandida: pill ámbar “PJN — Ya no en la lista”. No bloquea el detalle.",
 		cases: [
 			{
 				key: "list_removed.sync",
@@ -904,7 +904,7 @@ export const MEV_GROUPS: GuideGroup[] = [
 		row: "cred_status",
 		title: "Credencial MEV requerida / expirada / desactivada — chip ámbar",
 		whatUserSees:
-			"En la lista, debajo de la carátula, el chip ámbar clickeable (“Credencial requerida” / “Credencial inválida” / “Contraseña expirada” / “Credencial desactivada”) lleva a Perfil → Integraciones → MEV (desde 2026-09-05 ya no reemplaza la carátula, M11). Desde 2026-09-05 (M1/M2) gana sobre “Asociación fallida” cuando el login falló (invalid/expired/disabled), la fila expandida y el detalle muestran la pill ámbar “MEV — <problema>” con link al perfil, y el detalle no se bloquea con “Causa inválida”: la carpeta queda en la tabla principal con los datos ya sincronizados. Con 'missing' el orden anterior se mantiene (failed gana: el diagnóstico es previo a quitar la credencial).",
+			"En la lista, debajo de la carátula, el chip ámbar clickeable (“Credencial requerida” / “Credencial inválida” / “Contraseña expirada” / “Credencial desactivada”) lleva a Perfil → Integraciones → MEV (desde 2026-09-05 ya no reemplaza la carátula, M11). El logo MEV lleva además el indicador ámbar (!) con el mismo problema en el tooltip y el mismo destino al hacer clic. Desde 2026-09-05 (M1/M2) gana sobre “Asociación fallida” cuando el login falló (invalid/expired/disabled), la fila expandida y el detalle muestran la pill ámbar “MEV — <problema>” con link al perfil, y el detalle no se bloquea con “Causa inválida”: la carpeta queda en la tabla principal con los datos ya sincronizados. Con 'missing' el orden anterior se mantiene (failed gana: el diagnóstico es previo a quitar la credencial).",
 		cases: [
 			{
 				key: "mev.cred.missing",
@@ -1029,7 +1029,7 @@ export const MEV_GROUPS: GuideGroup[] = [
 		row: "pending_selection",
 		title: "Seleccionar expediente — chip ámbar clickeable",
 		whatUserSees:
-			"Chip “Seleccionar expediente” + warning en la lista; fila expandida pill ámbar “Seleccionar expediente”. Detalle: gate “Encontramos más de un expediente”. Gana sobre el chip de credencial.",
+			"Chip “Seleccionar expediente” en la lista + indicador ámbar (!) sobre el logo MEV; fila expandida pill ámbar “Seleccionar expediente”. Detalle: gate “Encontramos más de un expediente”. Gana sobre el chip de credencial.",
 		cases: [
 			{
 				key: "mev.pending_selection",
@@ -1059,7 +1059,7 @@ export const MEV_GROUPS: GuideGroup[] = [
 		row: "failed",
 		title: "Asociación fallida — chip rojo",
 		whatUserSees:
-			"Chip rojo “Asociación fallida” (tooltip “Verifique los datos ingresados”) en la lista. Gana sobre el chip de credencial solo con mevCred=missing; con invalid/expired/disabled gana la credencial (M1, 2026-09-05). Fila expandida y detalle: pill verde “Vinculado con MEV” (no leen 'failed'). Detalle: gate fallida.",
+			"Chip rojo “Asociación fallida” (tooltip “Verifique los datos ingresados”) en la lista + indicador rojo (!) sobre el logo MEV. Gana sobre el chip de credencial solo con mevCred=missing; con invalid/expired/disabled gana la credencial (M1, 2026-09-05). Fila expandida y detalle: pill verde “Vinculado con MEV” (no leen 'failed'). Detalle: gate fallida.",
 		cases: [
 			{
 				key: "mev.failed.notfound",
@@ -1125,7 +1125,7 @@ export const MEV_GROUPS: GuideGroup[] = [
 		row: "invalid",
 		title: "Causa inválida — chip rojo",
 		whatUserSees:
-			"Chip rojo “Causa inválida” en la lista (verified=true + isValid=false sin 'failed' ni problema de credencial). Fila expandida: badge rojo. Detalle: gate “Causa inválida”. Tabla de atención.",
+			"En la lista, chip rojo “Asociación fallida” + indicador rojo (!) sobre el logo MEV (verified=true + isValid=false sin 'failed' ni problema de credencial: misma rama que la fallida desde F7/F10; el chip “Causa inválida” ya no se usa en la lista). Fila expandida: badge rojo. Detalle: gate “Causa inválida”. Tabla de atención.",
 		cases: [
 			{
 				key: "mev.invalid.link_to_invalid",
@@ -1152,7 +1152,7 @@ export const MEV_GROUPS: GuideGroup[] = [
 		row: "unlinked",
 		title: "Desvinculada — warning ámbar",
 		whatUserSees:
-			"Carátula + warning ámbar (tooltip “Desvinculada de MEV — conserva todos sus datos pero ya no se sincroniza. Hacé clic para volver a vincularla desde la carpeta.”), clic → detalle. Fila expandida y detalle: pill ámbar “Desvinculada — volver a vincular” (clic abre el modal de vinculación por número). Sin gate: el detalle abre completo. Tabla principal.",
+			"Carátula + ícono ámbar a la derecha (se conserva: la carpeta desvinculada ya no tiene logo de fuente) con tooltip (“Desvinculada de MEV — conserva todos sus datos pero ya no se sincroniza. Hacé clic para volver a vincularla desde la carpeta.”), clic → detalle. Fila expandida y detalle: pill ámbar “Desvinculada — volver a vincular” (clic abre el modal de vinculación por número). Sin gate: el detalle abre completo. Tabla principal.",
 		cases: [
 			{
 				key: "mev.unlinked",
@@ -1662,7 +1662,7 @@ export const EJE_GROUPS: GuideGroup[] = [
 		row: "pending_selection",
 		title: "Seleccionar expediente — chip ámbar clickeable",
 		whatUserSees:
-			"Chip “Seleccionar expediente” + warning; fila expandida: callout “Acción requerida: seleccionar expediente”; detalle: gate “Encontramos más de un expediente”.",
+			"Chip “Seleccionar expediente” + indicador ámbar (!) sobre el logo EJE; fila expandida: callout “Acción requerida: seleccionar expediente”; detalle: gate “Encontramos más de un expediente”.",
 		cases: [
 			{
 				key: "eje.pivot.worker",
@@ -1964,15 +1964,15 @@ export const SCBA_GROUPS: GuideGroup[] = [
 					},
 					[{ ...credOk[0], credentialEnabled: false }],
 				),
-				warn: "Integraciones muestra “Sincronización pausada” + aviso de soporte, sin “Actualizar contraseña” ni re-sync; las carpetas llevan el warning ámbar con el mismo copy. El admin confirma en un diálogo que explica el efecto.",
+				warn: "Integraciones muestra “Sincronización pausada” + aviso de soporte, sin “Actualizar contraseña” ni re-sync; las carpetas llevan el indicador ámbar con el mismo copy. El admin confirma en un diálogo que explica el efecto.",
 			},
 		],
 	},
 	{
 		row: "ok_cred_error",
-		title: "OK con credencial rota — warning ámbar",
+		title: "OK con credencial rota — indicador ámbar",
 		whatUserSees:
-			"Carátula + warning ámbar clickeable a Integraciones → SCBA. Fila expandida/detalle: pill “SCBA — Sincronización pausada”. Global por usuario (useScbaCredentialError, un fetch para N carpetas). Copy según statusReason (scbaStatusNotice).",
+			"Carátula sola; el logo SCBA lleva el indicador ámbar (!), clickeable a Integraciones → SCBA. Fila expandida/detalle: pill “SCBA — Sincronización pausada”. Global por usuario (useScbaCredentialError, un fetch para N carpetas). Copy según statusReason (scbaStatusNotice).",
 		cases: [
 			{
 				key: "scba.cred.rejected",
@@ -2012,9 +2012,9 @@ export const SCBA_GROUPS: GuideGroup[] = [
 	},
 	{
 		row: "list_removed",
-		title: "Ya no en la lista — warning ámbar",
+		title: "Ya no en la lista — indicador ámbar",
 		whatUserSees:
-			"Carátula + warning ámbar (“…tu lista de Mis Causas del portal SCBA”). Fila expandida/detalle: pill ámbar “SCBA — Ya no en la lista”. No bloquea.",
+			"Carátula sola; el logo SCBA lleva el indicador ámbar (!) (“…tu lista de Mis Causas del portal SCBA”). Fila expandida/detalle: pill ámbar “SCBA — Ya no en la lista”. No bloquea.",
 		cases: [
 			{
 				key: "scba.list_removed",
@@ -2038,7 +2038,7 @@ export const SCBA_GROUPS: GuideGroup[] = [
 		row: "unlinked",
 		title: "Desvinculada (keep) — “Sincronización pausada (era SCBA)”",
 		whatUserSees:
-			"Carátula + ícono gris con tooltip “Esta carpeta fue desvinculada de SCBA… vinculá tu cuenta desde Integraciones → SCBA” (scbaBindingState 'unlinked'). Fila expandida/detalle: pill “Sincronización pausada (era SCBA)”. Movimientos: snapshot materializado en `movements` (source 'scba-snapshot') + PDFs copiados a folders/{id}/.",
+			"Carátula + ícono ámbar a la derecha (única excepción que lo conserva: la carpeta desvinculada ya no tiene logo de fuente; clic → Integraciones → SCBA) con tooltip “Esta carpeta fue desvinculada de SCBA… vinculá tu cuenta desde Integraciones → SCBA” (scbaBindingState 'unlinked'). Fila expandida/detalle: pill “Sincronización pausada (era SCBA)”. Movimientos: snapshot materializado en `movements` (source 'scba-snapshot') + PDFs copiados a folders/{id}/.",
 		cases: [
 			{
 				key: "scba.keep",
