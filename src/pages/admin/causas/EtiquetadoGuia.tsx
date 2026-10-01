@@ -464,6 +464,12 @@ const SECCIONES: Seccion[] = [
 					<Codigo>revoca</Codigo>, y la nueva sentencia o el acuerdo es otra terminación.
 				</P>
 				<P>
+					<B>Addendum 52 (2026-10-01) — recepción tras la contienda</B>: el juzgado que <B>había declinado</B> y reasume después de
+					que el superior dirime la contienda a su favor → <Codigo>reanuda_proceso</Codigo> · reanudación, aunque solo diga «por
+					recibidos» o «reasumo la competencia»; el que <B>declara o acepta expresamente</B> una competencia que no había declinado →{" "}
+					<Codigo>declara_competencia</Codigo>; el que solo recibe una causa que nunca tuvo → <Codigo>tiene_presente</Codigo>.
+				</P>
+				<P>
 					<B>Coherencia (cierre fase B)</B>: «mal concedido» / inadmisible / inapelable → <Codigo>deniega_recurso</Codigo>; acuse de
 					caducidad rechazado → <Codigo>declara_caducidad</Codigo> · rechaza; adelanto de gastos del perito → decisión; ejecución
 					autónoma (acuerdo, honorarios, convenio) → contexto <Codigo>ejecucion</Codigo>, auto inicial con embargo →{" "}
