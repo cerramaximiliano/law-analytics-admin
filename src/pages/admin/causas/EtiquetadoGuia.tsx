@@ -456,8 +456,8 @@ const SECCIONES: Seccion[] = [
 					declara la vía no habilitada o la falta de aptitud jurisdiccional → <Codigo>inhabilidad_de_instancia</Codigo>. (c){" "}
 					<B>Deserción del recurso ley 27.348</B> que cierra el proceso → terminación · <Codigo>resuelve_recurso</Codigo> · modo{" "}
 					<Codigo>inhabilidad_de_instancia</Codigo> · <Codigo>rechaza</Codigo>, con filas <Codigo>recurso_apelacion → desierto</Codigo>{" "}
-					y <Codigo>habilitacion_instancia → rechaza</Codigo>. La apelación común declarada desierta por la Cámara sigue siendo
-					terminación · <Codigo>otro</Codigo> · <Codigo>desierto</Codigo>. Si además confirma el dictamen de la CM, resolvió el
+					y <Codigo>habilitacion_instancia → rechaza</Codigo>. La apelación común declarada desierta por la Cámara es
+					decisión · <Codigo>desierto</Codigo>: deja firme lo apelado, como la que confirma (addendum 53). Si además confirma el dictamen de la CM, resolvió el
 					mérito: <Codigo>sentencia_sobre_fondo</Codigo> · rechaza con fila <Codigo>recurso_apelacion → desierto</Codigo>. (d) <B>Sentencia anulada por la Cámara para producir
 					prueba</B> (la Sala la deja sin efecto y remite a otro juzgado o al de origen): la anulada <B>conserva</B> terminación y{" "}
 					<Codigo>sentencia_primera</Codigo> (37 b); la Sala va como <Codigo>resuelve_recurso</Codigo> · decisión ·{" "}
@@ -468,6 +468,12 @@ const SECCIONES: Seccion[] = [
 					que el superior dirime la contienda a su favor → <Codigo>reanuda_proceso</Codigo> · reanudación, aunque solo diga «por
 					recibidos» o «reasumo la competencia»; el que <B>declara o acepta expresamente</B> una competencia que no había declinado →{" "}
 					<Codigo>declara_competencia</Codigo>; el que solo recibe una causa que nunca tuvo → <Codigo>tiene_presente</Codigo>.
+				</P>
+				<P>
+					<B>Addendum 53 (2026-10-01) — desierto en Cámara</B>: la Sala que declara desierta una apelación común va como{" "}
+					<Codigo>resuelve_recurso</Codigo> · decisión · <Codigo>desierto</Codigo>; la terminación es la del acto apelado, anotada al
+					dictarse. Que la apelación «revive» el proceso y la Cámara lo cierra no se anota: lo calcula la secuencia como estado de
+					instancia (apelada, resuelta por la Cámara, ante la Corte).
 				</P>
 				<P>
 					<B>Coherencia (cierre fase B)</B>: «mal concedido» / inadmisible / inapelable → <Codigo>deniega_recurso</Codigo>; acuse de
