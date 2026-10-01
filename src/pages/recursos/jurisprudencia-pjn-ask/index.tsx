@@ -29,6 +29,7 @@ import SentenciasAskService, { AskFilters, AskOptions, AskResponse } from "api/s
 import { SentenciaResult, FullChunk } from "api/sentenciasSearch";
 import SemanticWorkerService from "api/semanticWorker";
 import SearchUsageService, { SearchUsageResponse } from "api/searchUsage";
+import SearchLogPanel from "./SearchLogPanel";
 import { Fuero, SentenciaTipo } from "api/sentenciasCapturadas";
 
 // ── Helpers (mismos códigos de color/labels que la vista de búsqueda semántica) ─
@@ -585,6 +586,8 @@ export default function JurisprudenciaPjnAskPage() {
 						) : null}
 					</CardContent>
 				</Card>
+
+				<SearchLogPanel />
 
 				<Stack spacing={2}>
 					<TextField
