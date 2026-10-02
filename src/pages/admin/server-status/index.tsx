@@ -118,6 +118,13 @@ const ServerStatus = () => {
 			baseUrl: "https://ia.lawanalytics.app",
 			status: "checking",
 		},
+		{
+			name: "MCP Server",
+			url: "https://mcp.lawanalytics.app/health",
+			ip: "15.229.93.121",
+			baseUrl: "https://mcp.lawanalytics.app",
+			status: "checking",
+		},
 	]);
 
 	// Salud de los crons in-process (heartbeat persistido en el admin-api).
@@ -210,7 +217,8 @@ const ServerStatus = () => {
 							service.name === "API de Causas PJN" ||
 							service.name === "API de Causas MEV" ||
 							service.name === "API de Causas EJE" ||
-							service.name === "API de RAG (IA)"
+							service.name === "API de RAG (IA)" ||
+							service.name === "MCP Server"
 						) {
 							// Intentar verificar a través de nuestro backend
 							try {

@@ -33,6 +33,7 @@ const SERVICES: ServiceInfo[] = [
 		corsRestricted: true,
 	},
 	{ name: "API de RAG (IA)", shortName: "RAG/IA", url: "https://ia.lawanalytics.app/rag/health", corsRestricted: true },
+	{ name: "MCP Server", shortName: "MCP", url: "https://mcp.lawanalytics.app/health", corsRestricted: true },
 ];
 
 interface ServiceState {
