@@ -10,6 +10,7 @@ import {
 	FormControl,
 	FormControlLabel,
 	Switch,
+	Chip,
 	InputLabel,
 	MenuItem,
 	Select,
@@ -20,6 +21,7 @@ import {
 } from "@mui/material";
 import { CloseCircle, Add, Trash } from "iconsax-react";
 import { Plan, PlanPricingInfo, ResourceLimit, PlanFeature, VisibilityType } from "types/plan";
+import { isManagedPlanFeature } from "utils/managedPlanFeatures";
 
 // Opciones de visibilidad para features y resourceLimits
 const VISIBILITY_OPTIONS: { value: VisibilityType; label: string }[] = [
@@ -341,64 +343,83 @@ const PlanFormModal = ({ open, onClose, onSave, plan }: PlanFormModalProps) => {
 							</Button>
 						</Box>
 					</Grid>
-					{formData.features?.map((feature, index) => (
-						<Grid item xs={12} key={index}>
-							<Box display="flex" gap={2} alignItems="center" flexWrap="wrap">
-								<TextField
-									label="Nombre (ID)"
-									value={feature.name}
-									onChange={(e) => updateFeature(index, "name", e.target.value)}
-									size="small"
-									style={{ flex: 1, minWidth: 120 }}
-								/>
-								<TextField
-									label="Nombre UI"
-									value={feature.displayName || ""}
-									onChange={(e) => updateFeature(index, "displayName", e.target.value)}
-									size="small"
-									style={{ flex: 1, minWidth: 120 }}
-									placeholder="Nombre para mostrar"
-								/>
-								<TextField
-									label="Descripción"
-									value={feature.description}
-									onChange={(e) => updateFeature(index, "description", e.target.value)}
-									size="small"
-									style={{ flex: 1.5, minWidth: 150 }}
-								/>
-								<FormControl size="small" style={{ minWidth: 140 }}>
-									<InputLabel>Visibilidad</InputLabel>
-									<Select
-										value={feature.visibility || "all"}
-										label="Visibilidad"
-										onChange={(e) => updateFeature(index, "visibility", e.target.value)}
-									>
-										{VISIBILITY_OPTIONS.map((opt) => (
-											<MenuItem key={opt.value} value={opt.value}>
-												{opt.label}
-											</MenuItem>
-										))}
-									</Select>
-								</FormControl>
-								<TextField
-									label="Orden"
-									type="number"
-									value={feature.order ?? 99}
-									onChange={(e) => updateFeature(index, "order", Number(e.target.value))}
-									size="small"
-									style={{ width: 70 }}
-									inputProps={{ min: 0 }}
-								/>
-								<FormControlLabel
-									control={<Switch checked={feature.enabled} onChange={(e) => updateFeature(index, "enabled", e.target.checked)} />}
-									label="Activo"
-								/>
-								<IconButton onClick={() => removeFeature(index)} size="small">
-									<Trash size={20} />
-								</IconButton>
-							</Box>
-						</Grid>
-					))}
+					{formData.features?.map((feature, index) => {
+						// Gestionada desde Integraciones: se muestra, no se edita (el
+						// backend además conserva lo guardado).
+						const managed = isManagedPlanFeature(feature.name);
+						return (
+							<Grid item xs={12} key={index}>
+								<Box display="flex" gap={2} alignItems="center" flexWrap="wrap">
+									<TextField
+										label="Nombre (ID)"
+										disabled={managed}
+										value={feature.name}
+										onChange={(e) => updateFeature(index, "name", e.target.value)}
+										size="small"
+										style={{ flex: 1, minWidth: 120 }}
+									/>
+									<TextField
+										label="Nombre UI"
+										disabled={managed}
+										value={feature.displayName || ""}
+										onChange={(e) => updateFeature(index, "displayName", e.target.value)}
+										size="small"
+										style={{ flex: 1, minWidth: 120 }}
+										placeholder="Nombre para mostrar"
+									/>
+									<TextField
+										label="Descripción"
+										disabled={managed}
+										value={feature.description}
+										onChange={(e) => updateFeature(index, "description", e.target.value)}
+										size="small"
+										style={{ flex: 1.5, minWidth: 150 }}
+									/>
+									<FormControl size="small" style={{ minWidth: 140 }} disabled={managed}>
+										<InputLabel>Visibilidad</InputLabel>
+										<Select
+											value={feature.visibility || "all"}
+											label="Visibilidad"
+											onChange={(e) => updateFeature(index, "visibility", e.target.value)}
+										>
+											{VISIBILITY_OPTIONS.map((opt) => (
+												<MenuItem key={opt.value} value={opt.value}>
+													{opt.label}
+												</MenuItem>
+											))}
+										</Select>
+									</FormControl>
+									<TextField
+										label="Orden"
+										disabled={managed}
+										type="number"
+										value={feature.order ?? 99}
+										onChange={(e) => updateFeature(index, "order", Number(e.target.value))}
+										size="small"
+										style={{ width: 70 }}
+										inputProps={{ min: 0 }}
+									/>
+									<FormControlLabel
+										control={
+											<Switch
+												checked={feature.enabled}
+												disabled={managed}
+												onChange={(e) => updateFeature(index, "enabled", e.target.checked)}
+											/>
+										}
+										label="Activo"
+									/>
+									{managed ? (
+										<Chip size="small" variant="outlined" label="Se gestiona en Integraciones" />
+									) : (
+										<IconButton onClick={() => removeFeature(index)} size="small">
+											<Trash size={20} />
+										</IconButton>
+									)}
+								</Box>
+							</Grid>
+						);
+					})}
 
 					{/* Status */}
 					<Grid item xs={12}>

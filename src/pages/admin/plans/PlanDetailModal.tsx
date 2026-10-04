@@ -20,6 +20,7 @@ import {
 } from "@mui/material";
 import { CloseCircle } from "iconsax-react";
 import { Plan, VisibilityType } from "types/plan";
+import { isManagedPlanFeature } from "utils/managedPlanFeatures";
 import { formatCurrency } from "utils/formatCurrency";
 
 // Helper para mostrar el label de visibilidad
@@ -275,6 +276,11 @@ const PlanDetailModal = ({ open, onClose, plan }: PlanDetailModalProps) => {
 												<Typography variant="body2" fontWeight="medium">
 													{feature.name}
 												</Typography>
+												{isManagedPlanFeature(feature.name) && (
+													<Typography variant="caption" color="text.secondary">
+														Se gestiona en Integraciones
+													</Typography>
+												)}
 											</TableCell>
 											<TableCell>
 												<Typography variant="body2" color="text.secondary">

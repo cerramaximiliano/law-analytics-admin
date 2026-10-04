@@ -51,6 +51,8 @@ import DeletePlanDialog from "./DeletePlanDialog";
 import PlanDetailModal from "./PlanDetailModal";
 import UpdatePriceModal from "./UpdatePriceModal";
 import PlanOrderTab from "./PlanOrderTab";
+import ManagedServicesPanel from "./ManagedServicesPanel";
+import { isManagedPlanFeature } from "utils/managedPlanFeatures";
 
 const PlansManagement = () => {
 	const theme = useTheme();
@@ -518,6 +520,11 @@ const PlansManagement = () => {
 							</TableContainer>
 						</Grid>
 
+						{/* Servicios que se administran desde Integraciones (solo lectura) */}
+						<Grid item xs={12}>
+							<ManagedServicesPanel />
+						</Grid>
+
 						{/* Plan Details Cards */}
 						<Grid item xs={12}>
 							<Typography variant="h5" sx={{ mb: 2 }}>
@@ -692,6 +699,11 @@ const PlansManagement = () => {
 																				›
 																			</Box>
 																			{feature.description}
+																			{isManagedPlanFeature(feature.name) && (
+																				<Box component="span" sx={{ ml: 0.75, fontSize: "0.7rem", color: "text.disabled" }}>
+																					· Integraciones
+																				</Box>
+																			)}
 																		</Typography>
 																	))}
 															</Stack>
