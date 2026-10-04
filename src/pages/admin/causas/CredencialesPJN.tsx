@@ -297,12 +297,15 @@ function groupRunsIntoCycles(runs: UpdateRun[]): RunWithCycle[] {
 // Templates de email asociados al ciclo de vida de una credencial PJN.
 // El tab de notificaciones se acota a este conjunto para hacer tracking solo
 // de los avisos de credenciales (no de syncs completadas u otros emails).
+// pjnCausaChanges es el digest de altas/bajas de causas detectadas en el
+// listado de la credencial (sweep causa-change-notifier de pjn-mis-causas).
 const PJN_CREDENTIAL_TEMPLATES = [
 	"pjnCredentialRequiredAction",
 	"pjnCredentialError",
 	"pjnCredentialDisabled",
 	"pjnCredentialReminder",
 	"pjnCredentialRestored",
+	"pjnCausaChanges",
 ] as const;
 
 const CREDENTIAL_TEMPLATE_LABELS: Record<string, string> = {
@@ -311,6 +314,7 @@ const CREDENTIAL_TEMPLATE_LABELS: Record<string, string> = {
 	pjnCredentialDisabled: "Cuenta desactivada",
 	pjnCredentialReminder: "Recordatorio",
 	pjnCredentialRestored: "Restaurada",
+	pjnCausaChanges: "Altas/bajas de causas",
 };
 
 const CredencialesPJN = () => {
