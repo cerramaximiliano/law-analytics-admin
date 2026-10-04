@@ -100,7 +100,8 @@ const ManagedServicesPanel = () => {
 			</Stack>
 			<Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
 				Estos servicios se muestran acá solo como referencia. Se habilitan y deshabilitan desde Integraciones; en los planes sus
-				características no se pueden editar.
+				características no se pueden editar. Única excepción: el tope mensual de consultas del chat con expediente, que se configura en cada
+				plan como límite de recurso <code>chatMessagesPerMonth</code> (-1 = sin límite).
 			</Typography>
 			{loading ? (
 				<Skeleton variant="rounded" height={96} />
