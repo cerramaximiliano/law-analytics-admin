@@ -97,6 +97,8 @@ export interface IntegrationsConfigDoc {
 		 *  el singleton. */
 		claudeAi?: AiServiceFlag;
 		chatGpt?: AiServiceFlag;
+		/** Chat con IA sobre el expediente (feature expediente_chat). */
+		expedienteChat?: AiServiceFlag;
 	};
 	/** Strip "Integrado con" de la landing — mapa legacy (solo 6 core), espejado
 	 *  por compat. Opcional en docs previos al feature. */
@@ -108,7 +110,7 @@ export interface IntegrationsConfigDoc {
 	updatedBy?: string | null;
 }
 
-export type ServiceKey = "groups" | "claudeAi" | "chatGpt";
+export type ServiceKey = "groups" | "claudeAi" | "chatGpt" | "expedienteChat";
 
 export interface UpdateServicePayload {
 	/** Boolean para services simples. Para AI services se acepta también

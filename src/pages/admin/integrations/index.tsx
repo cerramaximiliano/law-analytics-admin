@@ -397,6 +397,27 @@ const IntegrationsPage: React.FC = () => {
 	const handleChatGptReleaseStage = (stage: ReleaseStage) =>
 		updateIntegrationService("chatGpt", { releaseStage: stage }, `ChatGPT marcado como ${stage}`);
 
+	// Chat con IA sobre el expediente — mismo patrón per-env. En beta solo
+	// entran los usuarios con el grant expediente_chat; en stable, además los
+	// planes con la feature. El interruptor también decide en qué entorno
+	// aparece la feature en las listas de planes.
+	const handleExpedienteChatToggle = (enabled: boolean) =>
+		updateIntegrationService(
+			"expedienteChat",
+			{ enabled },
+			enabled ? "Chat con expediente habilitado" : "Chat con expediente deshabilitado",
+		);
+	const handleExpedienteChatToggleEnv = (env: Environment, value: boolean) =>
+		updateIntegrationService(
+			"expedienteChat",
+			{ enabled: { [env]: value } },
+			`Chat con expediente ${env} ${value ? "habilitado" : "deshabilitado"}`,
+		);
+	const handleExpedienteChatMessage = (message: string | null) =>
+		updateIntegrationService("expedienteChat", { maintenanceMessage: message }, "Mensaje del chat con expediente actualizado");
+	const handleExpedienteChatReleaseStage = (stage: ReleaseStage) =>
+		updateIntegrationService("expedienteChat", { releaseStage: stage }, `Chat con expediente marcado como ${stage}`);
+
 	const handlePjnToggle = async (enabled: boolean) => {
 		if (!pjn.data) return;
 		setPjn((s) => ({ ...s, saving: true }));
@@ -477,6 +498,7 @@ const IntegrationsPage: React.FC = () => {
 	const groupsFlag = integrations.data?.services.groups;
 	const claudeAiFlag = integrations.data?.services.claudeAi;
 	const chatGptFlag = integrations.data?.services.chatGpt;
+	const expedienteChatFlag = integrations.data?.services.expedienteChat;
 
 	// Normaliza el shape de enabled — el doc viejo puede tener boolean, el
 	// nuevo tiene { development, production }. Devolvemos siempre el shape
@@ -491,6 +513,7 @@ const IntegrationsPage: React.FC = () => {
 	};
 	const claudeAiEnabled = toEnabledByEnv(claudeAiFlag?.enabled);
 	const chatGptEnabled = toEnabledByEnv(chatGptFlag?.enabled);
+	const expedienteChatEnabled = toEnabledByEnv(expedienteChatFlag?.enabled);
 	const pjnGlobal = pjn.data?.global;
 	const scbaSettings = scba.data?.config;
 
@@ -638,6 +661,32 @@ const IntegrationsPage: React.FC = () => {
 							onToggleEnv={handleChatGptToggleEnv}
 							onSaveMessage={handleChatGptMessage}
 							onChangeReleaseStage={handleChatGptReleaseStage}
+						/>
+					)}
+				</Grid>
+				{/* Chat con IA sobre el expediente (feature expediente_chat) */}
+				<Grid item xs={12} md={6}>
+					{integrations.loading ? (
+						<Skeleton variant="rounded" height={180} />
+					) : integrations.error ? (
+						<Alert severity="error">No se pudo cargar el chat con expediente: {integrations.error}</Alert>
+					) : (
+						<ServiceAvailabilityCard
+							title="Chat con IA sobre el expediente"
+							description="Chat con los documentos de una causa. Beta: solo usuarios con el grant expediente_chat. Stable: además, planes pagos."
+							enabled={expedienteChatEnabled.production}
+							enabledByEnv={expedienteChatEnabled}
+							maintenanceMessage={expedienteChatFlag?.maintenanceMessage ?? null}
+							releaseStage={(expedienteChatFlag?.releaseStage as ReleaseStage) ?? "beta"}
+							saving={integrations.saving}
+							editableMessage
+							updatedAt={expedienteChatFlag?.updatedAt}
+							updatedBy={expedienteChatFlag?.updatedBy}
+							helperOff="El chat está apagado en producción: nadie lo ve, ni con grant. Habilitá 'Dev' para probarlo sin exponerlo. El interruptor también decide en qué entorno aparece la función en las listas de planes."
+							onToggle={handleExpedienteChatToggle}
+							onToggleEnv={handleExpedienteChatToggleEnv}
+							onSaveMessage={handleExpedienteChatMessage}
+							onChangeReleaseStage={handleExpedienteChatReleaseStage}
 						/>
 					)}
 				</Grid>

@@ -1,7 +1,10 @@
 import adminAxios from "utils/adminAxios";
 
-/** whatsapp_channel: inscripción al canal WhatsApp durante el piloto (inscripción cerrada) */
-export type KnownFeature = "mcp_access" | "whatsapp_channel";
+/**
+ * whatsapp_channel: inscripción al canal WhatsApp durante el piloto (inscripción cerrada)
+ * expediente_chat: chat con IA sobre el expediente mientras el servicio está en beta
+ */
+export type KnownFeature = "mcp_access" | "whatsapp_channel" | "expediente_chat";
 
 export interface FeatureGrantMeta {
 	granted: boolean;
@@ -80,7 +83,7 @@ export async function getUserGrants(userId: string): Promise<GetUserResponse["da
 export async function setUserGrant(
 	userId: string,
 	feature: KnownFeature,
-	body: { granted: boolean; reason?: string | null }
+	body: { granted: boolean; reason?: string | null },
 ): Promise<SetGrantResponse["data"]> {
 	const res = await adminAxios.put<SetGrantResponse>(`/api/feature-grants/${userId}/${feature}`, body);
 	return res.data.data;
@@ -89,10 +92,7 @@ export async function setUserGrant(
 /**
  * Elimina el grant (lo borra del documento — distinto de revocar con granted:false).
  */
-export async function deleteUserGrant(
-	userId: string,
-	feature: KnownFeature
-): Promise<SetGrantResponse["data"]> {
+export async function deleteUserGrant(userId: string, feature: KnownFeature): Promise<SetGrantResponse["data"]> {
 	const res = await adminAxios.delete<SetGrantResponse>(`/api/feature-grants/${userId}/${feature}`);
 	return res.data.data;
 }
