@@ -191,6 +191,7 @@ const GroupsPage = Loadable(lazyWithRetry(() => import("pages/admin/groups")));
 // Integrations page
 const IntegrationsPage = Loadable(lazyWithRetry(() => import("pages/admin/integrations")));
 const MovementLinkAnalytics = Loadable(lazyWithRetry(() => import("pages/admin/integrations/MovementLinkAnalytics")));
+const McpUsage = Loadable(lazyWithRetry(() => import("pages/admin/integrations/McpUsage")));
 
 // PDF Templates page
 const PdfTemplatesPage = Loadable(lazyWithRetry(() => import("pages/admin/pdf-templates")));
@@ -1126,6 +1127,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<MovementLinkAnalytics />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "integrations/mcp-usage",
+							element: (
+								<AdminRoleGuard>
+									<McpUsage />
 								</AdminRoleGuard>
 							),
 						},
