@@ -738,6 +738,25 @@ const JudicialMovementsConfig: React.FC<JudicialMovementsConfigProps> = ({ secti
 									<FormControlLabel
 										control={
 											<Switch
+												checked={config.limits.oneNotificationPerExpedientePerDay !== false}
+												onChange={(e) => handleFieldChange("limits.oneNotificationPerExpedientePerDay", e.target.checked)}
+											/>
+										}
+										label={
+											<Typography variant="body2">
+												Una notificación por causa y por día{" "}
+												<Typography component="span" variant="caption" color="text.secondary">
+													— si una causa ya se notificó hoy, los movimientos que lleguen después quedan pendientes y viajan en el aviso de
+													mañana. Vale igual para email y WhatsApp. Es independiente del interruptor de abajo.
+												</Typography>
+											</Typography>
+										}
+									/>
+								</Grid>
+								<Grid item xs={12}>
+									<FormControlLabel
+										control={
+											<Switch
 												checked={config.limits.enforcePerUserLimits === true}
 												onChange={(e) => handleFieldChange("limits.enforcePerUserLimits", e.target.checked)}
 											/>

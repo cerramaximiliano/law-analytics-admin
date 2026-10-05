@@ -54,6 +54,8 @@ export interface JudicialNotificationConfig {
 		minHoursBetweenSameExpediente: number;
 		/** Aplicar los límites por usuario en la entrega (opt-in, default false) */
 		enforcePerUserLimits?: boolean;
+		/** Una sola notificación por causa y por día (email y WhatsApp). Default: encendido. */
+		oneNotificationPerExpedientePerDay?: boolean;
 		/** Exigir que el usuario tenga la causa en su cuenta para recibir el movimiento */
 		requireFolderForDelivery?: boolean;
 	};
