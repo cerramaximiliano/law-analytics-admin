@@ -4,7 +4,10 @@ export interface LegalDocumentSection {
 	title: string;
 	content: string;
 	order: number;
+	/** Vacío o ausente = visible para todos los planes (hub: isSectionVisibleFor). */
 	visibleFor: string[];
+	/** Ancla estable de la sección (ej. "conectores-ia" → /privacy-policy#conectores-ia). */
+	anchor?: string;
 }
 
 export interface CompanyDetails {
@@ -28,9 +31,15 @@ export interface LegalDocument {
 	sections?: LegalDocumentSection[];
 	conclusion?: string;
 	companyDetails?: CompanyDetails;
+	metadata?: Record<string, unknown>;
 	createdAt: string;
 	updatedAt: string;
 }
+
+/** Idiomas admitidos por el enum del modelo en el hub (LegalDocument.language). */
+export const LEGAL_DOCUMENT_LANGUAGES = ["es", "en"] as const;
+
+export type NewLegalDocument = Omit<LegalDocument, "_id" | "createdAt" | "updatedAt">;
 
 export interface LegalDocumentsListResponse {
 	success: boolean;

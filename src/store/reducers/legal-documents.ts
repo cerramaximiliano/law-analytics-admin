@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import authAxios from "utils/authAxios";
-import { LegalDocument, LegalDocumentsState } from "types/legal-document";
+import { LegalDocument, LegalDocumentsState, NewLegalDocument } from "types/legal-document";
 
 const initialState: LegalDocumentsState = {
 	documents: [],
@@ -37,6 +37,23 @@ export const fetchLegalDocumentById = createAsyncThunk("legalDocuments/fetchById
 		return rejectWithValue(message);
 	}
 });
+
+// Async thunk para crear un documento legal
+export const createLegalDocument = createAsyncThunk(
+	"legalDocuments/create",
+	async (data: Partial<NewLegalDocument>, { rejectWithValue }) => {
+		try {
+			const response = await authAxios.post("/api/legal/admin/create", data);
+			if (response.data.success) {
+				return response.data.document;
+			}
+			return rejectWithValue(response.data.message || "Error al crear documento legal");
+		} catch (error: any) {
+			const message = error.response?.data?.message || error.message || "Error al crear documento legal";
+			return rejectWithValue(message);
+		}
+	},
+);
 
 // Async thunk para actualizar un documento legal
 export const updateLegalDocument = createAsyncThunk(
@@ -124,6 +141,19 @@ const legalDocumentsSlice = createSlice({
 			.addCase(fetchLegalDocumentById.rejected, (state, action) => {
 				state.loadingDetail = false;
 				state.error = action.payload as string;
+			})
+			// Create document
+			.addCase(createLegalDocument.pending, (state) => {
+				state.loadingDetail = true;
+				state.error = null;
+			})
+			.addCase(createLegalDocument.fulfilled, (state, action: PayloadAction<LegalDocument>) => {
+				state.loadingDetail = false;
+				state.documents = [action.payload, ...state.documents];
+			})
+			// El error de creación lo muestra el modal (unwrap); no se pisa la lista con el estado de error.
+			.addCase(createLegalDocument.rejected, (state) => {
+				state.loadingDetail = false;
 			})
 			// Update document
 			.addCase(updateLegalDocument.pending, (state) => {

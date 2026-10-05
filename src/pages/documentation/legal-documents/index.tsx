@@ -48,7 +48,7 @@ import { LegalDocument, LegalDocumentSection } from "types/legal-document";
 import EditLegalDocumentModal from "./EditLegalDocumentModal";
 
 // assets
-import { Eye, CloseCircle, ArrowDown2, DocumentText, TickCircle, CloseSquare, Trash, Edit } from "iconsax-react";
+import { Eye, CloseCircle, ArrowDown2, DocumentText, TickCircle, CloseSquare, Trash, Edit, Add } from "iconsax-react";
 
 // table header options
 const headCells = [
@@ -107,7 +107,6 @@ const documentTypeLabels: Record<string, string> = {
 const languageLabels: Record<string, string> = {
 	es: "Espanol",
 	en: "Ingles",
-	pt: "Portugues",
 };
 
 // ==============================|| LEGAL DOCUMENTS PAGE ||============================== //
@@ -124,8 +123,12 @@ const LegalDocumentsPage = () => {
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 	const [editModalOpen, setEditModalOpen] = useState(false);
 	const [documentToDelete, setDocumentToDelete] = useState<LegalDocument | null>(null);
-	const [documentToEdit, setDocumentToEdit] = useState<LegalDocument | null>(null);
+	const [, setDocumentToEdit] = useState<LegalDocument | null>(null);
 	const [togglingId, setTogglingId] = useState<string | null>(null);
+	const [createModalOpen, setCreateModalOpen] = useState(false);
+	// Activar/desactivar la política de privacidad cambia lo que se exige aceptar
+	// (consent OAuth y add-on MCP): se confirma antes.
+	const [privacyToggleTarget, setPrivacyToggleTarget] = useState<LegalDocument | null>(null);
 
 	useEffect(() => {
 		dispatch(fetchLegalDocuments());
@@ -160,13 +163,30 @@ const LegalDocumentsPage = () => {
 		dispatch(clearSelectedDocument());
 	};
 
-	const handleToggleDocument = async (document: LegalDocument) => {
+	const runToggle = async (document: LegalDocument) => {
 		setTogglingId(document._id);
 		try {
 			await dispatch(toggleLegalDocument(document._id));
+			// Activar uno desactiva los demás del mismo tipo/idioma/región en el hub:
+			// se recarga la lista para reflejarlo.
+			dispatch(fetchLegalDocuments());
 		} finally {
 			setTogglingId(null);
 		}
+	};
+
+	const handleToggleDocument = (document: LegalDocument) => {
+		if (document.documentType === "privacy") {
+			setPrivacyToggleTarget(document);
+			return;
+		}
+		runToggle(document);
+	};
+
+	const handleConfirmPrivacyToggle = () => {
+		const target = privacyToggleTarget;
+		setPrivacyToggleTarget(null);
+		if (target) runToggle(target);
 	};
 
 	const handleDeleteClick = (document: LegalDocument) => {
@@ -248,7 +268,7 @@ const LegalDocumentsPage = () => {
 	return (
 		<MainCard title="Documentos legales" content={false}>
 			<ScrollX>
-				<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ p: 3 }}>
+				<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ p: 3 }} flexWrap="wrap" useFlexGap spacing={2}>
 					<Stack spacing={0.5}>
 						<Typography variant="h5" sx={{ fontWeight: 600, letterSpacing: "-0.01em" }}>
 							Lista de documentos
@@ -257,6 +277,9 @@ const LegalDocumentsPage = () => {
 							Términos, privacidad, facturación y otros documentos publicados.
 						</Typography>
 					</Stack>
+					<Button variant="contained" startIcon={<Add size={18} />} onClick={() => setCreateModalOpen(true)} sx={{ textTransform: "none" }}>
+						Nuevo documento
+					</Button>
 				</Stack>
 				<Divider />
 
@@ -507,6 +530,13 @@ const LegalDocumentsPage = () => {
 															<Typography variant="subtitle2">
 																{section.order}. {section.title}
 															</Typography>
+															{section.anchor && (
+																<Chip
+																	label={`#${section.anchor}`}
+																	size="small"
+																	sx={{ borderRadius: "4px", fontSize: "0.7rem", height: 20 }}
+																/>
+															)}
 															{section.visibleFor && section.visibleFor.length > 0 && (
 																<Stack direction="row" spacing={0.5}>
 																	{section.visibleFor.map((plan: string) => (
@@ -523,7 +553,7 @@ const LegalDocumentsPage = () => {
 														</Stack>
 													</AccordionSummary>
 													<AccordionDetails>
-														<Typography variant="body2" color="text.secondary">
+														<Typography variant="body2" color="text.secondary" sx={{ whiteSpace: "pre-line" }}>
 															{section.content}
 														</Typography>
 													</AccordionDetails>
@@ -610,6 +640,36 @@ const LegalDocumentsPage = () => {
 					</Button>
 				</DialogActions>
 			</Dialog>
+
+			{/* Confirmación al activar/desactivar la política de privacidad */}
+			<Dialog open={!!privacyToggleTarget} onClose={() => setPrivacyToggleTarget(null)} maxWidth="sm" fullWidth>
+				<DialogTitle sx={{ fontWeight: 600 }}>
+					{privacyToggleTarget?.isActive ? "Desactivar" : "Activar"} política de privacidad v{privacyToggleTarget?.version}
+				</DialogTitle>
+				<DialogContent>
+					<DialogContentText>
+						{privacyToggleTarget?.isActive
+							? "Sin una política de privacidad activa, el consentimiento de conectores de IA y la compra del add-on MCP dejan de pedir aceptación, y la página pública vuelve al texto fijo del front."
+							: "Al activarla se desactiva cualquier otra política de privacidad del mismo idioma y región. Desde ese momento (hasta 60 s por la caché del servidor) se exige aceptar esta versión para autorizar conectores de IA y contratar el add-on MCP. Verificá que el texto tenga la revisión legal y una versión definitiva (AAAA-MM-DD), no un borrador."}
+					</DialogContentText>
+				</DialogContent>
+				<DialogActions sx={{ px: 3, pb: 2 }}>
+					<Button onClick={() => setPrivacyToggleTarget(null)} color="inherit">
+						Cancelar
+					</Button>
+					<Button onClick={handleConfirmPrivacyToggle} variant="contained" color={privacyToggleTarget?.isActive ? "error" : "success"}>
+						{privacyToggleTarget?.isActive ? "Desactivar" : "Activar"}
+					</Button>
+				</DialogActions>
+			</Dialog>
+
+			{/* Modal para crear documento */}
+			<EditLegalDocumentModal
+				open={createModalOpen}
+				onClose={() => setCreateModalOpen(false)}
+				document={null}
+				onSuccess={handleEditSuccess}
+			/>
 
 			{/* Modal para editar documento */}
 			{selectedDocument && (
