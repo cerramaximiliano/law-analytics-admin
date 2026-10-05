@@ -682,7 +682,7 @@ const IntegrationsPage: React.FC = () => {
 							editableMessage
 							updatedAt={expedienteChatFlag?.updatedAt}
 							updatedBy={expedienteChatFlag?.updatedBy}
-							helperOff="El chat está apagado en producción: nadie lo ve, ni con grant. Habilitá 'Dev' para probarlo sin exponerlo. El interruptor también decide en qué entorno aparece la función en las listas de planes."
+							helperOff="El chat está apagado en producción: nadie lo ve, ni con grant. Habilitá 'Dev' para probarlo sin exponerlo. La función se anuncia en las listas de planes recién en etapa stable, en los entornos encendidos."
 							onToggle={handleExpedienteChatToggle}
 							onToggleEnv={handleExpedienteChatToggleEnv}
 							onSaveMessage={handleExpedienteChatMessage}
