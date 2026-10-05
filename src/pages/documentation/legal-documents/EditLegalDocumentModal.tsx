@@ -3,6 +3,7 @@ import { useDispatch } from "store/index";
 
 // material-ui
 import {
+	Alert,
 	Box,
 	Button,
 	Chip,
@@ -27,8 +28,8 @@ import {
 } from "@mui/material";
 
 // project imports
-import { updateLegalDocument } from "store/reducers/legal-documents";
-import { LegalDocument, LegalDocumentSection, CompanyDetails } from "types/legal-document";
+import { createLegalDocument, updateLegalDocument } from "store/reducers/legal-documents";
+import { LegalDocument, LegalDocumentSection, CompanyDetails, LEGAL_DOCUMENT_LANGUAGES } from "types/legal-document";
 
 // assets
 import { CloseCircle, Add, Trash, ArrowUp2, ArrowDown2 } from "iconsax-react";
@@ -36,15 +37,31 @@ import { CloseCircle, Add, Trash, ArrowUp2, ArrowDown2 } from "iconsax-react";
 interface EditLegalDocumentModalProps {
 	open: boolean;
 	onClose: () => void;
-	document: LegalDocument;
+	/** Documento a editar. `null` = modo creación. */
+	document: LegalDocument | null;
 	onSuccess?: () => void;
 }
+
+const LANGUAGE_LABELS: Record<(typeof LEGAL_DOCUMENT_LANGUAGES)[number], string> = {
+	es: "Español",
+	en: "Inglés",
+};
+
+const EMPTY_COMPANY: CompanyDetails = {
+	name: "",
+	address: "",
+	email: "",
+	phone: "",
+	registrationNumber: "",
+};
 
 const EditLegalDocumentModal: React.FC<EditLegalDocumentModalProps> = ({ open, onClose, document, onSuccess }) => {
 	const theme = useTheme();
 	const dispatch = useDispatch();
+	const isCreate = !document;
 
 	const [loading, setLoading] = useState(false);
+	const [submitError, setSubmitError] = useState<string | null>(null);
 	const [formData, setFormData] = useState<Partial<LegalDocument>>({});
 	const [sections, setSections] = useState<LegalDocumentSection[]>([]);
 	const [companyDetails, setCompanyDetails] = useState<CompanyDetails>({
@@ -57,7 +74,27 @@ const EditLegalDocumentModal: React.FC<EditLegalDocumentModalProps> = ({ open, o
 
 	// Inicializar formulario cuando se abre el modal
 	useEffect(() => {
-		if (open && document) {
+		if (!open) return;
+		setSubmitError(null);
+		if (!document) {
+			// Modo creación: inactivo por defecto (activar es una acción explícita
+			// porque, para "privacy", enciende la exigencia de aceptación).
+			setFormData({
+				title: "",
+				documentType: "privacy",
+				version: "",
+				language: "es",
+				region: "general",
+				effectiveDate: new Date().toISOString().split("T")[0],
+				isActive: false,
+				introduction: "",
+				conclusion: "",
+			});
+			setSections([]);
+			setCompanyDetails(EMPTY_COMPANY);
+			return;
+		}
+		if (document) {
 			setFormData({
 				title: document.title,
 				documentType: document.documentType,
@@ -95,8 +132,10 @@ const EditLegalDocumentModal: React.FC<EditLegalDocumentModalProps> = ({ open, o
 		const newSection: LegalDocumentSection = {
 			title: "",
 			content: "",
+			anchor: "",
 			order: sections.length + 1,
-			visibleFor: ["free", "standard", "premium"],
+			// Privacidad no se personaliza por plan: vacío = visible para todos.
+			visibleFor: formData.documentType === "privacy" ? [] : ["free", "standard", "premium"],
 		};
 		setSections([...sections, newSection]);
 	};
@@ -148,20 +187,28 @@ const EditLegalDocumentModal: React.FC<EditLegalDocumentModalProps> = ({ open, o
 		setSections(newSections);
 	};
 
+	const missingRequired = !formData.documentType || !formData.title?.trim() || !formData.introduction?.trim() || !formData.version?.trim();
+
 	const handleSubmit = async () => {
 		setLoading(true);
+		setSubmitError(null);
 		try {
-			const dataToUpdate: Partial<LegalDocument> = {
+			const data: Partial<LegalDocument> = {
 				...formData,
-				sections: sections,
+				sections: sections.map((section) => ({ ...section, anchor: section.anchor?.trim() || undefined })),
 				companyDetails: companyDetails,
 			};
 
-			await dispatch(updateLegalDocument({ documentId: document._id, data: dataToUpdate }));
+			if (document) {
+				await dispatch(updateLegalDocument({ documentId: document._id, data })).unwrap();
+			} else {
+				await dispatch(createLegalDocument(data)).unwrap();
+			}
 			onSuccess?.();
 			onClose();
 		} catch (error) {
-			console.error("Error al actualizar documento:", error);
+			console.error("Error al guardar documento:", error);
+			setSubmitError(typeof error === "string" ? error : "No se pudo guardar el documento");
 		} finally {
 			setLoading(false);
 		}
@@ -184,7 +231,7 @@ const EditLegalDocumentModal: React.FC<EditLegalDocumentModalProps> = ({ open, o
 			<DialogTitle>
 				<Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" useFlexGap>
 					<Typography variant="h5" sx={{ fontWeight: 600, letterSpacing: "-0.01em" }}>
-						Editar documento legal
+						{isCreate ? "Nuevo documento legal" : "Editar documento legal"}
 					</Typography>
 					<IconButton onClick={onClose} color="error">
 						<CloseCircle size={24} />
@@ -194,6 +241,14 @@ const EditLegalDocumentModal: React.FC<EditLegalDocumentModalProps> = ({ open, o
 			<Divider />
 			<DialogContent>
 				<Stack spacing={3} sx={{ mt: 1 }}>
+					{formData.documentType === "privacy" && (
+						<Alert severity="warning">
+							Mientras haya una política de privacidad <strong>activa</strong>, su versión es la que se exige aceptar al autorizar un
+							conector de IA y al contratar el add-on MCP. Activarla enciende esa exigencia; editar el texto sin cambiar la versión no pide
+							una nueva aceptación. Usá versiones con formato de fecha (AAAA-MM-DD).
+						</Alert>
+					)}
+					{submitError && <Alert severity="error">{submitError}</Alert>}
 					{/* Informacion basica */}
 					<Box>
 						<Typography variant="subtitle1" sx={{ fontWeight: 600, letterSpacing: "-0.005em" }} gutterBottom>
@@ -236,9 +291,11 @@ const EditLegalDocumentModal: React.FC<EditLegalDocumentModalProps> = ({ open, o
 								<FormControl fullWidth>
 									<InputLabel>Idioma</InputLabel>
 									<Select value={formData.language || ""} label="Idioma" onChange={(e) => handleInputChange("language", e.target.value)}>
-										<MenuItem value="es">Español</MenuItem>
-										<MenuItem value="en">Inglés</MenuItem>
-										<MenuItem value="pt">Portugués</MenuItem>
+										{LEGAL_DOCUMENT_LANGUAGES.map((lang) => (
+											<MenuItem key={lang} value={lang}>
+												{LANGUAGE_LABELS[lang]}
+											</MenuItem>
+										))}
 									</Select>
 								</FormControl>
 							</Grid>
@@ -344,7 +401,7 @@ const EditLegalDocumentModal: React.FC<EditLegalDocumentModalProps> = ({ open, o
 									</Stack>
 
 									<Grid container spacing={2}>
-										<Grid item xs={12}>
+										<Grid item xs={12} md={8}>
 											<TextField
 												fullWidth
 												label="Título de la sección"
@@ -353,11 +410,22 @@ const EditLegalDocumentModal: React.FC<EditLegalDocumentModalProps> = ({ open, o
 												size="small"
 											/>
 										</Grid>
+										<Grid item xs={12} md={4}>
+											<TextField
+												fullWidth
+												label="Ancla (opcional)"
+												placeholder="ej. conectores-ia"
+												value={section.anchor || ""}
+												onChange={(e) => handleSectionChange(index, "anchor", e.target.value)}
+												size="small"
+											/>
+										</Grid>
 										<Grid item xs={12}>
 											<TextField
 												fullWidth
 												multiline
-												rows={3}
+												minRows={3}
+												maxRows={16}
 												label="Contenido"
 												value={section.content}
 												onChange={(e) => handleSectionChange(index, "content", e.target.value)}
@@ -366,7 +434,7 @@ const EditLegalDocumentModal: React.FC<EditLegalDocumentModalProps> = ({ open, o
 										</Grid>
 										<Grid item xs={12}>
 											<Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: "block" }}>
-												Visible para planes:
+												Visible para planes{section.visibleFor?.length ? ":" : " (ninguno marcado = todos):"}
 											</Typography>
 											<Stack direction="row" spacing={1}>
 												{planOptions.map((plan) => (
@@ -490,14 +558,14 @@ const EditLegalDocumentModal: React.FC<EditLegalDocumentModalProps> = ({ open, o
 					onClick={handleSubmit}
 					variant="contained"
 					color="primary"
-					disabled={loading}
+					disabled={loading || missingRequired}
 					sx={{
 						textTransform: "none",
 						transition: "transform 200ms ease, box-shadow 200ms ease",
 						"&:active": { transform: "scale(0.97)" },
 					}}
 				>
-					{loading ? <CircularProgress size={20} /> : "Guardar cambios"}
+					{loading ? <CircularProgress size={20} /> : isCreate ? "Crear documento" : "Guardar cambios"}
 				</Button>
 			</DialogActions>
 		</Dialog>
