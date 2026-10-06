@@ -60,7 +60,12 @@ import SentenciasService, {
 	Fuero,
 } from "api/sentenciasCapturadas";
 import CollectorService, { CollectorConfig, FueroConfig } from "api/sentenciasCollector";
-import SemanticWorkerService, { SemanticWorkerConfig } from "api/semanticWorker";
+import SemanticWorkerService, {
+	SemanticWorkerConfig,
+	SEARCH_CORPUS_CONSUMERS,
+	SearchCorpusValue,
+	normalizeSearchCorpus,
+} from "api/semanticWorker";
 import RagWorkersService, { PineconeStats, SentenciasWorkerConfig } from "api/ragWorkers";
 import WorkerControlPanel from "components/WorkerControlPanel";
 import CronSelector from "components/admin/CronSelector";
@@ -1106,7 +1111,7 @@ function NoveltySection({ stats, loading, onRefresh }: { stats: SentenciasStats 
 				batchSize: draft.batchSize,
 				searchQueryPlanner: draft.searchQueryPlanner,
 				searchLexicalLayer: draft.searchLexicalLayer,
-				searchCorpus: draft.searchCorpus,
+				searchCorpus: normalizeSearchCorpus(draft.searchCorpus),
 			});
 			setConfig(updated);
 			setDraft(updated);
@@ -1129,8 +1134,9 @@ function NoveltySection({ stats, loading, onRefresh }: { stats: SentenciasStats 
 			draft.batchSize !== config.batchSize ||
 			(draft.searchQueryPlanner?.enabled ?? false) !== (config.searchQueryPlanner?.enabled ?? false) ||
 			(draft.searchLexicalLayer?.enabled ?? false) !== (config.searchLexicalLayer?.enabled ?? false) ||
-			(draft.searchCorpus?.app ?? "saij") !== (config.searchCorpus?.app ?? "saij") ||
-			(draft.searchCorpus?.mcp ?? "saij") !== (config.searchCorpus?.mcp ?? "saij"));
+			SEARCH_CORPUS_CONSUMERS.some(
+				({ key }) => normalizeSearchCorpus(draft.searchCorpus)[key] !== normalizeSearchCorpus(config.searchCorpus)[key],
+			));
 
 	return (
 		<Stack spacing={3}>
@@ -1399,51 +1405,41 @@ function NoveltySection({ stats, loading, onRefresh }: { stats: SentenciasStats 
 									</Box>
 								</Stack>
 
-								{/* Corpus habilitado por consumidor — lo enfuerza pjn-rag-api server-side */}
+								{/* Corpus habilitado por consumidor — app/mcp los enfuerza pjn-rag-api, public law-analytics-server */}
 								<Box>
 									<Typography variant="body2" sx={{ mb: 0.5 }}>
-										Corpus de búsqueda semántica
+										Corpus de jurisprudencia por consumidor
 									</Typography>
 									<Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1 }}>
-										"Solo SAIJ" = corpus curado público (~10k fallos con resumen, igual que /jurisprudencia). "Todo" = corpus completo
-										(~320k, incluye sentencias PJN capturadas de causas de usuarios). Se aplica en el servidor: el cliente no puede
-										ampliarlo.
+										"Solo SAIJ" = corpus curado público (~10k fallos con resumen). "Todo" = corpus completo (~320k, incluye sentencias PJN
+										capturadas de causas de usuarios). Un valor por consumidor: app y MCP los aplica pjn-rag-api, la vista pública
+										law-analytics-server. Se aplica en el servidor: el cliente no puede ampliarlo.
 									</Typography>
 									<Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
-										<TextField
-											select
-											size="small"
-											label="App (law-analytics-front)"
-											value={draft.searchCorpus?.app ?? "saij"}
-											onChange={(e) =>
-												setDraft((d) => ({
-													...d,
-													searchCorpus: { app: e.target.value as "saij" | "all", mcp: d.searchCorpus?.mcp ?? "saij" },
-												}))
-											}
-											disabled={saving}
-											sx={{ minWidth: { xs: 0, sm: 230 }, width: { xs: "100%", sm: "auto" } }}
-										>
-											<MenuItem value="saij">Solo SAIJ (público)</MenuItem>
-											<MenuItem value="all">Todo el corpus</MenuItem>
-										</TextField>
-										<TextField
-											select
-											size="small"
-											label="MCP (Claude / IA externas)"
-											value={draft.searchCorpus?.mcp ?? "saij"}
-											onChange={(e) =>
-												setDraft((d) => ({
-													...d,
-													searchCorpus: { app: d.searchCorpus?.app ?? "saij", mcp: e.target.value as "saij" | "all" },
-												}))
-											}
-											disabled={saving}
-											sx={{ minWidth: { xs: 0, sm: 230 }, width: { xs: "100%", sm: "auto" } }}
-										>
-											<MenuItem value="saij">Solo SAIJ (público)</MenuItem>
-											<MenuItem value="all">Todo el corpus</MenuItem>
-										</TextField>
+										{SEARCH_CORPUS_CONSUMERS.map(({ key, label, help }) => (
+											<TextField
+												key={key}
+												select
+												size="small"
+												label={label}
+												helperText={help}
+												value={normalizeSearchCorpus(draft.searchCorpus)[key]}
+												onChange={(e) =>
+													setDraft((d) => ({
+														...d,
+														searchCorpus: {
+															...normalizeSearchCorpus(d.searchCorpus),
+															[key]: e.target.value as SearchCorpusValue,
+														},
+													}))
+												}
+												disabled={saving}
+												sx={{ minWidth: { xs: 0, sm: 260 }, maxWidth: { sm: 320 }, width: { xs: "100%", sm: "auto" } }}
+											>
+												<MenuItem value="saij">Solo SAIJ (público)</MenuItem>
+												<MenuItem value="all">Todo el corpus</MenuItem>
+											</TextField>
+										))}
 									</Stack>
 								</Box>
 

@@ -27,7 +27,13 @@ import { ArrowDown2, ArrowUp2, MessageQuestion, Refresh } from "iconsax-react";
 import MainCard from "components/MainCard";
 import SentenciasAskService, { AskFilters, AskOptions, AskResponse } from "api/sentenciasAsk";
 import { SentenciaResult, FullChunk } from "api/sentenciasSearch";
-import SemanticWorkerService from "api/semanticWorker";
+import SemanticWorkerService, {
+	SEARCH_CORPUS_CONSUMERS,
+	SearchCorpus,
+	SearchCorpusConsumer,
+	SearchCorpusValue,
+	normalizeSearchCorpus,
+} from "api/semanticWorker";
 import SearchUsageService, { SearchUsageResponse } from "api/searchUsage";
 import SearchLogPanel from "./SearchLogPanel";
 import { Fuero, SentenciaTipo } from "api/sentenciasCapturadas";
@@ -303,8 +309,8 @@ export default function JurisprudenciaPjnAskPage() {
 	const [plannerModel, setPlannerModel] = useState<string>("gpt-4o-mini");
 	const [togglingPlanner, setTogglingPlanner] = useState(false);
 	const [plannerError, setPlannerError] = useState<string | null>(null);
-	// Corpus habilitado por consumidor (app/mcp) — misma config global.
-	const [corpus, setCorpus] = useState<{ app: "saij" | "all"; mcp: "saij" | "all" } | null>(null);
+	// Corpus habilitado por consumidor (app/mcp/public) — misma config global.
+	const [corpus, setCorpus] = useState<SearchCorpus | null>(null);
 	const [savingCorpus, setSavingCorpus] = useState(false);
 
 	// Uso mensual de la búsqueda (rag-usage-monthly vía /rag/admin/search-usage)
@@ -334,7 +340,7 @@ export default function JurisprudenciaPjnAskPage() {
 				if (!alive) return;
 				setPlannerEnabled(cfg.searchQueryPlanner?.enabled ?? false);
 				setPlannerModel(cfg.searchQueryPlanner?.model ?? "gpt-4o-mini");
-				setCorpus({ app: cfg.searchCorpus?.app ?? "saij", mcp: cfg.searchCorpus?.mcp ?? "saij" });
+				setCorpus(normalizeSearchCorpus(cfg.searchCorpus));
 			})
 			.catch(() => {
 				if (alive) setPlannerEnabled(null);
@@ -344,16 +350,15 @@ export default function JurisprudenciaPjnAskPage() {
 		};
 	}, []);
 
-	const handleCorpusChange = async (consumer: "app" | "mcp", value: "saij" | "all") => {
-		const next = { app: corpus?.app ?? "saij", mcp: corpus?.mcp ?? "saij", [consumer]: value } as {
-			app: "saij" | "all";
-			mcp: "saij" | "all";
-		};
+	const handleCorpusChange = async (consumer: SearchCorpusConsumer, value: SearchCorpusValue) => {
+		const next: SearchCorpus = { ...normalizeSearchCorpus(corpus), [consumer]: value };
 		setSavingCorpus(true);
 		setPlannerError(null);
 		try {
+			// Se manda el objeto completo: funciona igual con pjn-api viejo (que
+			// reemplaza el subdocumento) y con el nuevo (que guarda por subcampo).
 			const updated = await SemanticWorkerService.updateConfig({ searchCorpus: next });
-			setCorpus({ app: updated.searchCorpus?.app ?? next.app, mcp: updated.searchCorpus?.mcp ?? next.mcp });
+			setCorpus(normalizeSearchCorpus({ ...next, ...updated.searchCorpus }));
 		} catch (e: unknown) {
 			const err = e as { response?: { data?: { message?: string } }; message?: string };
 			setPlannerError(err.response?.data?.message || err.message || "No se pudo cambiar el corpus");
@@ -461,35 +466,26 @@ export default function JurisprudenciaPjnAskPage() {
 							</Box>
 						</Stack>
 
-						{/* Corpus habilitado por consumidor — lo enfuerza pjn-rag-api server-side */}
+						{/* Corpus habilitado por consumidor — app/mcp los enfuerza pjn-rag-api, public law-analytics-server */}
 						<Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" useFlexGap sx={{ mt: 1.5 }}>
-							<TextField
-								select
-								size="small"
-								label="Corpus — App"
-								value={corpus?.app ?? "saij"}
-								onChange={(e) => handleCorpusChange("app", e.target.value as "saij" | "all")}
-								disabled={savingCorpus || corpus === null}
-								sx={{ minWidth: 210 }}
-							>
-								<MenuItem value="saij">Solo SAIJ (público ~10k)</MenuItem>
-								<MenuItem value="all">Todo el corpus (~320k)</MenuItem>
-							</TextField>
-							<TextField
-								select
-								size="small"
-								label="Corpus — MCP (Claude/IA externas)"
-								value={corpus?.mcp ?? "saij"}
-								onChange={(e) => handleCorpusChange("mcp", e.target.value as "saij" | "all")}
-								disabled={savingCorpus || corpus === null}
-								sx={{ minWidth: 250 }}
-							>
-								<MenuItem value="saij">Solo SAIJ (público ~10k)</MenuItem>
-								<MenuItem value="all">Todo el corpus (~320k)</MenuItem>
-							</TextField>
+							{SEARCH_CORPUS_CONSUMERS.map(({ key, label }) => (
+								<TextField
+									key={key}
+									select
+									size="small"
+									label={`Corpus — ${label}`}
+									value={corpus?.[key] ?? "saij"}
+									onChange={(e) => handleCorpusChange(key, e.target.value as SearchCorpusValue)}
+									disabled={savingCorpus || corpus === null}
+									sx={{ minWidth: 250 }}
+								>
+									<MenuItem value="saij">Solo SAIJ (público ~10k)</MenuItem>
+									<MenuItem value="all">Todo el corpus (~320k)</MenuItem>
+								</TextField>
+							))}
 							<Typography variant="caption" color="text.secondary" sx={{ maxWidth: 380 }}>
 								Se aplica en el servidor por consumidor: el cliente puede acotar pero nunca ampliar. "Todo" incluye las sentencias PJN
-								capturadas de causas de usuarios.
+								capturadas de causas de usuarios; en la pública solo las que tienen resumen aprobado y publicación "published".
 								{savingCorpus && <CircularProgress size={10} sx={{ ml: 1 }} />}
 							</Typography>
 						</Stack>
