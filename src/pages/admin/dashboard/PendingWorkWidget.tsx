@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { Box, Stack, Typography, Paper, Skeleton, Tooltip, IconButton, useTheme, alpha, Chip, Grid } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { Refresh, TaskSquare, MessageQuestion, MessageText1 } from "iconsax-react";
+import { Refresh, TaskSquare, MessageQuestion, MessageText1, Archive } from "iconsax-react";
 import AdminTasksService from "api/adminTasks";
 import SupportContactsService, { SupportContact } from "api/supportContacts";
 import FeedbackService, { UserFeedback } from "api/feedback";
 import { AdminTask } from "types/admin-task";
+import { useSnackbar } from "notistack";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 
 // ----------------------------------------------------------------------
@@ -49,6 +50,7 @@ const PendingWorkWidget: React.FC = () => {
 	const theme = useTheme();
 	const navigate = useNavigate();
 	const isDark = theme.palette.mode === "dark";
+	const { enqueueSnackbar } = useSnackbar();
 
 	const [tasks, setTasks] = useState<ColumnState<AdminTask>>(initialColumn<AdminTask>());
 	const [support, setSupport] = useState<ColumnState<SupportContact>>(initialColumn<SupportContact>());
@@ -98,6 +100,20 @@ const PendingWorkWidget: React.FC = () => {
 		}
 	}, []);
 
+	// Archivar = salir de "pendientes" sin borrar el registro (reversible desde /admin/feedback).
+	const archiveFeedback = useCallback(
+		async (id: string) => {
+			try {
+				await FeedbackService.bulkStatus([id], "archived");
+				setFeedback((s) => ({ ...s, items: s.items.filter((f) => f._id !== id), total: Math.max(0, s.total - 1) }));
+				enqueueSnackbar("Feedback archivado", { variant: "success" });
+			} catch (e: any) {
+				enqueueSnackbar(e?.message || "No se pudo archivar el feedback", { variant: "error" });
+			}
+		},
+		[enqueueSnackbar],
+	);
+
 	const refreshAll = useCallback(() => {
 		fetchTasks();
 		fetchSupport();
@@ -130,8 +146,10 @@ const PendingWorkWidget: React.FC = () => {
 		linkTo: string;
 		empty: string;
 		row: (item: T) => { key: string; primary: string; secondary: string; trailing: React.ReactNode };
+		onDismiss?: (item: T) => void;
+		dismissLabel?: string;
 	}) => {
-		const { title, icon, state, linkTo, empty, row } = opts;
+		const { title, icon, state, linkTo, empty, row, onDismiss, dismissLabel } = opts;
 		return (
 			<Box sx={{ height: "100%" }}>
 				<Box
@@ -199,7 +217,23 @@ const PendingWorkWidget: React.FC = () => {
 											{r.secondary}
 										</Typography>
 									</Box>
-									{r.trailing}
+									<Stack direction="row" alignItems="center" spacing={0.5} sx={{ flexShrink: 0 }}>
+										{r.trailing}
+										{onDismiss && (
+											<Tooltip title={dismissLabel || "Quitar de la lista"}>
+												<IconButton
+													size="small"
+													onClick={(e) => {
+														e.stopPropagation();
+														onDismiss(item);
+													}}
+													sx={{ p: 0.25 }}
+												>
+													<Archive size={14} />
+												</IconButton>
+											</Tooltip>
+										)}
+									</Stack>
 								</Box>
 							);
 						})}
@@ -271,6 +305,8 @@ const PendingWorkWidget: React.FC = () => {
 						state: feedback,
 						linkTo: "/admin/feedback",
 						empty: "No hay feedback pendiente de moderación.",
+						dismissLabel: "Archivar (sale de pendientes, no se borra)",
+						onDismiss: (f) => archiveFeedback(f._id),
 						row: (f) => {
 							const author =
 								f.authorSnapshot?.name ||
