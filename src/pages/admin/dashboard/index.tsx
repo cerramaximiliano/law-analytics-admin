@@ -72,6 +72,7 @@ import CronsStatusWidget from "./CronsStatusWidget";
 import IntegrationsStatusWidget from "./IntegrationsStatusWidget";
 import PrivacyStatsWidget from "./PrivacyStatsWidget";
 import PostalTrackingWidget from "./PostalTrackingWidget";
+import PendingWorkWidget from "./PendingWorkWidget";
 
 // Theme-aware color helper - maps semantic roles to MUI theme palette tokens
 // Usage: const COLORS = getThemeColors(theme) inside any component with useTheme()
@@ -1355,6 +1356,11 @@ const AdminDashboard = () => {
 				    El dashboard muestra excepciones; el resto es drill-down bajo demanda. */}
 				<Box sx={{ mb: { xs: 2, sm: 3 } }}>
 					<IncidentsWidget />
+				</Box>
+
+				{/* Pendientes del equipo: tareas por vencer + soporte + feedback sin atender */}
+				<Box sx={{ mb: { xs: 2, sm: 3 } }}>
+					<PendingWorkWidget />
 				</Box>
 
 				{/* Primary KPIs Row - jerarquía en dos niveles: 4 KPIs hero + strip de contexto */}
