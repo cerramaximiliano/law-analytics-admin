@@ -2025,7 +2025,7 @@ const AdminDashboard = () => {
 												>
 													{eligibilityStats.updatedToday.toLocaleString()}
 												</Typography>
-												<Typography variant="caption" color="text.secondary">
+												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													Actualizados hoy
 												</Typography>
 											</Box>
@@ -2041,7 +2041,7 @@ const AdminDashboard = () => {
 														eligibilityStats.eligible - eligibilityStats.updatedToday - eligibilityStats.eligibleWithErrors
 													).toLocaleString()}
 												</Typography>
-												<Typography variant="caption" color="text.secondary">
+												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													Pendientes hoy
 												</Typography>
 											</Box>
@@ -2054,7 +2054,7 @@ const AdminDashboard = () => {
 												>
 													{eligibilityStats.eligibleWithErrors.toLocaleString()}
 												</Typography>
-												<Typography variant="caption" color="text.secondary">
+												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													Con errores
 												</Typography>
 											</Box>
@@ -2064,7 +2064,7 @@ const AdminDashboard = () => {
 												<Typography variant="h5" sx={{ fontWeight: 700, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>
 													{eligibilityStats.eligible.toLocaleString()}
 												</Typography>
-												<Typography variant="caption" color="text.secondary">
+												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													Total elegibles
 												</Typography>
 											</Box>
@@ -2194,7 +2194,7 @@ const AdminDashboard = () => {
 												>
 													{mevEligibilityStats.updatedToday.toLocaleString()}
 												</Typography>
-												<Typography variant="caption" color="text.secondary">
+												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													Actualizados hoy
 												</Typography>
 											</Box>
@@ -2210,7 +2210,7 @@ const AdminDashboard = () => {
 														mevEligibilityStats.eligible - mevEligibilityStats.updatedToday - mevEligibilityStats.eligibleWithErrors
 													).toLocaleString()}
 												</Typography>
-												<Typography variant="caption" color="text.secondary">
+												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													Pendientes hoy
 												</Typography>
 											</Box>
@@ -2223,7 +2223,7 @@ const AdminDashboard = () => {
 												>
 													{mevEligibilityStats.eligibleWithErrors.toLocaleString()}
 												</Typography>
-												<Typography variant="caption" color="text.secondary">
+												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													Con errores
 												</Typography>
 											</Box>
@@ -2236,7 +2236,7 @@ const AdminDashboard = () => {
 												>
 													{mevEligibilityStats.eligible.toLocaleString()}
 												</Typography>
-												<Typography variant="caption" color="text.secondary">
+												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													Total elegibles
 												</Typography>
 											</Box>
@@ -2379,7 +2379,7 @@ const AdminDashboard = () => {
 												>
 													{ejeEligibilityStats.actualizadosHoy.toLocaleString()}
 												</Typography>
-												<Typography variant="caption" color="text.secondary">
+												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													Actualizados hoy
 												</Typography>
 											</Box>
@@ -2392,7 +2392,7 @@ const AdminDashboard = () => {
 												>
 													{ejeEligibilityStats.pendientesHoy.toLocaleString()}
 												</Typography>
-												<Typography variant="caption" color="text.secondary">
+												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													Pendientes hoy
 												</Typography>
 											</Box>
@@ -2405,7 +2405,7 @@ const AdminDashboard = () => {
 												>
 													{ejeEligibilityStats.totalElegibles.toLocaleString()}
 												</Typography>
-												<Typography variant="caption" color="text.secondary">
+												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													Total elegibles
 												</Typography>
 											</Box>
@@ -2418,7 +2418,7 @@ const AdminDashboard = () => {
 												>
 													{ejeEligibilityStats.noElegibles.toLocaleString()}
 												</Typography>
-												<Typography variant="caption" color="text.secondary">
+												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													No elegibles
 												</Typography>
 											</Box>
@@ -2555,7 +2555,7 @@ const AdminDashboard = () => {
 												>
 													{pjsaltaEligibilityStats.actualizadosHoy.toLocaleString()}
 												</Typography>
-												<Typography variant="caption" color="text.secondary">
+												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													Actualizados hoy
 												</Typography>
 											</Box>
@@ -2568,7 +2568,7 @@ const AdminDashboard = () => {
 												>
 													{pjsaltaEligibilityStats.pendientesHoy.toLocaleString()}
 												</Typography>
-												<Typography variant="caption" color="text.secondary">
+												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													Pendientes hoy
 												</Typography>
 											</Box>
@@ -2581,7 +2581,7 @@ const AdminDashboard = () => {
 												>
 													{pjsaltaEligibilityStats.totalElegibles.toLocaleString()}
 												</Typography>
-												<Typography variant="caption" color="text.secondary">
+												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													Total elegibles
 												</Typography>
 											</Box>
@@ -2594,7 +2594,7 @@ const AdminDashboard = () => {
 												>
 													{pjsaltaEligibilityStats.noElegibles.toLocaleString()}
 												</Typography>
-												<Typography variant="caption" color="text.secondary">
+												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													No elegibles
 												</Typography>
 											</Box>
@@ -2731,7 +2731,7 @@ const AdminDashboard = () => {
 												>
 													{pjcatamarcaEligibilityStats.actualizadosHoy.toLocaleString()}
 												</Typography>
-												<Typography variant="caption" color="text.secondary">
+												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													Actualizados hoy
 												</Typography>
 											</Box>
@@ -2744,7 +2744,7 @@ const AdminDashboard = () => {
 												>
 													{pjcatamarcaEligibilityStats.pendientesHoy.toLocaleString()}
 												</Typography>
-												<Typography variant="caption" color="text.secondary">
+												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													Pendientes hoy
 												</Typography>
 											</Box>
@@ -2757,7 +2757,7 @@ const AdminDashboard = () => {
 												>
 													{pjcatamarcaEligibilityStats.totalElegibles.toLocaleString()}
 												</Typography>
-												<Typography variant="caption" color="text.secondary">
+												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													Total elegibles
 												</Typography>
 											</Box>
@@ -2770,7 +2770,7 @@ const AdminDashboard = () => {
 												>
 													{pjcatamarcaEligibilityStats.noElegibles.toLocaleString()}
 												</Typography>
-												<Typography variant="caption" color="text.secondary">
+												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													No elegibles
 												</Typography>
 											</Box>
@@ -2907,7 +2907,7 @@ const AdminDashboard = () => {
 												>
 													{pjmendozaEligibilityStats.actualizadosHoy.toLocaleString()}
 												</Typography>
-												<Typography variant="caption" color="text.secondary">
+												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													Actualizados hoy
 												</Typography>
 											</Box>
@@ -2920,7 +2920,7 @@ const AdminDashboard = () => {
 												>
 													{pjmendozaEligibilityStats.pendientesHoy.toLocaleString()}
 												</Typography>
-												<Typography variant="caption" color="text.secondary">
+												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													Pendientes hoy
 												</Typography>
 											</Box>
@@ -2933,7 +2933,7 @@ const AdminDashboard = () => {
 												>
 													{pjmendozaEligibilityStats.totalElegibles.toLocaleString()}
 												</Typography>
-												<Typography variant="caption" color="text.secondary">
+												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													Total elegibles
 												</Typography>
 											</Box>
@@ -2946,7 +2946,7 @@ const AdminDashboard = () => {
 												>
 													{pjmendozaEligibilityStats.noElegibles.toLocaleString()}
 												</Typography>
-												<Typography variant="caption" color="text.secondary">
+												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													No elegibles
 												</Typography>
 											</Box>
@@ -3086,7 +3086,7 @@ const AdminDashboard = () => {
 												>
 													{stuckDocumentsStats.pending.total.toLocaleString()}
 												</Typography>
-												<Typography variant="caption" color="text.secondary">
+												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													Pendientes
 												</Typography>
 											</Box>
@@ -3099,7 +3099,7 @@ const AdminDashboard = () => {
 												>
 													{stuckDocumentsStats.totals.fixed.toLocaleString()}
 												</Typography>
-												<Typography variant="caption" color="text.secondary">
+												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													Reparados
 												</Typography>
 											</Box>
@@ -3112,7 +3112,7 @@ const AdminDashboard = () => {
 												>
 													{stuckDocumentsStats.totals.failed.toLocaleString()}
 												</Typography>
-												<Typography variant="caption" color="text.secondary">
+												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													Fallidos
 												</Typography>
 											</Box>
@@ -3122,7 +3122,7 @@ const AdminDashboard = () => {
 												<Typography variant="h5" sx={{ fontWeight: 700, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>
 													{stuckDocumentsStats.totals.processed.toLocaleString()}
 												</Typography>
-												<Typography variant="caption" color="text.secondary">
+												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													Total procesados
 												</Typography>
 											</Box>
@@ -4002,6 +4002,10 @@ const AdminDashboard = () => {
 									onClick={() => navigate("/admin/causas/verified-app")}
 									sx={{
 										p: { xs: 1.5, sm: 2 },
+										height: "100%",
+										display: "flex",
+										flexDirection: "column",
+										justifyContent: "center",
 										borderRadius: 2,
 										bgcolor: alpha(COLORS.primary.main, 0.05),
 										border: `1px solid ${alpha(COLORS.primary.main, 0.15)}`,
@@ -4055,6 +4059,10 @@ const AdminDashboard = () => {
 									onClick={() => navigate("/admin/mev/verified-app")}
 									sx={{
 										p: { xs: 1.5, sm: 2 },
+										height: "100%",
+										display: "flex",
+										flexDirection: "column",
+										justifyContent: "center",
 										borderRadius: 2,
 										bgcolor: alpha(COLORS.primary.main, 0.05),
 										border: `1px solid ${alpha(COLORS.primary.main, 0.15)}`,
