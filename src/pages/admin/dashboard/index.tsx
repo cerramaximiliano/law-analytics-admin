@@ -74,6 +74,7 @@ import IntegrationsStatusWidget from "./IntegrationsStatusWidget";
 import PrivacyStatsWidget from "./PrivacyStatsWidget";
 import PostalTrackingWidget from "./PostalTrackingWidget";
 import PendingWorkWidget from "./PendingWorkWidget";
+import CollapsibleSection from "./CollapsibleSection";
 
 // Theme-aware color helper - maps semantic roles to MUI theme palette tokens
 // Usage: const COLORS = getThemeColors(theme) inside any component with useTheme()
@@ -1361,21 +1362,26 @@ const AdminDashboard = () => {
 
 				{/* Pendientes del equipo: tareas por vencer + soporte + feedback sin atender */}
 				<Box sx={{ mb: { xs: 2, sm: 4 } }}>
-					<SectionHeader
+					<CollapsibleSection
+						id="pendientes"
+						defaultOpenMobile
 						title="Pendientes del equipo"
 						subtitle="Tareas por vencer, consultas de soporte y feedback sin moderar"
 						icon={<TaskSquare size={16} variant="Bold" />}
-					/>
+					>
 					<PendingWorkWidget />
+					</CollapsibleSection>
 				</Box>
 
 				{/* Primary KPIs Row - jerarquía en dos niveles: 4 KPIs hero + strip de contexto */}
 				<Box sx={{ mb: { xs: 2, sm: 4 } }}>
-					<SectionHeader
+					<CollapsibleSection
+						id="resumen"
+						defaultOpenMobile
 						title="Resumen general"
 						subtitle="Usuarios, suscripciones y causas de la plataforma"
 						icon={<Chart size={16} variant="Bold" />}
-					/>
+					>
 					<Grid container spacing={{ xs: 1, sm: 2 }}>
 						<Grid item xs={6} sm={6} md={3}>
 							<PrimaryKPICard
@@ -1539,15 +1545,17 @@ const AdminDashboard = () => {
 							]}
 						/>
 					</Box>
+					</CollapsibleSection>
 				</Box>
 
 				{/* Créditos y recursos - saldos de servicios externos y datasets internos */}
 				<Box sx={{ mb: { xs: 2, sm: 4 } }}>
-					<SectionHeader
+					<CollapsibleSection
+						id="creditos"
 						title="Créditos y recursos"
 						subtitle="Saldos de servicios externos y datasets internos"
 						icon={<Wallet2 size={16} variant="Bold" />}
-					/>
+					>
 					<Grid container spacing={{ xs: 1, sm: 2 }}>
 						<Grid item xs={6} sm={6} md={4} lg={2.4}>
 							<PrimaryKPICard
@@ -1794,15 +1802,17 @@ const AdminDashboard = () => {
 							</Paper>
 						</Grid>
 					</Grid>
+					</CollapsibleSection>
 				</Box>
 
 				{/* Services Status Widget */}
 				<Box sx={{ mb: { xs: 2, sm: 4 } }}>
-					<SectionHeader
+					<CollapsibleSection
+						id="infra"
 						title="Infraestructura"
 						subtitle="Salud de servicios, crons e integraciones"
 						icon={<MessageProgramming size={16} variant="Bold" />}
-					/>
+					>
 					<Grid container spacing={{ xs: 1, sm: 2 }}>
 						<Grid item xs={12} sm={6} md={2.4}>
 							<ServicesStatusWidget />
@@ -1820,14 +1830,16 @@ const AdminDashboard = () => {
 							<PostalTrackingWidget />
 						</Grid>
 					</Grid>
+					</CollapsibleSection>
 				</Box>
 
 				{/* Worker Widgets Row */}
-				<SectionHeader
+				<CollapsibleSection
+					id="workers"
 					title="Cobertura de workers"
 					subtitle="Actualización de causas por jurisdicción y salud de credenciales"
 					icon={<Refresh size={16} variant="Bold" />}
-				/>
+				>
 				<Grid container spacing={{ xs: 1, sm: 2 }} sx={{ mb: { xs: 2, sm: 4 } }}>
 					{/* PJN Update Coverage Widget */}
 					<Grid item xs={12} sm={6} md={3}>
@@ -3547,16 +3559,18 @@ const AdminDashboard = () => {
 						</Paper>
 					</Grid>
 				</Grid>
+				</CollapsibleSection>
 
 				{/* Detailed Sections with Charts */}
 				<Grid container spacing={{ xs: 2, sm: 3 }}>
 					{/* Users Section with Charts */}
 					<Grid item xs={12} lg={6}>
-						<SectionHeader
+						<CollapsibleSection
+							id="usuarios"
 							title="Usuarios"
 							subtitle="Estadísticas de usuarios registrados"
 							icon={<UserSquare size={22} variant="Bold" />}
-						/>
+						>
 						<Grid container spacing={{ xs: 1.5, sm: 2 }}>
 							{/* User Status Donut Chart */}
 							<Grid item xs={12} sm={6}>
@@ -3631,15 +3645,17 @@ const AdminDashboard = () => {
 								</ChartCard>
 							</Grid>
 						</Grid>
+						</CollapsibleSection>
 					</Grid>
 
 					{/* Subscriptions Section with Charts */}
 					<Grid item xs={12} lg={6}>
-						<SectionHeader
+						<CollapsibleSection
+							id="suscripciones"
 							title="Suscripciones"
 							subtitle="Distribución por planes y modo"
 							icon={<ReceiptItem size={22} variant="Bold" />}
-						/>
+						>
 						<Grid container spacing={{ xs: 1.5, sm: 2 }}>
 							{/* Plan Distribution Pie Chart - Live Mode */}
 							<Grid item xs={12} sm={6}>
@@ -3888,11 +3904,17 @@ const AdminDashboard = () => {
 								</Paper>
 							</Grid>
 						</Grid>
+						</CollapsibleSection>
 					</Grid>
 
 					{/* Folders Section with Bar Chart */}
 					<Grid item xs={12} md={6}>
-						<SectionHeader title="Carpetas / Causas" subtitle="Comparación PJN vs MEV" icon={<Folder size={22} variant="Bold" />} />
+						<CollapsibleSection
+							id="carpetas"
+							title="Carpetas / Causas"
+							subtitle="Comparación PJN vs MEV"
+							icon={<Folder size={22} variant="Bold" />}
+						>
 						<Grid container spacing={{ xs: 1.5, sm: 2 }}>
 							{/* Bar Chart comparing PJN vs MEV */}
 							<Grid item xs={12}>
@@ -4039,11 +4061,17 @@ const AdminDashboard = () => {
 								</Paper>
 							</Grid>
 						</Grid>
+						</CollapsibleSection>
 					</Grid>
 
 					{/* Marketing Section with Charts */}
 					<Grid item xs={12} md={6}>
-						<SectionHeader title="Marketing" subtitle="Email marketing y segmentación" icon={<Sms size={22} variant="Bold" />} />
+						<CollapsibleSection
+							id="marketing"
+							title="Marketing"
+							subtitle="Email marketing y segmentación"
+							icon={<Sms size={22} variant="Bold" />}
+						>
 						<Grid container spacing={{ xs: 1.5, sm: 2 }}>
 							{/* Campaigns Stats */}
 							<Grid item xs={12}>
@@ -4295,6 +4323,7 @@ const AdminDashboard = () => {
 								</ChartCard>
 							</Grid>
 						</Grid>
+						</CollapsibleSection>
 					</Grid>
 				</Grid>
 			</MainCard>
