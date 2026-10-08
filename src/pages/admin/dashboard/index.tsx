@@ -742,7 +742,7 @@ const StatStrip: React.FC<{ items: StatStripItem[] }> = ({ items }) => {
 						</Typography>
 					)}
 					<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.25 }}>
-						<Typography variant="caption" color="textSecondary" noWrap>
+						<Typography variant="caption" color="textSecondary" sx={{ lineHeight: 1.25, textWrap: "balance" }}>
 							{item.label}
 						</Typography>
 						<InfoTooltip metricKey={item.infoKey} />
@@ -1450,9 +1450,13 @@ const AdminDashboard = () => {
 									bgcolor: theme.palette.background.paper,
 									border: `1px solid ${theme.palette.divider}`,
 									height: "100%",
+									display: { xs: "grid", sm: "block" },
+									gridTemplateColumns: "1fr auto",
+									alignItems: "center",
+									columnGap: 1.5,
 								}}
 							>
-								<Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.75, sm: 1.25 }, mb: { xs: 1.25, sm: 1.75 } }}>
+								<Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.75, sm: 1.25 }, mb: { xs: 0, sm: 1.75 }, minWidth: 0 }}>
 									<Box
 										sx={{
 											width: 34,
@@ -1493,7 +1497,7 @@ const AdminDashboard = () => {
 											variant="h3"
 											sx={{
 												fontWeight: 700,
-												mb: 1,
+												mb: { xs: 0, sm: 1 },
 												lineHeight: 1,
 												fontSize: { xs: "1.5rem", sm: "2rem" },
 												letterSpacing: "-0.02em",
@@ -1509,7 +1513,7 @@ const AdminDashboard = () => {
 												(pjmendozaStats?.status.valid || 0)
 											).toLocaleString()}
 										</Typography>
-										<Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap" }}>
+										<Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap", gridColumn: "1 / -1", mt: { xs: 1, sm: 0 } }}>
 											{[
 												{ label: `PJN ${(data?.folders.pjn?.verified || 0).toLocaleString()}`, to: "/admin/causas/verified-app" },
 												{ label: `MEV ${(data?.folders.mev?.verified || 0).toLocaleString()}`, to: "/admin/mev/verified-app" },
