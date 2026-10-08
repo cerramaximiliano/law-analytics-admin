@@ -72,6 +72,8 @@ const SectionNav: React.FC<SectionNavProps> = ({ items }) => {
 				bgcolor: alpha(theme.palette.background.paper, isDark ? 0.92 : 0.9),
 				backdropFilter: "blur(8px)",
 				borderBottom: `1px solid ${headerBorder(isDark)}`,
+				// indicio visual de que hay más chips a la derecha
+				maskImage: { xs: "linear-gradient(to right, #000 calc(100% - 28px), transparent)", sm: "none" },
 				scrollbarWidth: "none",
 				"&::-webkit-scrollbar": { display: "none" },
 			}}

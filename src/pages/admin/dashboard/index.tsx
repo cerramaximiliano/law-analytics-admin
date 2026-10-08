@@ -76,6 +76,7 @@ import PostalTrackingWidget from "./PostalTrackingWidget";
 import PendingWorkWidget from "./PendingWorkWidget";
 import CollapsibleSection from "./CollapsibleSection";
 import SectionNav from "./SectionNav";
+import CoverageSummary from "./CoverageSummary";
 
 // Theme-aware color helper - maps semantic roles to MUI theme palette tokens
 // Usage: const COLORS = getThemeColors(theme) inside any component with useTheme()
@@ -833,6 +834,8 @@ const AdminDashboard = () => {
 	const [loadingOpenai, setLoadingOpenai] = useState(false);
 	const [eligibilityStats, setEligibilityStats] = useState<EligibilityStats | null>(null);
 	const [loadingEligibility, setLoadingEligibility] = useState(false);
+	// Móvil: el detalle de cobertura (9 tarjetas) arranca oculto tras el resumen compacto.
+	const [coverageDetailOpen, setCoverageDetailOpen] = useState(false);
 	const [mevEligibilityStats, setMevEligibilityStats] = useState<EligibilityStatsMEV | null>(null);
 	const [loadingMevEligibility, setLoadingMevEligibility] = useState(false);
 	const [ejeEligibilityStats, setEjeEligibilityStats] = useState<EjeEligibilityStatsResponse["data"] | null>(null);
@@ -1356,6 +1359,8 @@ const AdminDashboard = () => {
 				title="Dashboard"
 				// clip (no hidden): hidden vuelve a la tarjeta un contenedor de scroll y rompe el sticky de SectionNav
 				sx={{ overflow: "clip" }}
+				// menos relleno lateral en móvil: las tarjetas ganan ancho útil
+				contentSX={{ "@media (max-width:599.95px)": { p: 1.25 } }}
 				secondary={
 					<Box sx={{ display: "flex", alignItems: "center", gap: { xs: 1, sm: 2 }, flexWrap: "wrap", justifyContent: "flex-end" }}>
 						{lastUpdated && (
@@ -1882,7 +1887,21 @@ const AdminDashboard = () => {
 					subtitle="Actualización de causas por jurisdicción y salud de credenciales"
 					icon={<Refresh size={16} variant="Bold" />}
 				>
-				<Grid container spacing={{ xs: 1, sm: 2 }} sx={{ mb: { xs: 2, sm: 4 } }}>
+								<CoverageSummary
+					loading={loadingEligibility || loadingMevEligibility || loadingEjeEligibility || loadingPjsaltaEligibility || loadingPjcatamarcaEligibility || loadingPjmendozaEligibility}
+					detailOpen={coverageDetailOpen}
+					onToggleDetail={() => setCoverageDetailOpen((v) => !v)}
+					rows={[
+						{ label: "PJN", percent: eligibilityStats?.coveragePercent ?? null, to: "/admin/causas/verified-app" },
+						{ label: "MEV", percent: mevEligibilityStats?.coveragePercent ?? null, to: "/admin/mev/verified-app" },
+						{ label: "EJE", percent: ejeEligibilityStats?.coveragePercent ?? null, to: "/admin/eje/verified-app" },
+						{ label: "Salta", percent: pjsaltaEligibilityStats?.coveragePercent ?? null, to: "/admin/pjsalta/verified-app" },
+						{ label: "Catamarca", percent: pjcatamarcaEligibilityStats?.coveragePercent ?? null, to: "/admin/pjcatamarca/verified-app" },
+						{ label: "Mendoza", percent: pjmendozaEligibilityStats?.coveragePercent ?? null, to: "/admin/pjmendoza/verified-app" },
+					]}
+				/>
+				<Box sx={{ display: { xs: coverageDetailOpen ? "block" : "none", sm: "block" } }}>
+<Grid container spacing={{ xs: 1, sm: 2 }} sx={{ mb: { xs: 2, sm: 4 } }}>
 					{/* PJN Update Coverage Widget */}
 					<Grid item xs={12} sm={6} md={4}>
 						<Paper
@@ -3601,6 +3620,7 @@ const AdminDashboard = () => {
 						</Paper>
 					</Grid>
 				</Grid>
+				</Box>
 				</CollapsibleSection>
 
 				{/* Detailed Sections with Charts */}
@@ -3703,6 +3723,7 @@ const AdminDashboard = () => {
 							<Grid item xs={12} sm={6}>
 								<ChartCard
 									title="Distribución por Plan (Live)"
+									mobileHeight={250}
 									icon={<TickCircle size={18} />}
 									linkTo="/admin/usuarios/suscripciones"
 									height={200}
