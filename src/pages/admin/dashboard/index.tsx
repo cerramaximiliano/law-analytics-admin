@@ -2016,8 +2016,8 @@ const AdminDashboard = () => {
 											},
 										}}
 									/>
-									<Grid container spacing={2}>
-										<Grid item xs={6} sm={3}>
+									<Grid container spacing={{ xs: 0.5, sm: 2 }}>
+										<Grid item xs={3}>
 											<Box sx={{ textAlign: "center" }}>
 												<Typography
 													variant="h5"
@@ -2030,7 +2030,7 @@ const AdminDashboard = () => {
 												</Typography>
 											</Box>
 										</Grid>
-										<Grid item xs={6} sm={3}>
+										<Grid item xs={3}>
 											<Box sx={{ textAlign: "center" }}>
 												<Typography
 													variant="h5"
@@ -2046,7 +2046,7 @@ const AdminDashboard = () => {
 												</Typography>
 											</Box>
 										</Grid>
-										<Grid item xs={6} sm={3}>
+										<Grid item xs={3}>
 											<Box sx={{ textAlign: "center" }}>
 												<Typography
 													variant="h5"
@@ -2059,7 +2059,7 @@ const AdminDashboard = () => {
 												</Typography>
 											</Box>
 										</Grid>
-										<Grid item xs={6} sm={3}>
+										<Grid item xs={3}>
 											<Box sx={{ textAlign: "center" }}>
 												<Typography variant="h5" sx={{ fontWeight: 700, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>
 													{eligibilityStats.eligible.toLocaleString()}
@@ -2185,8 +2185,8 @@ const AdminDashboard = () => {
 											},
 										}}
 									/>
-									<Grid container spacing={2}>
-										<Grid item xs={6} sm={3}>
+									<Grid container spacing={{ xs: 0.5, sm: 2 }}>
+										<Grid item xs={3}>
 											<Box sx={{ textAlign: "center" }}>
 												<Typography
 													variant="h5"
@@ -2199,7 +2199,7 @@ const AdminDashboard = () => {
 												</Typography>
 											</Box>
 										</Grid>
-										<Grid item xs={6} sm={3}>
+										<Grid item xs={3}>
 											<Box sx={{ textAlign: "center" }}>
 												<Typography
 													variant="h5"
@@ -2215,7 +2215,7 @@ const AdminDashboard = () => {
 												</Typography>
 											</Box>
 										</Grid>
-										<Grid item xs={6} sm={3}>
+										<Grid item xs={3}>
 											<Box sx={{ textAlign: "center" }}>
 												<Typography
 													variant="h5"
@@ -2228,7 +2228,7 @@ const AdminDashboard = () => {
 												</Typography>
 											</Box>
 										</Grid>
-										<Grid item xs={6} sm={3}>
+										<Grid item xs={3}>
 											<Box sx={{ textAlign: "center" }}>
 												<Typography
 													variant="h5"
@@ -2370,8 +2370,8 @@ const AdminDashboard = () => {
 											},
 										}}
 									/>
-									<Grid container spacing={2}>
-										<Grid item xs={6} sm={3}>
+									<Grid container spacing={{ xs: 0.5, sm: 2 }}>
+										<Grid item xs={3}>
 											<Box sx={{ textAlign: "center" }}>
 												<Typography
 													variant="h5"
@@ -2384,7 +2384,7 @@ const AdminDashboard = () => {
 												</Typography>
 											</Box>
 										</Grid>
-										<Grid item xs={6} sm={3}>
+										<Grid item xs={3}>
 											<Box sx={{ textAlign: "center" }}>
 												<Typography
 													variant="h5"
@@ -2397,7 +2397,7 @@ const AdminDashboard = () => {
 												</Typography>
 											</Box>
 										</Grid>
-										<Grid item xs={6} sm={3}>
+										<Grid item xs={3}>
 											<Box sx={{ textAlign: "center" }}>
 												<Typography
 													variant="h5"
@@ -2410,7 +2410,7 @@ const AdminDashboard = () => {
 												</Typography>
 											</Box>
 										</Grid>
-										<Grid item xs={6} sm={3}>
+										<Grid item xs={3}>
 											<Box sx={{ textAlign: "center" }}>
 												<Typography
 													variant="h5"
@@ -2546,8 +2546,8 @@ const AdminDashboard = () => {
 										Ventana {pjsaltaEligibilityStats.schedule ?? "—"}
 										{pjsaltaEligibilityStats.thresholdHours ? ` · cada ${pjsaltaEligibilityStats.thresholdHours} h` : ""}
 									</Typography>
-									<Grid container spacing={2}>
-										<Grid item xs={6} sm={3}>
+									<Grid container spacing={{ xs: 0.5, sm: 2 }}>
+										<Grid item xs={3}>
 											<Box sx={{ textAlign: "center" }}>
 												<Typography
 													variant="h5"
@@ -2560,7 +2560,7 @@ const AdminDashboard = () => {
 												</Typography>
 											</Box>
 										</Grid>
-										<Grid item xs={6} sm={3}>
+										<Grid item xs={3}>
 											<Box sx={{ textAlign: "center" }}>
 												<Typography
 													variant="h5"
@@ -2573,7 +2573,7 @@ const AdminDashboard = () => {
 												</Typography>
 											</Box>
 										</Grid>
-										<Grid item xs={6} sm={3}>
+										<Grid item xs={3}>
 											<Box sx={{ textAlign: "center" }}>
 												<Typography
 													variant="h5"
@@ -2586,7 +2586,7 @@ const AdminDashboard = () => {
 												</Typography>
 											</Box>
 										</Grid>
-										<Grid item xs={6} sm={3}>
+										<Grid item xs={3}>
 											<Box sx={{ textAlign: "center" }}>
 												<Typography
 													variant="h5"
@@ -2722,8 +2722,8 @@ const AdminDashboard = () => {
 										Ventana {pjcatamarcaEligibilityStats.schedule ?? "—"}
 										{pjcatamarcaEligibilityStats.thresholdHours ? ` · cada ${pjcatamarcaEligibilityStats.thresholdHours} h` : ""}
 									</Typography>
-									<Grid container spacing={2}>
-										<Grid item xs={6} sm={3}>
+									<Grid container spacing={{ xs: 0.5, sm: 2 }}>
+										<Grid item xs={3}>
 											<Box sx={{ textAlign: "center" }}>
 												<Typography
 													variant="h5"
@@ -2736,7 +2736,7 @@ const AdminDashboard = () => {
 												</Typography>
 											</Box>
 										</Grid>
-										<Grid item xs={6} sm={3}>
+										<Grid item xs={3}>
 											<Box sx={{ textAlign: "center" }}>
 												<Typography
 													variant="h5"
@@ -2749,7 +2749,7 @@ const AdminDashboard = () => {
 												</Typography>
 											</Box>
 										</Grid>
-										<Grid item xs={6} sm={3}>
+										<Grid item xs={3}>
 											<Box sx={{ textAlign: "center" }}>
 												<Typography
 													variant="h5"
@@ -2762,7 +2762,7 @@ const AdminDashboard = () => {
 												</Typography>
 											</Box>
 										</Grid>
-										<Grid item xs={6} sm={3}>
+										<Grid item xs={3}>
 											<Box sx={{ textAlign: "center" }}>
 												<Typography
 													variant="h5"
@@ -2898,8 +2898,8 @@ const AdminDashboard = () => {
 										Ventana {pjmendozaEligibilityStats.schedule ?? "—"}
 										{pjmendozaEligibilityStats.thresholdHours ? ` · cada ${pjmendozaEligibilityStats.thresholdHours} h` : ""}
 									</Typography>
-									<Grid container spacing={2}>
-										<Grid item xs={6} sm={3}>
+									<Grid container spacing={{ xs: 0.5, sm: 2 }}>
+										<Grid item xs={3}>
 											<Box sx={{ textAlign: "center" }}>
 												<Typography
 													variant="h5"
@@ -2912,7 +2912,7 @@ const AdminDashboard = () => {
 												</Typography>
 											</Box>
 										</Grid>
-										<Grid item xs={6} sm={3}>
+										<Grid item xs={3}>
 											<Box sx={{ textAlign: "center" }}>
 												<Typography
 													variant="h5"
@@ -2925,7 +2925,7 @@ const AdminDashboard = () => {
 												</Typography>
 											</Box>
 										</Grid>
-										<Grid item xs={6} sm={3}>
+										<Grid item xs={3}>
 											<Box sx={{ textAlign: "center" }}>
 												<Typography
 													variant="h5"
@@ -2938,7 +2938,7 @@ const AdminDashboard = () => {
 												</Typography>
 											</Box>
 										</Grid>
-										<Grid item xs={6} sm={3}>
+										<Grid item xs={3}>
 											<Box sx={{ textAlign: "center" }}>
 												<Typography
 													variant="h5"
@@ -3077,8 +3077,8 @@ const AdminDashboard = () => {
 											},
 										}}
 									/>
-									<Grid container spacing={2}>
-										<Grid item xs={6} sm={3}>
+									<Grid container spacing={{ xs: 0.5, sm: 2 }}>
+										<Grid item xs={3}>
 											<Box sx={{ textAlign: "center" }}>
 												<Typography
 													variant="h5"
@@ -3091,7 +3091,7 @@ const AdminDashboard = () => {
 												</Typography>
 											</Box>
 										</Grid>
-										<Grid item xs={6} sm={3}>
+										<Grid item xs={3}>
 											<Box sx={{ textAlign: "center" }}>
 												<Typography
 													variant="h5"
@@ -3104,7 +3104,7 @@ const AdminDashboard = () => {
 												</Typography>
 											</Box>
 										</Grid>
-										<Grid item xs={6} sm={3}>
+										<Grid item xs={3}>
 											<Box sx={{ textAlign: "center" }}>
 												<Typography
 													variant="h5"
@@ -3117,7 +3117,7 @@ const AdminDashboard = () => {
 												</Typography>
 											</Box>
 										</Grid>
-										<Grid item xs={6} sm={3}>
+										<Grid item xs={3}>
 											<Box sx={{ textAlign: "center" }}>
 												<Typography variant="h5" sx={{ fontWeight: 700, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>
 													{stuckDocumentsStats.totals.processed.toLocaleString()}
@@ -3950,7 +3950,7 @@ const AdminDashboard = () => {
 					</Grid>
 
 					{/* Folders Section with Bar Chart */}
-					<Grid item xs={12} md={6}>
+					<Grid item xs={12}>
 						<CollapsibleSection
 							id="carpetas"
 							title="Carpetas / Causas"
@@ -3959,7 +3959,7 @@ const AdminDashboard = () => {
 						>
 						<Grid container spacing={{ xs: 1.5, sm: 2 }}>
 							{/* Bar Chart comparing PJN vs MEV */}
-							<Grid item xs={12}>
+							<Grid item xs={12} md={8}>
 								<ChartCard title="Comparación por Fuente" icon={<Folder size={18} />} height={220}>
 									{loading ? (
 										<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
@@ -3996,7 +3996,7 @@ const AdminDashboard = () => {
 							</Grid>
 
 							{/* Quick Stats Row */}
-							<Grid item xs={6}>
+							<Grid item xs={6} md={2}>
 								<Paper
 									elevation={0}
 									onClick={() => navigate("/admin/causas/verified-app")}
@@ -4049,7 +4049,7 @@ const AdminDashboard = () => {
 									</Box>
 								</Paper>
 							</Grid>
-							<Grid item xs={6}>
+							<Grid item xs={6} md={2}>
 								<Paper
 									elevation={0}
 									onClick={() => navigate("/admin/mev/verified-app")}
@@ -4107,7 +4107,7 @@ const AdminDashboard = () => {
 					</Grid>
 
 					{/* Marketing Section with Charts */}
-					<Grid item xs={12} md={6}>
+					<Grid item xs={12}>
 						<CollapsibleSection
 							id="marketing"
 							title="Marketing"
@@ -4175,7 +4175,7 @@ const AdminDashboard = () => {
 							</Grid>
 
 							{/* Contacts Pie Chart */}
-							<Grid item xs={12} sm={6}>
+							<Grid item xs={12} sm={6} md={3}>
 								<ChartCard title="Contactos" icon={<Profile2User size={18} />} linkTo="/admin/marketing/contacts" height={180}>
 									{loading ? (
 										<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
@@ -4214,7 +4214,7 @@ const AdminDashboard = () => {
 							</Grid>
 
 							{/* Segments Pie Chart */}
-							<Grid item xs={12} sm={6}>
+							<Grid item xs={12} sm={6} md={3}>
 								<ChartCard title="Segmentos" icon={<MessageProgramming size={18} />} linkTo="/admin/marketing/contacts" height={180}>
 									{loading ? (
 										<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
@@ -4263,7 +4263,7 @@ const AdminDashboard = () => {
 							</Grid>
 
 							{/* Email Verification Pie Chart (isEmailVerified) */}
-							<Grid item xs={12} sm={6}>
+							<Grid item xs={12} sm={6} md={3}>
 								<ChartCard title="Verificación de Email" icon={<TickCircle size={18} />} linkTo="/admin/marketing/contacts" height={180}>
 									{loading ? (
 										<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
@@ -4312,7 +4312,7 @@ const AdminDashboard = () => {
 							</Grid>
 
 							{/* Verification Result Pie Chart (emailVerification.verified - within verified emails) */}
-							<Grid item xs={12} sm={6}>
+							<Grid item xs={12} sm={6} md={3}>
 								<ChartCard
 									title="Resultado de Verificación"
 									icon={<TickCircle size={18} />}
