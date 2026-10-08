@@ -350,6 +350,12 @@ const PrimaryKPICard: React.FC<PrimaryKPICardProps> = ({ title, value, icon, val
 				bgcolor: theme.palette.background.paper,
 				border: `1px solid ${theme.palette.divider}`,
 				height: "100%",
+				display: "flex",
+				flexDirection: { xs: "row", sm: "column" },
+				alignItems: { xs: "center", sm: "stretch" },
+				justifyContent: { xs: "space-between", sm: "flex-start" },
+				gap: { xs: 1.5, sm: 0 },
+				minHeight: { xs: 56, sm: "auto" },
 				cursor: isClickable ? "pointer" : "default",
 				transition: "transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease",
 				...(isClickable && {
@@ -362,7 +368,7 @@ const PrimaryKPICard: React.FC<PrimaryKPICardProps> = ({ title, value, icon, val
 			}}
 		>
 			{/* Header: Icon chip + Title + Info */}
-			<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: { xs: 1.25, sm: 1.75 } }}>
+			<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: { xs: 0, sm: 1.75 }, minWidth: 0, flex: { xs: 1, sm: "initial" } }}>
 				<Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.75, sm: 1.25 }, minWidth: 0 }}>
 					<Box
 						sx={{
@@ -390,7 +396,8 @@ const PrimaryKPICard: React.FC<PrimaryKPICardProps> = ({ title, value, icon, val
 							letterSpacing: "-0.005em",
 							overflow: "hidden",
 							textOverflow: "ellipsis",
-							whiteSpace: "nowrap",
+							whiteSpace: { xs: "normal", sm: "nowrap" },
+							lineHeight: 1.25,
 						}}
 					>
 						{title}
@@ -405,7 +412,7 @@ const PrimaryKPICard: React.FC<PrimaryKPICardProps> = ({ title, value, icon, val
 			{loading ? (
 				<Skeleton variant="text" width={80} height={48} />
 			) : (
-				<Box sx={{ display: "flex", alignItems: "baseline", gap: 0.5 }}>
+				<Box sx={{ display: "flex", alignItems: "baseline", gap: 0.5, flexShrink: 0 }}>
 					{prefix && (
 						<Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
 							{prefix}
@@ -1383,7 +1390,7 @@ const AdminDashboard = () => {
 						icon={<Chart size={16} variant="Bold" />}
 					>
 					<Grid container spacing={{ xs: 1, sm: 2 }}>
-						<Grid item xs={6} sm={6} md={3}>
+						<Grid item xs={12} sm={6} md={3}>
 							<PrimaryKPICard
 								title="Total Usuarios"
 								value={data?.users.total || 0}
@@ -1393,7 +1400,7 @@ const AdminDashboard = () => {
 								linkTo="/admin/users"
 							/>
 						</Grid>
-						<Grid item xs={6} sm={6} md={3}>
+						<Grid item xs={12} sm={6} md={3}>
 							<PrimaryKPICard
 								title="Suscripciones Activas"
 								value={data?.subscriptions.active || 0}
@@ -1403,7 +1410,7 @@ const AdminDashboard = () => {
 								linkTo="/admin/usuarios/suscripciones"
 							/>
 						</Grid>
-						<Grid item xs={6} sm={6} md={3}>
+						<Grid item xs={12} sm={6} md={3}>
 							<Paper
 								elevation={0}
 								sx={{
@@ -1508,7 +1515,7 @@ const AdminDashboard = () => {
 								)}
 							</Paper>
 						</Grid>
-						<Grid item xs={6} sm={6} md={3}>
+						<Grid item xs={12} sm={6} md={3}>
 							<PrimaryKPICard
 								title="Carpetas Pendientes"
 								value={data?.folders.pending || 0}
@@ -1557,7 +1564,7 @@ const AdminDashboard = () => {
 						icon={<Wallet2 size={16} variant="Bold" />}
 					>
 					<Grid container spacing={{ xs: 1, sm: 2 }}>
-						<Grid item xs={6} sm={6} md={4} lg={2.4}>
+						<Grid item xs={12} sm={6} md={4} lg={2.4}>
 							<PrimaryKPICard
 								title="Créditos NeverBounce"
 								value={neverBounceCredits || 0}
@@ -1567,7 +1574,7 @@ const AdminDashboard = () => {
 								linkTo="/admin/workers/email-verification"
 							/>
 						</Grid>
-						<Grid item xs={6} sm={6} md={4} lg={2.4}>
+						<Grid item xs={12} sm={6} md={4} lg={2.4}>
 							<PrimaryKPICard
 								title="Saldo Capsolver"
 								value={capsolverBalance !== null ? Number(capsolverBalance.toFixed(2)) : 0}
@@ -1578,7 +1585,7 @@ const AdminDashboard = () => {
 								linkTo="/admin/causas/workers"
 							/>
 						</Grid>
-						<Grid item xs={6} sm={6} md={4} lg={2.4}>
+						<Grid item xs={12} sm={6} md={4} lg={2.4}>
 							<PrimaryKPICard
 								title={openaiBalance !== null ? "Saldo OpenAI" : "OpenAI (sin config)"}
 								value={openaiBalance !== null ? Number(openaiBalance.toFixed(2)) : 0}
@@ -1590,7 +1597,7 @@ const AdminDashboard = () => {
 							/>
 						</Grid>
 						{/* Tasas de Interés widget */}
-						<Grid item xs={6} sm={6} md={4} lg={2.4}>
+						<Grid item xs={12} sm={6} md={4} lg={2.4}>
 							<Paper
 								elevation={0}
 								onClick={() => navigate("/recursos/tasas")}
@@ -1706,7 +1713,7 @@ const AdminDashboard = () => {
 							</Paper>
 						</Grid>
 						{/* Datos Previsionales widget */}
-						<Grid item xs={6} sm={6} md={4} lg={2.4}>
+						<Grid item xs={12} sm={6} md={4} lg={2.4}>
 							<Paper
 								elevation={0}
 								onClick={() => navigate("/recursos/datos-previsionales")}
@@ -1842,7 +1849,7 @@ const AdminDashboard = () => {
 				>
 				<Grid container spacing={{ xs: 1, sm: 2 }} sx={{ mb: { xs: 2, sm: 4 } }}>
 					{/* PJN Update Coverage Widget */}
-					<Grid item xs={12} sm={6} md={3}>
+					<Grid item xs={12} sm={6} md={4}>
 						<Paper
 							elevation={0}
 							onClick={() => navigate("/admin/causas/verified-app")}
@@ -2038,7 +2045,7 @@ const AdminDashboard = () => {
 					</Grid>
 
 					{/* MEV Update Coverage Widget */}
-					<Grid item xs={12} sm={6} md={3}>
+					<Grid item xs={12} sm={6} md={4}>
 						<Paper
 							elevation={0}
 							onClick={() => navigate("/admin/mev/verified-app")}
@@ -2223,7 +2230,7 @@ const AdminDashboard = () => {
 					</Grid>
 
 					{/* EJE Update Coverage Widget */}
-					<Grid item xs={12} sm={6} md={3}>
+					<Grid item xs={12} sm={6} md={4}>
 						<Paper
 							elevation={0}
 							onClick={() => navigate("/admin/eje/verified-app")}
@@ -2392,7 +2399,7 @@ const AdminDashboard = () => {
 					</Grid>
 
 					{/* PJ Salta Update Coverage Widget */}
-					<Grid item xs={12} sm={6} md={3}>
+					<Grid item xs={12} sm={6} md={4}>
 						<Paper
 							elevation={0}
 							onClick={() => navigate("/admin/pjsalta/verified-app")}
@@ -2568,7 +2575,7 @@ const AdminDashboard = () => {
 					</Grid>
 
 					{/* PJ Catamarca Update Coverage Widget */}
-					<Grid item xs={12} sm={6} md={3}>
+					<Grid item xs={12} sm={6} md={4}>
 						<Paper
 							elevation={0}
 							onClick={() => navigate("/admin/pjcatamarca/verified-app")}
@@ -2744,7 +2751,7 @@ const AdminDashboard = () => {
 					</Grid>
 
 					{/* PJ Mendoza Update Coverage Widget */}
-					<Grid item xs={12} sm={6} md={3}>
+					<Grid item xs={12} sm={6} md={4}>
 						<Paper
 							elevation={0}
 							onClick={() => navigate("/admin/pjmendoza/verified-app")}
@@ -2920,7 +2927,7 @@ const AdminDashboard = () => {
 					</Grid>
 
 					{/* Stuck Documents Worker Widget */}
-					<Grid item xs={12} sm={6} md={3}>
+					<Grid item xs={12} sm={6} md={4}>
 						<Paper
 							elevation={0}
 							onClick={() => navigate("/admin/causas/workers")}
@@ -3119,7 +3126,7 @@ const AdminDashboard = () => {
 					</Grid>
 
 					{/* Mis Causas (SSO) Update Coverage Widget */}
-					<Grid item xs={12} sm={6} md={3}>
+					<Grid item xs={12} sm={6} md={4}>
 						<Paper
 							elevation={0}
 							onClick={() => navigate("/admin/causas/synced-credentials")}
@@ -3404,7 +3411,7 @@ const AdminDashboard = () => {
 					)}
 
 					{/* SCBA Update Coverage Widget */}
-					<Grid item xs={12} sm={6} md={3}>
+					<Grid item xs={12} sm={6} md={4}>
 						<Paper
 							elevation={0}
 							onClick={() => navigate("/admin/mev/causes-by-credential")}
