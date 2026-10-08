@@ -14,9 +14,10 @@ import WorkerAnalyticsTab from "./WorkerAnalyticsTab";
 import WorkerHelpTab from "./WorkerHelpTab";
 import ChatRagTab from "./ChatRagTab";
 import ChatEditorTab from "./ChatEditorTab";
+import ExtraccionTab from "./ExtraccionTab";
 
 // Slugs de los tabs en la URL. El principal va en `?tab=`, el sub-tab en `?sub=`.
-const TAB_VALUES = ["control", "metricas", "pricing", "indexation", "pipeline", "chat", "help"] as const;
+const TAB_VALUES = ["control", "metricas", "pricing", "indexation", "extraccion", "pipeline", "chat", "help"] as const;
 // Al cambiar de tab se limpia `sub`: el sub-tab del anterior no aplica al nuevo.
 const TAB_RESETS = ["sub"] as const;
 const METRICAS_SUB = ["stats", "analytics"] as const;
@@ -116,6 +117,12 @@ const RagWorkersPage = () => {
 			component: <WorkerIndexationTab />,
 		},
 		{
+			label: "Extracción de cédulas",
+			value: "extraccion",
+			icon: <DocumentText size={20} />,
+			component: <ExtraccionTab />,
+		},
+		{
 			label: "Pipeline",
 			value: "pipeline",
 			icon: <CpuSetting size={20} />,
@@ -147,10 +154,7 @@ const RagWorkersPage = () => {
 					</Typography>
 				</Box>
 
-				<Paper
-					variant="outlined"
-					sx={{ borderRadius: 2, overflow: "hidden", borderColor: headerBorder(isDark), boxShadow: "none" }}
-				>
+				<Paper variant="outlined" sx={{ borderRadius: 2, overflow: "hidden", borderColor: headerBorder(isDark), boxShadow: "none" }}>
 					<Box
 						sx={{
 							borderBottom: `1px solid ${headerBorder(isDark)}`,
