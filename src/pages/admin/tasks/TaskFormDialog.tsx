@@ -39,6 +39,9 @@ import { isSafeSessionId } from "utils/aiSessions";
 import RepoPicker from "./RepoPicker";
 import AiContextEditor from "./AiContextEditor";
 
+/** Fin del día local: "2026-10-08" sin hora se interpretaba como medianoche UTC y mostraba el día anterior en Argentina. */
+const dueDateToIso = (day: string): string => dayjs(day).endOf("day").toISOString();
+
 interface TaskFormDialogProps {
 	open: boolean;
 	task: AdminTask | null;
@@ -112,9 +115,13 @@ const TaskFormDialog: React.FC<TaskFormDialogProps> = ({ open, task, filterOptio
 	const [form, setForm] = useState<FormState>(EMPTY_FORM);
 	const [saving, setSaving] = useState(false);
 	const [tagInput, setTagInput] = useState("");
+	// Día del vencimiento tal como se cargó: si no se toca, se conserva el instante guardado.
+	const [initialDueDay, setInitialDueDay] = useState("");
 
 	useEffect(() => {
-		setForm(task ? fromTask(task) : EMPTY_FORM);
+		const next = task ? fromTask(task) : EMPTY_FORM;
+		setForm(next);
+		setInitialDueDay(next.dueDate);
 		setTagInput("");
 	}, [task, open]);
 
@@ -149,7 +156,7 @@ const TaskFormDialog: React.FC<TaskFormDialogProps> = ({ open, task, filterOptio
 				tags: form.tags,
 				project: form.project,
 				assignedTo: form.assignedTo,
-				dueDate: form.dueDate,
+				...(form.dueDate !== initialDueDay ? { dueDate: form.dueDate ? dueDateToIso(form.dueDate) : "" } : {}),
 				repos: form.repos,
 				// Siempre se envía completo: así, vaciar el prompt o quitar sesiones también se guarda.
 				aiContext: { prompt: form.aiContext.prompt?.trim() || "", agent: form.aiContext.agent, sessions },
@@ -177,67 +184,69 @@ const TaskFormDialog: React.FC<TaskFormDialogProps> = ({ open, task, filterOptio
 						minRows={3}
 						maxRows={10}
 					/>
-					<Grid container spacing={2}>
-						<Grid item xs={6} sm={3}>
-							<FormControl fullWidth size="small">
-								<InputLabel>Estado</InputLabel>
-								<Select value={form.status} label="Estado" onChange={(e) => set("status", e.target.value as TaskStatus)}>
-									{filterOptions?.statuses.map((s) => (
-										<MenuItem key={s} value={s}>
-											{STATUS_LABELS[s]}
-										</MenuItem>
-									))}
-								</Select>
-							</FormControl>
+					<Box>
+						<Grid container spacing={2}>
+							<Grid item xs={6} sm={3}>
+								<FormControl fullWidth size="small">
+									<InputLabel>Estado</InputLabel>
+									<Select value={form.status} label="Estado" onChange={(e) => set("status", e.target.value as TaskStatus)}>
+										{filterOptions?.statuses.map((s) => (
+											<MenuItem key={s} value={s}>
+												{STATUS_LABELS[s]}
+											</MenuItem>
+										))}
+									</Select>
+								</FormControl>
+							</Grid>
+							<Grid item xs={6} sm={3}>
+								<FormControl fullWidth size="small">
+									<InputLabel>Prioridad</InputLabel>
+									<Select value={form.priority} label="Prioridad" onChange={(e) => set("priority", e.target.value as TaskPriority)}>
+										{filterOptions?.priorities.map((p) => (
+											<MenuItem key={p} value={p}>
+												{PRIORITY_LABELS[p]}
+											</MenuItem>
+										))}
+									</Select>
+								</FormControl>
+							</Grid>
+							<Grid item xs={6} sm={3}>
+								<FormControl fullWidth size="small">
+									<InputLabel>Categoría</InputLabel>
+									<Select value={form.category} label="Categoría" onChange={(e) => set("category", e.target.value as TaskCategory)}>
+										{filterOptions?.categories.map((c) => (
+											<MenuItem key={c} value={c}>
+												{CATEGORY_LABELS[c]}
+											</MenuItem>
+										))}
+									</Select>
+								</FormControl>
+							</Grid>
+							<Grid item xs={6} sm={3}>
+								<TextField
+									label="Fecha límite"
+									type="date"
+									value={form.dueDate}
+									onChange={(e) => set("dueDate", e.target.value)}
+									fullWidth
+									size="small"
+									InputLabelProps={{ shrink: true }}
+								/>
+							</Grid>
+							<Grid item xs={6}>
+								<TextField label="Proyecto" value={form.project} onChange={(e) => set("project", e.target.value)} fullWidth size="small" />
+							</Grid>
+							<Grid item xs={6}>
+								<TextField
+									label="Asignado a"
+									value={form.assignedTo}
+									onChange={(e) => set("assignedTo", e.target.value)}
+									fullWidth
+									size="small"
+								/>
+							</Grid>
 						</Grid>
-						<Grid item xs={6} sm={3}>
-							<FormControl fullWidth size="small">
-								<InputLabel>Prioridad</InputLabel>
-								<Select value={form.priority} label="Prioridad" onChange={(e) => set("priority", e.target.value as TaskPriority)}>
-									{filterOptions?.priorities.map((p) => (
-										<MenuItem key={p} value={p}>
-											{PRIORITY_LABELS[p]}
-										</MenuItem>
-									))}
-								</Select>
-							</FormControl>
-						</Grid>
-						<Grid item xs={6} sm={3}>
-							<FormControl fullWidth size="small">
-								<InputLabel>Categoría</InputLabel>
-								<Select value={form.category} label="Categoría" onChange={(e) => set("category", e.target.value as TaskCategory)}>
-									{filterOptions?.categories.map((c) => (
-										<MenuItem key={c} value={c}>
-											{CATEGORY_LABELS[c]}
-										</MenuItem>
-									))}
-								</Select>
-							</FormControl>
-						</Grid>
-						<Grid item xs={6} sm={3}>
-							<TextField
-								label="Fecha límite"
-								type="date"
-								value={form.dueDate}
-								onChange={(e) => set("dueDate", e.target.value)}
-								fullWidth
-								size="small"
-								InputLabelProps={{ shrink: true }}
-							/>
-						</Grid>
-						<Grid item xs={6}>
-							<TextField label="Proyecto" value={form.project} onChange={(e) => set("project", e.target.value)} fullWidth size="small" />
-						</Grid>
-						<Grid item xs={6}>
-							<TextField
-								label="Asignado a"
-								value={form.assignedTo}
-								onChange={(e) => set("assignedTo", e.target.value)}
-								fullWidth
-								size="small"
-							/>
-						</Grid>
-					</Grid>
+					</Box>
 					<Box>
 						<Typography variant="body2" color="textSecondary" gutterBottom>
 							Tags

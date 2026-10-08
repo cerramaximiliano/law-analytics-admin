@@ -32,10 +32,11 @@ const AiContextEditor: React.FC<AiContextEditorProps> = ({ value, onChange }) =>
 	return (
 		<Stack spacing={2}>
 			<FormControl size="small" sx={{ maxWidth: 220 }}>
-				<InputLabel>Agente del prompt</InputLabel>
+				<InputLabel shrink>Agente del prompt</InputLabel>
 				<Select
 					value={value.agent ?? ""}
 					label="Agente del prompt"
+					notched
 					displayEmpty
 					onChange={(e) => onChange({ ...value, agent: (e.target.value || undefined) as AiAgent | undefined })}
 				>
