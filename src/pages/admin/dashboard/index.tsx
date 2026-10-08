@@ -16,6 +16,7 @@ import {
 	Chart,
 	DocumentText,
 	Key,
+	TaskSquare,
 } from "iconsax-react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -1359,7 +1360,12 @@ const AdminDashboard = () => {
 				</Box>
 
 				{/* Pendientes del equipo: tareas por vencer + soporte + feedback sin atender */}
-				<Box sx={{ mb: { xs: 2, sm: 3 } }}>
+				<Box sx={{ mb: { xs: 2, sm: 4 } }}>
+					<SectionHeader
+						title="Pendientes del equipo"
+						subtitle="Tareas por vencer, consultas de soporte y feedback sin moderar"
+						icon={<TaskSquare size={16} variant="Bold" />}
+					/>
 					<PendingWorkWidget />
 				</Box>
 
@@ -1866,7 +1872,7 @@ const AdminDashboard = () => {
 										fontWeight={600}
 										sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" }, letterSpacing: "-0.005em" }}
 									>
-										Cobertura Actualización PJN
+										Actualización PJN
 									</Typography>
 									{pjnSiteStatus && pjnSiteStatus.status === "maintenance" && (
 										<Tooltip
@@ -2062,7 +2068,7 @@ const AdminDashboard = () => {
 										fontWeight={600}
 										sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" }, letterSpacing: "-0.005em" }}
 									>
-										Cobertura Actualización MEV
+										Actualización MEV
 									</Typography>
 								</Box>
 								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -2247,7 +2253,7 @@ const AdminDashboard = () => {
 										fontWeight={600}
 										sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" }, letterSpacing: "-0.005em" }}
 									>
-										Cobertura Actualización EJE
+										Actualización EJE
 									</Typography>
 								</Box>
 								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -2416,7 +2422,7 @@ const AdminDashboard = () => {
 										fontWeight={600}
 										sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" }, letterSpacing: "-0.005em" }}
 									>
-										Cobertura Actualización Salta
+										Actualización Salta
 									</Typography>
 								</Box>
 								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -2592,7 +2598,7 @@ const AdminDashboard = () => {
 										fontWeight={600}
 										sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" }, letterSpacing: "-0.005em" }}
 									>
-										Cobertura Actualización Catamarca
+										Actualización Catamarca
 									</Typography>
 								</Box>
 								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -2768,7 +2774,7 @@ const AdminDashboard = () => {
 										fontWeight={600}
 										sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" }, letterSpacing: "-0.005em" }}
 									>
-										Cobertura Actualización Mendoza
+										Actualización Mendoza
 									</Typography>
 								</Box>
 								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>

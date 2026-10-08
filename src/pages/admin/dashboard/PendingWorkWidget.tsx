@@ -126,6 +126,11 @@ const PendingWorkWidget: React.FC = () => {
 
 	const anyLoading = tasks.loading || support.loading || feedback.loading;
 
+	const dueAccent = (iso: string): string | undefined => {
+		const d = daysUntil(iso);
+		return d < 0 ? theme.palette.error.main : d <= 1 ? theme.palette.warning.main : undefined;
+	};
+
 	const dueChip = (iso: string) => {
 		const d = daysUntil(iso);
 		const label = d < 0 ? `Vencida hace ${-d} d` : d === 0 ? "Vence hoy" : d === 1 ? "Vence mañana" : `En ${d} d`;
@@ -145,7 +150,7 @@ const PendingWorkWidget: React.FC = () => {
 		state: ColumnState<T>;
 		linkTo: string;
 		empty: string;
-		row: (item: T) => { key: string; primary: string; secondary: string; trailing: React.ReactNode };
+		row: (item: T) => { key: string; primary: string; secondary: string; trailing: React.ReactNode; accent?: string };
 		onDismiss?: (item: T) => void;
 		dismissLabel?: string;
 	}) => {
@@ -175,7 +180,11 @@ const PendingWorkWidget: React.FC = () => {
 						{title}
 					</Typography>
 					{!state.loading && !state.error && state.total > 0 && (
-						<Chip size="small" label={state.total} sx={{ height: 18, fontSize: "0.65rem", fontWeight: 700 }} />
+						<Chip
+							size="small"
+							label={state.total}
+							sx={{ height: 18, fontSize: "0.65rem", fontWeight: 700, fontVariantNumeric: "tabular-nums" }}
+						/>
 					)}
 				</Box>
 				{state.loading ? (
@@ -185,9 +194,12 @@ const PendingWorkWidget: React.FC = () => {
 						{state.error}
 					</Typography>
 				) : state.items.length === 0 ? (
-					<Typography variant="caption" color="text.secondary">
-						{empty}
-					</Typography>
+					<Stack direction="row" alignItems="center" spacing={0.75}>
+						<Box sx={{ width: 6, height: 6, borderRadius: "50%", bgcolor: theme.palette.success.main, flexShrink: 0 }} />
+						<Typography variant="caption" color="text.secondary">
+							{empty}
+						</Typography>
+					</Stack>
 				) : (
 					<Stack spacing={0.75}>
 						{state.items.map((item) => {
@@ -206,11 +218,14 @@ const PendingWorkWidget: React.FC = () => {
 										borderRadius: 1,
 										cursor: "pointer",
 										border: `1px solid ${headerBorder(isDark)}`,
+										borderLeft: `3px solid ${r.accent || headerBorder(isDark)}`,
+										transition: "background-color 200ms ease, transform 200ms ease",
+										"&:active": { transform: "scale(0.995)" },
 										"&:hover": { bgcolor: alpha(BRAND_BLUE, isDark ? 0.12 : 0.05) },
 									}}
 								>
 									<Box sx={{ minWidth: 0 }}>
-										<Typography variant="caption" fontWeight={600} noWrap display="block">
+										<Typography variant="caption" fontWeight={600} noWrap display="block" sx={{ letterSpacing: "-0.005em" }}>
 											{r.primary}
 										</Typography>
 										<Typography variant="caption" color="text.secondary" noWrap display="block">
@@ -249,17 +264,15 @@ const PendingWorkWidget: React.FC = () => {
 	};
 
 	return (
-		<Paper elevation={0} sx={{ p: { xs: 1.5, sm: 2.5 }, borderRadius: 2, border: `1px solid ${headerBorder(isDark)}`, height: "100%" }}>
-			<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
-				<Typography variant="subtitle2" fontWeight="bold">
-					Pendientes del equipo
-				</Typography>
-				<Tooltip title="Actualizar">
-					<IconButton size="small" onClick={refreshAll} disabled={anyLoading}>
-						<Refresh size={18} />
-					</IconButton>
-				</Tooltip>
-			</Box>
+		<Paper
+			elevation={0}
+			sx={{ position: "relative", p: { xs: 1.5, sm: 2.5 }, borderRadius: 2, border: `1px solid ${headerBorder(isDark)}`, height: "100%" }}
+		>
+			<Tooltip title="Actualizar">
+				<IconButton size="small" onClick={refreshAll} disabled={anyLoading} sx={{ position: "absolute", top: 8, right: 8 }}>
+					<Refresh size={18} />
+				</IconButton>
+			</Tooltip>
 			<Grid container spacing={{ xs: 2, md: 3 }}>
 				<Grid item xs={12} md={4}>
 					{renderColumn<AdminTask>({
@@ -267,12 +280,13 @@ const PendingWorkWidget: React.FC = () => {
 						icon: <TaskSquare size={14} />,
 						state: tasks,
 						linkTo: "/admin/tasks",
-						empty: `Sin tareas que venzan en los próximos ${DUE_WINDOW_DAYS} días.`,
+						empty: `Nada vence en los próximos ${DUE_WINDOW_DAYS} días.`,
 						row: (t) => ({
 							key: t._id,
 							primary: t.title,
 							secondary: PRIORITY_LABEL[t.priority] ? `Prioridad ${PRIORITY_LABEL[t.priority].toLowerCase()}` : t.priority,
 							trailing: t.dueDate ? dueChip(t.dueDate) : null,
+							accent: t.dueDate ? dueAccent(t.dueDate) : undefined,
 						}),
 					})}
 				</Grid>
@@ -282,11 +296,12 @@ const PendingWorkWidget: React.FC = () => {
 						icon: <MessageQuestion size={14} />,
 						state: support,
 						linkTo: "/admin/support",
-						empty: "No hay consultas de soporte pendientes.",
+						empty: "Soporte al día, sin consultas pendientes.",
 						row: (c) => ({
 							key: c._id,
 							primary: c.subject,
 							secondary: `${c.name || c.email} · ${new Date(c.createdAt).toLocaleDateString("es-AR")}`,
+							accent: c.priority === "urgent" ? theme.palette.error.main : c.priority === "high" ? theme.palette.warning.main : undefined,
 							trailing: (
 								<Chip
 									size="small"
@@ -304,7 +319,7 @@ const PendingWorkWidget: React.FC = () => {
 						icon: <MessageText1 size={14} />,
 						state: feedback,
 						linkTo: "/admin/feedback",
-						empty: "No hay feedback pendiente de moderación.",
+						empty: "Todo el feedback está moderado.",
 						dismissLabel: "Archivar (sale de pendientes, no se borra)",
 						onDismiss: (f) => archiveFeedback(f._id),
 						row: (f) => {
