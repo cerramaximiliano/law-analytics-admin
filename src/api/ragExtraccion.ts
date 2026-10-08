@@ -22,10 +22,14 @@ export interface ExtraccionResumen {
 		porFuero: Record<string, number>;
 		vinculadas: number;
 		conTranscripcion: number;
+		sinVinculoPorMotivo: Record<string, number>;
+		porVersion: Record<string, number>;
 	};
 	// pjn-movements (Atlas) del tipo de la etapa con PDF descargado, por textoStatus
 	atlas: Record<string, number>;
 }
+
+export type MotivoSinVinculo = "sin_texto_de_resolucion" | "causa_sin_textos" | "sin_coincidencia";
 
 export interface Vinculo {
 	movementId: string;
@@ -71,7 +75,20 @@ export interface FichaCedula {
 	transcripcion?: string | null;
 	paginasCedula?: number[];
 	paginasDorsoFormulario?: number[];
-	paginasAdjuntas?: Array<{ n: number; conTexto: boolean; chars: number }>;
+	paginasAdjuntas?: Array<{ n: number; conTexto: boolean; enBlanco?: boolean; chars: number }>;
+	// Copias adjuntas separadas por documento (el texto está en pjn-movement-texts)
+	adjuntos?: Array<{
+		tipo: "resolucion" | "escrito" | "escaneado" | "otro";
+		paginas: number[];
+		chars: number;
+		titulo?: string | null;
+		sgjId?: string | null;
+		firmadoEl?: string | null;
+		firmantes?: string[];
+		fechaFirma?: string | null;
+		cerrado?: boolean;
+	}>;
+	resolucionAdjunta?: number | null;
 	camposFaltantes?: string[];
 }
 
@@ -90,7 +107,12 @@ export interface ExtraccionItem {
 	aliasDe?: string;
 	procesadoAt: string;
 	ficha?: Partial<FichaCedula>;
-	vinculos?: { resolucion?: Vinculo | null; adjuntos?: Vinculo[] };
+	vinculos?: {
+		resolucion?: Vinculo | null;
+		adjuntos?: Array<Vinculo & { indice?: number; tipo?: string; paginas?: number[] }>;
+		motivo?: MotivoSinVinculo | null;
+	};
+	parserVersion?: string;
 }
 
 export interface ExtraccionDetalle {
@@ -122,7 +144,14 @@ export interface ExtraccionDetalle {
 				parserVersion?: string;
 				ms?: number;
 				intentos?: number;
-				vinculos?: { resolucion?: Vinculo | null; adjuntos?: Vinculo[]; intentadoAt?: string };
+				vinculos?: {
+					resolucion?: Vinculo | null;
+					adjuntos?: Array<Vinculo & { indice?: number; tipo?: string; paginas?: number[] }>;
+					motivo?: MotivoSinVinculo | null;
+					intentadoAt?: string;
+				};
+				paginasEnBlanco?: number[];
+				textoCrudoChars?: number;
 		  })
 		| null;
 	texto: string | null;
@@ -136,6 +165,7 @@ export interface ExtraccionFiltros {
 	clase?: string;
 	familia?: string;
 	vinculo?: "si" | "no" | "";
+	motivo?: MotivoSinVinculo | "";
 	fuero?: string;
 	causaId?: string;
 	q?: string;

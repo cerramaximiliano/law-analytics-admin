@@ -69,6 +69,23 @@ const STATUS_COLOR: Record<string, "success" | "warning" | "default" | "error"> 
 	failed: "error",
 };
 const STATUS_LABEL: Record<string, string> = { extracted: "Extraído", needs_ocr: "Necesita OCR", skipped: "Omitido", failed: "Falló" };
+const MOTIVO_LABEL: Record<string, string> = {
+	sin_texto_de_resolucion: "Sin texto de la resolución",
+	causa_sin_textos: "La causa no tiene despachos con texto",
+	sin_coincidencia: "Ningún despacho coincide",
+};
+const ADJ_LABEL: Record<string, string> = {
+	resolucion: "Resolución",
+	escrito: "Escrito",
+	escaneado: "Escaneado (OCR pendiente)",
+	otro: "Documentación",
+};
+const ADJ_COLOR: Record<string, "primary" | "secondary" | "warning" | "default"> = {
+	resolucion: "primary",
+	escrito: "secondary",
+	escaneado: "warning",
+	otro: "default",
+};
 const TIPO_CORTO: Record<string, string> = {
 	"CEDULA ELECTRONICA TRIBUNAL": "Electrónica · tribunal",
 	"CEDULA ELECTRONICA PARTE": "Electrónica · parte",
@@ -116,7 +133,7 @@ const Resumen = ({ r }: { r: ExtraccionResumen }) => {
 					<Cifra
 						titulo="Vinculadas a su resolución"
 						valor={pct(p.vinculadas, p.conTranscripcion)}
-						sub={`${n(p.vinculadas)} de ${n(p.conTranscripcion)} que transcriben la resolución`}
+						sub={`${n(p.vinculadas)} de ${n(p.conTranscripcion)} con texto de la resolución (transcripta o adjunta)`}
 					/>
 				</Grid>
 				<Grid item xs={6} md={3}>
@@ -149,6 +166,12 @@ const Resumen = ({ r }: { r: ExtraccionResumen }) => {
 				))}
 				{Object.entries(p.porClase).map(([k, v]) => (
 					<Chip key={`c-${k}`} size="small" variant="outlined" color="secondary" label={`${k}: ${n(v)}`} />
+				))}
+				{Object.entries(p.sinVinculoPorMotivo || {}).map(([k, v]) => (
+					<Chip key={`m-${k}`} size="small" variant="outlined" color="warning" label={`sin vínculo · ${MOTIVO_LABEL[k] || k}: ${n(v)}`} />
+				))}
+				{Object.entries(p.porVersion || {}).map(([k, v]) => (
+					<Chip key={`v-${k}`} size="small" variant="outlined" label={`versión ${k}: ${n(v)}`} />
 				))}
 			</Stack>
 		</Stack>
@@ -232,19 +255,49 @@ const FichaVista = ({ f, causa }: { f: FichaCedula; causa: ExtraccionDetalle["ca
 			<Campo
 				k="Páginas"
 				v={`cédula ${f.paginasCedula?.join(",") || "—"}${
-					f.paginasDorsoFormulario?.length ? ` (dorso en blanco ${f.paginasDorsoFormulario.join(",")})` : ""
-				} · copias ${(f.paginasAdjuntas || []).length}${
-					(f.paginasAdjuntas || []).some((p) => !p.conTexto)
-						? ` (${(f.paginasAdjuntas || []).filter((p) => !p.conTexto).length} escaneadas)`
+					f.paginasDorsoFormulario?.length ? ` (formulario de diligencia en blanco ${f.paginasDorsoFormulario.join(",")})` : ""
+				} · copias ${(f.paginasAdjuntas || []).filter((p) => !p.enBlanco).length}${
+					(f.paginasAdjuntas || []).some((p) => p.enBlanco)
+						? ` · en blanco ${(f.paginasAdjuntas || [])
+								.filter((p) => p.enBlanco)
+								.map((p) => p.n)
+								.join(",")}`
 						: ""
 				}`}
 			/>
+			{f.adjuntos && f.adjuntos.length > 0 && (
+				<Campo
+					k="Adjuntos"
+					v={
+						<Stack spacing={0.5}>
+							{f.adjuntos.map((a, i) => (
+								<Stack key={i} direction="row" spacing={0.75} alignItems="center" flexWrap="wrap" useFlexGap>
+									<Chip size="small" color={ADJ_COLOR[a.tipo]} label={`${i + 1} · ${ADJ_LABEL[a.tipo] || a.tipo}`} />
+									<Typography variant="caption">
+										{a.paginas.length > 1 ? `págs. ${a.paginas[0]}–${a.paginas[a.paginas.length - 1]}` : `pág. ${a.paginas[0]}`}
+										{a.titulo ? ` · «${a.titulo}»` : ""}
+										{a.firmadoEl ? ` · firmada ${fmtFecha(a.firmadoEl, true)}` : ""}
+										{a.firmantes && a.firmantes.length ? ` · ${a.firmantes.join(", ")}` : ""}
+										{a.chars ? ` · ${n(a.chars)} caracteres` : ""}
+									</Typography>
+									{f.resolucionAdjunta === i && <Chip size="small" color="success" variant="outlined" label="resolución notificada" />}
+								</Stack>
+							))}
+						</Stack>
+					}
+				/>
+			)}
 			{f.camposFaltantes && f.camposFaltantes.length > 0 && (
 				<Campo k="Faltan" v={<Chip size="small" color="warning" label={f.camposFaltantes.join(", ")} />} />
 			)}
 			<Grid item xs={12}>
 				<Typography variant="caption" color="text.secondary">
-					Resolución transcripta {f.resolucionEnAdjunto && !f.transcripcion ? "(no está en la cédula: va en la copia adjunta)" : ""}
+					Resolución transcripta{" "}
+					{f.resolucionEnAdjunto && !f.transcripcion
+						? typeof f.resolucionAdjunta === "number"
+							? `(no está en la cédula: es el adjunto ${f.resolucionAdjunta + 1}, ver pestaña Texto)`
+							: "(no está en la cédula: va en la copia adjunta)"
+						: ""}
 				</Typography>
 				{f.transcripcion && (
 					<Paper variant="outlined" sx={{ p: 1, mt: 0.5, maxHeight: 220, overflow: "auto", whiteSpace: "pre-wrap", fontSize: 13 }}>
@@ -262,7 +315,7 @@ const DetalleDialog = ({ id, onClose }: { id: string | null; onClose: () => void
 	const { enqueueSnackbar } = useSnackbar();
 	const [d, setD] = useState<ExtraccionDetalle | null>(null);
 	const [cargando, setCargando] = useState(false);
-	const [vista, setVista] = useState<"ficha" | "texto" | "pdf" | "vinculos">("ficha");
+	const [vista, setVista] = useState<"ficha" | "texto" | "pdf" | "vinculos" | "json">("ficha");
 	const [pdf, setPdf] = useState<ArrayBuffer | null>(null);
 
 	useEffect(() => {
@@ -342,7 +395,16 @@ const DetalleDialog = ({ id, onClose }: { id: string | null; onClose: () => void
 									label={`Vinculada (${res.metodo === "fecha" ? "por fecha" : `${Math.round(res.cobertura * 100)}%`})`}
 								/>
 							) : (
-								e?.ficha?.esCedula && <Chip size="small" variant="outlined" label="Sin resolución vinculada" />
+								e?.ficha?.esCedula && (
+									<Chip
+										size="small"
+										variant="outlined"
+										color="warning"
+										label={`Sin resolución vinculada${
+											e?.vinculos?.motivo ? `: ${MOTIVO_LABEL[e.vinculos.motivo] || e.vinculos.motivo}` : ""
+										}`}
+									/>
+								)
 							)}
 							{e?.parserVersion && (
 								<Chip size="small" variant="outlined" label={`${e.parserVersion} · ${e.ms ?? "?"} ms · ${fmtFecha(e.procesadoAt, true)}`} />
@@ -357,6 +419,7 @@ const DetalleDialog = ({ id, onClose }: { id: string | null; onClose: () => void
 							<Tab value="texto" label={`Texto${d.texto ? ` (${n(d.texto.length)})` : ""}`} />
 							<Tab value="pdf" label="PDF original" />
 							<Tab value="vinculos" label={`Vinculados (${d.vinculados.length})`} />
+							<Tab value="json" label="JSON" />
 						</Tabs>
 						{vista === "ficha" &&
 							(e?.ficha?.esCedula ? (
@@ -393,6 +456,28 @@ const DetalleDialog = ({ id, onClose }: { id: string | null; onClose: () => void
 							) : (
 								<Skeleton variant="rectangular" height={400} />
 							))}
+						{vista === "json" && (
+							<Stack spacing={1}>
+								<Box>
+									<Button
+										size="small"
+										variant="outlined"
+										onClick={() => navigator.clipboard?.writeText(JSON.stringify({ estado: d.estado, movimiento: d.movimiento }, null, 2))}
+									>
+										Copiar
+									</Button>
+								</Box>
+								<Typography variant="caption" color="text.secondary">
+									estado: rag-movement-docs (rs0) · movimiento: pjn-movements (Atlas)
+								</Typography>
+								<Paper
+									variant="outlined"
+									sx={{ p: 1.25, maxHeight: "60vh", overflow: "auto", fontFamily: "monospace", fontSize: 12, whiteSpace: "pre" }}
+								>
+									{JSON.stringify({ estado: d.estado, movimiento: d.movimiento }, null, 2)}
+								</Paper>
+							</Stack>
+						)}
 						{vista === "vinculos" &&
 							(d.vinculados.length ? (
 								<Stack spacing={1}>
@@ -418,7 +503,9 @@ const DetalleDialog = ({ id, onClose }: { id: string | null; onClose: () => void
 														<Chip
 															size="small"
 															color="info"
-															label={`copia adjunta pág. ${adj.pagina} · ${Math.round(adj.cobertura * 100)}%`}
+															label={`adjunto ${adj.indice !== undefined ? adj.indice + 1 : ""} (${ADJ_LABEL[adj.tipo || ""] || "copia"}${
+																adj.paginas ? `, pág. ${adj.paginas.join(",")}` : adj.pagina ? `, pág. ${adj.pagina}` : ""
+															}) · ${Math.round(adj.cobertura * 100)}%`}
 														/>
 													)}
 													{e?.aliasDe === v._id && <Chip size="small" label="mismo documento" />}
@@ -462,6 +549,7 @@ const ExtraccionTab = () => {
 		clase: "",
 		familia: "",
 		vinculo: "",
+		motivo: "",
 		fuero: "",
 		q: "",
 	});
@@ -533,6 +621,14 @@ const ExtraccionTab = () => {
 						<MenuItem value="">Todos</MenuItem>
 						<MenuItem value="si">Con resolución</MenuItem>
 						<MenuItem value="no">Sin resolución</MenuItem>
+					</TextField>
+					<TextField select size="small" label="Motivo sin vínculo" value={filtros.motivo} onChange={set("motivo")} sx={{ minWidth: 190 }}>
+						<MenuItem value="">Todos</MenuItem>
+						{Object.entries(MOTIVO_LABEL).map(([k, v]) => (
+							<MenuItem key={k} value={k}>
+								{v}
+							</MenuItem>
+						))}
 					</TextField>
 					<TextField select size="small" label="Fuero" value={filtros.fuero} onChange={set("fuero")} sx={{ minWidth: 110 }}>
 						<MenuItem value="">Todos</MenuItem>
@@ -639,10 +735,16 @@ const ExtraccionTab = () => {
 													icon={<Link21 size={12} />}
 													label={r.metodo === "fecha" ? "por fecha" : `${Math.round(r.cobertura * 100)}%`}
 												/>
-											) : f.resolucionEnAdjunto ? (
-												<Typography variant="caption" color="text.secondary">
-													en copia
-												</Typography>
+											) : it.vinculos?.motivo ? (
+												<Tooltip title={MOTIVO_LABEL[it.vinculos.motivo] || it.vinculos.motivo}>
+													<Typography variant="caption" color="warning.main">
+														{it.vinculos.motivo === "sin_texto_de_resolucion"
+															? "sin texto"
+															: it.vinculos.motivo === "causa_sin_textos"
+															? "causa sin textos"
+															: "no coincide"}
+													</Typography>
+												</Tooltip>
 											) : (
 												"—"
 											)}
@@ -691,7 +793,9 @@ const ExtraccionTab = () => {
 					size="small"
 					variant="text"
 					sx={{ alignSelf: "flex-start" }}
-					onClick={() => setFiltros({ etapa: "cedulas", status: "", clase: "", familia: "", vinculo: "", fuero: "", q: "", causaId: "" })}
+					onClick={() =>
+						setFiltros({ etapa: "cedulas", status: "", clase: "", familia: "", vinculo: "", motivo: "", fuero: "", q: "", causaId: "" })
+					}
 				>
 					Limpiar filtros
 				</Button>
