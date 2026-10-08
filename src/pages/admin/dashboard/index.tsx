@@ -1354,6 +1354,8 @@ const AdminDashboard = () => {
 		<>
 			<MainCard
 				title="Dashboard"
+				// clip (no hidden): hidden vuelve a la tarjeta un contenedor de scroll y rompe el sticky de SectionNav
+				sx={{ overflow: "clip" }}
 				secondary={
 					<Box sx={{ display: "flex", alignItems: "center", gap: { xs: 1, sm: 2 }, flexWrap: "wrap", justifyContent: "flex-end" }}>
 						{lastUpdated && (
