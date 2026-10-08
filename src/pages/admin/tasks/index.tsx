@@ -34,7 +34,8 @@ import {
 	alpha,
 	Divider,
 	LinearProgress,
-	Stack,
+	Autocomplete,
+	Tooltip,
 } from "@mui/material";
 import {
 	SearchNormal1,
@@ -52,14 +53,20 @@ import {
 	Calendar,
 	TaskSquare,
 	Refresh,
+	Code1,
+	MagicStar,
+	Eye,
 } from "iconsax-react";
 import MainCard from "components/MainCard";
 import AdminTasksService from "api/adminTasks";
+import useAuth from "hooks/useAuth";
+import { ECOSYSTEM_REPO_NAMES, repoGroup } from "utils/ecosystemRepos";
+import TaskFormDialog from "./TaskFormDialog";
+import TaskDetailDrawer from "./TaskDetailDrawer";
 import {
 	AdminTask,
 	TaskStatus,
 	TaskPriority,
-	TaskCategory,
 	TaskStats,
 	TaskFilterOptions,
 	CreateTaskRequest,
@@ -130,223 +137,10 @@ const StatCard: React.FC<StatCardProps> = ({ label, value, icon, color, loading 
 	);
 };
 
-// Task Form Dialog
-interface TaskFormDialogProps {
-	open: boolean;
-	task: AdminTask | null;
-	filterOptions: TaskFilterOptions | null;
-	onClose: () => void;
-	onSave: (data: CreateTaskRequest) => Promise<void>;
-}
-
-const TaskFormDialog: React.FC<TaskFormDialogProps> = ({ open, task, filterOptions, onClose, onSave }) => {
-	const [formData, setFormData] = useState<CreateTaskRequest>({
-		title: "",
-		description: "",
-		status: "todo",
-		priority: "medium",
-		category: "other",
-		tags: [],
-		project: "",
-		assignedTo: "",
-		dueDate: "",
-	});
-	const [saving, setSaving] = useState(false);
-	const [tagInput, setTagInput] = useState("");
-
-	useEffect(() => {
-		if (task) {
-			setFormData({
-				title: task.title,
-				description: task.description || "",
-				status: task.status,
-				priority: task.priority,
-				category: task.category,
-				tags: task.tags || [],
-				project: task.project || "",
-				assignedTo: task.assignedTo || "",
-				dueDate: task.dueDate ? dayjs(task.dueDate).format("YYYY-MM-DD") : "",
-			});
-		} else {
-			setFormData({
-				title: "",
-				description: "",
-				status: "todo",
-				priority: "medium",
-				category: "other",
-				tags: [],
-				project: "",
-				assignedTo: "",
-				dueDate: "",
-			});
-		}
-	}, [task, open]);
-
-	const handleSubmit = async () => {
-		if (!formData.title.trim()) return;
-		setSaving(true);
-		try {
-			await onSave(formData);
-			onClose();
-		} finally {
-			setSaving(false);
-		}
-	};
-
-	const handleAddTag = () => {
-		if (tagInput.trim() && !formData.tags?.includes(tagInput.trim().toLowerCase())) {
-			setFormData({ ...formData, tags: [...(formData.tags || []), tagInput.trim().toLowerCase()] });
-			setTagInput("");
-		}
-	};
-
-	const handleRemoveTag = (tag: string) => {
-		setFormData({ ...formData, tags: formData.tags?.filter((t) => t !== tag) });
-	};
-
-	return (
-		<Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-			<DialogTitle>{task ? "Editar Tarea" : "Nueva Tarea"}</DialogTitle>
-			<DialogContent dividers>
-				<Stack spacing={2} sx={{ pt: 1 }}>
-					<TextField
-						label="Título"
-						value={formData.title}
-						onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-						fullWidth
-						required
-						autoFocus
-					/>
-					<TextField
-						label="Descripción"
-						value={formData.description}
-						onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-						fullWidth
-						multiline
-						rows={3}
-					/>
-					<Grid container spacing={2}>
-						<Grid item xs={6}>
-							<FormControl fullWidth size="small">
-								<InputLabel>Estado</InputLabel>
-								<Select
-									value={formData.status}
-									label="Estado"
-									onChange={(e) => setFormData({ ...formData, status: e.target.value as TaskStatus })}
-								>
-									{filterOptions?.statuses.map((s) => (
-										<MenuItem key={s} value={s}>
-											{STATUS_LABELS[s]}
-										</MenuItem>
-									))}
-								</Select>
-							</FormControl>
-						</Grid>
-						<Grid item xs={6}>
-							<FormControl fullWidth size="small">
-								<InputLabel>Prioridad</InputLabel>
-								<Select
-									value={formData.priority}
-									label="Prioridad"
-									onChange={(e) => setFormData({ ...formData, priority: e.target.value as TaskPriority })}
-								>
-									{filterOptions?.priorities.map((p) => (
-										<MenuItem key={p} value={p}>
-											{PRIORITY_LABELS[p]}
-										</MenuItem>
-									))}
-								</Select>
-							</FormControl>
-						</Grid>
-						<Grid item xs={6}>
-							<FormControl fullWidth size="small">
-								<InputLabel>Categoría</InputLabel>
-								<Select
-									value={formData.category}
-									label="Categoría"
-									onChange={(e) => setFormData({ ...formData, category: e.target.value as TaskCategory })}
-								>
-									{filterOptions?.categories.map((c) => (
-										<MenuItem key={c} value={c}>
-											{CATEGORY_LABELS[c]}
-										</MenuItem>
-									))}
-								</Select>
-							</FormControl>
-						</Grid>
-						<Grid item xs={6}>
-							<TextField
-								label="Fecha límite"
-								type="date"
-								value={formData.dueDate}
-								onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-								fullWidth
-								size="small"
-								InputLabelProps={{ shrink: true }}
-							/>
-						</Grid>
-						<Grid item xs={6}>
-							<TextField
-								label="Proyecto"
-								value={formData.project}
-								onChange={(e) => setFormData({ ...formData, project: e.target.value })}
-								fullWidth
-								size="small"
-							/>
-						</Grid>
-						<Grid item xs={6}>
-							<TextField
-								label="Asignado a"
-								value={formData.assignedTo}
-								onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
-								fullWidth
-								size="small"
-							/>
-						</Grid>
-					</Grid>
-					<Box>
-						<Typography variant="body2" color="textSecondary" gutterBottom>
-							Tags
-						</Typography>
-						<Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 1 }}>
-							{formData.tags?.map((tag) => (
-								<Chip key={tag} label={tag} size="small" onDelete={() => handleRemoveTag(tag)} />
-							))}
-						</Box>
-						<TextField
-							placeholder="Agregar tag..."
-							value={tagInput}
-							onChange={(e) => setTagInput(e.target.value)}
-							onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), handleAddTag())}
-							size="small"
-							InputProps={{
-								endAdornment: (
-									<InputAdornment position="end">
-										<IconButton size="small" onClick={handleAddTag}>
-											<Add size={16} />
-										</IconButton>
-									</InputAdornment>
-								),
-							}}
-						/>
-					</Box>
-				</Stack>
-			</DialogContent>
-			<DialogActions>
-				<Button onClick={onClose} disabled={saving}>
-					Cancelar
-				</Button>
-				<Button variant="contained" onClick={handleSubmit} disabled={saving || !formData.title.trim()}>
-					{saving ? "Guardando..." : task ? "Actualizar" : "Crear"}
-				</Button>
-			</DialogActions>
-		</Dialog>
-	);
-};
-
 // Main Component
 const AdminTasks: React.FC = () => {
 	const theme = useTheme();
+	const { user } = useAuth();
 
 	// State
 	const [tasks, setTasks] = useState<AdminTask[]>([]);
@@ -368,9 +162,15 @@ const AdminTasks: React.FC = () => {
 	const [statusFilter, setStatusFilter] = useState<string>("");
 	const [priorityFilter, setPriorityFilter] = useState<string>("");
 	const [categoryFilter, setCategoryFilter] = useState<string>("");
+	const [repoFilter, setRepoFilter] = useState<string>("");
+	const [aiOnly, setAiOnly] = useState(false);
 
 	// Selection
 	const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+	// Panel de detalle (solo lectura)
+	const [detailTask, setDetailTask] = useState<AdminTask | null>(null);
+	const [detailOpen, setDetailOpen] = useState(false);
 
 	// Dialogs
 	const [formOpen, setFormOpen] = useState(false);
@@ -414,6 +214,8 @@ const AdminTasks: React.FC = () => {
 				status: statusFilter || undefined,
 				priority: priorityFilter || undefined,
 				category: categoryFilter || undefined,
+				repo: repoFilter || undefined,
+				hasAi: aiOnly || undefined,
 				sortBy,
 				sortOrder,
 			});
@@ -426,7 +228,7 @@ const AdminTasks: React.FC = () => {
 		} finally {
 			setLoading(false);
 		}
-	}, [page, rowsPerPage, search, statusFilter, priorityFilter, categoryFilter, sortBy, sortOrder]);
+	}, [page, rowsPerPage, search, statusFilter, priorityFilter, categoryFilter, repoFilter, aiOnly, sortBy, sortOrder]);
 
 	useEffect(() => {
 		fetchStats();
@@ -455,6 +257,12 @@ const AdminTasks: React.FC = () => {
 		setSortBy(column);
 	};
 
+	const handleOpenDetail = (task: AdminTask) => {
+		setDetailTask(task);
+		setDetailOpen(true);
+		setMenuAnchor(null);
+	};
+
 	const handleCreateTask = () => {
 		setEditingTask(null);
 		setFormOpen(true);
@@ -464,13 +272,14 @@ const AdminTasks: React.FC = () => {
 		setEditingTask(task);
 		setFormOpen(true);
 		setMenuAnchor(null);
+		setDetailOpen(false);
 	};
 
 	const handleSaveTask = async (data: CreateTaskRequest) => {
 		if (editingTask) {
 			await AdminTasksService.updateTask(editingTask._id, data);
 		} else {
-			await AdminTasksService.createTask(data);
+			await AdminTasksService.createTask({ ...data, createdBy: user?.email || undefined });
 		}
 		fetchTasks();
 		fetchStats();
@@ -705,6 +514,32 @@ const AdminTasks: React.FC = () => {
 					</Select>
 				</FormControl>
 
+				<Autocomplete
+					size="small"
+					sx={{ minWidth: 190 }}
+					options={ECOSYSTEM_REPO_NAMES}
+					groupBy={repoGroup}
+					value={repoFilter || null}
+					onChange={(_, value) => {
+						setRepoFilter(value || "");
+						setPage(0);
+					}}
+					renderInput={(params) => <TextField {...params} label="Repositorio" />}
+				/>
+
+				<Chip
+					icon={<MagicStar size={16} />}
+					label="Con IA"
+					clickable
+					color={aiOnly ? "primary" : "default"}
+					variant={aiOnly ? "filled" : "outlined"}
+					onClick={() => {
+						setAiOnly((v) => !v);
+						setPage(0);
+					}}
+					aria-pressed={aiOnly}
+				/>
+
 				<Box sx={{ flexGrow: 1 }} />
 
 				{selectedIds.length > 0 && (
@@ -810,26 +645,81 @@ const AdminTasks: React.FC = () => {
 							</TableRow>
 						) : (
 							tasks.map((task) => (
-								<TableRow key={task._id} hover selected={selectedIds.includes(task._id)}>
-									<TableCell padding="checkbox">
+								<TableRow
+									key={task._id}
+									hover
+									selected={selectedIds.includes(task._id)}
+									onClick={() => handleOpenDetail(task)}
+									sx={{ cursor: "pointer" }}
+								>
+									<TableCell padding="checkbox" onClick={(e) => e.stopPropagation()}>
 										<Checkbox checked={selectedIds.includes(task._id)} onChange={(e) => handleSelectOne(task._id, e.target.checked)} />
 									</TableCell>
 									<TableCell>
 										<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
 											{task.isPinned && <Flag size={14} color={theme.palette.warning.main} />}
-											<Box>
-												<Typography
-													variant="body2"
-													fontWeight="medium"
-													sx={{ textDecoration: task.status === "completed" ? "line-through" : "none" }}
-												>
-													{task.title}
-												</Typography>
-												{task.project && (
-													<Typography variant="caption" color="textSecondary">
-														{task.project}
+											<Box sx={{ minWidth: 0 }}>
+												<Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+													<Typography
+														variant="body2"
+														fontWeight="medium"
+														sx={{ textDecoration: task.status === "completed" ? "line-through" : "none" }}
+													>
+														{task.title}
+													</Typography>
+													{(task.aiContext?.prompt || task.aiContext?.sessions?.length) && (
+														<Tooltip title="Tiene prompt o sesiones de IA">
+															<Box component="span" sx={{ display: "inline-flex", color: "primary.main" }}>
+																<MagicStar size={14} />
+															</Box>
+														</Tooltip>
+													)}
+												</Box>
+												{task.description && (
+													<Typography
+														variant="caption"
+														color="textSecondary"
+														sx={{
+															display: "-webkit-box",
+															WebkitLineClamp: 2,
+															WebkitBoxOrient: "vertical",
+															overflow: "hidden",
+															maxWidth: 420,
+														}}
+													>
+														{task.description}
 													</Typography>
 												)}
+												<Box
+													sx={{
+														display: "flex",
+														alignItems: "center",
+														gap: 0.5,
+														flexWrap: "wrap",
+														mt: task.repos?.length || task.project ? 0.5 : 0,
+													}}
+												>
+													{task.project && (
+														<Typography variant="caption" color="textSecondary" sx={{ mr: 0.5 }}>
+															{task.project}
+														</Typography>
+													)}
+													{task.repos?.slice(0, 2).map((repo) => (
+														<Chip
+															key={repo}
+															size="small"
+															variant="outlined"
+															icon={<Code1 size={12} />}
+															label={repo}
+															sx={{ height: 20, fontSize: "0.7rem" }}
+														/>
+													))}
+													{(task.repos?.length || 0) > 2 && (
+														<Tooltip title={task.repos!.slice(2).join(", ")}>
+															<Chip size="small" label={`+${task.repos!.length - 2}`} sx={{ height: 20, fontSize: "0.7rem" }} />
+														</Tooltip>
+													)}
+												</Box>
 											</Box>
 										</Box>
 									</TableCell>
@@ -887,9 +777,10 @@ const AdminTasks: React.FC = () => {
 											<Typography variant="caption">{task.progress}%</Typography>
 										</Box>
 									</TableCell>
-									<TableCell align="right">
+									<TableCell align="right" onClick={(e) => e.stopPropagation()}>
 										<IconButton
 											size="small"
+											aria-label="Acciones de la tarea"
 											onClick={(e) => {
 												setMenuAnchor(e.currentTarget);
 												setMenuTask(task);
@@ -923,6 +814,12 @@ const AdminTasks: React.FC = () => {
 
 			{/* Context Menu */}
 			<Menu anchorEl={menuAnchor} open={Boolean(menuAnchor)} onClose={() => setMenuAnchor(null)}>
+				<MenuItem onClick={() => menuTask && handleOpenDetail(menuTask)}>
+					<ListItemIcon>
+						<Eye size={18} />
+					</ListItemIcon>
+					<ListItemText>Ver detalle</ListItemText>
+				</MenuItem>
 				<MenuItem onClick={() => menuTask && handleEditTask(menuTask)}>
 					<ListItemIcon>
 						<Edit2 size={18} />
@@ -953,6 +850,21 @@ const AdminTasks: React.FC = () => {
 					<ListItemText>Eliminar</ListItemText>
 				</MenuItem>
 			</Menu>
+
+			{/* Detalle de solo lectura */}
+			<TaskDetailDrawer
+				open={detailOpen}
+				task={detailTask}
+				currentUser={user?.email}
+				getStatusColor={getStatusColor}
+				getPriorityColor={getPriorityColor}
+				onClose={() => setDetailOpen(false)}
+				onEdit={handleEditTask}
+				onChanged={() => {
+					fetchTasks();
+					fetchStats();
+				}}
+			/>
 
 			{/* Task Form Dialog */}
 			<TaskFormDialog

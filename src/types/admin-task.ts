@@ -2,7 +2,17 @@
 
 export type TaskStatus = "backlog" | "todo" | "in_progress" | "review" | "completed" | "cancelled" | "blocked";
 export type TaskPriority = "low" | "medium" | "high" | "urgent";
-export type TaskCategory = "bug" | "feature" | "improvement" | "maintenance" | "documentation" | "research" | "meeting" | "admin" | "other";
+export type TaskCategory =
+	| "bug"
+	| "feature"
+	| "improvement"
+	| "maintenance"
+	| "documentation"
+	| "research"
+	| "meeting"
+	| "admin"
+	| "ai_query"
+	| "other";
 export type RecurringPattern = "daily" | "weekly" | "biweekly" | "monthly" | "quarterly" | "yearly";
 export type RelatedEntityType = "user" | "folder" | "subscription" | "support" | "other";
 
@@ -35,6 +45,24 @@ export interface ExternalLink {
 	url: string;
 }
 
+export type AiAgent = "claude" | "codex" | "other";
+
+/** Sesión de un agente de IA que se puede retomar desde la terminal. */
+export interface AiSession {
+	_id?: string;
+	agent: AiAgent;
+	sessionId: string;
+	label?: string;
+	createdAt?: string;
+}
+
+/** Consulta a un agente de IA asociada a la tarea. */
+export interface AiContext {
+	prompt?: string;
+	agent?: AiAgent;
+	sessions?: AiSession[];
+}
+
 export interface AdminTask {
 	_id: string;
 	title: string;
@@ -61,6 +89,9 @@ export interface AdminTask {
 	relatedTasks: string[] | Array<{ _id: string; title: string; status: TaskStatus }>;
 	blockedBy: string[] | Array<{ _id: string; title: string; status: TaskStatus }>;
 	externalLinks: ExternalLink[];
+	/** Nombres de repos de GitHub del ecosistema (ver utils/ecosystemRepos). */
+	repos?: string[];
+	aiContext?: AiContext;
 	relatedUserId?: string;
 	relatedEntityType?: RelatedEntityType;
 	relatedEntityId?: string;
@@ -91,6 +122,7 @@ export interface TaskFilterOptions {
 	tags: string[];
 	assignees: string[];
 	creators: string[];
+	repos?: string[];
 	statuses: TaskStatus[];
 	priorities: TaskPriority[];
 	categories: TaskCategory[];
@@ -125,6 +157,8 @@ export interface CreateTaskRequest {
 	relatedTasks?: string[];
 	blockedBy?: string[];
 	externalLinks?: ExternalLink[];
+	repos?: string[];
+	aiContext?: AiContext;
 	relatedUserId?: string;
 	relatedEntityType?: RelatedEntityType;
 	relatedEntityId?: string;
@@ -155,6 +189,8 @@ export interface TasksQueryParams {
 	isPinned?: boolean;
 	hasSubtasks?: boolean;
 	isOverdue?: boolean;
+	repo?: string;
+	hasAi?: boolean;
 	dueDateFrom?: string;
 	dueDateTo?: string;
 	sortBy?: string;
@@ -233,5 +269,6 @@ export const CATEGORY_LABELS: Record<TaskCategory, string> = {
 	research: "Investigación",
 	meeting: "Reunión",
 	admin: "Admin",
+	ai_query: "Consulta IA",
 	other: "Otro",
 };
