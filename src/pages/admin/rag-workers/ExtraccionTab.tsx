@@ -41,6 +41,7 @@ import RagExtraccionService, {
 	FichaCedula,
 } from "api/ragExtraccion";
 import { headerBorder } from "themes/dashboardTokens";
+import PdfCanvasViewer from "components/PdfCanvasViewer";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -262,7 +263,7 @@ const DetalleDialog = ({ id, onClose }: { id: string | null; onClose: () => void
 	const [d, setD] = useState<ExtraccionDetalle | null>(null);
 	const [cargando, setCargando] = useState(false);
 	const [vista, setVista] = useState<"ficha" | "texto" | "pdf" | "vinculos">("ficha");
-	const [pdf, setPdf] = useState<string | null>(null);
+	const [pdf, setPdf] = useState<ArrayBuffer | null>(null);
 
 	useEffect(() => {
 		if (!id) return;
@@ -278,17 +279,20 @@ const DetalleDialog = ({ id, onClose }: { id: string | null; onClose: () => void
 
 	useEffect(() => {
 		if (vista !== "pdf" || !id || pdf) return;
-		RagExtraccionService.pdfUrl(id)
+		RagExtraccionService.pdf(id)
 			.then(setPdf)
 			.catch(() => enqueueSnackbar("No se pudo bajar el PDF", { variant: "error" }));
 	}, [vista, id, pdf, enqueueSnackbar]);
 
-	useEffect(
-		() => () => {
-			if (pdf) URL.revokeObjectURL(pdf);
-		},
-		[pdf],
-	);
+	const descargarPdf = () => {
+		if (!pdf || !id) return;
+		const url = URL.createObjectURL(new Blob([pdf], { type: "application/pdf" }));
+		const a = document.createElement("a");
+		a.href = url;
+		a.download = `${id.replace(/[^\w-]/g, "_")}.pdf`;
+		a.click();
+		setTimeout(() => URL.revokeObjectURL(url), 10000);
+	};
 
 	const e = d?.estado;
 	const res = e?.vinculos?.resolucion;
@@ -376,7 +380,16 @@ const DetalleDialog = ({ id, onClose }: { id: string | null; onClose: () => void
 							))}
 						{vista === "pdf" &&
 							(pdf ? (
-								<Box component="iframe" src={pdf} title="PDF" sx={{ width: "100%", height: "70vh", border: 0 }} />
+								<Stack spacing={1}>
+									<Box>
+										<Button size="small" variant="outlined" onClick={descargarPdf}>
+											Descargar PDF
+										</Button>
+									</Box>
+									<Box sx={{ maxHeight: "70vh", overflow: "auto", bgcolor: "action.hover", p: 1, borderRadius: 1 }}>
+										<PdfCanvasViewer data={pdf} />
+									</Box>
+								</Stack>
 							) : (
 								<Skeleton variant="rectangular" height={400} />
 							))}

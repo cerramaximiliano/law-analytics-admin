@@ -158,13 +158,13 @@ const RagExtraccionService = {
 		const r = await ragAxios.get(`/rag/admin/extraccion/documentos/${encodeURIComponent(id)}`);
 		return r.data.data;
 	},
-	// El PDF se pide con el token del admin y se muestra como objeto local.
-	async pdfUrl(id: string): Promise<string> {
+	// El PDF se pide con el token del admin; se devuelven los bytes para dibujarlo con pdf.js.
+	async pdf(id: string): Promise<ArrayBuffer> {
 		const r = await ragAxios.get(`/rag/admin/extraccion/documentos/${encodeURIComponent(id)}/pdf`, {
-			responseType: "blob",
+			responseType: "arraybuffer",
 			timeout: 60000,
 		});
-		return URL.createObjectURL(r.data as Blob);
+		return r.data as ArrayBuffer;
 	},
 };
 
