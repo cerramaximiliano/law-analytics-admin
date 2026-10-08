@@ -75,6 +75,7 @@ import PrivacyStatsWidget from "./PrivacyStatsWidget";
 import PostalTrackingWidget from "./PostalTrackingWidget";
 import PendingWorkWidget from "./PendingWorkWidget";
 import CollapsibleSection from "./CollapsibleSection";
+import SectionNav from "./SectionNav";
 
 // Theme-aware color helper - maps semantic roles to MUI theme palette tokens
 // Usage: const COLORS = getThemeColors(theme) inside any component with useTheme()
@@ -344,6 +345,18 @@ const PrimaryKPICard: React.FC<PrimaryKPICardProps> = ({ title, value, icon, val
 		<Paper
 			elevation={0}
 			onClick={isClickable ? handleClick : undefined}
+			role={isClickable ? "button" : undefined}
+			tabIndex={isClickable ? 0 : undefined}
+			onKeyDown={
+				isClickable
+					? (e) => {
+							if (e.key === "Enter" || e.key === " ") {
+								e.preventDefault();
+								handleClick();
+							}
+					  }
+					: undefined
+			}
 			sx={{
 				p: { xs: 1.5, sm: 2.5 },
 				borderRadius: 2,
@@ -359,6 +372,8 @@ const PrimaryKPICard: React.FC<PrimaryKPICardProps> = ({ title, value, icon, val
 				cursor: isClickable ? "pointer" : "default",
 				transition: "transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease",
 				...(isClickable && {
+					"&:focus-visible": { outline: `2px solid ${BRAND_BLUE}`, outlineOffset: 2 },
+					"&:active": { transform: "scale(0.99)" },
 					"&:hover": {
 						boxShadow: headerShadow(isDark),
 						borderColor: alpha(BRAND_BLUE, isDark ? 0.32 : 0.22),
@@ -785,6 +800,18 @@ const CredentialsStat: React.FC<{ count: number; tooltip: string }> = ({ count, 
 		</Tooltip>
 	);
 };
+
+const DASHBOARD_NAV_ITEMS = [
+	{ id: "pendientes", label: "Pendientes" },
+	{ id: "resumen", label: "Resumen" },
+	{ id: "creditos", label: "Créditos" },
+	{ id: "infra", label: "Infraestructura" },
+	{ id: "workers", label: "Workers" },
+	{ id: "usuarios", label: "Usuarios" },
+	{ id: "suscripciones", label: "Suscripciones" },
+	{ id: "carpetas", label: "Carpetas" },
+	{ id: "marketing", label: "Marketing" },
+];
 
 const AdminDashboard = () => {
 	const theme = useTheme();
@@ -1366,6 +1393,8 @@ const AdminDashboard = () => {
 				<Box sx={{ mb: { xs: 2, sm: 3 } }}>
 					<IncidentsWidget />
 				</Box>
+
+				<SectionNav items={DASHBOARD_NAV_ITEMS} />
 
 				{/* Pendientes del equipo: tareas por vencer + soporte + feedback sin atender */}
 				<Box sx={{ mb: { xs: 2, sm: 4 } }}>
