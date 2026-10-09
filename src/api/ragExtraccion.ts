@@ -1,9 +1,10 @@
 import ragAxios from "utils/ragAxios";
 
-// Detalle de la extracción de texto y fichas del RAG por causa (worker pjn-rag-cedulas).
-// Backend: pjn-rag-api /rag/admin/extraccion/*
+// Extracción de texto y fichas del RAG por causa. Backend: pjn-rag-api /rag/admin/extraccion/*
+//   cedulas    → worker pjn-rag-cedulas (cédulas electrónicas: ficha, resolución, adjuntos por remisión)
+//   resultados → worker pjn-rag-cedulas-diligenciadas (cédulas/mandamientos en papel que vuelven diligenciados)
 
-export type EtapaExtraccion = "cedulas" | "deo" | "escritos";
+export type EtapaExtraccion = "cedulas" | "resultados" | "deo" | "escritos";
 
 export interface ExtraccionResumen {
 	etapa: EtapaExtraccion;
@@ -24,9 +25,15 @@ export interface ExtraccionResumen {
 		conTranscripcion: number;
 		sinVinculoPorMotivo: Record<string, number>;
 		porVersion: Record<string, number>;
+		revisar: number;
 	};
-	// pjn-movements (Atlas) del tipo de la etapa con PDF descargado, por textoStatus
+	// pjn-movements (Atlas) de la etapa con PDF descargado, por textoStatus
 	atlas: Record<string, number>;
+	// cédulas: tramos de adjuntos por método de remisión (sgj / huella / similitud)
+	adjuntosPorMetodo?: Record<string, number>;
+	// diligenciadas: conteo por clase / resultado / quién la libró, y gasto de visión
+	notificaciones?: Array<{ clase?: string; resultado?: string; libradaPor?: string | null; n: number }>;
+	vision?: { usd: number; documentos: number };
 }
 
 export type MotivoSinVinculo = "sin_texto_de_resolucion" | "causa_sin_textos" | "sin_coincidencia";
@@ -34,8 +41,21 @@ export type MotivoSinVinculo = "sin_texto_de_resolucion" | "causa_sin_textos" | 
 export interface Vinculo {
 	movementId: string;
 	cobertura: number;
-	metodo?: "texto" | "fecha";
+	metodo?: "texto" | "fecha" | "adjunto";
 	pagina?: number;
+}
+
+export interface AdjuntoRemitido {
+	indice?: number;
+	paginas: number[];
+	movementId: string;
+	paginasOrigen?: number[];
+	metodo?: "sgj" | "huella" | "similitud" | "texto";
+	similitud?: number | null;
+	cobertura?: number;
+	tipoOrigen?: string;
+	detalleOrigen?: string | null;
+	fechaOrigen?: string;
 }
 
 export interface FichaCedula {
@@ -76,21 +96,70 @@ export interface FichaCedula {
 	paginasCedula?: number[];
 	paginasDorsoFormulario?: number[];
 	paginasAdjuntas?: Array<{ n: number; conTexto: boolean; enBlanco?: boolean; chars: number }>;
-	// Copias adjuntas separadas por documento (el texto está en pjn-movement-texts)
+	// Tramos de adjuntos con su movimiento de origen (remisión)
 	adjuntos?: Array<{
-		tipo: "resolucion" | "escrito" | "cedula" | "escaneado" | "otro";
-		ocr?: boolean;
 		paginas: number[];
-		chars: number;
-		titulo?: string | null;
-		sgjId?: string | null;
-		firmadoEl?: string | null;
-		firmantes?: string[];
-		fechaFirma?: string | null;
-		cerrado?: boolean;
+		movementId: string | null;
+		tipoOrigen: string | null;
+		metodo: string | null;
+		similitud: number | null;
 	}>;
-	resolucionAdjunta?: number | null;
+	adjuntosSinOrigen?: number[];
+	tiposParser?: Array<{ tipo: string; paginas: number[] }>;
 	camposFaltantes?: string[];
+}
+
+export interface Diligencia {
+	fecha: string | null;
+	hora: string | null;
+	tipo: "aviso" | "entrega" | "fijacion" | "negativa" | "otro";
+	quienAtendio: string | null;
+	observaciones: string | null;
+}
+
+export interface ResultadoNotificacion {
+	diligencias: Diligencia[];
+	resultado: "positiva" | "negativa" | "indeterminado";
+	fechaNotificacion: string | null;
+	fechaUltimaDiligencia: string | null;
+	fuenteFecha: "dorso" | "sistema" | null;
+	fuenteResultado: "dorso" | "sistema" | null;
+	legibilidad: "alta" | "media" | "baja" | null;
+	oficialNotificador?: string | null;
+	discrepancias: string[];
+}
+
+// Ficha de la etapa diligenciadas (escrito con una cédula / mandamiento en papel)
+export interface FichaResultado {
+	clase: "resultado" | "proyecto" | "escrito";
+	instrumento: "cedula" | "mandamiento";
+	ley22172: boolean;
+	libradaPor: "tribunal" | "parte" | null;
+	presentadaCon: "escrito" | "digitalizacion";
+	numeroCedula: string | null;
+	destinatario: string | null;
+	domicilio: string | null;
+	paginasCedula: number[];
+	paginasDorso: number[];
+	criterioDorso: "sello" | "contiguo" | "ninguno";
+	resultadoNotificacion: ResultadoNotificacion | null;
+}
+
+export interface Vinculos {
+	resolucion?: Vinculo | null;
+	adjuntos?: AdjuntoRemitido[];
+	motivo?: MotivoSinVinculo | null;
+	original?: { movementId: string; numero: string | null; fecha: string; metodo: string } | null;
+	datoSistema?: { movementId: string; tipo: string; fechaNotificacion: string | null; resultado: string | null; metodo: string } | null;
+	resultado?: {
+		movementId: string;
+		resultado: string;
+		fechaNotificacion: string | null;
+		fechaMovimiento: string | null;
+		detalle?: string | null;
+	} | null;
+	notificadoPor?: Array<{ cedulaId: string; numero: string | null; fecha: string; destinatario: string | null; emisor: string | null }>;
+	intentadoAt?: string;
 }
 
 export interface ExtraccionItem {
@@ -107,13 +176,13 @@ export interface ExtraccionItem {
 	textoChars?: number;
 	aliasDe?: string;
 	procesadoAt: string;
-	ficha?: Partial<FichaCedula>;
-	vinculos?: {
-		resolucion?: Vinculo | null;
-		adjuntos?: Array<Vinculo & { indice?: number; tipo?: string; paginas?: number[] }>;
-		motivo?: MotivoSinVinculo | null;
-	};
+	ficha?: Partial<FichaCedula> & Partial<FichaResultado>;
+	vinculos?: Vinculos;
+	vision?: { usd?: number; reutilizada?: boolean; modelo?: string; paginas?: number[]; tokIn?: number; tokOut?: number; json?: any };
+	claseEscrito?: string;
 	parserVersion?: string;
+	detalle?: string | null;
+	revisar?: string[];
 }
 
 export interface ExtraccionDetalle {
@@ -138,19 +207,13 @@ export interface ExtraccionDetalle {
 	causa: { number: number; year: number; caratula: string; juzgado?: number } | null;
 	estado:
 		| (ExtraccionItem & {
-				ficha?: FichaCedula;
+				etapa?: string;
+				ficha?: FichaCedula & Partial<FichaResultado>;
 				paginasSinTexto?: number[];
 				producer?: string;
 				textHash?: string;
-				parserVersion?: string;
 				ms?: number;
 				intentos?: number;
-				vinculos?: {
-					resolucion?: Vinculo | null;
-					adjuntos?: Array<Vinculo & { indice?: number; tipo?: string; paginas?: number[] }>;
-					motivo?: MotivoSinVinculo | null;
-					intentadoAt?: string;
-				};
 				paginasEnBlanco?: number[];
 				paginasOcr?: number[];
 				paginasOcrFallidas?: number[];
@@ -161,6 +224,7 @@ export interface ExtraccionDetalle {
 		| null;
 	texto: string | null;
 	textoTruncado: boolean;
+	revisar?: string[];
 	vinculados: Array<{ _id: string; tipo: string; detalle: string; fecha: string; extracto: string }>;
 }
 
@@ -171,6 +235,10 @@ export interface ExtraccionFiltros {
 	familia?: string;
 	vinculo?: "si" | "no" | "";
 	motivo?: MotivoSinVinculo | "";
+	resultado?: "positiva" | "negativa" | "indeterminado" | "";
+	claseNotif?: "resultado" | "proyecto" | "escrito" | "";
+	libradaPor?: "tribunal" | "parte" | "";
+	revisar?: "1" | "";
 	fuero?: string;
 	causaId?: string;
 	q?: string;

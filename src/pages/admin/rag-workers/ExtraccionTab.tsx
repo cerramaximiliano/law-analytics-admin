@@ -8,6 +8,7 @@ import {
 	DialogContent,
 	DialogTitle,
 	Divider,
+	FormControlLabel,
 	Grid,
 	IconButton,
 	LinearProgress,
@@ -23,8 +24,11 @@ import {
 	TableHead,
 	TablePagination,
 	TableRow,
+	Switch,
 	Tabs,
 	TextField,
+	ToggleButton,
+	ToggleButtonGroup,
 	Tooltip,
 	Typography,
 	alpha,
@@ -38,7 +42,9 @@ import RagExtraccionService, {
 	ExtraccionFiltros,
 	ExtraccionItem,
 	ExtraccionResumen,
+	EtapaExtraccion,
 	FichaCedula,
+	FichaResultado,
 } from "api/ragExtraccion";
 import { headerBorder } from "themes/dashboardTokens";
 import PdfCanvasViewer from "components/PdfCanvasViewer";
@@ -74,20 +80,58 @@ const MOTIVO_LABEL: Record<string, string> = {
 	causa_sin_textos: "La causa no tiene despachos con texto",
 	sin_coincidencia: "Ningún despacho coincide",
 };
-const ADJ_LABEL: Record<string, string> = {
-	resolucion: "Resolución",
-	escrito: "Escrito",
-	cedula: "Cédula diligenciada",
-	escaneado: "Escaneado sin texto",
-	otro: "Documentación",
+const METODO_LABEL: Record<string, string> = {
+	sgj: "código del sistema",
+	huella: "copia idéntica",
+	similitud: "similitud",
+	texto: "texto",
 };
-const ADJ_COLOR: Record<string, "primary" | "secondary" | "warning" | "default" | "info"> = {
-	resolucion: "primary",
-	escrito: "secondary",
-	cedula: "info",
-	escaneado: "warning",
-	otro: "default",
+const RESULTADO_COLOR: Record<string, "success" | "error" | "warning" | "default"> = {
+	positiva: "success",
+	negativa: "error",
+	indeterminado: "warning",
 };
+const DILIGENCIA_LABEL: Record<string, string> = {
+	aviso: "Aviso (art. 339)",
+	entrega: "Entrega",
+	fijacion: "Fijación",
+	negativa: "Negativa",
+	otro: "Diligencia",
+};
+const CLASE_NOTIF_LABEL: Record<string, string> = {
+	resultado: "Diligenciada",
+	proyecto: "Sin diligenciar (de la parte)",
+	escrito: "No contiene cédula",
+};
+const ETAPA_INFO: Record<string, { titulo: string; texto: string }> = {
+	cedulas: {
+		titulo: "Cédulas electrónicas",
+		texto:
+			"Ficha, resolución notificada y adjuntos remitidos a su movimiento de origen, por cada cédula de pjn-movements. Worker pjn-rag-cedulas (worker_02).",
+	},
+	resultados: {
+		titulo: "Cédulas en papel diligenciadas",
+		texto:
+			"Escritos con una cédula o mandamiento en papel que volvió diligenciado: dorso leído con visión, resultado y fecha de notificación, vínculo con la cédula original y con el dato del sistema. Worker pjn-rag-cedulas-diligenciadas (worker_02).",
+	},
+};
+const FILTROS_VACIOS = (etapa: EtapaExtraccion): ExtraccionFiltros => ({
+	etapa,
+	status: "",
+	clase: "",
+	familia: "",
+	vinculo: "",
+	motivo: "",
+	resultado: "",
+	claseNotif: "",
+	libradaPor: "",
+	revisar: "",
+	fuero: "",
+	q: "",
+	causaId: "",
+});
+const corto = (id?: string | null) => (id ? id.split(":")[1] || id : "");
+
 const TIPO_CORTO: Record<string, string> = {
 	"CEDULA ELECTRONICA TRIBUNAL": "Electrónica · tribunal",
 	"CEDULA ELECTRONICA PARTE": "Electrónica · parte",
@@ -112,7 +156,94 @@ const Cifra = ({ titulo, valor, sub }: { titulo: string; valor: React.ReactNode;
 	</Paper>
 );
 
-const Resumen = ({ r }: { r: ExtraccionResumen }) => {
+const ResumenDiligenciadas = ({ r, onRevisar }: { r: ExtraccionResumen; onRevisar: () => void }) => {
+	const total = Object.values(r.atlas).reduce((a, b) => a + b, 0);
+	const p = r.procesados;
+	const procesados = Object.values(p.porStatus).reduce((a, b) => a + b, 0);
+	const cuenta = (pred: (x: { clase?: string; resultado?: string; libradaPor?: string | null }) => boolean) =>
+		(r.notificaciones || []).filter(pred).reduce((a, x) => a + x.n, 0);
+	const dilig = cuenta((x) => x.clase === "resultado");
+	return (
+		<Stack spacing={1.5}>
+			<Grid container spacing={1.5}>
+				<Grid item xs={6} md={3}>
+					<Cifra
+						titulo="Escritos candidatos (Atlas)"
+						valor={n(total)}
+						sub={`mencionan cédula / mandamiento / diligenciamiento · ${n(procesados)} procesados`}
+					/>
+				</Grid>
+				<Grid item xs={6} md={3}>
+					<Cifra
+						titulo="Notificaciones diligenciadas"
+						valor={n(dilig)}
+						sub={`${n(cuenta((x) => x.resultado === "positiva"))} positivas · ${n(
+							cuenta((x) => x.resultado === "negativa"),
+						)} negativas · ${n(cuenta((x) => x.resultado === "indeterminado"))} sin determinar`}
+					/>
+				</Grid>
+				<Grid item xs={6} md={3}>
+					<Cifra
+						titulo="Visión (dorso)"
+						valor={`US$ ${(r.vision?.usd || 0).toFixed(2)}`}
+						sub={`${n(r.vision?.documentos)} documentos leídos · gpt-4.1`}
+					/>
+				</Grid>
+				<Grid item xs={6} md={3}>
+					<Cifra
+						titulo="Worker"
+						valor={
+							<Chip
+								size="small"
+								color={r.worker?.activo ? "success" : "default"}
+								label={r.worker ? (r.worker.activo ? "Activo" : "Detenido") : "Sin datos"}
+							/>
+						}
+						sub={
+							r.worker
+								? `${r.worker.host} · ${r.worker.version} · último ciclo ${fmtFecha(r.worker.ultimoCicloAt, true)}`
+								: "Todavía no corrió"
+						}
+					/>
+				</Grid>
+			</Grid>
+			<Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
+				<Chip
+					size="small"
+					variant="outlined"
+					color="primary"
+					label={`libradas por el tribunal: ${n(cuenta((x) => x.libradaPor === "tribunal" && x.clase === "resultado"))}`}
+				/>
+				<Chip
+					size="small"
+					variant="outlined"
+					color="primary"
+					label={`confeccionadas por la parte: ${n(cuenta((x) => x.libradaPor === "parte" && x.clase === "resultado"))}`}
+				/>
+				<Chip size="small" variant="outlined" label={`sin diligenciar (de la parte): ${n(cuenta((x) => x.clase === "proyecto"))}`} />
+				<Chip size="small" variant="outlined" label={`no contienen cédula: ${n(cuenta((x) => x.clase === "escrito"))}`} />
+				{Object.entries(p.porStatus).map(([k, v]) => (
+					<Chip key={`s-${k}`} size="small" variant="outlined" color="secondary" label={`${STATUS_LABEL[k] || k}: ${n(v)}`} />
+				))}
+			</Stack>
+			{p.revisar > 0 && (
+				<Alert
+					severity="warning"
+					action={
+						<Button size="small" onClick={onRevisar}>
+							Ver
+						</Button>
+					}
+				>
+					{n(p.revisar)} casos para revisar a mano (resultado sin determinar, dorso poco legible, discrepancia con el sistema, positiva sin
+					fecha o cédula del tribunal sin su original).
+				</Alert>
+			)}
+		</Stack>
+	);
+};
+
+const Resumen = ({ r, onRevisar }: { r: ExtraccionResumen; onRevisar: () => void }) => {
 	const pendientes = (r.atlas.not_applicable || 0) + (r.atlas.pending || 0) + (r.atlas.sin_estado || 0);
 	const hechos = (r.atlas.extracted || 0) + (r.atlas.ocr_done || 0);
 	const total = Object.values(r.atlas).reduce((a, b) => a + b, 0);
@@ -175,7 +306,25 @@ const Resumen = ({ r }: { r: ExtraccionResumen }) => {
 				{Object.entries(p.porVersion || {}).map(([k, v]) => (
 					<Chip key={`v-${k}`} size="small" variant="outlined" label={`versión ${k}: ${n(v)}`} />
 				))}
+				{Object.entries(r.adjuntosPorMetodo || {})
+					.filter(([k]) => k !== "sin_dato")
+					.map(([k, v]) => (
+						<Chip key={`a-${k}`} size="small" variant="outlined" color="info" label={`adjuntos por ${METODO_LABEL[k] || k}: ${n(v)}`} />
+					))}
 			</Stack>
+			{p.revisar > 0 && (
+				<Alert
+					severity="warning"
+					action={
+						<Button size="small" onClick={onRevisar}>
+							Ver
+						</Button>
+					}
+				>
+					{n(p.revisar)} cédulas para revisar a mano (adjunto sin origen o reconocido solo por similitud baja, sin resolución vinculada,
+					campos que faltan).
+				</Alert>
+			)}
 		</Stack>
 	);
 };
@@ -197,7 +346,15 @@ const Campo = ({ k, v }: { k: string; v: React.ReactNode }) => (
 	</>
 );
 
-const FichaVista = ({ f, causa }: { f: FichaCedula; causa: ExtraccionDetalle["causa"] }) => {
+const FichaVista = ({
+	f,
+	causa,
+	vinculosAdj,
+}: {
+	f: FichaCedula;
+	causa: ExtraccionDetalle["causa"];
+	vinculosAdj?: NonNullable<ExtraccionItem["vinculos"]>["adjuntos"];
+}) => {
 	const expLeido = f.expediente ? `${f.expediente.numero}/${f.expediente.anio || "????"}` : null;
 	const expCausa = causa ? `${causa.number}/${causa.year}` : null;
 	const expDistinto = expLeido && expCausa && f.expediente && String(f.expediente.numero) !== String(causa?.number);
@@ -267,27 +424,42 @@ const FichaVista = ({ f, causa }: { f: FichaCedula; causa: ExtraccionDetalle["ca
 						: ""
 				}`}
 			/>
-			{f.adjuntos && f.adjuntos.length > 0 && (
+			{vinculosAdj && vinculosAdj.length > 0 && (
 				<Campo
 					k="Adjuntos"
 					v={
 						<Stack spacing={0.5}>
-							{f.adjuntos.map((a, i) => (
+							{vinculosAdj.map((a, i) => (
 								<Stack key={i} direction="row" spacing={0.75} alignItems="center" flexWrap="wrap" useFlexGap>
-									<Chip size="small" color={ADJ_COLOR[a.tipo]} label={`${i + 1} · ${ADJ_LABEL[a.tipo] || a.tipo}`} />
-									{a.ocr && <Chip size="small" variant="outlined" label="OCR" />}
+									<Chip
+										size="small"
+										color={/DESPACHO|SENTENCIA/.test(a.tipoOrigen || "") ? "primary" : "secondary"}
+										label={`${i + 1} · ${a.tipoOrigen || "?"}`}
+									/>
 									<Typography variant="caption">
 										{a.paginas.length > 1 ? `págs. ${a.paginas[0]}–${a.paginas[a.paginas.length - 1]}` : `pág. ${a.paginas[0]}`}
-										{a.titulo ? ` · «${a.titulo}»` : ""}
-										{a.firmadoEl ? ` · firmada ${fmtFecha(a.firmadoEl, true)}` : ""}
-										{a.firmantes && a.firmantes.length ? ` · ${a.firmantes.join(", ")}` : ""}
-										{a.chars ? ` · ${n(a.chars)} caracteres` : ""}
+										{a.detalleOrigen ? ` · «${a.detalleOrigen}»` : ""}
+										{a.fechaOrigen ? ` · ${fmtFecha(a.fechaOrigen)}` : ""}
+										{` · mov. ${corto(a.movementId)}`}
 									</Typography>
-									{f.resolucionAdjunta === i && <Chip size="small" color="success" variant="outlined" label="resolución notificada" />}
+									<Chip
+										size="small"
+										variant="outlined"
+										color={a.metodo === "similitud" && (a.similitud || 0) < 0.85 ? "warning" : "default"}
+										label={`${METODO_LABEL[a.metodo || ""] || a.metodo}${
+											a.metodo === "similitud" ? ` ${Math.round((a.similitud || 0) * 100)}%` : ""
+										}`}
+									/>
 								</Stack>
 							))}
 						</Stack>
 					}
+				/>
+			)}
+			{f.adjuntosSinOrigen && f.adjuntosSinOrigen.length > 0 && (
+				<Campo
+					k="Sin origen"
+					v={<Chip size="small" color="warning" label={`págs. ${f.adjuntosSinOrigen.join(", ")}: sin movimiento de origen en la causa`} />}
 				/>
 			)}
 			{f.camposFaltantes && f.camposFaltantes.length > 0 && (
@@ -295,12 +467,7 @@ const FichaVista = ({ f, causa }: { f: FichaCedula; causa: ExtraccionDetalle["ca
 			)}
 			<Grid item xs={12}>
 				<Typography variant="caption" color="text.secondary">
-					Resolución transcripta{" "}
-					{f.resolucionEnAdjunto && !f.transcripcion
-						? typeof f.resolucionAdjunta === "number"
-							? `(no está en la cédula: es el adjunto ${f.resolucionAdjunta + 1}, ver pestaña Texto)`
-							: "(no está en la cédula: va en la copia adjunta)"
-						: ""}
+					Resolución transcripta {!f.transcripcion ? "(no está transcripta en la cédula: ver adjuntos)" : ""}
 				</Typography>
 				{f.transcripcion && (
 					<Paper variant="outlined" sx={{ p: 1, mt: 0.5, maxHeight: 220, overflow: "auto", whiteSpace: "pre-wrap", fontSize: 13 }}>
@@ -308,6 +475,152 @@ const FichaVista = ({ f, causa }: { f: FichaCedula; causa: ExtraccionDetalle["ca
 					</Paper>
 				)}
 			</Grid>
+		</Grid>
+	);
+};
+
+const FichaResultadoVista = ({ f, e }: { f: Partial<FichaResultado>; e: NonNullable<ExtraccionDetalle["estado"]> }) => {
+	const r = f.resultadoNotificacion;
+	const v = e.vinculos || {};
+	const inst = f.instrumento === "mandamiento" ? "Mandamiento" : "Cédula";
+	return (
+		<Grid container spacing={0.75}>
+			<Campo
+				k="Qué es"
+				v={
+					<Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
+						<Chip
+							size="small"
+							color={f.clase === "resultado" ? "primary" : "default"}
+							label={CLASE_NOTIF_LABEL[f.clase || ""] || f.clase}
+						/>
+						<Chip size="small" variant="outlined" label={`${inst}${f.ley22172 ? " ley 22.172" : ""}`} />
+						{f.libradaPor && (
+							<Chip
+								size="small"
+								variant="outlined"
+								label={f.libradaPor === "tribunal" ? "librada por el tribunal" : "confeccionada por la parte"}
+							/>
+						)}
+						<Chip
+							size="small"
+							variant="outlined"
+							label={f.presentadaCon === "escrito" ? "acompañada por escrito de parte" : "digitalizada (sin escrito)"}
+						/>
+					</Stack>
+				}
+			/>
+			<Campo k="N° de cédula" v={f.numeroCedula} />
+			<Campo k="Destinatario" v={f.destinatario ? `${f.destinatario}${f.domicilio ? ` — ${f.domicilio}` : ""}` : null} />
+			<Campo
+				k="Páginas"
+				v={`cédula ${f.paginasCedula?.join(",") || "—"} · dorso ${f.paginasDorso?.join(",") || "—"}${
+					f.criterioDorso
+						? ` (${
+								f.criterioDorso === "sello"
+									? "detectado por el sello"
+									: f.criterioDorso === "contiguo"
+									? "página contigua al frente"
+									: "no detectado por OCR"
+						  })`
+						: ""
+				}`}
+			/>
+			{r && (
+				<>
+					<Campo
+						k="Resultado"
+						v={
+							<Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap" useFlexGap>
+								<Chip size="small" color={RESULTADO_COLOR[r.resultado]} label={r.resultado.toUpperCase()} />
+								{r.fechaNotificacion && <Typography variant="body2">notificada el {fmtDia(r.fechaNotificacion)}</Typography>}
+								{!r.fechaNotificacion && r.fechaUltimaDiligencia && (
+									<Typography variant="body2">última diligencia {fmtDia(r.fechaUltimaDiligencia)}</Typography>
+								)}
+								{r.fuenteFecha && (
+									<Chip size="small" variant="outlined" label={`fecha: ${r.fuenteFecha === "sistema" ? "dato del sistema" : "dorso"}`} />
+								)}
+								{r.legibilidad && (
+									<Chip
+										size="small"
+										variant="outlined"
+										color={r.legibilidad === "baja" ? "warning" : "default"}
+										label={`legibilidad ${r.legibilidad}`}
+									/>
+								)}
+							</Stack>
+						}
+					/>
+					{r.discrepancias?.length > 0 && (
+						<Campo k="Discrepancias" v={<Chip size="small" color="warning" label={r.discrepancias.join(" · ")} />} />
+					)}
+					<Grid item xs={12}>
+						<Typography variant="caption" color="text.secondary">
+							Diligencias del {f.instrumento === "mandamiento" ? "oficial de justicia" : "oficial notificador"} (leídas del dorso)
+						</Typography>
+						{r.diligencias?.length ? (
+							<Table size="small" sx={{ mt: 0.5 }}>
+								<TableHead>
+									<TableRow>
+										<TableCell>Fecha</TableCell>
+										<TableCell>Hora</TableCell>
+										<TableCell>Tipo</TableCell>
+										<TableCell>Atendió</TableCell>
+										<TableCell>Observaciones</TableCell>
+									</TableRow>
+								</TableHead>
+								<TableBody>
+									{r.diligencias.map((x, i) => (
+										<TableRow key={i}>
+											<TableCell sx={{ whiteSpace: "nowrap" }}>{fmtDia(x.fecha) || "ilegible"}</TableCell>
+											<TableCell>{x.hora || "—"}</TableCell>
+											<TableCell>{DILIGENCIA_LABEL[x.tipo] || x.tipo}</TableCell>
+											<TableCell>{x.quienAtendio || "—"}</TableCell>
+											<TableCell sx={{ fontSize: 12 }}>{x.observaciones || "—"}</TableCell>
+										</TableRow>
+									))}
+								</TableBody>
+							</Table>
+						) : (
+							<Alert severity="info" sx={{ mt: 0.5 }}>
+								No se leyeron diligencias en el dorso.
+							</Alert>
+						)}
+					</Grid>
+				</>
+			)}
+			<Campo
+				k="Cédula original"
+				v={
+					v.original
+						? `mov. ${corto(v.original.movementId)} · librada el ${fmtDia(v.original.fecha)} · N° ${v.original.numero || "—"} (por ${
+								v.original.metodo
+						  })`
+						: null
+				}
+			/>
+			<Campo
+				k="Dato del sistema"
+				v={
+					v.datoSistema
+						? `${v.datoSistema.tipo} · ${fmtDia(v.datoSistema.fechaNotificacion) || "sin fecha"}${
+								v.datoSistema.resultado ? ` · ${v.datoSistema.resultado}` : ""
+						  } (por ${v.datoSistema.metodo})`
+						: null
+				}
+			/>
+			<Campo
+				k="Resolución que notifica"
+				v={v.resolucion ? `mov. ${corto(v.resolucion.movementId)} · ${Math.round((v.resolucion.cobertura || 0) * 100)}% del texto` : null}
+			/>
+			{e.vision && (
+				<Campo
+					k="Visión"
+					v={`${e.vision.modelo || "gpt-4.1"} · págs. ${(e.vision.paginas || []).join(",")} · US$ ${(e.vision.usd || 0).toFixed(4)}${
+						e.vision.reutilizada ? " (lectura anterior reutilizada)" : ""
+					}`}
+				/>
+			)}
 		</Grid>
 	);
 };
@@ -369,6 +682,11 @@ const DetalleDialog = ({ id, onClose }: { id: string | null; onClose: () => void
 				{cargando && <LinearProgress />}
 				{d && (
 					<Stack spacing={1.5}>
+						{d.revisar && d.revisar.length > 0 && (
+							<Alert severity="warning">
+								<strong>Revisar a mano:</strong> {d.revisar.join(" · ")}
+							</Alert>
+						)}
 						<Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
 							{e && <Chip size="small" color={STATUS_COLOR[e.status]} label={STATUS_LABEL[e.status] || e.status} />}
 							{e?.clase && (
@@ -402,7 +720,8 @@ const DetalleDialog = ({ id, onClose }: { id: string | null; onClose: () => void
 									label={`Vinculada (${res.metodo === "fecha" ? "por fecha" : `${Math.round(res.cobertura * 100)}%`})`}
 								/>
 							) : (
-								e?.ficha?.esCedula && (
+								e?.ficha?.esCedula &&
+								e?.etapa !== "resultados" && (
 									<Chip
 										size="small"
 										variant="outlined"
@@ -429,8 +748,10 @@ const DetalleDialog = ({ id, onClose }: { id: string | null; onClose: () => void
 							<Tab value="json" label="JSON" />
 						</Tabs>
 						{vista === "ficha" &&
-							(e?.ficha?.esCedula ? (
-								<FichaVista f={e.ficha} causa={d.causa} />
+							(e?.etapa === "resultados" && e.ficha ? (
+								<FichaResultadoVista f={e.ficha} e={e} />
+							) : e?.ficha?.esCedula ? (
+								<FichaVista f={e.ficha} causa={d.causa} vinculosAdj={e.vinculos?.adjuntos} />
 							) : (
 								<Alert severity="info">
 									No se reconoció la plantilla de cédula{e?.ficha?.camposFaltantes ? ` (${e.ficha.camposFaltantes.join(", ")})` : ""}.
@@ -491,6 +812,13 @@ const DetalleDialog = ({ id, onClose }: { id: string | null; onClose: () => void
 									{d.vinculados.map((v) => {
 										const esRes = res?.movementId === v._id;
 										const adj = e?.vinculos?.adjuntos?.find((a) => a.movementId === v._id);
+										const vv = e?.vinculos || {};
+										const extra = [
+											vv.original?.movementId === v._id && "cédula original",
+											vv.datoSistema?.movementId === v._id && "dato del sistema",
+											vv.resultado?.movementId === v._id && `volvió diligenciada: ${vv.resultado?.resultado || ""}`,
+											(vv.notificadoPor || []).some((x) => x.cedulaId === v._id) && "cédula que lo adjuntó",
+										].filter(Boolean) as string[];
 										return (
 											<Paper key={v._id} variant="outlined" sx={{ p: 1.25 }}>
 												<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
@@ -510,11 +838,14 @@ const DetalleDialog = ({ id, onClose }: { id: string | null; onClose: () => void
 														<Chip
 															size="small"
 															color="info"
-															label={`adjunto ${adj.indice !== undefined ? adj.indice + 1 : ""} (${ADJ_LABEL[adj.tipo || ""] || "copia"}${
-																adj.paginas ? `, pág. ${adj.paginas.join(",")}` : adj.pagina ? `, pág. ${adj.pagina}` : ""
-															}) · ${Math.round(adj.cobertura * 100)}%`}
+															label={`adjunto, págs. ${adj.paginas.join(",")} · ${METODO_LABEL[adj.metodo || ""] || adj.metodo || ""}${
+																adj.metodo === "similitud" ? ` ${Math.round((adj.similitud || 0) * 100)}%` : ""
+															}`}
 														/>
 													)}
+													{extra.map((x) => (
+														<Chip key={x} size="small" color="secondary" label={x} />
+													))}
 													{e?.aliasDe === v._id && <Chip size="small" label="mismo documento" />}
 												</Stack>
 												<Typography variant="caption" color="text.secondary" sx={{ display: "block", overflowWrap: "anywhere" }}>
@@ -550,26 +881,19 @@ const ExtraccionTab = () => {
 	const [items, setItems] = useState<ExtraccionItem[]>([]);
 	const [total, setTotal] = useState(0);
 	const [cargando, setCargando] = useState(false);
-	const [filtros, setFiltros] = useState<ExtraccionFiltros>({
-		etapa: "cedulas",
-		status: "",
-		clase: "",
-		familia: "",
-		vinculo: "",
-		motivo: "",
-		fuero: "",
-		q: "",
-	});
+	const [filtros, setFiltros] = useState<ExtraccionFiltros>(FILTROS_VACIOS("cedulas"));
 	const [busqueda, setBusqueda] = useState("");
 	const [page, setPage] = useState(0);
 	const [limit, setLimit] = useState(25);
 	const [abierto, setAbierto] = useState<string | null>(null);
+	const etapa = (filtros.etapa || "cedulas") as EtapaExtraccion;
+	const esDiligenciadas = etapa === "resultados";
 
 	const cargar = useCallback(async () => {
 		setCargando(true);
 		try {
 			const [r, l] = await Promise.all([
-				RagExtraccionService.resumen(filtros.etapa),
+				RagExtraccionService.resumen(etapa),
 				RagExtraccionService.documentos({ ...filtros, page: page + 1, limit }),
 			]);
 			setResumen(r);
@@ -580,7 +904,7 @@ const ExtraccionTab = () => {
 		} finally {
 			setCargando(false);
 		}
-	}, [filtros, page, limit, enqueueSnackbar]);
+	}, [etapa, filtros, page, limit, enqueueSnackbar]);
 
 	useEffect(() => {
 		cargar();
@@ -590,33 +914,70 @@ const ExtraccionTab = () => {
 		setPage(0);
 		setFiltros((f) => ({ ...f, [k]: ev.target.value }));
 	};
+	const cambiarEtapa = (_: unknown, v: EtapaExtraccion | null) => {
+		if (!v) return;
+		setPage(0);
+		setResumen(null);
+		setItems([]);
+		setBusqueda("");
+		setFiltros(FILTROS_VACIOS(v));
+	};
+	const verRevisar = () => {
+		setPage(0);
+		setFiltros((f) => ({ ...f, revisar: "1" }));
+	};
 	const fueros = useMemo(() => Object.keys(resumen?.procesados.porFuero || {}).filter((f) => f !== "sin_dato"), [resumen]);
 	const familias = useMemo(() => Object.keys(resumen?.procesados.porFamilia || {}).filter((f) => f !== "sin_dato"), [resumen]);
+	const info = ETAPA_INFO[etapa] || ETAPA_INFO.cedulas;
+
+	const chipRevisar = (it: ExtraccionItem) =>
+		it.revisar && it.revisar.length > 0 ? (
+			<Tooltip title={it.revisar.join(" · ")}>
+				<Chip size="small" color="warning" label="revisar" />
+			</Tooltip>
+		) : null;
 
 	return (
 		<Box sx={{ p: { xs: 1.5, sm: 2.5 } }}>
 			<Stack spacing={2}>
-				<Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={1}>
-					<Box>
-						<Typography variant="h5">Extracción de cédulas</Typography>
+				<Stack direction={{ xs: "column", md: "row" }} justifyContent="space-between" alignItems={{ md: "flex-start" }} spacing={1}>
+					<Box sx={{ maxWidth: 820 }}>
+						<Typography variant="h5">{info.titulo}</Typography>
 						<Typography variant="body2" color="text.secondary">
-							Texto, ficha y vínculo con la resolución notificada, por cada cédula de pjn-movements. Lo escribe el worker pjn-rag-cedulas
-							(worker_02).
+							{info.texto}
 						</Typography>
 					</Box>
-					<Tooltip title="Actualizar">
-						<span>
-							<IconButton onClick={cargar} disabled={cargando}>
-								<Refresh size={18} />
-							</IconButton>
-						</span>
-					</Tooltip>
+					<Stack direction="row" spacing={1} alignItems="center">
+						<ToggleButtonGroup size="small" exclusive value={etapa} onChange={cambiarEtapa}>
+							<ToggleButton value="cedulas" sx={{ textTransform: "none" }}>
+								Cédulas electrónicas
+							</ToggleButton>
+							<ToggleButton value="resultados" sx={{ textTransform: "none" }}>
+								Cédulas en papel diligenciadas
+							</ToggleButton>
+						</ToggleButtonGroup>
+						<Tooltip title="Actualizar">
+							<span>
+								<IconButton onClick={cargar} disabled={cargando}>
+									<Refresh size={18} />
+								</IconButton>
+							</span>
+						</Tooltip>
+					</Stack>
 				</Stack>
 
-				{resumen ? <Resumen r={resumen} /> : <Skeleton variant="rectangular" height={110} />}
+				{resumen && resumen.etapa === etapa ? (
+					esDiligenciadas ? (
+						<ResumenDiligenciadas r={resumen} onRevisar={verRevisar} />
+					) : (
+						<Resumen r={resumen} onRevisar={verRevisar} />
+					)
+				) : (
+					<Skeleton variant="rectangular" height={110} />
+				)}
 
-				<Stack direction={{ xs: "column", md: "row" }} spacing={1}>
-					<TextField select size="small" label="Estado" value={filtros.status} onChange={set("status")} sx={{ minWidth: 140 }}>
+				<Stack direction={{ xs: "column", md: "row" }} spacing={1} flexWrap="wrap" useFlexGap>
+					<TextField select size="small" label="Estado" value={filtros.status} onChange={set("status")} sx={{ minWidth: 130 }}>
 						<MenuItem value="">Todos</MenuItem>
 						{Object.entries(STATUS_LABEL).map(([k, v]) => (
 							<MenuItem key={k} value={k}>
@@ -624,41 +985,75 @@ const ExtraccionTab = () => {
 							</MenuItem>
 						))}
 					</TextField>
-					<TextField select size="small" label="Vínculo" value={filtros.vinculo} onChange={set("vinculo")} sx={{ minWidth: 150 }}>
-						<MenuItem value="">Todos</MenuItem>
-						<MenuItem value="si">Con resolución</MenuItem>
-						<MenuItem value="no">Sin resolución</MenuItem>
-					</TextField>
-					<TextField select size="small" label="Motivo sin vínculo" value={filtros.motivo} onChange={set("motivo")} sx={{ minWidth: 190 }}>
-						<MenuItem value="">Todos</MenuItem>
-						{Object.entries(MOTIVO_LABEL).map(([k, v]) => (
-							<MenuItem key={k} value={k}>
-								{v}
-							</MenuItem>
-						))}
-					</TextField>
-					<TextField select size="small" label="Fuero" value={filtros.fuero} onChange={set("fuero")} sx={{ minWidth: 110 }}>
-						<MenuItem value="">Todos</MenuItem>
-						{fueros.map((f) => (
-							<MenuItem key={f} value={f}>
-								{f}
-							</MenuItem>
-						))}
-					</TextField>
-					<TextField select size="small" label="Plantilla" value={filtros.familia} onChange={set("familia")} sx={{ minWidth: 130 }}>
-						<MenuItem value="">Todas</MenuItem>
-						{familias.map((f) => (
-							<MenuItem key={f} value={f}>
-								{f}
-							</MenuItem>
-						))}
-					</TextField>
-					<TextField select size="small" label="Capa de texto" value={filtros.clase} onChange={set("clase")} sx={{ minWidth: 140 }}>
-						<MenuItem value="">Todas</MenuItem>
-						<MenuItem value="digital">Digital</MenuItem>
-						<MenuItem value="mixto">Mixto</MenuItem>
-						<MenuItem value="escaneado">Escaneado</MenuItem>
-					</TextField>
+					{esDiligenciadas ? (
+						<>
+							<TextField select size="small" label="Qué es" value={filtros.claseNotif} onChange={set("claseNotif")} sx={{ minWidth: 200 }}>
+								<MenuItem value="">Todos</MenuItem>
+								{Object.entries(CLASE_NOTIF_LABEL).map(([k, v]) => (
+									<MenuItem key={k} value={k}>
+										{v}
+									</MenuItem>
+								))}
+							</TextField>
+							<TextField select size="small" label="Resultado" value={filtros.resultado} onChange={set("resultado")} sx={{ minWidth: 150 }}>
+								<MenuItem value="">Todos</MenuItem>
+								<MenuItem value="positiva">Positiva</MenuItem>
+								<MenuItem value="negativa">Negativa</MenuItem>
+								<MenuItem value="indeterminado">Sin determinar</MenuItem>
+							</TextField>
+							<TextField
+								select
+								size="small"
+								label="Librada por"
+								value={filtros.libradaPor}
+								onChange={set("libradaPor")}
+								sx={{ minWidth: 150 }}
+							>
+								<MenuItem value="">Todos</MenuItem>
+								<MenuItem value="tribunal">Tribunal</MenuItem>
+								<MenuItem value="parte">Parte</MenuItem>
+							</TextField>
+						</>
+					) : (
+						<>
+							<TextField select size="small" label="Vínculo" value={filtros.vinculo} onChange={set("vinculo")} sx={{ minWidth: 150 }}>
+								<MenuItem value="">Todos</MenuItem>
+								<MenuItem value="si">Con resolución</MenuItem>
+								<MenuItem value="no">Sin resolución</MenuItem>
+							</TextField>
+							<TextField
+								select
+								size="small"
+								label="Motivo sin vínculo"
+								value={filtros.motivo}
+								onChange={set("motivo")}
+								sx={{ minWidth: 190 }}
+							>
+								<MenuItem value="">Todos</MenuItem>
+								{Object.entries(MOTIVO_LABEL).map(([k, v]) => (
+									<MenuItem key={k} value={k}>
+										{v}
+									</MenuItem>
+								))}
+							</TextField>
+							<TextField select size="small" label="Fuero" value={filtros.fuero} onChange={set("fuero")} sx={{ minWidth: 110 }}>
+								<MenuItem value="">Todos</MenuItem>
+								{fueros.map((f) => (
+									<MenuItem key={f} value={f}>
+										{f}
+									</MenuItem>
+								))}
+							</TextField>
+							<TextField select size="small" label="Plantilla" value={filtros.familia} onChange={set("familia")} sx={{ minWidth: 130 }}>
+								<MenuItem value="">Todas</MenuItem>
+								{familias.map((f) => (
+									<MenuItem key={f} value={f}>
+										{f}
+									</MenuItem>
+								))}
+							</TextField>
+						</>
+					)}
 					<TextField
 						size="small"
 						label="Buscar (destinatario, carátula, N°, tribunal)"
@@ -680,6 +1075,18 @@ const ExtraccionTab = () => {
 						sx={{ minWidth: 220 }}
 						error={!!filtros.causaId && !/^[a-f0-9]{24}$/i.test(filtros.causaId)}
 					/>
+					<FormControlLabel
+						control={
+							<Switch
+								checked={filtros.revisar === "1"}
+								onChange={(ev) => {
+									setPage(0);
+									setFiltros((f) => ({ ...f, revisar: ev.target.checked ? "1" : "" }));
+								}}
+							/>
+						}
+						label="Solo a revisar"
+					/>
 				</Stack>
 
 				<TableContainer component={Paper} variant="outlined" sx={{ borderColor: headerBorder(isDark) }}>
@@ -688,82 +1095,166 @@ const ExtraccionTab = () => {
 						<TableHead>
 							<TableRow sx={{ "& th": { bgcolor: alpha(theme.palette.primary.main, 0.04), fontWeight: 600 } }}>
 								<TableCell>Fecha</TableCell>
-								<TableCell>Tipo</TableCell>
-								<TableCell>Destinatario</TableCell>
-								<TableCell>Notificada</TableCell>
-								<TableCell>Expediente</TableCell>
-								<TableCell>Estado</TableCell>
-								<TableCell>Resolución</TableCell>
-								<TableCell align="right">Págs</TableCell>
+								{esDiligenciadas ? (
+									<>
+										<TableCell>Escrito</TableCell>
+										<TableCell>Destinatario</TableCell>
+										<TableCell>Qué es</TableCell>
+										<TableCell>Resultado</TableCell>
+										<TableCell>Vínculos</TableCell>
+										<TableCell align="right">Visión</TableCell>
+									</>
+								) : (
+									<>
+										<TableCell>Tipo</TableCell>
+										<TableCell>Destinatario</TableCell>
+										<TableCell>Notificada</TableCell>
+										<TableCell>Expediente</TableCell>
+										<TableCell>Estado</TableCell>
+										<TableCell>Resolución</TableCell>
+										<TableCell align="right">Adjuntos</TableCell>
+									</>
+								)}
 							</TableRow>
 						</TableHead>
 						<TableBody>
 							{items.map((it) => {
 								const r = it.vinculos?.resolucion;
 								const f = it.ficha || {};
+								const rn = f.resultadoNotificacion;
 								return (
 									<TableRow key={it._id} hover sx={{ cursor: "pointer" }} onClick={() => setAbierto(it._id)}>
 										<TableCell sx={{ whiteSpace: "nowrap" }}>{fmtFecha(it.fecha)}</TableCell>
-										<TableCell>
-											<Typography variant="body2">{TIPO_CORTO[it.tipo] || it.tipo}</Typography>
-											<Typography variant="caption" color="text.secondary">
-												{[it.fuero, f.familia].filter(Boolean).join(" · ")}
-											</Typography>
-										</TableCell>
-										<TableCell sx={{ maxWidth: 240 }}>
-											<Typography variant="body2" noWrap title={f.destinatario || ""}>
-												{f.destinatario || "—"}
-											</Typography>
-											<Typography variant="caption" color="text.secondary" noWrap display="block" title={f.tribunal || ""}>
-												{f.tribunal || ""}
-											</Typography>
-										</TableCell>
-										<TableCell sx={{ whiteSpace: "nowrap" }}>{f.notificadoEl ? fmtFecha(f.notificadoEl, true) : "—"}</TableCell>
-										<TableCell sx={{ whiteSpace: "nowrap" }}>
-											{f.expediente ? `${f.expediente.numero}/${f.expediente.anio || "?"}` : "—"}
-										</TableCell>
-										<TableCell>
-											<Stack direction="row" spacing={0.5}>
-												<Chip size="small" color={STATUS_COLOR[it.status]} label={STATUS_LABEL[it.status] || it.status} />
-												{f.camposFaltantes && f.camposFaltantes.length > 0 && (
-													<Tooltip title={`Faltan: ${f.camposFaltantes.join(", ")}`}>
-														<Chip size="small" color="warning" variant="outlined" label="!" />
-													</Tooltip>
-												)}
-												{it.aliasDe && <Chip size="small" variant="outlined" label="dup" />}
-											</Stack>
-										</TableCell>
-										<TableCell>
-											{r?.movementId ? (
-												<Chip
-													size="small"
-													color="success"
-													variant="outlined"
-													icon={<Link21 size={12} />}
-													label={r.metodo === "fecha" ? "por fecha" : `${Math.round(r.cobertura * 100)}%`}
-												/>
-											) : it.vinculos?.motivo ? (
-												<Tooltip title={MOTIVO_LABEL[it.vinculos.motivo] || it.vinculos.motivo}>
-													<Typography variant="caption" color="warning.main">
-														{it.vinculos.motivo === "sin_texto_de_resolucion"
-															? "sin texto"
-															: it.vinculos.motivo === "causa_sin_textos"
-															? "causa sin textos"
-															: "no coincide"}
+										{esDiligenciadas ? (
+											<>
+												<TableCell sx={{ maxWidth: 300 }}>
+													<Typography variant="body2" noWrap title={it.detalle || ""}>
+														{(it.detalle || it.tipo).replace(/\s*\[Presentado[^\]]*\]/i, "")}
 													</Typography>
-												</Tooltip>
-											) : (
-												"—"
-											)}
-										</TableCell>
-										<TableCell align="right">
-											{it.paginas ?? "—"}
-											{it.clase && it.clase !== "digital" && (
-												<Typography variant="caption" color="text.secondary" display="block">
-													{it.clase}
-												</Typography>
-											)}
-										</TableCell>
+													<Typography variant="caption" color="text.secondary">
+														{[
+															it.tipo,
+															it.status !== "extracted" ? `${STATUS_LABEL[it.status]}${it.skipReason ? `: ${it.skipReason}` : ""}` : null,
+														]
+															.filter(Boolean)
+															.join(" · ")}
+													</Typography>
+												</TableCell>
+												<TableCell sx={{ maxWidth: 220 }}>
+													<Typography variant="body2" noWrap title={f.destinatario || ""}>
+														{f.destinatario || "—"}
+													</Typography>
+												</TableCell>
+												<TableCell>
+													{f.clase ? (
+														<Stack spacing={0.25}>
+															<Typography variant="body2">{CLASE_NOTIF_LABEL[f.clase] || f.clase}</Typography>
+															<Typography variant="caption" color="text.secondary">
+																{[
+																	f.instrumento === "mandamiento" ? "mandamiento" : "cédula",
+																	f.ley22172 ? "ley 22.172" : null,
+																	f.libradaPor === "tribunal" ? "del tribunal" : f.libradaPor === "parte" ? "de la parte" : null,
+																]
+																	.filter(Boolean)
+																	.join(" · ")}
+															</Typography>
+														</Stack>
+													) : (
+														"—"
+													)}
+												</TableCell>
+												<TableCell>
+													<Stack direction="row" spacing={0.5} alignItems="center">
+														{rn ? <Chip size="small" color={RESULTADO_COLOR[rn.resultado]} label={rn.resultado} /> : "—"}
+														{chipRevisar(it)}
+													</Stack>
+													{rn && (rn.fechaNotificacion || rn.fechaUltimaDiligencia) && (
+														<Typography variant="caption" color="text.secondary">
+															{rn.fechaNotificacion
+																? `notificada ${fmtDia(rn.fechaNotificacion)}`
+																: `última diligencia ${fmtDia(rn.fechaUltimaDiligencia)}`}
+														</Typography>
+													)}
+												</TableCell>
+												<TableCell>
+													<Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+														{it.vinculos?.original && (
+															<Chip size="small" variant="outlined" color="primary" icon={<Link21 size={12} />} label="original" />
+														)}
+														{it.vinculos?.datoSistema && <Chip size="small" variant="outlined" color="secondary" label="sistema" />}
+														{r?.movementId && <Chip size="small" variant="outlined" color="success" label="resolución" />}
+													</Stack>
+												</TableCell>
+												<TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
+													{it.vision ? `US$ ${(it.vision.usd || 0).toFixed(3)}${it.vision.reutilizada ? " ↺" : ""}` : "—"}
+												</TableCell>
+											</>
+										) : (
+											<>
+												<TableCell>
+													<Typography variant="body2">{TIPO_CORTO[it.tipo] || it.tipo}</Typography>
+													<Typography variant="caption" color="text.secondary">
+														{[it.fuero, f.familia].filter(Boolean).join(" · ")}
+													</Typography>
+												</TableCell>
+												<TableCell sx={{ maxWidth: 240 }}>
+													<Typography variant="body2" noWrap title={f.destinatario || ""}>
+														{f.destinatario || "—"}
+													</Typography>
+													<Typography variant="caption" color="text.secondary" noWrap display="block" title={f.tribunal || ""}>
+														{f.tribunal || ""}
+													</Typography>
+												</TableCell>
+												<TableCell sx={{ whiteSpace: "nowrap" }}>{f.notificadoEl ? fmtFecha(f.notificadoEl, true) : "—"}</TableCell>
+												<TableCell sx={{ whiteSpace: "nowrap" }}>
+													{f.expediente ? `${f.expediente.numero}/${f.expediente.anio || "?"}` : "—"}
+												</TableCell>
+												<TableCell>
+													<Stack direction="row" spacing={0.5}>
+														<Chip size="small" color={STATUS_COLOR[it.status]} label={STATUS_LABEL[it.status] || it.status} />
+														{chipRevisar(it)}
+														{it.aliasDe && <Chip size="small" variant="outlined" label="dup" />}
+													</Stack>
+												</TableCell>
+												<TableCell>
+													{r?.movementId ? (
+														<Chip
+															size="small"
+															color="success"
+															variant="outlined"
+															icon={<Link21 size={12} />}
+															label={
+																r.metodo === "fecha"
+																	? "por fecha"
+																	: r.metodo === "adjunto"
+																	? "adjunta"
+																	: `${Math.round(r.cobertura * 100)}%`
+															}
+														/>
+													) : it.vinculos?.motivo ? (
+														<Tooltip title={MOTIVO_LABEL[it.vinculos.motivo] || it.vinculos.motivo}>
+															<Typography variant="caption" color="warning.main">
+																{it.vinculos.motivo === "sin_texto_de_resolucion"
+																	? "sin texto"
+																	: it.vinculos.motivo === "causa_sin_textos"
+																	? "causa sin textos"
+																	: "no coincide"}
+															</Typography>
+														</Tooltip>
+													) : (
+														"—"
+													)}
+												</TableCell>
+												<TableCell align="right">
+													{(it.vinculos?.adjuntos || []).length || "—"}
+													{(f.adjuntosSinOrigen || []).length > 0 && (
+														<Typography variant="caption" color="warning.main" display="block">
+															{f.adjuntosSinOrigen?.length} sin origen
+														</Typography>
+													)}
+												</TableCell>
+											</>
+										)}
 									</TableRow>
 								);
 							})}
@@ -800,9 +1291,10 @@ const ExtraccionTab = () => {
 					size="small"
 					variant="text"
 					sx={{ alignSelf: "flex-start" }}
-					onClick={() =>
-						setFiltros({ etapa: "cedulas", status: "", clase: "", familia: "", vinculo: "", motivo: "", fuero: "", q: "", causaId: "" })
-					}
+					onClick={() => {
+						setBusqueda("");
+						setFiltros(FILTROS_VACIOS(etapa));
+					}}
 				>
 					Limpiar filtros
 				</Button>
