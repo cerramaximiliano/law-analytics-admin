@@ -112,7 +112,17 @@ export interface FichaCedula {
 export interface Diligencia {
 	fecha: string | null;
 	hora: string | null;
-	tipo: "aviso" | "entrega" | "fijacion" | "negativa" | "sin_diligenciar" | "intimacion" | "embargo" | "otro";
+	tipo:
+		| "aviso"
+		| "entrega"
+		| "fijacion"
+		| "bajo_responsabilidad"
+		| "negativa"
+		| "sin_diligenciar"
+		| "intimacion"
+		| "embargo"
+		| "constatacion"
+		| "otro";
 	quienAtendio: string | null;
 	observaciones: string | null;
 }
@@ -121,6 +131,8 @@ export interface ResultadoNotificacion {
 	diligencias: Diligencia[];
 	resultado: "positiva" | "negativa" | "sin_diligenciar" | "indeterminado";
 	motivo?: string | null;
+	modalidad?: "personal" | "fijacion" | "bajo_responsabilidad" | null;
+	transcripcionSello?: string | null;
 	fechaNotificacion: string | null;
 	fechaUltimaDiligencia: string | null;
 	fuenteFecha: "dorso" | "sistema" | null;
@@ -184,6 +196,7 @@ export interface ExtraccionItem {
 		usd?: number;
 		reutilizada?: boolean;
 		rotada?: number;
+		lecturaGirada?: { pagina: number; resultado: string; fecha: string | null; coincide: boolean };
 		modelo?: string;
 		paginas?: number[];
 		tokIn?: number;

@@ -106,6 +106,8 @@ const DILIGENCIA_LABEL: Record<string, string> = {
 	sin_diligenciar: "Devuelta sin diligenciar",
 	intimacion: "Intimación",
 	embargo: "Embargo",
+	bajo_responsabilidad: "Bajo responsabilidad de la parte",
+	constatacion: "Constatación",
 	otro: "Diligencia",
 };
 const CLASE_NOTIF_LABEL: Record<string, string> = {
@@ -547,6 +549,13 @@ const FichaResultadoVista = ({ f, e }: { f: Partial<FichaResultado>; e: NonNulla
 									color={RESULTADO_COLOR[r.resultado]}
 									label={(RESULTADO_LABEL[r.resultado] || r.resultado).toUpperCase()}
 								/>
+								{r.modalidad && r.modalidad !== "personal" && (
+									<Chip
+										size="small"
+										variant="outlined"
+										label={r.modalidad === "bajo_responsabilidad" ? "bajo responsabilidad de la parte" : "por fijación"}
+									/>
+								)}
 								{r.fechaNotificacion && <Typography variant="body2">notificada el {fmtDia(r.fechaNotificacion)}</Typography>}
 								{!r.fechaNotificacion && r.fechaUltimaDiligencia && (
 									<Typography variant="body2">última diligencia {fmtDia(r.fechaUltimaDiligencia)}</Typography>
@@ -603,6 +612,40 @@ const FichaResultadoVista = ({ f, e }: { f: Partial<FichaResultado>; e: NonNulla
 						)}
 					</Grid>
 				</>
+			)}
+			{(e.vision?.json?.dorso?.sellos || e.vision?.json?.sellos || []).length > 0 && (
+				<Grid item xs={12}>
+					<Typography variant="caption" color="text.secondary">
+						Sellos / informes del oficial (transcripción; lo tachado entre ~~, lo manuscrito entre [ ])
+					</Typography>
+					<Stack spacing={0.5} sx={{ mt: 0.5 }}>
+						{(e.vision?.json?.dorso?.sellos || e.vision?.json?.sellos || []).map(
+							(x: { pagina: number; rotado?: boolean; transcripcion: string }, i: number) => (
+								<Paper key={i} variant="outlined" sx={{ p: 1, fontSize: 12.5, whiteSpace: "pre-wrap" }}>
+									<strong>
+										pág. {x.pagina}
+										{x.rotado ? " (rotado)" : ""}:
+									</strong>{" "}
+									{x.transcripcion}
+								</Paper>
+							),
+						)}
+					</Stack>
+				</Grid>
+			)}
+			{e.vision?.lecturaGirada && (
+				<Campo
+					k="Lectura girada"
+					v={
+						<Chip
+							size="small"
+							color={e.vision.lecturaGirada.coincide ? "default" : "warning"}
+							label={`pág. ${e.vision.lecturaGirada.pagina} girada: ${e.vision.lecturaGirada.resultado}${
+								e.vision.lecturaGirada.fecha ? ` ${fmtDia(e.vision.lecturaGirada.fecha)}` : ""
+							} — ${e.vision.lecturaGirada.coincide ? "coincide" : "NO coincide"}`}
+						/>
+					}
+				/>
 			)}
 			<Campo
 				k="Cédula original"
