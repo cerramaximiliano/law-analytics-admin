@@ -685,6 +685,27 @@ const FichaResultadoVista = ({ f, e }: { f: Partial<FichaResultado>; e: NonNulla
 					}
 				/>
 			)}
+			{(e.vision?.niveles || []).length > 0 && (
+				<Campo
+					k="Niveles de lectura"
+					v={
+						<Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+							{(e.vision?.niveles || []).map((x, i) => (
+								<Chip
+									key={i}
+									size="small"
+									variant="outlined"
+									color={x.ok ? "default" : "error"}
+									label={`${i + 1}. ${x.modelo}${x.cuadrantes ? ` · pág. ${x.cuadrantes} ampliada` : ""}: ${
+										x.resultado || x.estado || x.error || "?"
+									}${x.legibilidad ? ` (${x.legibilidad})` : ""}`}
+								/>
+							))}
+							{e.vision?.dudosa && <Chip size="small" color="warning" label="sigue dudosa" />}
+						</Stack>
+					}
+				/>
+			)}
 			{e.vision && (
 				<Campo
 					k="Visión"
@@ -1368,17 +1389,31 @@ const ExtraccionTab = () => {
 						labelRowsPerPage="Por página"
 					/>
 				</TableContainer>
-				<Button
-					size="small"
-					variant="text"
-					sx={{ alignSelf: "flex-start" }}
-					onClick={() => {
-						setBusqueda("");
-						setFiltros(FILTROS_VACIOS(etapa));
-					}}
-				>
-					Limpiar filtros
-				</Button>
+				<Stack direction="row" spacing={1}>
+					<Button
+						size="small"
+						variant="text"
+						sx={{ alignSelf: "flex-start" }}
+						onClick={() => {
+							setBusqueda("");
+							setFiltros(FILTROS_VACIOS(etapa));
+						}}
+					>
+						Limpiar filtros
+					</Button>
+					<Tooltip title="30 documentos procesados al azar, con los filtros actuales, para revisar a mano">
+						<Button
+							size="small"
+							variant="outlined"
+							onClick={() => {
+								setPage(0);
+								setFiltros((f) => ({ ...f, muestra: f.muestra ? "" : "30" }));
+							}}
+						>
+							{filtros.muestra ? "Salir de la muestra" : "Muestra al azar (30)"}
+						</Button>
+					</Tooltip>
+				</Stack>
 			</Stack>
 			<DetalleDialog id={abierto} onClose={() => setAbierto(null)} />
 		</Box>

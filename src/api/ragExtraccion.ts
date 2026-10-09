@@ -197,6 +197,17 @@ export interface ExtraccionItem {
 		reutilizada?: boolean;
 		rotada?: number;
 		lecturaGirada?: { pagina: number; resultado: string; fecha: string | null; coincide: boolean };
+		niveles?: Array<{
+			modelo: string;
+			cuadrantes: number | null;
+			ok: boolean;
+			error?: string;
+			estado?: string;
+			resultado?: string | null;
+			legibilidad?: string | null;
+			usd?: number;
+		}>;
+		dudosa?: boolean;
 		modelo?: string;
 		paginas?: number[];
 		tokIn?: number;
@@ -263,6 +274,7 @@ export interface ExtraccionFiltros {
 	claseNotif?: "resultado" | "proyecto" | "escrito" | "";
 	libradaPor?: "tribunal" | "parte" | "";
 	revisar?: "1" | "";
+	muestra?: "30" | "";
 	fuero?: string;
 	causaId?: string;
 	q?: string;
