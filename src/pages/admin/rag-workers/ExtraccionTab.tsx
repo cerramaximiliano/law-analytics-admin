@@ -77,12 +77,14 @@ const MOTIVO_LABEL: Record<string, string> = {
 const ADJ_LABEL: Record<string, string> = {
 	resolucion: "Resolución",
 	escrito: "Escrito",
-	escaneado: "Escaneado (OCR pendiente)",
+	cedula: "Cédula diligenciada",
+	escaneado: "Escaneado sin texto",
 	otro: "Documentación",
 };
-const ADJ_COLOR: Record<string, "primary" | "secondary" | "warning" | "default"> = {
+const ADJ_COLOR: Record<string, "primary" | "secondary" | "warning" | "default" | "info"> = {
 	resolucion: "primary",
 	escrito: "secondary",
+	cedula: "info",
 	escaneado: "warning",
 	otro: "default",
 };
@@ -273,6 +275,7 @@ const FichaVista = ({ f, causa }: { f: FichaCedula; causa: ExtraccionDetalle["ca
 							{f.adjuntos.map((a, i) => (
 								<Stack key={i} direction="row" spacing={0.75} alignItems="center" flexWrap="wrap" useFlexGap>
 									<Chip size="small" color={ADJ_COLOR[a.tipo]} label={`${i + 1} · ${ADJ_LABEL[a.tipo] || a.tipo}`} />
+									{a.ocr && <Chip size="small" variant="outlined" label="OCR" />}
 									<Typography variant="caption">
 										{a.paginas.length > 1 ? `págs. ${a.paginas[0]}–${a.paginas[a.paginas.length - 1]}` : `pág. ${a.paginas[0]}`}
 										{a.titulo ? ` · «${a.titulo}»` : ""}
@@ -373,7 +376,11 @@ const DetalleDialog = ({ id, onClose }: { id: string | null; onClose: () => void
 									size="small"
 									variant="outlined"
 									label={`${e.clase} · ${e.paginas || 0} págs${
-										e.paginasSinTexto?.length ? ` (${e.paginasSinTexto.length} sin texto)` : ""
+										(e.paginasSinTexto?.length ? ` (${e.paginasSinTexto.length} sin texto)` : "") +
+										(e.paginasOcr?.length
+											? ` · ${e.paginasOcr.length} por OCR${e.paginasOcrCache ? ` (${e.paginasOcrCache} de caché)` : ""}`
+											: "") +
+										(e.paginasOcrFallidas?.length ? ` · OCR falló en ${e.paginasOcrFallidas.join(",")}` : "")
 									}`}
 								/>
 							)}

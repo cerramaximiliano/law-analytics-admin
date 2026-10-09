@@ -78,7 +78,8 @@ export interface FichaCedula {
 	paginasAdjuntas?: Array<{ n: number; conTexto: boolean; enBlanco?: boolean; chars: number }>;
 	// Copias adjuntas separadas por documento (el texto está en pjn-movement-texts)
 	adjuntos?: Array<{
-		tipo: "resolucion" | "escrito" | "escaneado" | "otro";
+		tipo: "resolucion" | "escrito" | "cedula" | "escaneado" | "otro";
+		ocr?: boolean;
 		paginas: number[];
 		chars: number;
 		titulo?: string | null;
@@ -151,6 +152,10 @@ export interface ExtraccionDetalle {
 					intentadoAt?: string;
 				};
 				paginasEnBlanco?: number[];
+				paginasOcr?: number[];
+				paginasOcrFallidas?: number[];
+				paginasOcrCache?: number;
+				msOcr?: number;
 				textoCrudoChars?: number;
 		  })
 		| null;
