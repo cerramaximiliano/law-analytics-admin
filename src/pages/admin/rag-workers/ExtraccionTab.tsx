@@ -89,13 +89,23 @@ const METODO_LABEL: Record<string, string> = {
 const RESULTADO_COLOR: Record<string, "success" | "error" | "warning" | "default"> = {
 	positiva: "success",
 	negativa: "error",
+	sin_diligenciar: "default",
 	indeterminado: "warning",
+};
+const RESULTADO_LABEL: Record<string, string> = {
+	positiva: "positiva",
+	negativa: "negativa",
+	sin_diligenciar: "sin diligenciar",
+	indeterminado: "sin determinar",
 };
 const DILIGENCIA_LABEL: Record<string, string> = {
 	aviso: "Aviso (art. 339)",
 	entrega: "Entrega",
 	fijacion: "Fijación",
 	negativa: "Negativa",
+	sin_diligenciar: "Devuelta sin diligenciar",
+	intimacion: "Intimación",
+	embargo: "Embargo",
 	otro: "Diligencia",
 };
 const CLASE_NOTIF_LABEL: Record<string, string> = {
@@ -532,7 +542,11 @@ const FichaResultadoVista = ({ f, e }: { f: Partial<FichaResultado>; e: NonNulla
 						k="Resultado"
 						v={
 							<Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap" useFlexGap>
-								<Chip size="small" color={RESULTADO_COLOR[r.resultado]} label={r.resultado.toUpperCase()} />
+								<Chip
+									size="small"
+									color={RESULTADO_COLOR[r.resultado]}
+									label={(RESULTADO_LABEL[r.resultado] || r.resultado).toUpperCase()}
+								/>
 								{r.fechaNotificacion && <Typography variant="body2">notificada el {fmtDia(r.fechaNotificacion)}</Typography>}
 								{!r.fechaNotificacion && r.fechaUltimaDiligencia && (
 									<Typography variant="body2">última diligencia {fmtDia(r.fechaUltimaDiligencia)}</Typography>
@@ -551,6 +565,7 @@ const FichaResultadoVista = ({ f, e }: { f: Partial<FichaResultado>; e: NonNulla
 							</Stack>
 						}
 					/>
+					{r.motivo && <Campo k="Motivo" v={r.motivo} />}
 					{r.discrepancias?.length > 0 && (
 						<Campo k="Discrepancias" v={<Chip size="small" color="warning" label={r.discrepancias.join(" · ")} />} />
 					)}
@@ -613,12 +628,26 @@ const FichaResultadoVista = ({ f, e }: { f: Partial<FichaResultado>; e: NonNulla
 				k="Resolución que notifica"
 				v={v.resolucion ? `mov. ${corto(v.resolucion.movementId)} · ${Math.round((v.resolucion.cobertura || 0) * 100)}% del texto` : null}
 			/>
+			{f.mismoDia && f.mismoDia.length > 0 && (
+				<Campo
+					k="Mismo día"
+					v={
+						<Stack spacing={0.25}>
+							{f.mismoDia.map((m) => (
+								<Typography key={m.movementId} variant="caption">
+									{m.tipo} · «{(m.detalle || "").replace(/\s*\[Presentado[^\]]*\]/i, "")}» · mov. {corto(m.movementId)}
+								</Typography>
+							))}
+						</Stack>
+					}
+				/>
+			)}
 			{e.vision && (
 				<Campo
 					k="Visión"
 					v={`${e.vision.modelo || "gpt-4.1"} · págs. ${(e.vision.paginas || []).join(",")} · US$ ${(e.vision.usd || 0).toFixed(4)}${
 						e.vision.reutilizada ? " (lectura anterior reutilizada)" : ""
-					}`}
+					}${e.vision.rotada ? ` · pág. ${e.vision.rotada} releída girada 180°` : ""}`}
 				/>
 			)}
 		</Grid>
@@ -999,6 +1028,7 @@ const ExtraccionTab = () => {
 								<MenuItem value="">Todos</MenuItem>
 								<MenuItem value="positiva">Positiva</MenuItem>
 								<MenuItem value="negativa">Negativa</MenuItem>
+								<MenuItem value="sin_diligenciar">Devuelta sin diligenciar</MenuItem>
 								<MenuItem value="indeterminado">Sin determinar</MenuItem>
 							</TextField>
 							<TextField
@@ -1165,7 +1195,15 @@ const ExtraccionTab = () => {
 												</TableCell>
 												<TableCell>
 													<Stack direction="row" spacing={0.5} alignItems="center">
-														{rn ? <Chip size="small" color={RESULTADO_COLOR[rn.resultado]} label={rn.resultado} /> : "—"}
+														{rn ? (
+															<Chip
+																size="small"
+																color={RESULTADO_COLOR[rn.resultado]}
+																label={RESULTADO_LABEL[rn.resultado] || rn.resultado}
+															/>
+														) : (
+															"—"
+														)}
 														{chipRevisar(it)}
 													</Stack>
 													{rn && (rn.fechaNotificacion || rn.fechaUltimaDiligencia) && (

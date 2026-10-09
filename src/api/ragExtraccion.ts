@@ -112,14 +112,15 @@ export interface FichaCedula {
 export interface Diligencia {
 	fecha: string | null;
 	hora: string | null;
-	tipo: "aviso" | "entrega" | "fijacion" | "negativa" | "otro";
+	tipo: "aviso" | "entrega" | "fijacion" | "negativa" | "sin_diligenciar" | "intimacion" | "embargo" | "otro";
 	quienAtendio: string | null;
 	observaciones: string | null;
 }
 
 export interface ResultadoNotificacion {
 	diligencias: Diligencia[];
-	resultado: "positiva" | "negativa" | "indeterminado";
+	resultado: "positiva" | "negativa" | "sin_diligenciar" | "indeterminado";
+	motivo?: string | null;
 	fechaNotificacion: string | null;
 	fechaUltimaDiligencia: string | null;
 	fuenteFecha: "dorso" | "sistema" | null;
@@ -143,6 +144,7 @@ export interface FichaResultado {
 	paginasDorso: number[];
 	criterioDorso: "sello" | "contiguo" | "ninguno";
 	resultadoNotificacion: ResultadoNotificacion | null;
+	mismoDia?: Array<{ movementId: string; tipo: string; detalle: string | null }>;
 }
 
 export interface Vinculos {
@@ -178,7 +180,16 @@ export interface ExtraccionItem {
 	procesadoAt: string;
 	ficha?: Partial<FichaCedula> & Partial<FichaResultado>;
 	vinculos?: Vinculos;
-	vision?: { usd?: number; reutilizada?: boolean; modelo?: string; paginas?: number[]; tokIn?: number; tokOut?: number; json?: any };
+	vision?: {
+		usd?: number;
+		reutilizada?: boolean;
+		rotada?: number;
+		modelo?: string;
+		paginas?: number[];
+		tokIn?: number;
+		tokOut?: number;
+		json?: any;
+	};
 	claseEscrito?: string;
 	parserVersion?: string;
 	detalle?: string | null;
@@ -235,7 +246,7 @@ export interface ExtraccionFiltros {
 	familia?: string;
 	vinculo?: "si" | "no" | "";
 	motivo?: MotivoSinVinculo | "";
-	resultado?: "positiva" | "negativa" | "indeterminado" | "";
+	resultado?: "positiva" | "negativa" | "sin_diligenciar" | "indeterminado" | "";
 	claseNotif?: "resultado" | "proyecto" | "escrito" | "";
 	libradaPor?: "tribunal" | "parte" | "";
 	revisar?: "1" | "";
