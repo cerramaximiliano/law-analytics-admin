@@ -1,4 +1,38 @@
-import workersAxios from "utils/workersAxios";
+import workersAxios, { pjnAtlasAxios } from "utils/workersAxios";
+import type { AxiosInstance } from "axios";
+
+// ── Base de datos (10/10/2026) ─────────────────────────────────────────────────
+// El subsistema corre con el mismo código sobre dos bases:
+//   - "cache": pjn/cache-api contra el rs0 — laboratorio de desarrollo (cédulas de la caché).
+//   - "usuarios": pjn/api contra Atlas — cédulas de las causas de usuarios (producción).
+// Notificaciones, vencimientos, monitoreo y revisión legal siguen la base elegida; el dataset
+// vive solo en la caché.
+export type PlazosBase = "cache" | "usuarios";
+const BASE_KEY = "plazos.base";
+let baseActual: PlazosBase = (() => {
+	try {
+		return localStorage.getItem(BASE_KEY) === "usuarios" ? "usuarios" : "cache";
+	} catch {
+		return "cache";
+	}
+})();
+export const getPlazosBase = (): PlazosBase => baseActual;
+export const setPlazosBase = (b: PlazosBase) => {
+	baseActual = b;
+	try {
+		localStorage.setItem(BASE_KEY, b);
+	} catch {
+		/* sin storage: queda en memoria */
+	}
+};
+const ax = (): AxiosInstance => (baseActual === "usuarios" ? pjnAtlasAxios : workersAxios);
+
+// Reglas y feriados: la copia maestra pasa a Atlas cuando los plazos-worker lean de ahí (F2).
+// Hasta entonces se editan en el rs0, que es lo que leen los workers. La semilla en Atlas
+// (16 reglas, 241 feriados) se copió el 10/10; al cambiar este flag, re-sincronizarla antes.
+const REFERENCIAS_EN_ATLAS = false;
+const axRef = (): AxiosInstance => (REFERENCIAS_EN_ATLAS ? pjnAtlasAxios : workersAxios);
+export const referenciasEnAtlas = REFERENCIAS_EN_ATLAS;
 
 /**
  * plazos.ts — Cliente del subsistema de plazos procesales (pjn-api
@@ -137,12 +171,12 @@ export const getNotificaciones = async (params: {
 	desde?: string;
 	hasta?: string;
 }): Promise<Paginated<PlazoNotificacion>> => {
-	const { data } = await workersAxios.get("/api/admin/plazos/notificaciones", { params });
+	const { data } = await ax().get("/api/admin/plazos/notificaciones", { params });
 	return data;
 };
 
 export const getNotificacion = async (id: string): Promise<PlazoNotificacion> => {
-	const { data } = await workersAxios.get(`/api/admin/plazos/notificaciones/${id}`);
+	const { data } = await ax().get(`/api/admin/plazos/notificaciones/${id}`);
 	return data.data;
 };
 
@@ -152,7 +186,7 @@ export const getStats = async (): Promise<{
 	porFuente: Record<string, number>;
 	vencimientosProximos: number;
 }> => {
-	const { data } = await workersAxios.get("/api/admin/plazos/notificaciones/stats");
+	const { data } = await ax().get("/api/admin/plazos/notificaciones/stats");
 	return data.data;
 };
 
@@ -163,17 +197,17 @@ export const getVencimientos = async (params: {
 	desde?: string;
 	hasta?: string;
 }): Promise<Paginated<PlazoNotificacion>> => {
-	const { data } = await workersAxios.get("/api/admin/plazos/vencimientos", { params });
+	const { data } = await ax().get("/api/admin/plazos/vencimientos", { params });
 	return data;
 };
 
 export const reprocessNotificacion = async (id: string): Promise<PlazoNotificacion> => {
-	const { data } = await workersAxios.post(`/api/admin/plazos/notificaciones/${id}/reprocess`);
+	const { data } = await ax().post(`/api/admin/plazos/notificaciones/${id}/reprocess`);
 	return data.data;
 };
 
 export const reprocessParsed = async (fuero?: string): Promise<{ reencoladas: number }> => {
-	const { data } = await workersAxios.post("/api/admin/plazos/notificaciones/reprocess-parsed", { fuero });
+	const { data } = await ax().post("/api/admin/plazos/notificaciones/reprocess-parsed", { fuero });
 	return data.data;
 };
 
@@ -184,17 +218,17 @@ export const getNormativa = async (params?: {
 	verificado?: boolean;
 	fuero?: string;
 }): Promise<PlazoNormativaRegla[]> => {
-	const { data } = await workersAxios.get("/api/admin/plazos/normativa", { params });
+	const { data } = await axRef().get("/api/admin/plazos/normativa", { params });
 	return data.data;
 };
 
 export const createNormativa = async (regla: Partial<PlazoNormativaRegla> & { _id: string }): Promise<PlazoNormativaRegla> => {
-	const { data } = await workersAxios.post("/api/admin/plazos/normativa", regla);
+	const { data } = await axRef().post("/api/admin/plazos/normativa", regla);
 	return data.data;
 };
 
 export const updateNormativa = async (id: string, cambios: Partial<PlazoNormativaRegla>): Promise<PlazoNormativaRegla> => {
-	const { data } = await workersAxios.patch(`/api/admin/plazos/normativa/${id}`, cambios);
+	const { data } = await axRef().patch(`/api/admin/plazos/normativa/${id}`, cambios);
 	return data.data;
 };
 
@@ -291,7 +325,13 @@ export const getDatasetCandidatos = async (params?: { minN?: number; minShare?: 
 
 export interface PlazosMonitor {
 	workers: {
-		plazosWorker: { enabled: boolean; alive: boolean; lastCycleAt: string | null; lastResult: string | null; stats: Record<string, number> | null };
+		plazosWorker: {
+			enabled: boolean;
+			alive: boolean;
+			lastCycleAt: string | null;
+			lastResult: string | null;
+			stats: Record<string, number> | null;
+		};
 		datasetWorker: {
 			enabled: boolean;
 			alive: boolean;
@@ -323,7 +363,7 @@ export interface PlazosMonitor {
 }
 
 export const getMonitor = async (): Promise<PlazosMonitor> => {
-	const { data } = await workersAxios.get("/api/admin/plazos/monitor");
+	const { data } = await ax().get("/api/admin/plazos/monitor");
 	return data.data;
 };
 
@@ -369,7 +409,7 @@ export const getFeriados = async (params?: {
 	verificado?: boolean;
 	habilitado?: boolean;
 }): Promise<FeriadoJudicial[]> => {
-	const { data } = await workersAxios.get("/api/admin/plazos/feriados", { params });
+	const { data } = await axRef().get("/api/admin/plazos/feriados", { params });
 	return data.data;
 };
 
@@ -384,11 +424,121 @@ export const createFeriados = async (payload: {
 	verificado?: boolean;
 	notas?: string;
 }): Promise<{ dias: number; upserts: number }> => {
-	const { data } = await workersAxios.post("/api/admin/plazos/feriados", payload);
+	const { data } = await axRef().post("/api/admin/plazos/feriados", payload);
 	return data.data;
 };
 
 export const updateFeriado = async (id: string, cambios: Partial<FeriadoJudicial>): Promise<FeriadoJudicial> => {
-	const { data } = await workersAxios.patch(`/api/admin/plazos/feriados/${encodeURIComponent(id)}`, cambios);
+	const { data } = await axRef().patch(`/api/admin/plazos/feriados/${encodeURIComponent(id)}`, cambios);
+	return data.data;
+};
+
+// ── Revisión legal (fase F0) ───────────────────────────────────────────────────
+
+export type Destinatario = "actor" | "demandado" | "perito" | "tercero" | "otro";
+
+export interface RevisionVeredicto {
+	destinatario: Destinatario | null;
+	actoNotificado: string | null;
+	plazoCorrecto: boolean | null;
+	plazoQueCorresponde: string | null;
+	vencimientoCorrecto: boolean | null;
+	vencimientoQueCorresponde: string | null;
+	comentario: string | null;
+}
+
+export interface RevisionItem {
+	_id: string;
+	muestra: string;
+	notificacionId: string;
+	estrato: string;
+	fuero: string;
+	number: number;
+	year: number;
+	caratula: string | null;
+	tipoNotificacion: string | null;
+	processingStatus: string;
+	movimiento: { fecha: string | null; tipo: string | null; detalle: string | null; url: string | null };
+	plazo: {
+		fuente: string | null;
+		confianza: string | null;
+		regla: string | null;
+		cita: string | null;
+		reglaVerificada: boolean | null;
+		fragmento: string | null;
+		plazoDias: number | null;
+		tipoPlazo: string | null;
+		fechaNotificacion: string | null;
+		fechaNotificacionFuente: string | null;
+		perfeccionamiento: string | null;
+		inicioPlazo: string | null;
+		vencimiento: string | null;
+		vencimientoConGracia: string | null;
+		feriadosAplicados: string[];
+	};
+	estado: "pendiente" | "revisada";
+	veredicto: RevisionVeredicto | null;
+	revisadoEn?: string;
+	textoCedula?: string | null;
+}
+
+export interface RevisionMuestra {
+	muestra: string;
+	total: number;
+	revisadas: number;
+	creadoEn: string;
+}
+
+export interface RevisionFila {
+	clave: string | null;
+	total: number;
+	revisadas: number;
+	plazoOk: number;
+	vencOk: number;
+	ambosOk: number;
+	precision: number | null;
+}
+
+export interface RevisionStats {
+	global: RevisionFila | null;
+	porEstrato: RevisionFila[];
+	porRegla: RevisionFila[];
+	destinatarios: { destinatario: string | null; n: number }[];
+}
+
+export const getRevisionMuestras = async (): Promise<RevisionMuestra[]> => {
+	const { data } = await ax().get("/api/admin/plazos/revision-legal/muestras");
+	return data.data;
+};
+
+export const crearRevisionMuestra = async (body: { nombre?: string; desde?: string }): Promise<{ muestra: string; total: number }> => {
+	// $sample sobre una colección grande: más margen que el timeout por defecto
+	const { data } = await ax().post("/api/admin/plazos/revision-legal/muestras", body, { timeout: 150000 });
+	return data.data;
+};
+
+export const getRevisionItems = async (params: {
+	muestra: string;
+	estado?: string;
+	estrato?: string;
+	page?: number;
+	limit?: number;
+}): Promise<Paginated<RevisionItem>> => {
+	const { data } = await ax().get("/api/admin/plazos/revision-legal", { params });
+	return data;
+};
+
+export const getRevisionItem = async (id: string): Promise<RevisionItem> => {
+	const { data } = await ax().get(`/api/admin/plazos/revision-legal/item/${id}`);
+	return data.data;
+};
+
+export const guardarRevisionVeredicto = async (id: string, veredicto: RevisionVeredicto): Promise<RevisionItem> => {
+	const { data } = await ax().patch(`/api/admin/plazos/revision-legal/item/${id}`, { veredicto });
+	return data.data;
+};
+
+export const getRevisionStats = async (muestra: string): Promise<RevisionStats> => {
+	const { data } = await ax().get("/api/admin/plazos/revision-legal/stats", { params: { muestra } });
 	return data.data;
 };
