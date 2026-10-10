@@ -542,3 +542,31 @@ export const getRevisionStats = async (muestra: string): Promise<RevisionStats> 
 	const { data } = await ax().get("/api/admin/plazos/revision-legal/stats", { params: { muestra } });
 	return data.data;
 };
+
+// ── Beta de plazos automáticos (F5) — datos reales en la base "usuarios" (Atlas) ──
+
+export interface PlazosBeta {
+	usuarios: { activos: number; conCuit: number };
+	cedulas: { total: number; ultimos7d: number; porStatus: Record<string, number> };
+	sugerencias: { eventos: number; eventosArchivados: number; porAccion: Record<string, number> };
+	feedback: {
+		correctos: number;
+		incorrectos: number;
+		precision: number | null;
+		porRegla: { clave: string; total: number; correctos: number }[];
+		negativos: {
+			_id: string;
+			fuero: string;
+			regla: string | null;
+			fuente: string | null;
+			vencimiento: string | null;
+			comentario: string | null;
+			at: string;
+		}[];
+	};
+}
+
+export const getPlazosBeta = async (): Promise<PlazosBeta> => {
+	const { data } = await ax().get("/api/admin/plazos/beta");
+	return data.data;
+};

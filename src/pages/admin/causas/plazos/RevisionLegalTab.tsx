@@ -41,6 +41,7 @@ import {
 	RevisionStats,
 	RevisionVeredicto,
 } from "api/plazos";
+import BetaPanel from "./BetaPanel";
 
 // Revisión legal de los plazos calculados (fase F0 de "plazos automáticos para usuarios").
 // Un abogado revisa una muestra estratificada y deja su veredicto; la precisión por estrato
@@ -408,6 +409,7 @@ export default function RevisionLegalTab() {
 				muestra y marca si el plazo y el vencimiento son correctos. Solo los estratos con precisión ≥ 95 % se les van a proponer a los
 				usuarios.
 			</Typography>
+			{getPlazosBase() === "usuarios" && <BetaPanel />}
 			<Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" useFlexGap>
 				<TextField
 					select
