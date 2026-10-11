@@ -12,6 +12,7 @@ import FeriadosTab from "./FeriadosTab";
 import DatasetTab from "./DatasetTab";
 import MonitoreoTab from "./MonitoreoTab";
 import RevisionLegalTab from "./RevisionLegalTab";
+import CedulaDetalle from "./CedulaDetalle";
 
 // Pestañas en la URL (?tab=) para poder enlazar desde el flujo y otras vistas.
 const TAB_SLUGS = ["notificaciones", "vencimientos", "normativa", "feriados", "dataset", "monitoreo", "revision-legal"] as const;
@@ -21,6 +22,9 @@ export default function PlazosPage() {
 	const [tab, setTab] = useTabIndexParam("tab", TAB_SLUGS);
 	// ?base=usuarios|cache manda sobre la elección guardada (links desde otras vistas).
 	const [baseParam, setBaseParam] = useQueryParam("base");
+	// Detalle unificado de una cédula de usuario: ?cedula=<causaId:sourceId> o ?plazo=<id>.
+	const [cedulaParam, setCedulaParam] = useQueryParam("cedula");
+	const [plazoParam, setPlazoParam] = useQueryParam("plazo");
 	const [base, setBase] = useState<PlazosBase>(() => {
 		if (baseParam === "usuarios" || baseParam === "cache") {
 			setPlazosBase(baseParam);
@@ -131,6 +135,15 @@ export default function PlazosPage() {
 				{tab === 4 && base === "cache" && <DatasetTab />}
 				{tab === 5 && <MonitoreoTab key={base} />}
 				{tab === 6 && <RevisionLegalTab key={base} />}
+				<CedulaDetalle
+					open={!!(cedulaParam || plazoParam)}
+					movementId={cedulaParam || null}
+					plazoId={cedulaParam ? null : plazoParam || null}
+					onClose={() => {
+						setCedulaParam("");
+						setPlazoParam("");
+					}}
+				/>
 			</Stack>
 		</MainCard>
 	);

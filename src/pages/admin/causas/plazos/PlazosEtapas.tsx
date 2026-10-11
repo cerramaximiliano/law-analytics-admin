@@ -20,7 +20,7 @@ const FUENTE: Record<string, string> = { "app-update": "app-update", "mis-causas
 // Vista donde se opera cada etapa.
 const HREF: Record<PlazosFlujoEtapa["id"], string> = {
 	detectadas: "/admin/causas/plazos?tab=notificaciones&base=usuarios",
-	esperando: "/admin/causas/plazos?tab=notificaciones&base=usuarios",
+	esperando: "/admin/causas/plazos?tab=notificaciones&base=usuarios&status=esperando_documento",
 	calculo: "/admin/workers/plazos?tab=estado&base=usuarios",
 	calculadas: "/admin/causas/plazos?tab=vencimientos&base=usuarios",
 	entrega: "/admin/causas/plazos?tab=monitoreo&base=usuarios",

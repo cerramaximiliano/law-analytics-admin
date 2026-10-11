@@ -54,7 +54,8 @@ export type PlazoProcessingStatus =
 	| "failed"
 	| "not_pdf"
 	| "computed"
-	| "revision_manual";
+	| "revision_manual"
+	| "esperando_documento";
 
 export interface PlazoComputado {
 	fuente: "texto" | "norma";
@@ -69,7 +70,7 @@ export interface PlazoComputado {
 		matchedPattern: string;
 		snippet: string;
 	};
-	fechaNotificacionFuente: "detalle" | "movimiento";
+	fechaNotificacionFuente: "detalle" | "movimiento" | "bandeja";
 	fechaNotificacion: string;
 	perfeccionamiento: string;
 	inicioPlazo: string;
@@ -164,6 +165,8 @@ export const getNotificaciones = async (params: {
 	status?: string;
 	fuero?: string;
 	fuente?: string;
+	/** Por dónde entró la cédula (base usuarios): app-update | mis-causas | bandeja */
+	via?: string;
 	causaId?: string;
 	desde?: string;
 	hasta?: string;
@@ -413,6 +416,52 @@ export interface PlazosFlujo {
 /** Siempre contra Atlas: el flujo de plazos automáticos es de la base de usuarios. */
 export const getFlujoUsuarios = async (): Promise<PlazosFlujo> => {
 	const { data } = await pjnAtlasAxios.get("/api/admin/plazos/flujo");
+	return data.data;
+};
+
+// ── Detalle unificado de una cédula de usuario (Atlas) ─────────────────────────
+export interface CedulaUsuario {
+	_id: string;
+	email?: string;
+	firstName?: string;
+	lastName?: string;
+	isTestAccount?: boolean;
+	plazosAutomaticos?: { activo?: boolean; cuit?: string | null } | null;
+}
+
+export interface CedulaDetalle {
+	movementId: string | null;
+	coleccion: string | null;
+	causa: { _id: string; number?: number; year?: number; fuero?: string; caratula?: string; objeto?: string; juzgado?: string; secretaria?: string; isPrivate?: boolean; source?: string } | null;
+	/** Doc de pjn-movements con el bloque cedula {documento, resultado, recepcion, plazo}. */
+	movimiento: {
+		_id: string;
+		fecha?: string;
+		tipo?: string;
+		detalle?: string;
+		url?: string;
+		pdfStatus?: string;
+		textoStatus?: string;
+		textoMethod?: string;
+		cedula?: { documento?: any; resultado?: any; recepcion?: any; plazo?: any };
+	} | null;
+	texto: { chars: number; texto: string } | null;
+	plazo: (PlazoNotificacion & { origen?: string; fuente?: string; bandeja?: any; validacion?: any; source?: any }) | null;
+	bandeja: Array<{ _id: string; userId: string; credentialsId: string; numeroCedula?: number; fecha?: string; destinatarios?: any[]; vinculo?: any; notified?: boolean; notifiedAt?: string | null }>;
+	folders: Array<{ _id: string; userId: string; folderName?: string; archived?: boolean; source?: string }>;
+	usuarios: CedulaUsuario[];
+	entrega: {
+		estado: string | null;
+		resultados: Array<{ folderId: string; userId: string; accion: string; confirmadoPor?: string | null; eventId?: string; notificationId?: string }>;
+		eventos: Array<{ _id: string; userId: string; folderId: string; title?: string; start?: string; confirmadoPor?: string | null; archivedAt?: string | null; googleEventId?: string | null }>;
+		avisos: Array<{ _id: string; userId: string; folderId: string; code: string; read?: boolean; createdAt?: string }>;
+	};
+	correos: Array<{ _id: string; userId: string; notificationStatus: string; notificationSettings?: { notifyAt?: string }; notifications?: Array<{ date: string; type: string; success: boolean; details: string }> }>;
+}
+
+/** Siempre contra Atlas. Por movimiento ("causaId:sourceId") o por id del plazo. */
+export const getCedulaDetalle = async (q: { movementId?: string; plazoId?: string }): Promise<CedulaDetalle> => {
+	const { data } = await pjnAtlasAxios.get("/api/admin/plazos/cedula", { params: q });
 	return data.data;
 };
 

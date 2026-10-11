@@ -23,7 +23,8 @@ import {
 	Typography,
 } from "@mui/material";
 import { useSnackbar } from "notistack";
-import { getNotificaciones, getNotificacion, reprocessNotificacion, reprocessParsed, PlazoNotificacion } from "api/plazos";
+import { getNotificaciones, getNotificacion, getPlazosBase, reprocessNotificacion, reprocessParsed, PlazoNotificacion } from "api/plazos";
+import { useQueryParam } from "hooks/useTabParam";
 
 const STATUS_COLOR: Record<string, "default" | "success" | "warning" | "error" | "info" | "primary"> = {
 	computed: "success",
@@ -34,12 +35,15 @@ const STATUS_COLOR: Record<string, "default" | "success" | "warning" | "error" |
 	ocr_needed: "warning",
 	revision_manual: "warning",
 	no_url: "default",
+	esperando_documento: "info",
 	failed: "error",
 	not_pdf: "error",
 };
 
 const FUEROS = ["", "CIV", "CSS", "CNT", "COM"];
-const STATUSES = ["", "pending", "computed", "parsed", "extracted", "revision_manual", "ocr_needed", "no_url", "failed", "not_pdf"];
+const STATUSES = ["", "pending", "computed", "parsed", "extracted", "revision_manual", "esperando_documento", "ocr_needed", "no_url", "failed", "not_pdf"];
+// Por dónde entró la cédula (solo base de usuarios).
+const VIAS: Array<[string, string]> = [["", "Todas"], ["app-update", "app-update"], ["mis-causas", "Mis Causas"], ["bandeja", "bandeja del PJN"]];
 
 const day = (v?: string | null) => (v ? String(v).slice(0, 10) : "—");
 
@@ -181,14 +185,22 @@ function DetalleDialog({ id, onClose, onChanged }: { id: string | null; onClose:
 
 export default function NotificacionesTab() {
 	const { enqueueSnackbar } = useSnackbar();
+	const esUsuarios = getPlazosBase() === "usuarios";
+	// Filtros en la URL: se puede enlazar a "las cédulas de esta causa" o "las que entraron por la bandeja".
+	const [status, setStatusParam] = useQueryParam("status");
+	const [fuero, setFueroParam] = useQueryParam("fuero");
+	const [via, setViaParam] = useQueryParam("via");
+	const [causaId, setCausaIdParam] = useQueryParam("causaId");
+	// En la base de usuarios la fila abre el detalle unificado (?plazo=, lo monta la página).
+	const [, setPlazoParam] = useQueryParam("plazo");
 	const [rows, setRows] = useState<PlazoNotificacion[]>([]);
 	const [count, setCount] = useState(0);
 	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [loading, setLoading] = useState(true);
-	const [status, setStatus] = useState("");
-	const [fuero, setFuero] = useState("");
 	const [detalleId, setDetalleId] = useState<string | null>(null);
+	const setStatus = (v: string) => setStatusParam(v);
+	const setFuero = (v: string) => setFueroParam(v);
 
 	const fetchList = useCallback(async () => {
 		try {
@@ -198,6 +210,8 @@ export default function NotificacionesTab() {
 				limit: rowsPerPage,
 				status: status || undefined,
 				fuero: fuero || undefined,
+				via: (esUsuarios && via) || undefined,
+				causaId: causaId || undefined,
 			});
 			setRows(resp.data);
 			setCount(resp.count);
@@ -206,7 +220,7 @@ export default function NotificacionesTab() {
 		} finally {
 			setLoading(false);
 		}
-	}, [page, rowsPerPage, status, fuero, enqueueSnackbar]);
+	}, [page, rowsPerPage, status, fuero, via, causaId, esUsuarios, enqueueSnackbar]);
 
 	useEffect(() => {
 		fetchList();
@@ -239,6 +253,16 @@ export default function NotificacionesTab() {
 						</MenuItem>
 					))}
 				</TextField>
+				{esUsuarios && (
+					<TextField select size="small" label="Entró por" value={via} onChange={(e) => { setViaParam(e.target.value); setPage(0); }} sx={{ minWidth: 150 }}>
+						{VIAS.map(([v, l]) => (
+							<MenuItem key={v} value={v}>
+								{l}
+							</MenuItem>
+						))}
+					</TextField>
+				)}
+				{causaId && <Chip size="small" label={`causa ${causaId.slice(-6)}`} onDelete={() => { setCausaIdParam(""); setPage(0); }} />}
 				<Box sx={{ flex: 1 }} />
 				<Button size="small" onClick={reprocesarParsed}>
 					Re-encolar «parsed» (tras ajustar reglas)
@@ -268,7 +292,7 @@ export default function NotificacionesTab() {
 									</TableRow>
 								))
 							: rows.map((r) => (
-									<TableRow key={r._id} hover sx={{ cursor: "pointer" }} onClick={() => setDetalleId(r._id)}>
+									<TableRow key={r._id} hover sx={{ cursor: "pointer" }} onClick={() => (esUsuarios ? setPlazoParam(r._id) : setDetalleId(r._id))}>
 										<TableCell>{day(r.detectedAt)}</TableCell>
 										<TableCell>
 											{r.number}/{r.year}
