@@ -37,6 +37,7 @@ import {
 } from "@mui/material";
 import { CloseCircle, DocumentText, Link21, Refresh } from "iconsax-react";
 import { useSnackbar } from "notistack";
+import { Link as RouterLink } from "react-router-dom";
 import RagExtraccionService, {
 	ExtraccionDetalle,
 	ExtraccionFiltros,
@@ -778,6 +779,23 @@ const DetalleDialog = ({ id, onClose }: { id: string | null; onClose: () => void
 						{d.revisar && d.revisar.length > 0 && (
 							<Alert severity="warning">
 								<strong>Revisar a mano:</strong> {d.revisar.join(" · ")}
+							</Alert>
+						)}
+						{d.movimiento?.cedula?.plazo && id && (
+							// Vista unificada de la cédula de usuario (plazos automáticos): ficha, bandeja, plazo, entrega y correo.
+							<Alert
+								severity="info"
+								action={
+									<Button size="small" component={RouterLink} to={`/admin/causas/plazos?base=usuarios&cedula=${encodeURIComponent(id)}`}>
+										Ver plazo y entrega
+									</Button>
+								}
+							>
+								Esta cédula tiene un plazo calculado
+								{d.movimiento.cedula.plazo.vencimiento
+									? ` (vence el ${d.movimiento.cedula.plazo.vencimiento.slice(0, 10).split("-").reverse().join("/")})`
+									: ""}
+								.
 							</Alert>
 						)}
 						<Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>

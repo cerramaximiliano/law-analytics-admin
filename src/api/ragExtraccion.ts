@@ -238,6 +238,8 @@ export interface ExtraccionDetalle {
 		textoCharCount?: number;
 		textoExtractedAt?: string;
 		textoError?: string;
+		// Bloque cédula (sub-bloque de plazos automáticos): solo el plazo, para enlazar a su vista.
+		cedula?: { plazo?: { plazoNotificacionId?: string; estado?: string; vencimiento?: string | null } | null } | null;
 	} | null;
 	causa: { number: number; year: number; caratula: string; juzgado?: number } | null;
 	estado:
