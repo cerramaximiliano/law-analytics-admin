@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 import { Alert, Chip, CircularProgress, Divider, Grid, Paper, Stack, Typography } from "@mui/material";
 import { useSnackbar } from "notistack";
 import { getMonitor, PlazosMonitor } from "api/plazos";
+import WorkerHeartbeatChip from "components/admin/WorkerHeartbeatChip";
+import PlazosEtapas from "./PlazosEtapas";
 
 const fmt = (v?: string | null) => (v ? new Date(v).toLocaleString("es-AR") : "—");
 
@@ -9,12 +11,14 @@ function WorkerCard({
 	nombre,
 	servidor,
 	alive,
+	lastCycleAt,
 	enabled,
 	children,
 }: {
 	nombre: string;
 	servidor?: string;
 	alive: boolean;
+	lastCycleAt?: string | null;
 	enabled: boolean;
 	children: React.ReactNode;
 }) {
@@ -25,7 +29,7 @@ function WorkerCard({
 					<Typography variant="subtitle1" sx={{ fontFamily: "monospace" }}>
 						{nombre}
 					</Typography>
-					<Chip size="small" label={alive ? "VIVO" : "SIN HEARTBEAT"} color={alive ? "success" : "error"} />
+					<WorkerHeartbeatChip alive={alive} lastCycleAt={lastCycleAt} />
 					{!enabled && <Chip size="small" label="deshabilitado" color="warning" variant="outlined" />}
 					{servidor && <Chip size="small" variant="outlined" label={servidor} sx={{ fontFamily: "monospace", fontSize: "0.65rem" }} />}
 				</Stack>
@@ -106,6 +110,8 @@ export default function MonitoreoTab() {
 				<Alert severity="success">Subsistema saludable — sin alertas.</Alert>
 			)}
 
+			{esUsuarios && <PlazosEtapas />}
+
 			<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 				<Chip size="small" label={`hoy: ${m.hoy.detectadas} detectadas`} />
 				<Chip size="small" color="success" variant="outlined" label={`hoy: ${m.hoy.computadas} computadas`} />
@@ -176,7 +182,7 @@ export default function MonitoreoTab() {
 
 				{w.datasetWorker && (
 					<Grid item xs={12} md={6}>
-						<WorkerCard nombre="plazos-dataset-worker" servidor="worker_01" alive={w.datasetWorker.alive} enabled={w.datasetWorker.enabled}>
+						<WorkerCard nombre="plazos-dataset-worker" servidor="worker_01" alive={w.datasetWorker.alive} lastCycleAt={w.datasetWorker.lastCycleAt} enabled={w.datasetWorker.enabled}>
 							<Typography variant="body2">
 								Hoy: {w.datasetWorker.hoy?.count ?? 0} / {w.datasetWorker.dailyLimit ?? "—"} descargas
 							</Typography>

@@ -377,6 +377,45 @@ export const getMonitor = async (): Promise<PlazosMonitor> => {
 	return data.data;
 };
 
+// ── Flujo de plazos automáticos: contadores por etapa (solo base de usuarios) ──
+export interface PlazosFlujoEtapa {
+	id: "detectadas" | "esperando" | "calculo" | "calculadas" | "entrega" | "entregadas";
+	label: string;
+	total: number;
+	nota: string;
+	hoy?: number;
+	desglose?: Record<string, number>;
+	enCola?: number;
+	fueraDeAlcance?: number;
+	errores?: number;
+	pausada?: boolean;
+	motivoPausa?: string | null;
+	confiables?: number;
+	sinPlazo?: number;
+	revisionManual?: number;
+	sinCarpeta?: number;
+	eventos?: number;
+	avisos?: number;
+}
+
+export interface PlazosFlujo {
+	alcance: {
+		calculo: "prueba" | "todos";
+		filtroCalculo: Record<string, unknown>;
+		causasCalculo: number | null;
+		causasEntrega: number;
+		dryRun: boolean;
+	};
+	etapas: PlazosFlujoEtapa[];
+	generatedAt: string;
+}
+
+/** Siempre contra Atlas: el flujo de plazos automáticos es de la base de usuarios. */
+export const getFlujoUsuarios = async (): Promise<PlazosFlujo> => {
+	const { data } = await pjnAtlasAxios.get("/api/admin/plazos/flujo");
+	return data.data;
+};
+
 /** Monitor de una base puntual, sin depender del selector (lo usa el diagrama del flujo). */
 export const getMonitorDe = async (base: PlazosBase): Promise<PlazosMonitor> => {
 	const { data } = await (base === "usuarios" ? pjnAtlasAxios : workersAxios).get("/api/admin/plazos/monitor");

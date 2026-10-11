@@ -26,6 +26,7 @@ import PlazosWorkerConfigService, { PlazosWorkerFullDoc, PlazosWorkerSettings, P
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 import { getPlazosBase, setPlazosBase, PlazosBase } from "api/plazos";
 import CrossViewLinks from "components/admin/CrossViewLink";
+import WorkerHeartbeatChip from "components/admin/WorkerHeartbeatChip";
 import { useQueryParam, useTabIndexParam } from "hooks/useTabParam";
 
 const fmtDate = (v: string | null | undefined) => (v ? new Date(v).toLocaleString("es-AR") : "—");
@@ -166,7 +167,7 @@ function StatusTab({ status, loading, onRefresh }: { status: PlazosWorkerStatus 
 	return (
 		<Stack spacing={2.5}>
 			<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
-				<Chip label={status.alive ? "VIVO" : "SIN HEARTBEAT"} color={status.alive ? "success" : "error"} size="small" />
+				<WorkerHeartbeatChip alive={status.alive} lastCycleAt={status.heartbeat?.lastCycleAt} umbralMin={5} />
 				<Chip label={status.enabled ? "habilitado" : "deshabilitado"} color={status.enabled ? "primary" : "warning"} size="small" variant="outlined" />
 				<Chip label={`cron ${status.cronPattern}`} size="small" variant="outlined" sx={{ fontFamily: "monospace" }} />
 			</Stack>

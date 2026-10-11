@@ -10,6 +10,7 @@ import DiagramCard from "../causas/flujos/DiagramCard";
 import { buildPlazosSpec, PlazosFlowLive } from "./plazosFlowData";
 import { getMonitorDe } from "api/plazos";
 import BandejaSyncConfigService from "api/bandejaSyncConfig";
+import PlazosEtapas from "../causas/plazos/PlazosEtapas";
 
 const DEFAULTS: PlazosFlowLive = {
 	calculoAlive: true,
@@ -88,6 +89,9 @@ const PlazosFlow: React.FC = () => {
 					El diagrama refleja el estado de la base de usuarios (Atlas) al abrir la pestaña.
 				</Typography>
 			</Stack>
+			<Box sx={{ mb: 2.5 }}>
+				<PlazosEtapas />
+			</Box>
 			<DiagramCard spec={spec} />
 			<Stack
 				direction={{ xs: "column", sm: "row" }}
