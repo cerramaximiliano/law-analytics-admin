@@ -1,9 +1,14 @@
-import workersAxios from "utils/workersAxios";
+import workersAxios, { pjnAtlasAxios } from "utils/workersAxios";
+import { getPlazosBase } from "api/plazos";
 
 /**
- * plazosWorkerConfig.ts — Config + estado del plazos-worker (pjn-api Local
- * /api/plazos-worker-config). Vista admin Workers PJN → Plazos.
+ * plazosWorkerConfig.ts — Config + estado del plazos-worker (pjn-api
+ * /api/plazos-worker-config), según la base elegida en Plazos:
+ *   - caché → plazos-worker (worker_01, laboratorio) vía pjn/cache-api;
+ *   - usuarios → plazos-worker-usuarios (worker_02) vía pjn/api contra Atlas.
+ * Vista admin Workers → Plazos.
  */
+const ax = () => (getPlazosBase() === "usuarios" ? pjnAtlasAxios : workersAxios);
 
 const BASE = "/api/plazos-worker-config";
 
@@ -14,6 +19,8 @@ export interface PlazosWorkerSettings {
 	maxRetries: number;
 	downloadTimeoutMs: number;
 	scanCharsPerPageThreshold: number;
+	/** Solo usuarios: alcance del cálculo. Ausente/null = solo cuentas de prueba; {} = todas. */
+	filtroUsuarios?: Record<string, unknown> | null;
 }
 
 export interface PlazosWorkerHeartbeat {
@@ -53,19 +60,19 @@ export interface PlazosWorkerStatus {
 
 const PlazosWorkerConfigService = {
 	getFull: async (): Promise<PlazosWorkerFullDoc> => {
-		const { data } = await workersAxios.get(BASE);
+		const { data } = await ax().get(BASE);
 		return data.data;
 	},
 	getStatus: async (): Promise<PlazosWorkerStatus> => {
-		const { data } = await workersAxios.get(`${BASE}/status`);
+		const { data } = await ax().get(`${BASE}/status`);
 		return data.data;
 	},
 	updateSettings: async (settings: Partial<PlazosWorkerSettings>): Promise<PlazosWorkerFullDoc> => {
-		const { data } = await workersAxios.patch(`${BASE}/settings`, settings);
+		const { data } = await ax().patch(`${BASE}/settings`, settings);
 		return data.data;
 	},
 	resetStats: async (): Promise<PlazosWorkerFullDoc> => {
-		const { data } = await workersAxios.post(`${BASE}/reset-stats`);
+		const { data } = await ax().post(`${BASE}/reset-stats`);
 		return data.data;
 	},
 };

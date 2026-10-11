@@ -26,6 +26,7 @@ import CijurWorkersFlow from "./CijurWorkersFlow";
 import PostalWorkersFlow from "./PostalWorkersFlow";
 import MisCausasWorkersFlow from "./MisCausasWorkersFlow";
 import MisCausasRepoFlow from "./MisCausasRepoFlow";
+import PlazosFlow from "./PlazosFlow";
 import CausasFlowDiagram from "../causas/flujos/FlowDiagram";
 import { mainSpecs } from "../causas/flujos/flowData";
 import NotificationsFlowDiagram from "../notifications/components/FlowDiagram";
@@ -137,6 +138,15 @@ const TABS: FlowTab[] = [
 			"La captura de la selección curada del Ministerio Público de Buenos Aires: dos canales, backfill una sola vez y vigilancia diaria. El sitio no corta la paginación con 404 y duplica cada fallo en el HTML — las dos cosas condicionan el diseño.",
 		href: "/admin/workers/cijur",
 		hrefLabel: "Operar el worker CIJur",
+	},
+	{
+		label: "Plazos automáticos",
+		slug: "plazos",
+		esWorker: true,
+		intro:
+			"De la cédula al vencimiento en la agenda del usuario: app-update, Mis Causas y la bandeja del PJN registran la cédula, worker_02 lee el PDF y calcula el plazo, y el hub decide qué ve cada usuario en su carpeta, su calendario y su correo. Refleja en vivo el alcance (prueba o todos) y si la entrega está en dry run.",
+		href: "/admin/workers/plazos",
+		hrefLabel: "Configuración y estado del plazos-worker",
 	},
 	{
 		label: "Data plane",
@@ -254,7 +264,9 @@ const FlujosEcosistema: React.FC = () => {
 
 					{tab === 9 && <CijurWorkersFlow />}
 
-					{tab === 10 && (
+					{tab === 10 && <PlazosFlow />}
+
+					{tab === 11 && (
 						// El data plane no se embebe: es una página con panel de detalle propio
 						// y su valor está en poder clickear cada nodo. Duplicar acá una versión
 						// recortada daría dos fuentes de verdad para el mismo diagrama.

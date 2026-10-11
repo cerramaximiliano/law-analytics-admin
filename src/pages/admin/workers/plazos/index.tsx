@@ -5,12 +5,17 @@ import {
 	Chip,
 	CircularProgress,
 	Divider,
+	FormControlLabel,
 	Grid,
+	Radio,
+	RadioGroup,
 	Stack,
 	Switch,
 	Tab,
 	Tabs,
 	TextField,
+	ToggleButton,
+	ToggleButtonGroup,
 	Typography,
 	alpha,
 	useTheme,
@@ -19,12 +24,15 @@ import MainCard from "components/MainCard";
 import { useSnackbar } from "notistack";
 import PlazosWorkerConfigService, { PlazosWorkerFullDoc, PlazosWorkerSettings, PlazosWorkerStatus } from "api/plazosWorkerConfig";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
+import { getPlazosBase, setPlazosBase, PlazosBase } from "api/plazos";
+import CrossViewLinks from "components/admin/CrossViewLink";
+import { useQueryParam, useTabIndexParam } from "hooks/useTabParam";
 
 const fmtDate = (v: string | null | undefined) => (v ? new Date(v).toLocaleString("es-AR") : "—");
 
 // ── Tab Configuración ──────────────────────────────────────────────────────────
 
-function ConfigTab({ doc, loading, onSaved }: { doc: PlazosWorkerFullDoc | null; loading: boolean; onSaved: () => void }) {
+function ConfigTab({ doc, loading, onSaved, base }: { doc: PlazosWorkerFullDoc | null; loading: boolean; onSaved: () => void; base: PlazosBase }) {
 	const { enqueueSnackbar } = useSnackbar();
 	const [form, setForm] = useState<PlazosWorkerSettings | null>(null);
 	const [saving, setSaving] = useState(false);
@@ -38,6 +46,7 @@ function ConfigTab({ doc, loading, onSaved }: { doc: PlazosWorkerFullDoc | null;
 				maxRetries: doc.maxRetries,
 				downloadTimeoutMs: doc.downloadTimeoutMs,
 				scanCharsPerPageThreshold: doc.scanCharsPerPageThreshold,
+				filtroUsuarios: doc.filtroUsuarios ?? null,
 			});
 		}
 	}, [doc]);
@@ -47,7 +56,9 @@ function ConfigTab({ doc, loading, onSaved }: { doc: PlazosWorkerFullDoc | null;
 	const save = async () => {
 		try {
 			setSaving(true);
-			await PlazosWorkerConfigService.updateSettings(form);
+			// filtroUsuarios solo existe en la base de usuarios.
+			const { filtroUsuarios, ...resto } = form;
+			await PlazosWorkerConfigService.updateSettings(base === "usuarios" ? { ...resto, filtroUsuarios: filtroUsuarios ?? null } : resto);
 			enqueueSnackbar("Configuración guardada — el worker la aplica en el próximo ciclo", { variant: "success" });
 			onSaved();
 		} catch (err: any) {
@@ -66,6 +77,24 @@ function ConfigTab({ doc, loading, onSaved }: { doc: PlazosWorkerFullDoc | null;
 				<Switch checked={form.enabled} onChange={(e) => setForm({ ...form, enabled: e.target.checked })} />
 				<Typography>Worker habilitado</Typography>
 			</Stack>
+			{base === "usuarios" && (
+				<Box>
+					<Typography variant="subtitle2" sx={{ mb: 0.5 }}>
+						Alcance del cálculo
+					</Typography>
+					<RadioGroup
+						value={form.filtroUsuarios && !Object.keys(form.filtroUsuarios).length ? "todas" : "prueba"}
+						onChange={(e) => setForm({ ...form, filtroUsuarios: e.target.value === "todas" ? {} : null })}
+					>
+						<FormControlLabel value="prueba" control={<Radio size="small" />} label="Solo causas de cuentas de prueba (etapa 1)" />
+						<FormControlLabel value="todas" control={<Radio size="small" />} label="Todas las causas de usuarios (etapa 2)" />
+					</RadioGroup>
+					<Typography variant="caption" color="text.secondary">
+						Solo cambia qué cédulas se calculan. Nada llega a los usuarios mientras la entrega (plazos-folders-config) siga en dry run o
+						limitada a cuentas de prueba.
+					</Typography>
+				</Box>
+			)}
 			<TextField
 				label="Cron pattern"
 				size="small"
@@ -108,7 +137,9 @@ function ConfigTab({ doc, loading, onSaved }: { doc: PlazosWorkerFullDoc | null;
 const COLA_LABELS: Record<string, string> = {
 	pending: "Pendientes",
 	no_url: "Sin URL",
+	esperando_documento: "Esperando documento (bandeja)",
 	processing: "Procesando",
+	revision_manual: "Revisión manual",
 	parsed: "Sin plazo (parsed)",
 	extracted: "Extraídas s/cómputo",
 	ocr_needed: "Necesitan OCR",
@@ -194,7 +225,21 @@ function StatusTab({ status, loading, onRefresh }: { status: PlazosWorkerStatus 
 export default function PlazosWorkerPage() {
 	const theme = useTheme();
 	const { enqueueSnackbar } = useSnackbar();
-	const [tab, setTab] = useState(0);
+	const [tab, setTab] = useTabIndexParam("tab", ["configuracion", "estado"]);
+	const [baseParam, setBaseParam] = useQueryParam("base");
+	const [base, setBase] = useState<PlazosBase>(() => {
+		if (baseParam === "usuarios" || baseParam === "cache") {
+			setPlazosBase(baseParam);
+			return baseParam;
+		}
+		return getPlazosBase();
+	});
+	const cambiarBase = (b: PlazosBase | null) => {
+		if (!b || b === base) return;
+		setPlazosBase(b);
+		setBase(b);
+		setBaseParam(b);
+	};
 	const [doc, setDoc] = useState<PlazosWorkerFullDoc | null>(null);
 	const [status, setStatus] = useState<PlazosWorkerStatus | null>(null);
 	const [loading, setLoading] = useState(true);
@@ -214,7 +259,7 @@ export default function PlazosWorkerPage() {
 
 	useEffect(() => {
 		refetch();
-	}, [refetch]);
+	}, [refetch, base]);
 
 	useEffect(() => {
 		if (tab !== 1) return;
@@ -234,7 +279,8 @@ export default function PlazosWorkerPage() {
 						</Typography>
 						<Typography variant="body1" color="text.secondary">
 							Lee las cédulas detectadas en movimientos nuevos, extrae el plazo expreso del documento (o aplica normativa subsidiaria por
-							fuero/objeto) y computa el vencimiento sobre el calendario de días hábiles.
+							fuero/objeto) y computa el vencimiento sobre el calendario de días hábiles. Mismo código en dos instancias: la de usuarios
+							(Atlas, worker_02) y la de la caché (laboratorio, worker_01).
 						</Typography>
 					</Box>
 					<Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap alignItems="center">
@@ -253,14 +299,38 @@ export default function PlazosWorkerPage() {
 								fontFamily: "monospace",
 							}}
 						>
-							worker_01
+							{base === "usuarios" ? "worker_02" : "worker_01"}
 						</Box>
-						<Chip label="PM2 · plazos-worker" size="small" color="secondary" variant="outlined" sx={{ fontFamily: "monospace", fontSize: "0.72rem" }} />
 						<Chip
-							label="plazos-notificaciones · local"
+							label={`PM2 · ${base === "usuarios" ? "plazos-worker-usuarios" : "plazos-worker"}`}
+							size="small"
+							color="secondary"
+							variant="outlined"
+							sx={{ fontFamily: "monospace", fontSize: "0.72rem" }}
+						/>
+						<Chip
+							label={base === "usuarios" ? "plazos-notificaciones · Atlas" : "plazos-notificaciones · rs0"}
 							size="small"
 							variant="outlined"
 							sx={{ fontFamily: "monospace", fontSize: "0.72rem", color: BRAND_BLUE, borderColor: alpha(BRAND_BLUE, 0.4) }}
+						/>
+						<ToggleButtonGroup
+							size="small"
+							exclusive
+							value={base}
+							onChange={(_, b) => cambiarBase(b)}
+							sx={{ "& .MuiToggleButton-root": { textTransform: "none", py: 0.25 } }}
+						>
+							<ToggleButton value="usuarios">Usuarios (Atlas)</ToggleButton>
+							<ToggleButton value="cache">Caché (desarrollo)</ToggleButton>
+						</ToggleButtonGroup>
+						<CrossViewLinks
+							current="worker"
+							to={{ datos: `/admin/causas/plazos?tab=monitoreo&base=${base}`, flujo: "/admin/flujos?tab=plazos" }}
+							tooltips={{
+								datos: "Cédulas, vencimientos, monitoreo y revisión legal",
+								flujo: "Diagrama del flujo de plazos automáticos, con el estado en vivo",
+							}}
 						/>
 					</Stack>
 				</Stack>
@@ -272,7 +342,7 @@ export default function PlazosWorkerPage() {
 					</Tabs>
 				</Box>
 
-				{tab === 0 && <ConfigTab doc={doc} loading={loading} onSaved={refetch} />}
+				{tab === 0 && <ConfigTab key={base} doc={doc} loading={loading} onSaved={refetch} base={base} />}
 				{tab === 1 && <StatusTab status={status} loading={loading} onRefresh={refetch} />}
 			</Stack>
 		</MainCard>

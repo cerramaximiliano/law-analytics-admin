@@ -36,11 +36,8 @@ export const referenciasEnAtlas = REFERENCIAS_EN_ATLAS;
 
 /**
  * plazos.ts — Cliente del subsistema de plazos procesales (pjn-api
- * /api/admin/plazos/*).
- *
- * ⚠️ Usa workersAxios (instancia LOCAL de pjn-api en worker_01): las
- * colecciones plazos-notificaciones / plazos-normativa / feriados-judiciales
- * viven en el Mongo local del worker.
+ * /api/admin/plazos/*), contra la base elegida (ver arriba). Documento del
+ * feature: la-ads/docs/producto/plazos-automaticos.md.
  */
 
 // ── Tipos ──────────────────────────────────────────────────────────────────────
@@ -323,15 +320,24 @@ export const getDatasetCandidatos = async (params?: { minN?: number; minShare?: 
 
 // ── Monitoreo consolidado del subsistema ──────────────────────────────────────
 
+export interface PlazosMonitorWorker {
+	/** plazos-worker (caché) | plazos-worker-usuarios (Atlas) */
+	nombre: string;
+	servidor: string;
+	enabled: boolean;
+	alive: boolean;
+	lastCycleAt: string | null;
+	lastResult: string | null;
+	stats: Record<string, number> | null;
+	/** Solo usuarios: alcance del cálculo. null = default (solo cuentas de prueba); {} = todos. */
+	filtroUsuarios?: Record<string, unknown> | null;
+}
+
 export interface PlazosMonitor {
+	base: PlazosBase;
 	workers: {
-		plazosWorker: {
-			enabled: boolean;
-			alive: boolean;
-			lastCycleAt: string | null;
-			lastResult: string | null;
-			stats: Record<string, number> | null;
-		};
+		plazosWorker: PlazosMonitorWorker;
+		/** Solo caché (laboratorio). */
 		datasetWorker: {
 			enabled: boolean;
 			alive: boolean;
@@ -341,29 +347,39 @@ export interface PlazosMonitor {
 			dailyLimit: number | null;
 			stats: Record<string, number> | null;
 			fuerosAgotados: string[];
-		};
+		} | null;
+		/** Solo usuarios: entrega a carpetas vía el hub (worker_02, config en Atlas). */
 		foldersWorker: {
+			servidor: string;
 			enabled: boolean;
 			alive: boolean;
 			lastCycleAt: string | null;
-			lastRun: { plazosLeidos: number; validadas: number; creadas: number } | null;
-			source: string;
+			lastRun: Record<string, unknown> | null;
 			dryRun: boolean;
 			userFilter: Record<string, unknown> | null;
 			stats: Record<string, number> | null;
-		};
+		} | null;
 	};
 	cola: Record<string, number>;
 	hoy: { detectadas: number; computadas: number };
 	revisionManual: number;
 	dispersosSinRevisar: number;
+	/** Solo caché: detección por update-movimientos. */
 	updaters: Array<{ fuero: string; enabled: boolean; processedToday: number | null }>;
+	/** Solo usuarios: por dónde entraron las cédulas (app-update, mis-causas, bandeja). */
+	porFuente: Record<string, number>;
 	alertas: string[];
 	generatedAt: string;
 }
 
 export const getMonitor = async (): Promise<PlazosMonitor> => {
 	const { data } = await ax().get("/api/admin/plazos/monitor");
+	return data.data;
+};
+
+/** Monitor de una base puntual, sin depender del selector (lo usa el diagrama del flujo). */
+export const getMonitorDe = async (base: PlazosBase): Promise<PlazosMonitor> => {
+	const { data } = await (base === "usuarios" ? pjnAtlasAxios : workersAxios).get("/api/admin/plazos/monitor");
 	return data.data;
 };
 

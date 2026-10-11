@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Box, Chip, Stack, Tab, Tabs, ToggleButton, ToggleButtonGroup, Typography, alpha, useTheme } from "@mui/material";
 import MainCard from "components/MainCard";
 import { getStats, getPlazosBase, setPlazosBase, PlazosBase, referenciasEnAtlas } from "api/plazos";
+import { useQueryParam, useTabIndexParam } from "hooks/useTabParam";
+import CrossViewLinks from "components/admin/CrossViewLink";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 import NotificacionesTab from "./NotificacionesTab";
 import VencimientosTab from "./VencimientosTab";
@@ -11,10 +13,21 @@ import DatasetTab from "./DatasetTab";
 import MonitoreoTab from "./MonitoreoTab";
 import RevisionLegalTab from "./RevisionLegalTab";
 
+// Pestañas en la URL (?tab=) para poder enlazar desde el flujo y otras vistas.
+const TAB_SLUGS = ["notificaciones", "vencimientos", "normativa", "feriados", "dataset", "monitoreo", "revision-legal"] as const;
+
 export default function PlazosPage() {
 	const theme = useTheme();
-	const [tab, setTab] = useState(0);
-	const [base, setBase] = useState<PlazosBase>(getPlazosBase());
+	const [tab, setTab] = useTabIndexParam("tab", TAB_SLUGS);
+	// ?base=usuarios|cache manda sobre la elección guardada (links desde otras vistas).
+	const [baseParam, setBaseParam] = useQueryParam("base");
+	const [base, setBase] = useState<PlazosBase>(() => {
+		if (baseParam === "usuarios" || baseParam === "cache") {
+			setPlazosBase(baseParam);
+			return baseParam;
+		}
+		return getPlazosBase();
+	});
 	const [stats, setStats] = useState<{ total: number; porStatus: Record<string, number>; vencimientosProximos: number } | null>(null);
 
 	// Los contadores del encabezado se piden una vez por base (no en cada pestaña) y nunca
@@ -30,6 +43,7 @@ export default function PlazosPage() {
 		if (!b || b === base) return;
 		setPlazosBase(b);
 		setBase(b);
+		setBaseParam(b);
 		if (b === "usuarios" && tab === 4) setTab(0); // el dataset vive solo en la caché
 	};
 
@@ -45,7 +59,8 @@ export default function PlazosPage() {
 						</Typography>
 						<Typography variant="body1" color="text.secondary">
 							Cédulas detectadas en movimientos nuevos con su vencimiento computado (plazo expreso del documento o normativa subsidiaria por
-							fuero/objeto), reglas de normativa y calendario de días inhábiles.
+							fuero/objeto), reglas de normativa y calendario de días inhábiles. La base “Usuarios” es la que llega a los usuarios; “Caché”
+							es el laboratorio.
 						</Typography>
 					</Box>
 					<Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap alignItems="center">
@@ -71,6 +86,14 @@ export default function PlazosPage() {
 							size="small"
 							variant="outlined"
 							sx={{ fontFamily: "monospace", fontSize: "0.7rem", color: BRAND_BLUE, borderColor: alpha(BRAND_BLUE, 0.4) }}
+						/>
+						<CrossViewLinks
+							current="datos"
+							to={{ worker: "/admin/workers/plazos", flujo: "/admin/flujos?tab=plazos" }}
+							tooltips={{
+								worker: "Configuración y estado del plazos-worker",
+								flujo: "Diagrama del flujo de plazos automáticos, con el estado en vivo",
+							}}
 						/>
 					</Stack>
 				</Stack>
