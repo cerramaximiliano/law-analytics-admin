@@ -59,6 +59,26 @@ export default function BetaPanel() {
 					label={`Feedback: ${d.feedback.correctos} correctos / ${d.feedback.incorrectos} incorrectos · ${pct(d.feedback.precision)}`}
 				/>
 			</Stack>
+			{d.bandeja && (
+				<Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap sx={{ mb: 1.5 }}>
+					<Typography variant="caption" color="text.secondary" sx={{ alignSelf: "center" }}>
+						Bandeja del PJN:
+					</Typography>
+					<Chip size="small" variant="outlined" label={`${d.bandeja.cedulas} cédulas (${d.bandeja.hoy} hoy)`} />
+					<Chip
+						size="small"
+						variant="outlined"
+						label={`${d.bandeja.credencialesConCedulas} de ${d.bandeja.credencialesElegibles} credenciales con cédulas`}
+					/>
+					<Chip size="small" variant="outlined" label={`${d.bandeja.enPlazos} en plazos`} />
+					{Object.entries(d.bandeja.porStatus).map(([k, v]) => (
+						<Chip key={k} size="small" variant="outlined" label={`${k}: ${v}`} />
+					))}
+					{Object.entries(d.bandeja.eventosPorConfirmacion).map(([k, v]) => (
+						<Chip key={k} size="small" label={`en calendario por ${k}: ${v}`} />
+					))}
+				</Stack>
+			)}
 			{d.feedback.negativos.length > 0 && (
 				<>
 					<Typography variant="subtitle2" sx={{ mb: 0.5 }}>

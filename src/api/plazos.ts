@@ -547,6 +547,15 @@ export const getRevisionStats = async (muestra: string): Promise<RevisionStats> 
 
 export interface PlazosBeta {
 	usuarios: { activos: number; conCuit: number };
+	bandeja: {
+		cedulas: number;
+		hoy: number;
+		credencialesConCedulas: number;
+		credencialesElegibles: number;
+		enPlazos: number;
+		porStatus: Record<string, number>;
+		eventosPorConfirmacion: Record<string, number>;
+	};
 	cedulas: { total: number; ultimos7d: number; porStatus: Record<string, number> };
 	sugerencias: { eventos: number; eventosArchivados: number; porAccion: Record<string, number> };
 	feedback: {
