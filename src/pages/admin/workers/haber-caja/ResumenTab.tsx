@@ -32,6 +32,7 @@ const ORDEN_CONSTANCIAS: EstadoCaso[] = [
 	"error_motor",
 	"sin_comparables",
 	"descartado",
+	"reemplazado",
 	"fuera_de_alcance",
 ];
 

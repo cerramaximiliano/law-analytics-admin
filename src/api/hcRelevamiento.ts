@@ -11,7 +11,8 @@ export type EstadoCaso =
 	| "descartado"
 	| "fuera_de_alcance"
 	| "error_motor"
-	| "sin_comparables";
+	| "sin_comparables"
+	| "reemplazado";
 
 export type EstadoRevision = "pendiente" | "corregida" | "validada" | "descartada";
 
@@ -44,6 +45,7 @@ export const ESTADO_LABEL: Record<EstadoCaso, string> = {
 	fuera_de_alcance: "Fuera de alcance",
 	error_motor: "Error del motor",
 	sin_comparables: "Sin comparables",
+	reemplazado: "Reemplazado",
 };
 
 export const COMPONENTES = ["sumatoria", "W", "R", "PBU", "PC", "PAP"] as const;
@@ -195,10 +197,60 @@ export interface RevisionDoc {
 	historial?: { estado: EstadoRevision; nota: string | null; por: string | null; en: string }[];
 }
 
+export type EstadoCarga = "pendiente" | "procesando" | "procesada" | "sin_hallazgos" | "error";
+
+export const ESTADO_CARGA_LABEL: Record<EstadoCarga, string> = {
+	pendiente: "Pendiente",
+	procesando: "Procesando",
+	procesada: "Procesada",
+	sin_hallazgos: "Sin hallazgos",
+	error: "Error",
+};
+
+export interface Carga {
+	_id: string;
+	estado: EstadoCarga;
+	prpaId: string | null;
+	causaId: string | null;
+	causaNumber: number | null;
+	causaYear: number | null;
+	fuero?: string;
+	tipo: string;
+	bytes: number;
+	nota: string | null;
+	subidoPor: string | null;
+	subidoEn: string;
+	intentos: number;
+	procesadoEn?: string;
+	prpaIds?: string[];
+	error?: string;
+	resultado?: {
+		escaneado?: boolean;
+		engine?: string;
+		hojasSica?: number;
+		detalleBeneficio?: number;
+		anexos?: number;
+		calidadOk?: number;
+		avisos?: string[];
+		segundos?: number;
+	};
+}
+
+export interface CargasResponse {
+	docs: Carga[];
+	total: number;
+	page: number;
+	limit: number;
+	pages: number;
+}
+
 export interface CasoDetalle {
 	evaluacion: CasoListItem | null;
 	prpa: PrpaDetalle | null;
 	revision: RevisionDoc | null;
+	cargas?: Carga[];
+	/** id del PRPA que reemplazó a esta lectura (carga del original) */
+	reemplazo?: string | null;
 }
 
 export interface Regla {
@@ -258,6 +310,24 @@ const HcRelevamientoService = {
 		body: { estado: EstadoRevision; correcciones?: Correcciones; nota?: string },
 	): Promise<RevisionDoc | null> {
 		const res = await workersAxios.put<{ success: boolean; data: RevisionDoc | null }>(`${BASE}/casos/${id}/revision`, body);
+		return res.data.data;
+	},
+
+	/** Sube el PRPA original (PDF, JPG o PNG, hasta 30 MB) para un caso existente o para una causa por número y año. */
+	async subirCarga(
+		archivo: File,
+		destino: { prpaId?: string; causaNumber?: number; causaYear?: number; nota?: string },
+	): Promise<{ carga: Carga; duplicada: boolean }> {
+		const res = await workersAxios.post<{ success: boolean; data: Carga; duplicada?: boolean }>(`${BASE}/cargas`, archivo, {
+			params: destino,
+			headers: { "Content-Type": archivo.type || "application/pdf" },
+			timeout: 180000,
+		});
+		return { carga: res.data.data, duplicada: !!res.data.duplicada };
+	},
+
+	async listCargas(params: { estado?: EstadoCarga; page?: number; limit?: number } = {}): Promise<CargasResponse> {
+		const res = await workersAxios.get<{ success: boolean; data: CargasResponse }>(`${BASE}/cargas`, { params });
 		return res.data.data;
 	},
 

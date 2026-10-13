@@ -29,6 +29,7 @@ import { useSnackbar } from "notistack";
 import HcRelevamientoService, { CasoDetalle, COMPONENTES, Correcciones, EstadoRevision, Tiempo, Tiempos } from "api/hcRelevamiento";
 import { STALE_AMBER, headerBorder } from "themes/dashboardTokens";
 import { EstadoChip, MotivoChip, fmtFechaHora, fmtNum, headSx, isoDia, COLOR_ESTADO, GRIS } from "./comun";
+import { ListaCargas, SubirPrpa } from "./CargaPrpa";
 
 interface Props {
 	id: string | null;
@@ -76,7 +77,11 @@ function tiemposForm(t?: Tiempos): TiemposForm {
 	};
 }
 
-export default function CasoDrawer({ id, onClose, onGuardado }: Props) {
+export default function CasoDrawer({ id: idInicial, onClose, onGuardado }: Props) {
+	// el caso que se ve puede cambiar dentro del panel (p. ej. al seguir a la lectura que reemplazó a esta)
+	const [id, setId] = useState<string | null>(idInicial);
+	useEffect(() => setId(idInicial), [idInicial]);
+	const [recarga, setRecarga] = useState(0);
 	const theme = useTheme();
 	const isDark = theme.palette.mode === "dark";
 	const { enqueueSnackbar } = useSnackbar();
@@ -148,7 +153,7 @@ export default function CasoDrawer({ id, onClose, onGuardado }: Props) {
 		return () => {
 			vivo = false;
 		};
-	}, [id, enqueueSnackbar]);
+	}, [id, recarga, enqueueSnackbar]);
 
 	const sumaFilas = useMemo(() => filas.reduce((s, f) => s + (Number(f.importe) || 0), 0), [filas]);
 	const sumaTramos = useMemo(() => TRAMOS.reduce((s, [t]) => s + CLASES.reduce((x, [k]) => x + mesesDe(tiempos[t][k]), 0), 0), [tiempos]);
@@ -228,7 +233,7 @@ export default function CasoDrawer({ id, onClose, onGuardado }: Props) {
 	const numSx = { "& input": { fontFamily: "monospace", fontSize: "0.8rem" } };
 
 	return (
-		<Drawer anchor="right" open={!!id} onClose={onClose} PaperProps={{ sx: { width: { xs: "100%", md: 860 } } }}>
+		<Drawer anchor="right" open={!!idInicial} onClose={onClose} PaperProps={{ sx: { width: { xs: "100%", md: 860 } } }}>
 			<Box sx={{ p: { xs: 2, md: 3 } }}>
 				<Stack direction="row" alignItems="flex-start" justifyContent="space-between" spacing={1}>
 					<Box>
@@ -253,7 +258,7 @@ export default function CasoDrawer({ id, onClose, onGuardado }: Props) {
 				) : (
 					<>
 						<Stack direction="row" spacing={2} sx={{ mt: 2 }} flexWrap="wrap" useFlexGap alignItems="center">
-							{p?.url && (
+							{p?.url && /^https?:/.test(p.url) && (
 								<Link
 									href={p.url}
 									target="_blank"
@@ -270,6 +275,30 @@ export default function CasoDrawer({ id, onClose, onGuardado }: Props) {
 								{fmtFechaHora(ev?.evaluadoEn)}
 							</Typography>
 						</Stack>
+
+						{data.reemplazo && (
+							<Alert
+								severity="info"
+								sx={{ mt: 2 }}
+								action={
+									<Button size="small" onClick={() => setId(data.reemplazo!)}>
+										Ver el caso nuevo
+									</Button>
+								}
+							>
+								Esta lectura fue reemplazada por un PRPA original cargado a mano.
+							</Alert>
+						)}
+
+						{seccion("PRPA original")}
+						<Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+							Si conseguiste el PRPA original (PDF de ANSES o una foto mejor), cargalo: se procesa en unos minutos y reemplaza a esta
+							lectura.
+						</Typography>
+						{p?._id && <SubirPrpa prpaId={p._id} onSubida={() => setRecarga((n) => n + 1)} />}
+						<Box sx={{ mt: 1 }}>
+							<ListaCargas cargas={data.cargas || []} isDark={isDark} onAbrir={(x) => setId(x)} />
+						</Box>
 
 						{ev?.revision?.detalle && (
 							<Alert severity="warning" sx={{ mt: 2 }}>

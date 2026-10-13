@@ -6,9 +6,10 @@ import { CasosParams } from "api/hcRelevamiento";
 import ResumenTab from "./ResumenTab";
 import CasosTable from "./CasosTable";
 import ReglasTab from "./ReglasTab";
+import CargasTab from "./CargasTab";
 
 // Slugs del tab en la URL (?tab=...)
-const TABS = ["resumen", "revision", "casos", "reglas"] as const;
+const TABS = ["resumen", "revision", "casos", "cargas", "reglas"] as const;
 const BASE_REVISION: CasosParams = { fuente: "detalleBeneficio", revision: "requerida" };
 const BASE_CASOS: CasosParams = {};
 
@@ -48,11 +49,13 @@ export default function HaberCajaRelevamientoPage() {
 					<Tab value="resumen" label="Resumen" />
 					<Tab value="revision" label="Revisión manual" />
 					<Tab value="casos" label="Casos" />
+					<Tab value="cargas" label="PRPA originales" />
 					<Tab value="reglas" label="Reglas y desvíos" />
 				</Tabs>
 				{tab === "resumen" && <ResumenTab />}
 				{tab === "revision" && <CasosTable base={BASE_REVISION} modoRevision />}
 				{tab === "casos" && <CasosTable base={BASE_CASOS} />}
+				{tab === "cargas" && <CargasTab />}
 				{tab === "reglas" && <ReglasTab />}
 			</Stack>
 		</MainCard>
