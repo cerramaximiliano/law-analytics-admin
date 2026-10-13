@@ -71,6 +71,7 @@ const EscritosWorkerPage = Loadable(lazyWithRetry(() => import("pages/admin/work
 const MovimientosWorkerPage = Loadable(lazyWithRetry(() => import("pages/admin/workers/movimientos")));
 const SentenciasWorkerPage = Loadable(lazyWithRetry(() => import("pages/admin/workers/sentencias")));
 const LiquidacionWorkerPage = Loadable(lazyWithRetry(() => import("pages/admin/workers/liquidacion")));
+const HaberCajaRelevamientoPage = Loadable(lazyWithRetry(() => import("pages/admin/workers/haber-caja")));
 const PlazosWorkerPage = Loadable(lazyWithRetry(() => import("pages/admin/workers/plazos")));
 const PlazosDatasetWorkerPage = Loadable(lazyWithRetry(() => import("pages/admin/workers/plazos-dataset")));
 const PlazosPage = Loadable(lazyWithRetry(() => import("pages/admin/causas/plazos")));
@@ -352,6 +353,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<LiquidacionWorkerPage />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "workers/haber-caja",
+							element: (
+								<AdminRoleGuard>
+									<HaberCajaRelevamientoPage />
 								</AdminRoleGuard>
 							),
 						},

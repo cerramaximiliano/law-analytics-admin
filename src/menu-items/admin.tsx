@@ -637,6 +637,14 @@ const admin: NavItemType = {
 							breadcrumbs: true,
 						},
 						{
+							id: "workers-haber-caja",
+							title: "Haber de caja",
+							type: "item",
+							icon: Calculator,
+							url: "/admin/workers/haber-caja",
+							breadcrumbs: true,
+						},
+						{
 							id: "workers-scraper-postal",
 							title: "Scraper postal",
 							type: "item",
