@@ -22,6 +22,7 @@ export type MotivoRevision =
 	| "sin_tiempos"
 	| "tiempos_inconsistentes"
 	| "filas_ocr"
+	| "categorias_ocr"
 	| "moratoria_no_capturada"
 	| "calidad_ocr";
 
@@ -29,8 +30,9 @@ export const MOTIVO_LABEL: Record<MotivoRevision, string> = {
 	fad_no_leida: "FAD no leída",
 	fecha_invalida: "Fecha inválida",
 	sin_tiempos: "Sin tiempos de servicio",
-	tiempos_inconsistentes: "Tiempos que no suman el total",
+	tiempos_inconsistentes: "Tiempos inconsistentes o imposibles",
 	filas_ocr: "Filas de remuneraciones",
+	categorias_ocr: "Categoría de autónomo sin período",
 	moratoria_no_capturada: "Moratoria no capturada",
 	calidad_ocr: "Lectura dudosa (abierto)",
 };
