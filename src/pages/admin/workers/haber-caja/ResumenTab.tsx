@@ -104,6 +104,8 @@ export default function ResumenTab() {
 	const sica = data.estados["sica:sentencia"] || 0;
 	const ultima = data.ultima;
 	const desvios = Object.entries(ultima?.desviosAcumulados || {}).sort((a, b) => b[1] - a[1]);
+	const desviosFila = Object.entries(ultima?.desviosFilaAcumulados || {}).sort((a, b) => b[1].filas - a[1].filas);
+	const filasAcum = ultima?.filasAcumuladas;
 	const haceMin = ultima ? Math.round((Date.now() - new Date(ultima._id).getTime()) / 60000) : null;
 
 	return (
@@ -221,6 +223,30 @@ export default function ResumenTab() {
 						<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1 }}>
 							Solo cuentan los que lo impreso confirma.
 						</Typography>
+						{!!desviosFila.length && (
+							<>
+								<Typography variant="subtitle2" sx={{ fontWeight: 700, mt: 2, mb: 0.5 }}>
+									Verificados fila por fila
+								</Typography>
+								{desviosFila.map(([k, v]) => (
+									<Stack key={k} direction="row" justifyContent="space-between" sx={{ py: 0.25 }}>
+										<Typography variant="body2" sx={{ fontFamily: "monospace", fontSize: "0.78rem" }}>
+											{k}
+										</Typography>
+										<Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>
+											{v.casos} casos · {v.filas.toLocaleString("es-AR")} filas
+										</Typography>
+									</Stack>
+								))}
+							</>
+						)}
+						{filasAcum && (
+							<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1 }}>
+								Filas contra el actualizado impreso: {filasAcum.ok.toLocaleString("es-AR")} exactas ·{" "}
+								{filasAcum.corregida.toLocaleString("es-AR")} con importe corregido · {filasAcum.desalineada.toLocaleString("es-AR")} con
+								columnas corridas · {filasAcum.sinExplicar.toLocaleString("es-AR")} sin explicar.
+							</Typography>
+						)}
 					</Paper>
 				</Grid>
 			</Grid>

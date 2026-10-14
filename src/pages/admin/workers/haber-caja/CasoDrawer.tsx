@@ -353,12 +353,21 @@ export default function CasoDrawer({ id: idInicial, onClose, onGuardado }: Props
 								Causas: {ev.causas.join(" · ")}
 							</Typography>
 						)}
+						{ev?.filas && (
+							<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
+								Filas contra el actualizado impreso: {ev.filas.ok} exactas
+								{ev.filas.sinTope14 ? ` · ${ev.filas.sinTope14} sin el tope sobre la actualizada` : ""}
+								{ev.filas.sinTope9 ? ` · ${ev.filas.sinTope9} sin el tope del art. 9` : ""}
+								{ev.filas.alAcuerdo ? ` · ${ev.filas.alAcuerdo} actualizadas al acuerdo (× ${ev.filas.factorAcuerdo})` : ""}
+								{ev.filas.corregida ? ` · ${ev.filas.corregida} con importe corregido` : ""}
+								{ev.filas.desalineada ? ` · ${ev.filas.desalineada} con columnas corridas` : ""}
+								{ev.filas.sinExplicar ? ` · ${ev.filas.sinExplicar} sin explicar` : ""}
+							</Typography>
+						)}
 						{!!ev?.correccionesFecha?.length && (
 							<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
 								Fechas del OCR:{" "}
-								{ev.correccionesFecha
-									.map((c) => `${c.campo} ${c.leido} → ${c.corregido || "fuera del cálculo"}`)
-									.join(" · ")}
+								{ev.correccionesFecha.map((c) => `${c.campo} ${c.leido} → ${c.corregido || "fuera del cálculo"}`).join(" · ")}
 							</Typography>
 						)}
 

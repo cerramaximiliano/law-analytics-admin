@@ -20,6 +20,7 @@ export type MotivoRevision =
 	| "fad_no_leida"
 	| "fecha_invalida"
 	| "fecha_corregida"
+	| "importe_corregido"
 	| "sin_tiempos"
 	| "tiempos_inconsistentes"
 	| "filas_ocr"
@@ -31,6 +32,7 @@ export const MOTIVO_LABEL: Record<MotivoRevision, string> = {
 	fad_no_leida: "FAD no leída",
 	fecha_invalida: "Fecha imposible (fila fuera del cálculo)",
 	fecha_corregida: "Año mal leído corregido",
+	importe_corregido: "Importe corregido con el actualizado impreso",
 	sin_tiempos: "Sin tiempos de servicio",
 	tiempos_inconsistentes: "Tiempos inconsistentes o imposibles",
 	filas_ocr: "Filas de remuneraciones",
@@ -103,6 +105,9 @@ export interface CasoListItem {
 	causas: string[];
 	/** años imposibles del OCR: corregidos (un solo dígito, encaja con la fila o sus vecinas) o fuera del cálculo (null) */
 	correccionesFecha?: { campo: string; leido: string; corregido: string | null }[];
+	/** auditoría por fila contra el importe actualizado impreso (constancias) */
+	filas?: FilasAuditoria;
+	desviosFila?: { regla: string; valor: unknown; filas: number }[];
 	revision?: RevisionEval;
 	impresos?: Impresos;
 	recalculos?: string[];
@@ -280,8 +285,27 @@ export interface PasadaResumen {
 	motorVersion: string;
 }
 
+export interface FilasAuditoria {
+	ok: number;
+	sinTope14: number;
+	sinTope9: number;
+	alAcuerdo: number;
+	corregida: number;
+	desalineada: number;
+	sinExplicar: number;
+	factorAcuerdo?: number;
+}
+
 export interface ResumenResponse {
-	ultima: (PasadaResumen & { acumulado?: Record<string, number>; desviosAcumulados?: Record<string, number>; reglas?: Regla[] }) | null;
+	ultima:
+		| (PasadaResumen & {
+				acumulado?: Record<string, number>;
+				desviosAcumulados?: Record<string, number>;
+				desviosFilaAcumulados?: Record<string, { casos: number; filas: number }>;
+				filasAcumuladas?: FilasAuditoria;
+				reglas?: Regla[];
+		  })
+		| null;
 	historial: PasadaResumen[];
 	estados: Record<string, number>;
 	revision: { requerida: number; revisadas: number; porMotivo: Record<string, number>; porEstado: Record<string, number> };
