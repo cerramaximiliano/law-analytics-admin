@@ -19,6 +19,7 @@ export type EstadoRevision = "pendiente" | "corregida" | "validada" | "descartad
 export type MotivoRevision =
 	| "fad_no_leida"
 	| "fecha_invalida"
+	| "fecha_corregida"
 	| "sin_tiempos"
 	| "tiempos_inconsistentes"
 	| "filas_ocr"
@@ -28,7 +29,8 @@ export type MotivoRevision =
 
 export const MOTIVO_LABEL: Record<MotivoRevision, string> = {
 	fad_no_leida: "FAD no leída",
-	fecha_invalida: "Fecha inválida",
+	fecha_invalida: "Fecha imposible (fila fuera del cálculo)",
+	fecha_corregida: "Año mal leído corregido",
 	sin_tiempos: "Sin tiempos de servicio",
 	tiempos_inconsistentes: "Tiempos inconsistentes o imposibles",
 	filas_ocr: "Filas de remuneraciones",
@@ -99,6 +101,8 @@ export interface CasoListItem {
 	componentes: Partial<Record<Componente, ComponenteEval>>;
 	desvios: Desvio[];
 	causas: string[];
+	/** años imposibles del OCR: corregidos (un solo dígito, encaja con la fila o sus vecinas) o fuera del cálculo (null) */
+	correccionesFecha?: { campo: string; leido: string; corregido: string | null }[];
 	revision?: RevisionEval;
 	impresos?: Impresos;
 	recalculos?: string[];

@@ -353,6 +353,14 @@ export default function CasoDrawer({ id: idInicial, onClose, onGuardado }: Props
 								Causas: {ev.causas.join(" · ")}
 							</Typography>
 						)}
+						{!!ev?.correccionesFecha?.length && (
+							<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
+								Fechas del OCR:{" "}
+								{ev.correccionesFecha
+									.map((c) => `${c.campo} ${c.leido} → ${c.corregido || "fuera del cálculo"}`)
+									.join(" · ")}
+							</Typography>
+						)}
 
 						<Divider sx={{ my: 3 }} />
 						<Typography variant="h5">Corrección manual</Typography>
