@@ -432,7 +432,18 @@ export interface CedulaUsuario {
 export interface CedulaDetalle {
 	movementId: string | null;
 	coleccion: string | null;
-	causa: { _id: string; number?: number; year?: number; fuero?: string; caratula?: string; objeto?: string; juzgado?: string; secretaria?: string; isPrivate?: boolean; source?: string } | null;
+	causa: {
+		_id: string;
+		number?: number;
+		year?: number;
+		fuero?: string;
+		caratula?: string;
+		objeto?: string;
+		juzgado?: string;
+		secretaria?: string;
+		isPrivate?: boolean;
+		source?: string;
+	} | null;
 	/** Doc de pjn-movements con el bloque cedula {documento, resultado, recepcion, plazo}. */
 	movimiento: {
 		_id: string;
@@ -447,16 +458,68 @@ export interface CedulaDetalle {
 	} | null;
 	texto: { chars: number; texto: string } | null;
 	plazo: (PlazoNotificacion & { origen?: string; fuente?: string; bandeja?: any; validacion?: any; source?: any }) | null;
-	bandeja: Array<{ _id: string; userId: string; credentialsId: string; numeroCedula?: number; fecha?: string; destinatarios?: any[]; vinculo?: any; notified?: boolean; notifiedAt?: string | null }>;
+	bandeja: Array<{
+		_id: string;
+		userId: string;
+		credentialsId: string;
+		numeroCedula?: number;
+		fecha?: string;
+		destinatarios?: any[];
+		vinculo?: any;
+		notified?: boolean;
+		notifiedAt?: string | null;
+	}>;
 	folders: Array<{ _id: string; userId: string; folderName?: string; archived?: boolean; source?: string }>;
 	usuarios: CedulaUsuario[];
 	entrega: {
 		estado: string | null;
-		resultados: Array<{ folderId: string; userId: string; accion: string; confirmadoPor?: string | null; eventId?: string; notificationId?: string }>;
-		eventos: Array<{ _id: string; userId: string; folderId: string; title?: string; start?: string; confirmadoPor?: string | null; archivedAt?: string | null; googleEventId?: string | null }>;
+		resultados: Array<{
+			folderId: string;
+			userId: string;
+			accion: string;
+			confirmadoPor?: string | null;
+			eventId?: string;
+			notificationId?: string;
+		}>;
+		eventos: Array<{
+			_id: string;
+			userId: string;
+			folderId: string;
+			title?: string;
+			start?: string;
+			confirmadoPor?: string | null;
+			archivedAt?: string | null;
+			googleEventId?: string | null;
+		}>;
 		avisos: Array<{ _id: string; userId: string; folderId: string; code: string; read?: boolean; createdAt?: string }>;
 	};
-	correos: Array<{ _id: string; userId: string; notificationStatus: string; notificationSettings?: { notifyAt?: string }; notifications?: Array<{ date: string; type: string; success: boolean; details: string }> }>;
+	correos: Array<{
+		_id: string;
+		userId: string;
+		notificationStatus: string;
+		notificationSettings?: { notifyAt?: string };
+		notifications?: Array<{ date: string; type: string; success: boolean; details: string }>;
+	}>;
+	/** Resolución que notifica la cédula (la vincula pjn-rag-cedulas), con su texto. Desde el 14/10/2026. */
+	resolucion?: {
+		movementId: string;
+		tipo: string | null;
+		fecha: string | null;
+		detalle: string | null;
+		/** 'texto': transcripción o copia contra el texto de la resolución; 'fecha': única resolución del día; 'adjunto': páginas identificadas por huella. */
+		metodo: "texto" | "fecha" | "adjunto" | null;
+		cobertura: number | null;
+		fuente: "transcripcion" | "copia_adjunta" | null;
+		texto: { chars: number; texto: string } | null;
+	} | null;
+	resolucionNotificada?: {
+		fuente: "transcripcion" | "copia_adjunta" | null;
+		textoMovementId: string | null;
+		texto: string | null;
+		chars: number | null;
+	} | null;
+	/** Movimientos de la causa adjuntos a la cédula (escritos, otras resoluciones). */
+	adjuntosRemitidos?: Array<{ movementId: string; tipo: string | null; fecha: string | null; detalle: string | null }>;
 }
 
 /** Siempre contra Atlas. Por movimiento ("causaId:sourceId") o por id del plazo. */

@@ -18,6 +18,7 @@ import {
 	DialogTitle,
 	Divider,
 	Grid,
+	Link,
 	Stack,
 	Tab,
 	Table,
@@ -65,18 +66,35 @@ const ACCION_LABEL: Record<string, string> = {
 	omitido_duplicado: "ya entregado",
 };
 
-const TABS = ["resumen", "pdf", "texto", "ficha", "bandeja", "plazo", "entrega", "json"] as const;
+const TABS = ["resumen", "pdf", "texto", "resolucion", "ficha", "bandeja", "plazo", "entrega", "json"] as const;
 type TabId = (typeof TABS)[number];
 const TAB_LABEL: Record<TabId, string> = {
 	resumen: "Resumen",
 	pdf: "PDF",
 	texto: "Texto",
+	resolucion: "Resolución notificada",
 	ficha: "Ficha (RAG)",
 	bandeja: "Bandeja",
 	plazo: "Plazo",
 	entrega: "Entrega y correo",
 	json: "JSON",
 };
+
+const METODO_VINCULO: Record<string, string> = {
+	texto: "por el texto",
+	fecha: "por la fecha (única resolución de ese día)",
+	adjunto: "por las páginas adjuntas",
+};
+const FUENTE_RESOLUCION: Record<string, string> = {
+	transcripcion: "La cédula transcribe la resolución.",
+	copia_adjunta: "La resolución va como copia adjunta a la cédula.",
+};
+const vinculoTexto = (r: { metodo: string | null; cobertura: number | null }) =>
+	r.metodo
+		? `vinculada ${METODO_VINCULO[r.metodo] || r.metodo}${
+				r.metodo === "texto" && r.cobertura != null ? ` (${Math.round(r.cobertura * 100)} % del texto coincide)` : ""
+		  }`
+		: "vinculada";
 
 function Fila({ label, children }: { label: string; children: React.ReactNode }) {
 	return (
@@ -142,6 +160,112 @@ function PdfTab({ movementId }: { movementId: string }) {
 	if (error) return <Alert severity="info">{error}</Alert>;
 	if (!data) return <CircularProgress size={22} />;
 	return <PdfCanvasViewer data={data} />;
+}
+
+const cajaTexto = {
+	whiteSpace: "pre-wrap",
+	fontSize: 12.5,
+	maxHeight: 520,
+	overflow: "auto",
+	p: 1.5,
+	bgcolor: "action.hover",
+	borderRadius: 1,
+} as const;
+
+/**
+ * La resolución que notifica la cédula: la vincula pjn-rag-cedulas (por el texto transcripto o la copia adjunta,
+ * por la fecha, o por las páginas adjuntas). Sirve para revisar el plazo: si es sentencia o interlocutoria, si
+ * fija su propio plazo, si trae honorarios con plazo de pago.
+ */
+function ResolucionTab({ d }: { d: Detalle }) {
+	const [verPdf, setVerPdf] = useState(false);
+	const r = d.resolucion || null;
+	const rn = d.resolucionNotificada || null;
+	// La transcripción de la cédula, si no hay texto de la resolución vinculada (o no hay vínculo).
+	const transcripcion = rn?.fuente === "transcripcion" && rn.texto ? rn.texto : null;
+	const adjuntos = (d.adjuntosRemitidos || []).filter((a) => a.movementId !== r?.movementId);
+	return (
+		<Stack spacing={1.5}>
+			{r ? (
+				<Box>
+					<Fila label="Resolución">{`${r.tipo || "—"} · ${fmtDia(r.fecha)}`}</Fila>
+					{r.detalle && <Fila label="Detalle">{r.detalle}</Fila>}
+					<Fila label="Vínculo">{vinculoTexto(r)}</Fila>
+					<Fila label="Movimiento">
+						<Box component="span" sx={{ fontFamily: "monospace", fontSize: 12.5 }}>
+							{r.movementId}
+						</Box>
+					</Fila>
+					{rn?.fuente && <Fila label="En la cédula">{FUENTE_RESOLUCION[rn.fuente]}</Fila>}
+				</Box>
+			) : (
+				<Alert severity="info">
+					No se encontró la resolución en la causa.{transcripcion ? " Se muestra lo que transcribe la cédula." : ""}
+				</Alert>
+			)}
+
+			{r?.texto ? (
+				<Box>
+					<Typography variant="caption" color="text.secondary">
+						Texto de la resolución ({r.texto.chars.toLocaleString("es-AR")} caracteres
+						{r.texto.chars > r.texto.texto.length ? ", se muestran los primeros 30.000" : ""}).
+					</Typography>
+					<Box component="pre" sx={cajaTexto}>
+						{r.texto.texto}
+					</Box>
+				</Box>
+			) : transcripcion ? (
+				<Box>
+					<Typography variant="caption" color="text.secondary">
+						Transcripción en la cédula ({(rn?.chars || transcripcion.length).toLocaleString("es-AR")} caracteres
+						{(rn?.chars || 0) > transcripcion.length ? ", se muestran los primeros 20.000" : ""}).
+					</Typography>
+					<Box component="pre" sx={cajaTexto}>
+						{transcripcion}
+					</Box>
+				</Box>
+			) : (
+				r && <Alert severity="info">La resolución todavía no tiene texto extraído.</Alert>
+			)}
+
+			{r && (
+				<Box>
+					<Button size="small" variant="outlined" onClick={() => setVerPdf((v) => !v)}>
+						{verPdf ? "Ocultar el PDF de la resolución" : "Ver el PDF de la resolución"}
+					</Button>
+					{verPdf && (
+						<Box sx={{ mt: 1 }}>
+							<PdfTab movementId={r.movementId} />
+						</Box>
+					)}
+				</Box>
+			)}
+
+			{adjuntos.length > 0 && (
+				<Box>
+					<Typography variant="subtitle2">Otros adjuntos de la cédula</Typography>
+					<Table size="small">
+						<TableHead>
+							<TableRow>
+								<TableCell>Tipo</TableCell>
+								<TableCell>Fecha</TableCell>
+								<TableCell>Detalle</TableCell>
+							</TableRow>
+						</TableHead>
+						<TableBody>
+							{adjuntos.map((a) => (
+								<TableRow key={a.movementId}>
+									<TableCell>{a.tipo || "—"}</TableCell>
+									<TableCell>{fmtDia(a.fecha)}</TableCell>
+									<TableCell>{a.detalle || "—"}</TableCell>
+								</TableRow>
+							))}
+						</TableBody>
+					</Table>
+				</Box>
+			)}
+		</Stack>
+	);
 }
 
 export default function CedulaDetalle({
@@ -230,7 +354,16 @@ export default function CedulaDetalle({
 								sx={{ "& .MuiTab-root": { textTransform: "none" } }}
 							>
 								{TABS.map((t) => (
-									<Tab key={t} value={t} label={TAB_LABEL[t]} disabled={(t === "pdf" && !d.movementId) || (t === "texto" && !d.texto)} />
+									<Tab
+										key={t}
+										value={t}
+										label={TAB_LABEL[t]}
+										disabled={
+											(t === "pdf" && !d.movementId) ||
+											(t === "texto" && !d.texto) ||
+											(t === "resolucion" && !d.resolucion && !d.resolucionNotificada?.texto)
+										}
+									/>
 								))}
 							</Tabs>
 
@@ -333,6 +466,8 @@ export default function CedulaDetalle({
 								</Box>
 							)}
 
+							{tab === "resolucion" && <ResolucionTab d={d} />}
+
 							{tab === "ficha" &&
 								(c.documento ? (
 									<Box>
@@ -341,7 +476,18 @@ export default function CedulaDetalle({
 										<Fila label="Tribunal">{c.documento.tribunal || "—"}</Fila>
 										<Fila label="Emitida">{fmtDia(c.documento.fechaEmision)}</Fila>
 										<Fila label="Resolución">
-											{c.documento.resolucion ? `${c.documento.resolucion.tipo || ""} ${fmtDia(c.documento.resolucion.fecha)}` : "—"}
+											{c.documento.resolucion ? (
+												<>
+													{`${c.documento.resolucion.tipo || ""} ${fmtDia(c.documento.resolucion.fecha)} · ${vinculoTexto(
+														c.documento.resolucion,
+													)} · `}
+													<Link component="button" variant="body2" onClick={() => setTab("resolucion")}>
+														ver la resolución
+													</Link>
+												</>
+											) : (
+												"—"
+											)}
 										</Fila>
 										<Fila label="Firmante">
 											{c.documento.firmante ? `${c.documento.firmante.nombre || ""} (${c.documento.firmante.cargo || ""})` : "—"}
