@@ -293,6 +293,10 @@ export interface FilasAuditoria {
 	corregida: number;
 	desalineada: number;
 	sinExplicar: number;
+	/** de las corregidas, por importe en una moneda más vieja que la del rótulo (× 1.000.000) */
+	moneda?: number;
+	/** renglones de varios meses revisados */
+	renglones?: number;
 	factorAcuerdo?: number;
 }
 

@@ -360,6 +360,8 @@ export default function CasoDrawer({ id: idInicial, onClose, onGuardado }: Props
 								{ev.filas.sinTope9 ? ` · ${ev.filas.sinTope9} sin el tope del art. 9` : ""}
 								{ev.filas.alAcuerdo ? ` · ${ev.filas.alAcuerdo} actualizadas al acuerdo (× ${ev.filas.factorAcuerdo})` : ""}
 								{ev.filas.corregida ? ` · ${ev.filas.corregida} con importe corregido` : ""}
+								{ev.filas.moneda ? ` (${ev.filas.moneda} por moneda)` : ""}
+								{ev.filas.renglones ? ` · ${ev.filas.renglones} renglones de varios meses` : ""}
 								{ev.filas.desalineada ? ` · ${ev.filas.desalineada} con columnas corridas` : ""}
 								{ev.filas.sinExplicar ? ` · ${ev.filas.sinExplicar} sin explicar` : ""}
 							</Typography>
