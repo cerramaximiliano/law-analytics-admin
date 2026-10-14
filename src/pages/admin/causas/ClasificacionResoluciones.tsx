@@ -37,7 +37,7 @@ import {
 	useMediaQuery,
 	useTheme,
 } from "@mui/material";
-import { Add, ArrowDown2, ArrowRight2, Refresh, TickCircle, CloseCircle, Eye, Trash } from "iconsax-react";
+import { Add, ArrowDown2, ArrowRight2, Copy, Refresh, TickCircle, CloseCircle, Eye, Trash } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import EnhancedTablePagination from "components/EnhancedTablePagination";
@@ -242,6 +242,21 @@ function PanelAnotacion({
 	}
 	const c = item.cuerpo;
 	const p = item.prediccion;
+	// Copia lo que se está mostrando: el documento completo si se expandió; si no, encabezado + dispositiva (o el texto plano).
+	const textoVisible =
+		completo !== null
+			? completo
+			: c?.tieneDispositiva
+			? [c.encabezado, c.dispositiva].filter(Boolean).join("\n\n")
+			: [c?.completo || c?.encabezado, c?.colaTexto].filter(Boolean).join("\n\n");
+	const copiar = async () => {
+		try {
+			await navigator.clipboard.writeText(textoVisible || "");
+			enqueueSnackbar("Texto copiado", { variant: "success", autoHideDuration: 1500 });
+		} catch {
+			enqueueSnackbar("No se pudo copiar", { variant: "error" });
+		}
+	};
 	const desacuerdoGold = item.gold?.tipoResolucion && p?.tipo && item.gold.tipoResolucion !== p.tipo;
 	const monoSx = {
 		fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
@@ -363,6 +378,9 @@ function PanelAnotacion({
 				<Typography variant="caption" color="text.secondary">
 					{(c?.caracteres ?? item.chars ?? 0).toLocaleString("es-AR")} caracteres{item.textoFuente ? ` · ${item.textoFuente}` : ""}
 				</Typography>
+				<Button size="small" startIcon={<Copy size={14} />} onClick={copiar} disabled={!textoVisible}>
+					Copiar texto
+				</Button>
 				{completo === null && (c?.tieneDispositiva || c?.colaTexto) && (
 					<Button size="small" startIcon={<Eye size={14} />} onClick={verCompleto}>
 						Ver documento completo
