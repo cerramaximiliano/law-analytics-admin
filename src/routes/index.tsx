@@ -27,6 +27,7 @@ const EtapaStatsPage = Loadable(lazyWithRetry(() => import("pages/admin/causas/E
 const EtapaArbolPage = Loadable(lazyWithRetry(() => import("pages/admin/causas/EtapaArbol")));
 const EtiquetadoDatasetPage = Loadable(lazyWithRetry(() => import("pages/admin/causas/EtiquetadoDataset")));
 const EtiquetadoEditorPage = Loadable(lazyWithRetry(() => import("pages/admin/causas/EtiquetadoEditor")));
+const ClasificacionResolucionesPage = Loadable(lazyWithRetry(() => import("pages/admin/causas/ClasificacionResoluciones")));
 const CarpetasVerificadasApp = Loadable(lazyWithRetry(() => import("pages/admin/causas/CarpetasVerificadasApp")));
 const CarpetasNoVerificadas = Loadable(lazyWithRetry(() => import("pages/admin/causas/CarpetasNoVerificadas")));
 const FlujosCausas = Loadable(lazyWithRetry(() => import("pages/admin/causas/flujos/FlujosCausas")));
@@ -553,6 +554,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<EtiquetadoEditorPage />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "causas/clasificacion-resoluciones",
+							element: (
+								<AdminRoleGuard>
+									<ClasificacionResolucionesPage />
 								</AdminRoleGuard>
 							),
 						},

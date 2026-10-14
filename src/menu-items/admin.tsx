@@ -205,6 +205,14 @@ const admin: NavItemType = {
 							breadcrumbs: true,
 						},
 						{
+							id: "causas-clasificacion-resoluciones",
+							title: "Clasificación de resoluciones",
+							type: "item",
+							icon: Judge,
+							url: "/admin/causas/clasificacion-resoluciones",
+							breadcrumbs: true,
+						},
+						{
 							id: "causas-plazos",
 							title: "Plazos",
 							type: "item",
