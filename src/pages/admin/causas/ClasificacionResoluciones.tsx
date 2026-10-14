@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+	Accordion,
+	AccordionDetails,
+	AccordionSummary,
 	Alert,
 	Box,
 	Button,
@@ -33,7 +36,7 @@ import {
 	alpha,
 	useTheme,
 } from "@mui/material";
-import { Add, ArrowRight2, Refresh, TickCircle, CloseCircle, Eye, Trash } from "iconsax-react";
+import { Add, ArrowDown2, ArrowRight2, Refresh, TickCircle, CloseCircle, Eye, Trash } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import EnhancedTablePagination from "components/EnhancedTablePagination";
@@ -60,6 +63,26 @@ const FUENTES: { value: string; label: string }[] = [
 	{ value: "baja_confianza", label: "Baja confianza" },
 	{ value: "manual", label: "Manual" },
 	{ value: "cedula", label: "Cédula" },
+];
+// Criterio aprobado 2026-10-14 (pjn-clasificador-resoluciones/docs/CRITERIO-TIPO.md y GUIA-OPERADOR.md).
+// El contenido manda sobre la forma: ¿decide algo discutido o que exige fundamentos? → interlocutoria.
+const CRITERIO: [string, string][] = [
+	["Rechaza revocatoria (aunque conceda apelación en subsidio)", "2 Interlocutoria"],
+	["Concede apelación / eleva, sin decidir nada más", "1 Providencia"],
+	["Deniega apelación, declara desierto o mal concedido", "2 Interlocutoria"],
+	["Declara incompetencia, rechaza conexidad", "2 Interlocutoria"],
+	["Regula honorarios, en cualquier formato", "2 Interlocutoria + H"],
+	["Aprueba liquidación sin impugnación", "1 Providencia"],
+	["Resuelve impugnación de liquidación", "2 Interlocutoria"],
+	["Decreta embargo o cautelar sin oír a la otra parte", "1 Providencia"],
+	["Levanta / sustituye / rechaza cautelar tras traslado", "2 Interlocutoria"],
+	["Apertura a prueba ordinaria", "1 Providencia"],
+	["Apertura a prueba que resuelve oposiciones; negligencia", "2 Interlocutoria"],
+	["Acepta desistimiento, concede aclaratoria, decreta rebeldía", "1 Providencia"],
+	["Rechaza una aclaratoria o cualquier planteo", "2 Interlocutoria"],
+	["Despacho mixto (trámite + una decisión)", "la clase de la decisión"],
+	["Constancia, certificación, cédula, oficio, escrito de parte", "7 No es resolución"],
+	["Acta de audiencia", "5 Acta"],
 ];
 const ESTADO_COLOR: Record<string, "default" | "info" | "error"> = { pendiente: "default", anotada: "info", descartada: "error" };
 const tipoLabel = (v?: string | null) => (v === "otra" ? "Otra / no resolución" : TIPOS.find((t) => t.value === v)?.label || v || "—");
@@ -729,6 +752,67 @@ const ClasificacionResoluciones = () => {
 					los casos de baja confianza, los desacuerdos con el gold anterior y las altas manuales. Cada confirmación es un ejemplo de
 					entrenamiento.
 				</Typography>
+				<Accordion
+					disableGutters
+					elevation={0}
+					sx={{ border: `1px solid ${theme.palette.divider}`, borderRadius: 1, "&:before": { display: "none" } }}
+				>
+					<AccordionSummary expandIcon={<ArrowDown2 size={16} />}>
+						<Typography variant="subtitle2">Criterio de anotación (aprobado 14/10/2026) y atajos de teclado</Typography>
+					</AccordionSummary>
+					<AccordionDetails>
+						<Grid container spacing={2}>
+							<Grid item xs={12} md={7}>
+								<Typography variant="body2" sx={{ mb: 1 }}>
+									<b>El contenido manda sobre la forma.</b> ¿Decide algo que fue discutido o que la ley exige resolver con fundamentos? →
+									interlocutoria, aunque esté redactada como despacho corrido. ¿Solo mueve el trámite o concede lo pedido sin contradictor?
+									→ providencia simple, aunque diga «RESUELVO». Leé la parte dispositiva (recuadro resaltado) y los movimientos
+									anterior/siguiente; no copies por inercia ni al modelo ni a la etiqueta previa.
+								</Typography>
+								<Table size="small">
+									<TableBody>
+										{CRITERIO.map(([caso, clase]) => (
+											<TableRow key={caso}>
+												<TableCell sx={{ py: 0.25 }}>
+													<Typography variant="caption">{caso}</Typography>
+												</TableCell>
+												<TableCell sx={{ py: 0.25, whiteSpace: "nowrap" }}>
+													<Typography variant="caption" sx={{ fontWeight: 600 }}>
+														{clase}
+													</Typography>
+												</TableCell>
+											</TableRow>
+										))}
+									</TableBody>
+								</Table>
+							</Grid>
+							<Grid item xs={12} md={5}>
+								<Typography variant="body2" sx={{ mb: 1 }}>
+									<b>Atajos</b> (con el panel abierto, fuera de los campos de texto)
+								</Typography>
+								<Typography variant="caption" component="div">
+									1–7 tipo de resolución · H regula honorarios · T corre traslado · V da vista · I intima
+								</Typography>
+								<Typography variant="caption" component="div">
+									Enter guarda y trae el siguiente · D descarta (texto roto, repetido) · N salta sin guardar
+								</Typography>
+								<Typography variant="body2" sx={{ mt: 1.5, mb: 0.5 }}>
+									<b>Ordena</b>
+								</Typography>
+								<Typography variant="caption" component="div">
+									Marcar solo lo que esta resolución ordena a una parte. No las fórmulas de rutina («notifíquese», «líbrese oficio»). Una
+									interlocutoria también puede ordenar: marcar ambas cosas.
+								</Typography>
+								<Typography variant="body2" sx={{ mt: 1.5, mb: 0.5 }}>
+									<b>Dudas</b>
+								</Typography>
+								<Typography variant="caption" component="div">
+									Anotar igual y dejar una nota corta: se revisan juntas antes de reentrenar.
+								</Typography>
+							</Grid>
+						</Grid>
+					</AccordionDetails>
+				</Accordion>
 				<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 					<Chip label={`Pendientes ${porEstado.pendiente || 0}`} color="default" />
 					<Chip label={`Anotadas ${porEstado.anotada || 0}`} color="info" variant="outlined" />
