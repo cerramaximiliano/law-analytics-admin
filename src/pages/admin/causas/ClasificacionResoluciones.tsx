@@ -34,6 +34,7 @@ import {
 	Tooltip,
 	Typography,
 	alpha,
+	useMediaQuery,
 	useTheme,
 } from "@mui/material";
 import { Add, ArrowDown2, ArrowRight2, Refresh, TickCircle, CloseCircle, Eye, Trash } from "iconsax-react";
@@ -106,11 +107,13 @@ function PanelAnotacion({
 	onGuardado,
 	onSiguiente,
 	cargando,
+	mobile = false,
 }: {
 	item: ItemResolucion | null;
 	onGuardado: (actualizado: ItemResolucion, avanzar: boolean) => void;
 	onSiguiente: () => void;
 	cargando: boolean;
+	mobile?: boolean;
 }) {
 	const theme = useTheme();
 	const { enqueueSnackbar } = useSnackbar();
@@ -242,7 +245,8 @@ function PanelAnotacion({
 	const desacuerdoGold = item.gold?.tipoResolucion && p?.tipo && item.gold.tipoResolucion !== p.tipo;
 	const monoSx = {
 		fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
-		fontSize: 12.5,
+		fontSize: mobile ? 13 : 12.5,
+		wordBreak: "break-word" as const,
 		whiteSpace: "pre-wrap" as const,
 		lineHeight: 1.45,
 	};
@@ -274,7 +278,7 @@ function PanelAnotacion({
 					{item.objeto || ""}
 				</Typography>
 			)}
-			<Stack direction="row" spacing={2}>
+			<Stack direction={{ xs: "column", sm: "row" }} spacing={{ xs: 0.5, sm: 2 }}>
 				<Typography variant="caption" color="text.secondary" sx={{ flex: 1 }}>
 					<b>Anterior:</b> {item.previo || "—"}
 				</Typography>
@@ -318,7 +322,7 @@ function PanelAnotacion({
 					border: `1px solid ${theme.palette.divider}`,
 					borderRadius: 1,
 					p: 1.5,
-					maxHeight: 420,
+					maxHeight: mobile ? "40vh" : 420,
 					overflow: "auto",
 					bgcolor: alpha(theme.palette.background.default, 0.6),
 				}}
@@ -355,7 +359,7 @@ function PanelAnotacion({
 					</>
 				)}
 			</Box>
-			<Stack direction="row" spacing={1} alignItems="center">
+			<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
 				<Typography variant="caption" color="text.secondary">
 					{(c?.caracteres ?? item.chars ?? 0).toLocaleString("es-AR")} caracteres{item.textoFuente ? ` · ${item.textoFuente}` : ""}
 				</Typography>
@@ -380,60 +384,103 @@ function PanelAnotacion({
 					(teclas 1–7)
 				</Typography>
 			</Typography>
-			<ToggleButtonGroup
-				size="small"
-				exclusive
-				value={tipo}
-				onChange={(_, v) => v && setTipo(v)}
-				sx={{ flexWrap: "wrap", gap: 0.5, "& .MuiToggleButton-root": { textTransform: "none", px: 1.25 } }}
-			>
-				{TIPOS.map((t) => (
-					<Tooltip key={t.value} title={t.ayuda} placement="top">
-						<ToggleButton value={t.value}>
-							<Box
-								component="span"
-								sx={{ mr: 0.75, fontSize: 10, px: 0.5, borderRadius: 0.5, bgcolor: alpha(theme.palette.text.primary, 0.08) }}
-							>
+			{mobile ? (
+				<Box sx={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 1 }}>
+					{TIPOS.map((t) => (
+						<Button
+							key={t.value}
+							variant={tipo === t.value ? "contained" : "outlined"}
+							onClick={() => setTipo(t.value)}
+							sx={{ minHeight: 48, textTransform: "none", justifyContent: "flex-start", textAlign: "left", lineHeight: 1.2 }}
+						>
+							<Box component="span" sx={{ mr: 1, fontWeight: 700 }}>
 								{t.tecla}
 							</Box>
 							{t.label}
-						</ToggleButton>
-					</Tooltip>
-				))}
-			</ToggleButtonGroup>
-			<Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
-				<FormControlLabel
-					control={<Checkbox size="small" checked={hon} onChange={(e) => setHon(e.target.checked)} />}
-					label={
-						<span>
-							Regula honorarios{" "}
-							<Typography component="span" variant="caption" color="text.secondary">
-								(H)
-							</Typography>
-						</span>
-					}
-				/>
-				{ORDENA_OPCIONES.map((o) => (
-					<FormControlLabel
-						key={o.value}
-						control={
-							<Checkbox
-								size="small"
-								checked={ordena.includes(o.value)}
-								onChange={(e) => setOrdena((v) => (e.target.checked ? [...v, o.value] : v.filter((x) => x !== o.value)))}
+						</Button>
+					))}
+				</Box>
+			) : (
+				<ToggleButtonGroup
+					size="small"
+					exclusive
+					value={tipo}
+					onChange={(_, v) => v && setTipo(v)}
+					sx={{ flexWrap: "wrap", gap: 0.5, "& .MuiToggleButton-root": { textTransform: "none", px: 1.25 } }}
+				>
+					{TIPOS.map((t) => (
+						<Tooltip key={t.value} title={t.ayuda} placement="top">
+							<ToggleButton value={t.value}>
+								<Box
+									component="span"
+									sx={{ mr: 0.75, fontSize: 10, px: 0.5, borderRadius: 0.5, bgcolor: alpha(theme.palette.text.primary, 0.08) }}
+								>
+									{t.tecla}
+								</Box>
+								{t.label}
+							</ToggleButton>
+						</Tooltip>
+					))}
+				</ToggleButtonGroup>
+			)}
+			{mobile ? (
+				<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+					<Chip
+						label="Regula honorarios"
+						color={hon ? "primary" : "default"}
+						variant={hon ? "filled" : "outlined"}
+						onClick={() => setHon((v) => !v)}
+						sx={{ height: 40, fontSize: 14 }}
+					/>
+					{ORDENA_OPCIONES.map((o) => {
+						const on = ordena.includes(o.value);
+						return (
+							<Chip
+								key={o.value}
+								label={o.label}
+								color={on ? "primary" : "default"}
+								variant={on ? "filled" : "outlined"}
+								onClick={() => setOrdena((v) => (on ? v.filter((x) => x !== o.value) : [...v, o.value]))}
+								sx={{ height: 40, fontSize: 14 }}
 							/>
-						}
+						);
+					})}
+				</Stack>
+			) : (
+				<Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
+					<FormControlLabel
+						control={<Checkbox size="small" checked={hon} onChange={(e) => setHon(e.target.checked)} />}
 						label={
 							<span>
-								{o.label}{" "}
+								Regula honorarios{" "}
 								<Typography component="span" variant="caption" color="text.secondary">
-									({o.tecla})
+									(H)
 								</Typography>
 							</span>
 						}
 					/>
-				))}
-			</Stack>
+					{ORDENA_OPCIONES.map((o) => (
+						<FormControlLabel
+							key={o.value}
+							control={
+								<Checkbox
+									size="small"
+									checked={ordena.includes(o.value)}
+									onChange={(e) => setOrdena((v) => (e.target.checked ? [...v, o.value] : v.filter((x) => x !== o.value)))}
+								/>
+							}
+							label={
+								<span>
+									{o.label}{" "}
+									<Typography component="span" variant="caption" color="text.secondary">
+										({o.tecla})
+									</Typography>
+								</span>
+							}
+						/>
+					))}
+				</Stack>
+			)}
 			<TextField
 				size="small"
 				label="Notas (opcional)"
@@ -444,33 +491,79 @@ function PanelAnotacion({
 				maxRows={3}
 				fullWidth
 			/>
-			<Stack direction="row" spacing={1} justifyContent="space-between" alignItems="center">
-				<Stack direction="row" spacing={1}>
-					<Button variant="contained" startIcon={<TickCircle size={16} />} disabled={guardando || !tipo} onClick={() => guardar(false)}>
-						Guardar y siguiente{" "}
-						<Typography component="span" variant="caption" sx={{ ml: 0.75, opacity: 0.8 }}>
-							Enter
-						</Typography>
-					</Button>
-					<Button color="error" variant="outlined" startIcon={<CloseCircle size={16} />} disabled={guardando} onClick={() => guardar(true)}>
-						Descartar{" "}
-						<Typography component="span" variant="caption" sx={{ ml: 0.75, opacity: 0.8 }}>
-							D
-						</Typography>
-					</Button>
+			{mobile ? (
+				<Box
+					sx={{
+						position: "sticky",
+						bottom: 0,
+						zIndex: 2,
+						mx: -2,
+						px: 2,
+						py: 1,
+						bgcolor: "background.paper",
+						borderTop: `1px solid ${theme.palette.divider}`,
+						pb: "calc(8px + env(safe-area-inset-bottom))",
+					}}
+				>
+					<Stack direction="row" spacing={1}>
+						<Button
+							fullWidth
+							variant="contained"
+							size="large"
+							startIcon={<TickCircle size={18} />}
+							disabled={guardando || !tipo}
+							onClick={() => guardar(false)}
+						>
+							Guardar
+						</Button>
+						<Button color="error" variant="outlined" size="large" disabled={guardando} onClick={() => guardar(true)}>
+							<CloseCircle size={18} />
+						</Button>
+						<Button variant="outlined" size="large" onClick={onSiguiente}>
+							<ArrowRight2 size={18} />
+						</Button>
+					</Stack>
 					{item.estado !== "pendiente" && (
-						<Button variant="text" onClick={reabrir}>
+						<Button fullWidth variant="text" size="small" onClick={reabrir} sx={{ mt: 0.5 }}>
 							Reabrir
 						</Button>
 					)}
+				</Box>
+			) : (
+				<Stack direction="row" spacing={1} justifyContent="space-between" alignItems="center">
+					<Stack direction="row" spacing={1}>
+						<Button variant="contained" startIcon={<TickCircle size={16} />} disabled={guardando || !tipo} onClick={() => guardar(false)}>
+							Guardar y siguiente{" "}
+							<Typography component="span" variant="caption" sx={{ ml: 0.75, opacity: 0.8 }}>
+								Enter
+							</Typography>
+						</Button>
+						<Button
+							color="error"
+							variant="outlined"
+							startIcon={<CloseCircle size={16} />}
+							disabled={guardando}
+							onClick={() => guardar(true)}
+						>
+							Descartar{" "}
+							<Typography component="span" variant="caption" sx={{ ml: 0.75, opacity: 0.8 }}>
+								D
+							</Typography>
+						</Button>
+						{item.estado !== "pendiente" && (
+							<Button variant="text" onClick={reabrir}>
+								Reabrir
+							</Button>
+						)}
+					</Stack>
+					<Button variant="text" endIcon={<ArrowRight2 size={16} />} onClick={onSiguiente}>
+						Saltar{" "}
+						<Typography component="span" variant="caption" sx={{ ml: 0.5, opacity: 0.8 }}>
+							N
+						</Typography>
+					</Button>
 				</Stack>
-				<Button variant="text" endIcon={<ArrowRight2 size={16} />} onClick={onSiguiente}>
-					Saltar{" "}
-					<Typography component="span" variant="caption" sx={{ ml: 0.5, opacity: 0.8 }}>
-						N
-					</Typography>
-				</Button>
-			</Stack>
+			)}
 		</Stack>
 	);
 }
@@ -484,6 +577,7 @@ function DialogoAgregar({ abierto, onCerrar, onAgregado }: { abierto: boolean; o
 	const [causa, setCausa] = useState<{ caratula?: string; objeto?: string; number?: number; year?: number } | null>(null);
 	const [sel, setSel] = useState<number[]>([]);
 	const [cargando, setCargando] = useState(false);
+	const fullScreen = useMediaQuery(useTheme().breakpoints.down("sm"));
 
 	const cargar = async () => {
 		if (!/^[0-9a-f]{24}$/i.test(causaId.trim())) {
@@ -533,10 +627,10 @@ function DialogoAgregar({ abierto, onCerrar, onAgregado }: { abierto: boolean; o
 		}
 	};
 	return (
-		<Dialog open={abierto} onClose={onCerrar} maxWidth="md" fullWidth>
+		<Dialog open={abierto} onClose={onCerrar} maxWidth="md" fullWidth fullScreen={fullScreen}>
 			<DialogTitle>Agregar resoluciones a la cola</DialogTitle>
 			<DialogContent>
-				<Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+				<Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ mt: 1 }}>
 					<FormControl size="small" sx={{ minWidth: 110 }}>
 						<InputLabel>Fuero</InputLabel>
 						<Select label="Fuero" value={fuero} onChange={(e) => setFuero(e.target.value)}>
@@ -568,7 +662,7 @@ function DialogoAgregar({ abierto, onCerrar, onAgregado }: { abierto: boolean; o
 					</Typography>
 				)}
 				{movs && (
-					<TableContainer sx={{ mt: 1, maxHeight: 380 }}>
+					<TableContainer sx={{ mt: 1, maxHeight: fullScreen ? "60vh" : 380 }}>
 						<Table size="small" stickyHeader>
 							<TableHead>
 								<TableRow>
@@ -649,6 +743,9 @@ const ClasificacionResoluciones = () => {
 	const [sel, setSel] = useState<ItemResolucion | null>(null);
 	const [cargandoSel, setCargandoSel] = useState(false);
 	const [dialogo, setDialogo] = useState(false);
+	const mobile = useMediaQuery(theme.breakpoints.down("md"));
+	const [vista, setVista] = useState<"etiquetar" | "cola">("etiquetar");
+	const [filtrosAbiertos, setFiltrosAbiertos] = useState(false);
 
 	const params = useMemo(() => ({ ...filtros, q: q || undefined }), [filtros, q]);
 
@@ -684,6 +781,7 @@ const ClasificacionResoluciones = () => {
 		setCargandoSel(true);
 		try {
 			setSel((await ResolucionesClasificacionService.getUno(id)).item);
+			setVista("etiquetar");
 		} catch (e: any) {
 			enqueueSnackbar(e?.response?.data?.message || e.message, { variant: "error" });
 		} finally {
@@ -702,6 +800,13 @@ const ClasificacionResoluciones = () => {
 			setCargandoSel(false);
 		}
 	}, [params, sel?._id, enqueueSnackbar]);
+	// En mobile se entra directo a etiquetar: trae el primer pendiente al abrir la vista.
+	useEffect(() => {
+		if (mobile && !sel) void siguiente();
+	}, [mobile]); // eslint-disable-line react-hooks/exhaustive-deps
+	useEffect(() => {
+		if (mobile) window.scrollTo({ top: 0 });
+	}, [mobile, sel?._id]);
 	const onGuardado = useCallback(
 		(actualizado: ItemResolucion, avanzar: boolean) => {
 			setItems((xs) => xs.map((x) => (x._id === actualizado._id ? { ...x, ...actualizado } : x)));
@@ -731,9 +836,11 @@ const ClasificacionResoluciones = () => {
 					<Button size="small" variant="outlined" startIcon={<Add size={16} />} onClick={() => setDialogo(true)}>
 						Agregar
 					</Button>
-					<Button size="small" variant="contained" endIcon={<ArrowRight2 size={16} />} onClick={siguiente}>
-						Siguiente pendiente
-					</Button>
+					{!mobile && (
+						<Button size="small" variant="contained" endIcon={<ArrowRight2 size={16} />} onClick={siguiente}>
+							Siguiente pendiente
+						</Button>
+					)}
 					<IconButton
 						size="small"
 						onClick={() => {
@@ -747,7 +854,7 @@ const ClasificacionResoluciones = () => {
 			}
 		>
 			<Stack spacing={2}>
-				<Typography variant="body2" color="text.secondary">
+				<Typography variant="body2" color="text.secondary" sx={{ display: { xs: "none", md: "block" } }}>
 					Cola de revisión para el clasificador de plazos: el modelo marca el tipo de cada resolución y acá se confirma o corrige. Entran
 					los casos de baja confianza, los desacuerdos con el gold anterior y las altas manuales. Cada confirmación es un ejemplo de
 					entrenamiento.
@@ -831,9 +938,37 @@ const ClasificacionResoluciones = () => {
 					{stats?.versiones?.length ? <Chip label={`Modelo: ${stats.versiones.join(", ")}`} variant="outlined" /> : null}
 				</Stack>
 
+				{mobile && (
+					<ToggleButtonGroup
+						exclusive
+						fullWidth
+						value={vista}
+						onChange={(_, v) => v && setVista(v)}
+						sx={{ "& .MuiToggleButton-root": { textTransform: "none", minHeight: 44 } }}
+					>
+						<ToggleButton value="etiquetar">Etiquetar</ToggleButton>
+						<ToggleButton value="cola">Cola ({total})</ToggleButton>
+					</ToggleButtonGroup>
+				)}
+
 				<Grid container spacing={2}>
-					<Grid item xs={12} md={5}>
-						<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mb: 1 }}>
+					<Grid item xs={12} md={5} sx={{ display: mobile && vista !== "cola" ? "none" : "block" }}>
+						{mobile && (
+							<Button fullWidth variant="outlined" size="small" onClick={() => setFiltrosAbiertos((v) => !v)} sx={{ mb: 1 }}>
+								{filtrosAbiertos ? "Ocultar filtros" : "Filtros y búsqueda"}
+							</Button>
+						)}
+						<Stack
+							direction="row"
+							spacing={1}
+							flexWrap="wrap"
+							useFlexGap
+							sx={{
+								mb: 1,
+								display: mobile && !filtrosAbiertos ? "none" : "flex",
+								"& .MuiFormControl-root, & .MuiTextField-root": { minWidth: { xs: "calc(50% - 4px)", md: undefined } },
+							}}
+						>
 							<FormControl size="small" sx={{ minWidth: 120 }}>
 								<InputLabel>Estado</InputLabel>
 								<Select label="Estado" value={filtros.estado || "todos"} onChange={(e) => setF("estado", e.target.value)}>
@@ -913,111 +1048,159 @@ const ClasificacionResoluciones = () => {
 								{error}
 							</Alert>
 						)}
-						<TableContainer sx={{ maxHeight: 640 }}>
-							<Table size="small" stickyHeader>
-								<TableHead>
-									<TableRow>
-										<TableCell>Fuero</TableCell>
-										<TableCell>Fecha</TableCell>
-										<TableCell>Movimiento</TableCell>
-										<TableCell>Modelo</TableCell>
-										<TableCell>Estado</TableCell>
-										<TableCell />
-									</TableRow>
-								</TableHead>
-								<TableBody>
-									{loading && !items.length ? (
-										<TableRow>
-											<TableCell colSpan={6} align="center">
-												<CircularProgress size={22} />
-											</TableCell>
-										</TableRow>
-									) : !items.length ? (
-										<TableRow>
-											<TableCell colSpan={6} align="center">
-												<Typography variant="body2" color="text.secondary">
-													Sin resultados
+						{mobile ? (
+							<Stack spacing={1}>
+								{loading && !items.length ? (
+									<Box sx={{ textAlign: "center", p: 2 }}>
+										<CircularProgress size={22} />
+									</Box>
+								) : !items.length ? (
+									<Typography variant="body2" color="text.secondary" align="center" sx={{ p: 2 }}>
+										Sin resultados
+									</Typography>
+								) : (
+									items.map((it) => (
+										<Box
+											key={it._id}
+											onClick={() => abrir(it._id)}
+											sx={{
+												p: 1.25,
+												borderRadius: 1,
+												cursor: "pointer",
+												border: `1px solid ${sel?._id === it._id ? theme.palette.primary.main : theme.palette.divider}`,
+											}}
+										>
+											<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+												<Chip size="small" label={it.fuero} variant="outlined" />
+												<Typography variant="caption">{fmtFecha(it.fecha)}</Typography>
+												<Chip size="small" label={it.estado} color={ESTADO_COLOR[it.estado]} />
+												{it.prediccion && (
+													<Chip
+														size="small"
+														label={`${tipoLabel(it.prediccion.tipo)} ${pct(it.prediccion.confianza)}`}
+														color={confColor(it.prediccion.confianza)}
+													/>
+												)}
+											</Stack>
+											<Typography variant="body2" sx={{ mt: 0.5 }} noWrap>
+												{it.titulo}
+											</Typography>
+											{it.anotacion?.tipoResolucion && (
+												<Typography variant="caption" color="info.main">
+													→ {tipoLabel(it.anotacion.tipoResolucion)}
 												</Typography>
-											</TableCell>
+											)}
+										</Box>
+									))
+								)}
+							</Stack>
+						) : (
+							<TableContainer sx={{ maxHeight: 640 }}>
+								<Table size="small" stickyHeader>
+									<TableHead>
+										<TableRow>
+											<TableCell>Fuero</TableCell>
+											<TableCell>Fecha</TableCell>
+											<TableCell>Movimiento</TableCell>
+											<TableCell>Modelo</TableCell>
+											<TableCell>Estado</TableCell>
+											<TableCell />
 										</TableRow>
-									) : (
-										items.map((it) => {
-											const desac = it.gold?.tipoResolucion && it.prediccion?.tipo && it.gold.tipoResolucion !== it.prediccion.tipo;
-											return (
-												<TableRow
-													key={it._id}
-													hover
-													selected={sel?._id === it._id}
-													sx={{ cursor: "pointer" }}
-													onClick={() => abrir(it._id)}
-												>
-													<TableCell>
-														<Chip size="small" label={it.fuero} variant="outlined" />
-													</TableCell>
-													<TableCell>
-														<Typography variant="caption">{fmtFecha(it.fecha)}</Typography>
-													</TableCell>
-													<TableCell sx={{ maxWidth: 260 }}>
-														<Tooltip title={it.titulo}>
-															<Typography variant="caption" noWrap component="div" sx={{ maxWidth: 260 }}>
-																{it.titulo}
-															</Typography>
-														</Tooltip>
-														{it.anotacion?.tipoResolucion && (
-															<Typography variant="caption" color="info.main">
-																→ {tipoLabel(it.anotacion.tipoResolucion)}
-															</Typography>
-														)}
-													</TableCell>
-													<TableCell>
-														{it.prediccion ? (
-															<Stack direction="row" spacing={0.5} alignItems="center">
-																<Chip
+									</TableHead>
+									<TableBody>
+										{loading && !items.length ? (
+											<TableRow>
+												<TableCell colSpan={6} align="center">
+													<CircularProgress size={22} />
+												</TableCell>
+											</TableRow>
+										) : !items.length ? (
+											<TableRow>
+												<TableCell colSpan={6} align="center">
+													<Typography variant="body2" color="text.secondary">
+														Sin resultados
+													</Typography>
+												</TableCell>
+											</TableRow>
+										) : (
+											items.map((it) => {
+												const desac = it.gold?.tipoResolucion && it.prediccion?.tipo && it.gold.tipoResolucion !== it.prediccion.tipo;
+												return (
+													<TableRow
+														key={it._id}
+														hover
+														selected={sel?._id === it._id}
+														sx={{ cursor: "pointer" }}
+														onClick={() => abrir(it._id)}
+													>
+														<TableCell>
+															<Chip size="small" label={it.fuero} variant="outlined" />
+														</TableCell>
+														<TableCell>
+															<Typography variant="caption">{fmtFecha(it.fecha)}</Typography>
+														</TableCell>
+														<TableCell sx={{ maxWidth: 260 }}>
+															<Tooltip title={it.titulo}>
+																<Typography variant="caption" noWrap component="div" sx={{ maxWidth: 260 }}>
+																	{it.titulo}
+																</Typography>
+															</Tooltip>
+															{it.anotacion?.tipoResolucion && (
+																<Typography variant="caption" color="info.main">
+																	→ {tipoLabel(it.anotacion.tipoResolucion)}
+																</Typography>
+															)}
+														</TableCell>
+														<TableCell>
+															{it.prediccion ? (
+																<Stack direction="row" spacing={0.5} alignItems="center">
+																	<Chip
+																		size="small"
+																		label={`${tipoLabel(it.prediccion.tipo)} ${pct(it.prediccion.confianza)}`}
+																		color={confColor(it.prediccion.confianza)}
+																		sx={{ fontSize: 11 }}
+																	/>
+																	{desac && (
+																		<Tooltip title={`gold: ${tipoLabel(it.gold?.tipoResolucion)}`}>
+																			<Box component="span" sx={{ color: theme.palette.warning.main, fontWeight: 700 }}>
+																				≠
+																			</Box>
+																		</Tooltip>
+																	)}
+																</Stack>
+															) : (
+																<Typography variant="caption" color="text.secondary">
+																	—
+																</Typography>
+															)}
+														</TableCell>
+														<TableCell>
+															<Chip size="small" label={it.estado} color={ESTADO_COLOR[it.estado]} />
+														</TableCell>
+														<TableCell padding="checkbox">
+															<Tooltip title="Quitar de la cola">
+																<IconButton
 																	size="small"
-																	label={`${tipoLabel(it.prediccion.tipo)} ${pct(it.prediccion.confianza)}`}
-																	color={confColor(it.prediccion.confianza)}
-																	sx={{ fontSize: 11 }}
-																/>
-																{desac && (
-																	<Tooltip title={`gold: ${tipoLabel(it.gold?.tipoResolucion)}`}>
-																		<Box component="span" sx={{ color: theme.palette.warning.main, fontWeight: 700 }}>
-																			≠
-																		</Box>
-																	</Tooltip>
-																)}
-															</Stack>
-														) : (
-															<Typography variant="caption" color="text.secondary">
-																—
-															</Typography>
-														)}
-													</TableCell>
-													<TableCell>
-														<Chip size="small" label={it.estado} color={ESTADO_COLOR[it.estado]} />
-													</TableCell>
-													<TableCell padding="checkbox">
-														<Tooltip title="Quitar de la cola">
-															<IconButton
-																size="small"
-																onClick={async (e) => {
-																	e.stopPropagation();
-																	if (!window.confirm("¿Quitar esta resolución de la cola?")) return;
-																	await ResolucionesClasificacionService.quitar(it._id);
-																	if (sel?._id === it._id) setSel(null);
-																	void cargar();
-																}}
-															>
-																<Trash size={14} />
-															</IconButton>
-														</Tooltip>
-													</TableCell>
-												</TableRow>
-											);
-										})
-									)}
-								</TableBody>
-							</Table>
-						</TableContainer>
+																	onClick={async (e) => {
+																		e.stopPropagation();
+																		if (!window.confirm("¿Quitar esta resolución de la cola?")) return;
+																		await ResolucionesClasificacionService.quitar(it._id);
+																		if (sel?._id === it._id) setSel(null);
+																		void cargar();
+																	}}
+																>
+																	<Trash size={14} />
+																</IconButton>
+															</Tooltip>
+														</TableCell>
+													</TableRow>
+												);
+											})
+										)}
+									</TableBody>
+								</Table>
+							</TableContainer>
+						)}
 						<EnhancedTablePagination
 							rowsPerPageOptions={[10, 25, 50, 100]}
 							count={total}
@@ -1030,9 +1213,16 @@ const ClasificacionResoluciones = () => {
 							}}
 						/>
 					</Grid>
-					<Grid item xs={12} md={7}>
-						<Box sx={{ border: `1px solid ${theme.palette.divider}`, borderRadius: 1.5, p: 2, minHeight: 400 }}>
-							<PanelAnotacion item={sel} onGuardado={onGuardado} onSiguiente={siguiente} cargando={cargandoSel} />
+					<Grid item xs={12} md={7} sx={{ display: mobile && vista !== "etiquetar" ? "none" : "block" }}>
+						<Box
+							sx={{
+								border: mobile ? "none" : `1px solid ${theme.palette.divider}`,
+								borderRadius: 1.5,
+								p: mobile ? 0 : 2,
+								minHeight: mobile ? 0 : 400,
+							}}
+						>
+							<PanelAnotacion item={sel} onGuardado={onGuardado} onSiguiente={siguiente} cargando={cargandoSel} mobile={mobile} />
 						</Box>
 					</Grid>
 				</Grid>
