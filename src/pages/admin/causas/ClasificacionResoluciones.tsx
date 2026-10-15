@@ -944,8 +944,8 @@ const ClasificacionResoluciones = () => {
 								</Typography>
 								<Typography variant="caption" component="div">
 									Marcar solo lo que esta resolución ordena a una parte. No las fórmulas de rutina («notifíquese», «líbrese oficio»). Una
-									interlocutoria también puede ordenar: marcar ambas cosas. Y una providencia simple que intima o corre traslado sigue siendo
-									providencia simple.
+									interlocutoria también puede ordenar: marcar ambas cosas. Y una providencia simple que intima o corre traslado sigue
+									siendo providencia simple.
 								</Typography>
 								<Typography variant="body2" sx={{ mt: 1.5, mb: 0.5 }}>
 									<b>Dudas</b>
