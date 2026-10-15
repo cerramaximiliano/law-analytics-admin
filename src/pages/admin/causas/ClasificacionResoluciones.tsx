@@ -67,6 +67,14 @@ const FUENTES: { value: string; label: string }[] = [
 ];
 // Criterio aprobado 2026-10-14 (pjn-clasificador-resoluciones/docs/CRITERIO-TIPO.md y GUIA-OPERADOR.md).
 // El contenido manda sobre la forma: ¿decide algo discutido o que exige fundamentos? → interlocutoria.
+// Principios dictados por el usuario el 2026-10-15 (docs/CRITERIO-TIPO.md § Principios del operador).
+const PRINCIPIOS: string[] = [
+	"El contenido manda sobre el título y el encabezado: un «AUTOS Y VISTOS» puede ser providencia simple; un despacho corrido puede ser interlocutoria.",
+	"Solo actos nuevos: T / V / H / I se marcan si esta resolución los dispone, no si menciona, reitera o da por cumplido uno anterior.",
+	"Leer la resolución completa: si hay varias decisiones, el tipo es el de la predominante por su efecto jurídico.",
+	"Obligación ≠ intimación: hay intimación cuando se exige a una parte una conducta en un plazo o bajo apercibimiento; una orden genérica no es I.",
+	"Tipo y acciones son independientes: una providencia simple puede correr traslado, dar vista o intimar sin volverse interlocutoria.",
+];
 const CRITERIO: [string, string][] = [
 	["Rechaza revocatoria (aunque conceda apelación en subsidio)", "2 Interlocutoria"],
 	["Concede apelación / eleva, sin decidir nada más", "1 Providencia"],
@@ -883,7 +891,7 @@ const ClasificacionResoluciones = () => {
 					sx={{ border: `1px solid ${theme.palette.divider}`, borderRadius: 1, "&:before": { display: "none" } }}
 				>
 					<AccordionSummary expandIcon={<ArrowDown2 size={16} />}>
-						<Typography variant="subtitle2">Criterio de anotación (aprobado 14/10/2026) y atajos de teclado</Typography>
+						<Typography variant="subtitle2">Criterio de anotación (aprobado 14/10/2026, principios 15/10) y atajos de teclado</Typography>
 					</AccordionSummary>
 					<AccordionDetails>
 						<Grid container spacing={2}>
@@ -893,6 +901,16 @@ const ClasificacionResoluciones = () => {
 									interlocutoria, aunque esté redactada como despacho corrido. ¿Solo mueve el trámite o concede lo pedido sin contradictor?
 									→ providencia simple, aunque diga «RESUELVO». Leé la parte dispositiva (recuadro resaltado) y los movimientos
 									anterior/siguiente; no copies por inercia ni al modelo ni a la etiqueta previa.
+								</Typography>
+								<Typography variant="body2" sx={{ mb: 0.5 }}>
+									<b>Principios</b> (15/10/2026)
+								</Typography>
+								<Typography variant="caption" component="div" sx={{ mb: 1 }}>
+									{PRINCIPIOS.map((p, i) => (
+										<div key={i}>
+											{i + 1}. {p}
+										</div>
+									))}
 								</Typography>
 								<Table size="small">
 									<TableBody>
@@ -926,7 +944,8 @@ const ClasificacionResoluciones = () => {
 								</Typography>
 								<Typography variant="caption" component="div">
 									Marcar solo lo que esta resolución ordena a una parte. No las fórmulas de rutina («notifíquese», «líbrese oficio»). Una
-									interlocutoria también puede ordenar: marcar ambas cosas.
+									interlocutoria también puede ordenar: marcar ambas cosas. Y una providencia simple que intima o corre traslado sigue siendo
+									providencia simple.
 								</Typography>
 								<Typography variant="body2" sx={{ mt: 1.5, mb: 0.5 }}>
 									<b>Dudas</b>
