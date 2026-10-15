@@ -65,7 +65,8 @@ const FUENTES: { value: string; label: string }[] = [
 	{ value: "manual", label: "Manual" },
 	{ value: "cedula", label: "Cédula" },
 ];
-// Criterio aprobado 2026-10-14 (pjn-clasificador-resoluciones/docs/CRITERIO-TIPO.md y GUIA-OPERADOR.md).
+// Criterio aprobado 2026-10-14 y completado con el informe del usuario del 2026-10-15
+// (pjn-clasificador-resoluciones/docs/CRITERIO-TIPO.md y GUIA-OPERADOR.md).
 // El contenido manda sobre la forma: ¿decide algo discutido o que exige fundamentos? → interlocutoria.
 // Principios dictados por el usuario el 2026-10-15 (docs/CRITERIO-TIPO.md § Principios del operador).
 const PRINCIPIOS: string[] = [
@@ -76,20 +77,24 @@ const PRINCIPIOS: string[] = [
 	"Tipo y acciones son independientes: una providencia simple puede correr traslado, dar vista o intimar sin volverse interlocutoria.",
 ];
 const CRITERIO: [string, string][] = [
-	["Rechaza revocatoria (aunque conceda apelación en subsidio)", "2 Interlocutoria"],
+	["Rechaza revocatoria sobre una cuestión de trámite (representación, notificación)", "1 Providencia"],
+	["Rechaza revocatoria que decide una controversia incidental con efectos propios", "2 Interlocutoria"],
 	["Concede apelación / eleva, sin decidir nada más", "1 Providencia"],
 	["Deniega apelación, declara desierto o mal concedido", "2 Interlocutoria"],
 	["Declara incompetencia, rechaza conexidad", "2 Interlocutoria"],
 	["Regula honorarios, en cualquier formato", "2 Interlocutoria + H"],
 	["Aprueba liquidación sin impugnación", "1 Providencia"],
 	["Resuelve impugnación de liquidación", "2 Interlocutoria"],
-	["Decreta embargo o cautelar sin oír a la otra parte", "1 Providencia"],
+	["Embargo ejecutorio (ejecución de sentencia o de honorarios)", "1 Providencia"],
+	["Cautelar discutida o que exige evaluar verosimilitud (embargo preventivo, inhibición)", "2 Interlocutoria"],
 	["Levanta / sustituye / rechaza cautelar tras traslado", "2 Interlocutoria"],
 	["Apertura a prueba ordinaria", "1 Providencia"],
 	["Apertura a prueba que resuelve oposiciones; negligencia", "2 Interlocutoria"],
 	["Acepta desistimiento, concede aclaratoria, decreta rebeldía", "1 Providencia"],
 	["Rechaza una aclaratoria o cualquier planteo", "2 Interlocutoria"],
-	["Despacho mixto (trámite + una decisión)", "la clase de la decisión"],
+	["Despacho mixto: trámite + decisión incidental que resuelve una controversia", "la clase de la decisión"],
+	["Sentencia de venta / manda llevar adelante la ejecución, y su ampliación", "3 Definitiva"],
+	["Aprueba convenio de partición", "4 Homologatoria"],
 	["Constancia, certificación, cédula, oficio, escrito de parte", "7 No es resolución"],
 	["Acta de audiencia", "5 Acta"],
 ];
@@ -891,7 +896,7 @@ const ClasificacionResoluciones = () => {
 					sx={{ border: `1px solid ${theme.palette.divider}`, borderRadius: 1, "&:before": { display: "none" } }}
 				>
 					<AccordionSummary expandIcon={<ArrowDown2 size={16} />}>
-						<Typography variant="subtitle2">Criterio de anotación (aprobado 14/10/2026, principios 15/10) y atajos de teclado</Typography>
+						<Typography variant="subtitle2">Criterio de anotación (aprobado 14/10/2026, informe 15/10) y atajos de teclado</Typography>
 					</AccordionSummary>
 					<AccordionDetails>
 						<Grid container spacing={2}>
@@ -943,9 +948,10 @@ const ClasificacionResoluciones = () => {
 									<b>Ordena</b>
 								</Typography>
 								<Typography variant="caption" component="div">
-									Marcar solo lo que esta resolución ordena a una parte. No las fórmulas de rutina («notifíquese», «líbrese oficio»). Una
-									interlocutoria también puede ordenar: marcar ambas cosas. Y una providencia simple que intima o corre traslado sigue
-									siendo providencia simple.
+									T: confiere un traslado nuevo para contestar (no traslados anteriores ni «notifíquese»). V: ordena vista o intervención a
+									un organismo (no dictámenes ya emitidos). H: fija o modifica una retribución concreta (no su liquidación, intimación al
+									pago o embargo). I: impone una conducta con plazo o apercibimiento (no instrucciones ordinarias). Tipo y acciones son
+									independientes.
 								</Typography>
 								<Typography variant="body2" sx={{ mt: 1.5, mb: 0.5 }}>
 									<b>Dudas</b>
