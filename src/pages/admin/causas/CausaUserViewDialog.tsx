@@ -141,12 +141,13 @@ export const LIST_TOOLTIPS: Record<string, string> = {
 		"Acceso restringido — el tribunal reservó esta causa y ya no figura entre las asignadas a tu credencial PJN. El acceso se restablece solo si vuelve a aparecer en tu listado de Mis Causas.",
 	list_removed:
 		"Esta causa ya no aparece en tu lista de Mis Causas del portal PJN. Puede haber sido archivada o desvinculada por el tribunal.",
-	pending_selection: "Se encontraron múltiples expedientes - Haz clic para seleccionar",
-	failed: "No se pudo vincular la causa - Verifique los datos ingresados",
-	pending: "Actualizar estado de verificación",
-	invalid: "Causa inválida - No se pudo verificar en el Poder Judicial",
-	ok: "Causa vinculada a PJN",
-	ok_cred_error: "PJN — Sincronización pausada: tus credenciales fueron rechazadas. Actualizalas desde Perfil → Cuentas Judiciales.",
+	// Copys reales del front (utils/pjnBindingState.ts PJN_BINDING_COPY / folders.tsx FolderSourceBadge), 2026-10-16.
+	pending_selection: "Se encontraron múltiples expedientes — hacé clic para seleccionar.",
+	failed: "No se pudo vincular la causa — verificá los datos ingresados.",
+	pending: "Pendiente de verificación — el sistema todavía no confirmó la causa en el Poder Judicial.",
+	// 'invalid' ya no se produce (F7/F10: verificada+inválida = 'failed'); queda por si llega un payload viejo.
+	invalid: "No se pudo vincular la causa — verificá los datos ingresados.",
+	ok: "Causa válida",
 	// Default (causa pública); listTooltip() elige el copy de reservada según la carpeta.
 	cred_error: PJN_CRED_ERROR_PUBLIC_COPY,
 	cred_status: "Credencial MEV: cargala/actualizala en tu perfil → Integraciones → MEV.",
@@ -172,7 +173,16 @@ export function folderJurisdiction(folder: CausaUserViewEntry["folder"]): string
 /** Tooltip del ícono de la lista, con la jurisdicción real del folder (folders.tsx). */
 export function listTooltip(list: string, folder: CausaUserViewEntry["folder"]): string {
 	const jur = folderJurisdiction(folder);
-	if (list === "ok") return `Causa vinculada a ${JURISDICTION_LABEL[jur || "pjn"]}`;
+	const label = JURISDICTION_LABEL[jur || "pjn"];
+	// folders.tsx FolderSourceBadge: PJN "Causa válida" (PJN_BINDING_COPY.ok), SCBA "Causa vinculada a SCBA",
+	// MEV "Vinculado con MEV", EJE/IOL "Vinculado con X".
+	if (list === "ok") return jur === "pjn" ? "Causa válida" : jur === "scba" ? "Causa vinculada a SCBA" : `Vinculado con ${label}`;
+	if (list === "pending" && jur !== "pjn") return "Verificando la causa en el portal";
+	if (list === "failed" || list === "invalid") {
+		const err = (folder as any).causaAssociationError;
+		if (jur === "pjn") return err && err !== "Error desconocido" ? `No se pudo vincular la causa — ${err}` : LIST_TOOLTIPS.failed;
+		return err ? `Vinculación fallida: ${err}` : "Vinculación fallida";
+	}
 	// folders.tsx (2026-09-28): el ícono ámbar lleva al perfil; copy pública / reservada por carpeta.
 	if (list === "cred_error") return pjnCredErrorCopy(folder);
 	if (list === "unlinked") {
@@ -180,7 +190,9 @@ export function listTooltip(list: string, folder: CausaUserViewEntry["folder"]):
 		const name = JURISDICTION_LABEL[src] || src.toUpperCase();
 		return RELINKABLE_SOURCES.includes(src)
 			? `Desvinculada de ${name} — conserva todos sus datos pero ya no se sincroniza. Hacé clic para volver a vincularla desde la carpeta.`
-			: `Sincronización pausada (era ${name}) — conserva el histórico pero no recibe actualizaciones. Para reanudar, vinculá tu cuenta desde Perfil → Cuentas Judiciales.`;
+			: src === "scba"
+			? "Esta carpeta fue desvinculada de SCBA. Conserva el histórico de movimientos pero no recibe actualizaciones. Para reanudar la sincronización, vinculá tu cuenta desde Integraciones → SCBA."
+			: `Sincronización pausada (era ${name}) — conserva el histórico pero no recibe actualizaciones. Para reanudar, vinculá tu cuenta desde Integraciones.`;
 	}
 	return LIST_TOOLTIPS[list] || "";
 }
@@ -317,11 +329,22 @@ function estadoBadge(list: string): { color: string; glyph: "ok" | "warn" | "loc
 			return { color: STALE_AMBER, glyph: "warn" };
 	}
 }
-function SourceBadgeReplica({ folder, list }: { folder: CausaUserViewEntry["folder"]; list: string }) {
+const ACCENT_COLOR: Record<string, string> = { green: LIVE_GREEN, amber: STALE_AMBER, red: RED };
+function SourceBadgeReplica({
+	folder,
+	list,
+	sourceBadge,
+}: {
+	folder: CausaUserViewEntry["folder"];
+	list: string;
+	sourceBadge?: CausaUserViewEntry["view"]["sourceBadge"];
+}) {
 	const theme = useTheme();
 	const f = folder as any;
 	const kind = (["pjn", "mev", "eje", "scba", "pjsalta", "pjcatamarca", "pjmendoza"] as const).find((k) => f[k] === true);
-	const st = estadoBadge(list);
+	// Desde 2026-10-16 el server manda el ícono real (FolderSourceBadge tiene cadenas propias por
+	// jurisdicción: p. ej. MEV/SCBA pendientes van en verde). Fallback: derivar de la fila de la Carátula.
+	const st = sourceBadge ? { color: ACCENT_COLOR[sourceBadge.accent] || STALE_AMBER, glyph: sourceBadge.glyph } : estadoBadge(list);
 	if (!kind || !st) return null;
 	return (
 		<Box sx={{ position: "relative", display: "inline-flex", flexShrink: 0 }}>
@@ -387,7 +410,8 @@ export function ListRowReplica({ entry }: { entry: CausaUserViewEntry }) {
 			case "pending":
 				return <MiniChip color={STALE_AMBER} text="Pendiente de verificación" />;
 			case "invalid":
-				return <MiniChip color={RED} text="Causa inválida" />;
+				// F7/F10: verificada+inválida es la misma fila que fallida (el server ya no la produce)
+				return <MiniChip color={RED} text="Asociación fallida" />;
 			case "cred_status":
 				// M11 (2026-09-05): carátula arriba, chip ámbar abajo — el chip ya no reemplaza el nombre
 				return (
@@ -442,7 +466,7 @@ export function ListRowReplica({ entry }: { entry: CausaUserViewEntry }) {
 				<Stack direction="row" alignItems="center" spacing={1} sx={{ minWidth: 0 }}>
 					<Tooltip title={listTooltip(view.list, folder)}>
 						<Box sx={{ display: "inline-flex" }}>
-							<SourceBadgeReplica folder={folder} list={view.list} />
+							<SourceBadgeReplica folder={folder} list={view.list} sourceBadge={view.sourceBadge} />
 						</Box>
 					</Tooltip>
 					<Box sx={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{left}</Box>
@@ -517,6 +541,11 @@ const BADGE_META: Record<string, { icon: JSX.Element; tooltip: string }> = {
 	pending: { icon: <InfoCircle size={14} variant="Bold" color={STALE_AMBER} />, tooltip: "Pendiente de verificación" },
 	valid: { icon: <TickCircle size={14} variant="Bold" color={LIVE_GREEN} />, tooltip: "Causa válida" },
 	invalid: { icon: <CloseCircle size={14} variant="Bold" color={RED} />, tooltip: "Causa inválida" },
+	// Badges del pill PJN por estado (FolderView.tsx 420-460): el ícono de verificación es el propio estado.
+	reserved_covered: { icon: <Lock1 size={14} variant="Bold" color={LIVE_GREEN} />, tooltip: LIST_TOOLTIPS.reserved_covered },
+	failed: { icon: <CloseCircle size={14} variant="Bold" color={RED} />, tooltip: LIST_TOOLTIPS.failed },
+	cred_error: { icon: <Warning2 size={14} variant="Bulk" color={STALE_AMBER} />, tooltip: PJN_CRED_ERROR_PUBLIC_COPY },
+	unlinked: { icon: <Warning2 size={14} variant="Bulk" color={STALE_AMBER} />, tooltip: "Desvinculada" },
 	// pending_selection / unlinked / cred_status / cred_error: la pill entera cambia (ámbar + Warning2), sin badge superpuesto
 	// (cred_error: FolderView.tsx no muestra el badge de verificación — la causa es válida, lo que falla es la credencial)
 	pending_selection: { icon: <Warning2 size={14} variant="Bulk" color={STALE_AMBER} />, tooltip: "Seleccionar expediente" },
@@ -625,9 +654,10 @@ export const GATE_META: Record<
 		icon: <CloseCircle size={20} variant="Bulk" />,
 		cta: "Verificar ahora",
 	},
+	// No se produce desde 2026-10-16: verificada+inválida es el gate 'failed' (F7/F10, details.tsx 970).
 	invalid: {
-		label: "Causa inválida",
-		title: "El expediente no es accesible",
+		label: "Causa inválida (= Asociación fallida)",
+		title: "No pudimos encontrar este expediente",
 		description:
 			"El portal devolvió el expediente, pero está marcado como no público o no existe en el sistema judicial. No vamos a poder sincronizar sus movimientos.",
 		tone: "red",
@@ -889,11 +919,9 @@ export function EntryPanel({ entry }: { entry: CausaUserViewEntry }) {
 									? LIST_TOOLTIPS.cred_status
 									: view.expanded.badge === "cred_error"
 									? pjnCredErrorCopy(folder)
-									: view.expanded.accent === "red"
-									? LIST_TOOLTIPS.reserved
-									: view.expanded.accent === "amber"
-									? LIST_TOOLTIPS.list_removed
-									: ""
+									: view.expanded.badge === "failed"
+									? listTooltip("failed", folder)
+									: (view.expanded.badge && BADGE_META[view.expanded.badge]?.tooltip) || view.expanded.label
 							}
 						/>
 					</Stack>

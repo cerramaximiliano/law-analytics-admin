@@ -46,13 +46,13 @@ import { GUIDE_BY_JURISDICTION, JURISDICTIONS, GuideJurisdiction } from "./userV
  */
 
 const ROW_LABEL: Record<string, string> = {
-	ok: "OK — carátula + tilde azul",
-	ok_cred_error: "OK con credencial rechazada — warning ámbar",
+	ok: "OK — carátula sola + ✓ verde en el ícono de la fuente",
+	ok_cred_error: "(no se produce desde 2026-10-16: el front usa requiresAction → cred_error)",
 	cred_error: "Credencial requiere acción — warning ámbar (todas las carpetas PJN)",
 	pending: "Pendiente de verificación (chip ámbar)",
 	pending_selection: "Seleccionar expediente (chip ámbar)",
 	failed: "Asociación fallida (chip rojo)",
-	invalid: "Causa inválida (chip rojo)",
+	invalid: "(no se produce desde 2026-10-16: verificada+inválida = Asociación fallida)",
 	reserved: "Causa reservada (warning rojo)",
 	reserved_covered: "Reservada con acceso (candado verde)",
 	revoked: "Acceso restringido (candado ámbar)",
@@ -70,7 +70,7 @@ const GATE_LABEL: Record<string, string> = {
 	pending: "Gate: pendiente",
 	pending_selection: "Gate: varias coincidencias",
 	failed: "Gate: asociación fallida",
-	invalid: "Gate: inválida",
+	invalid: "Gate: inválida (no se produce: = asociación fallida)",
 	reserved: "Gate: reservada (sin credencial)",
 	reserved_revoked: "Gate: acceso restringido",
 	cred_error: "Gate: credencial requiere acción (reservada sin cobertura)",
@@ -465,7 +465,11 @@ export default function UserViewGuide() {
 										</TableHead>
 										<TableBody>
 											{combos.map((c, i) => {
-												const rowKey = c.view.hiddenFromList ? "hidden_archived" : c.view.list;
+												const rowKey = c.view.hiddenFromList
+													? "hidden_archived"
+													: c.view.inMainTable === false && !c.view.inAttentionTable
+													? "invisible"
+													: c.view.list;
 												const gate = c.view.detail.gate || "none";
 												const open = !!expanded[i];
 												return (

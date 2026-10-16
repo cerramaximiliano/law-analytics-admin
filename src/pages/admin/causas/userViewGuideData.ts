@@ -1715,7 +1715,8 @@ export const EJE_GROUPS: GuideGroup[] = [
 	{
 		row: "failed",
 		title: "Asociación fallida — chip rojo",
-		whatUserSees: "Chip rojo “Asociación fallida”. Fila expandida: pill verde genérica con badge rojo (EJE no tiene pill de fallida).",
+		whatUserSees:
+			"Chip rojo “Asociación fallida”. Fila expandida: pill ROJA “Vinculación fallida · EJE” con el motivo del portal en el tooltip (IOL-7, FolderView.tsx 618-626); el chip del detalle EJE sigue verde fijo pero queda tapado por el gate.",
 		cases: [
 			{
 				key: "eje.failed.zero",
@@ -2357,7 +2358,7 @@ const iolGroups = (jur: "pjsalta" | "pjcatamarca" | "pjmendoza", label: string):
 		{
 			row: "ok",
 			title: "OK — ícono de la jurisdicción con tilde verde",
-			whatUserSees: `Ícono de ${label} a la izquierda con tilde verde (tooltip “${label} — Vinculado con ${label}”). Fila expandida: pill verde “Vinculado con ${label}” — SIEMPRE verde para IOL, sin importar el estado (solo cambia el ícono chico).`,
+			whatUserSees: `Ícono de ${label} a la izquierda con tilde verde (tooltip “Vinculado con ${label}”). Fila expandida: pill verde “Vinculado con ${label}” con badge de validez (tick / nada si isValid null). Desde IOL-7 la pill cambia de color según el estado: roja en fallida, ámbar en pendiente y en “ya no en el portal”.`,
 			cases: [
 				{
 					key: `${jur}.ok.single`,
@@ -2410,7 +2411,8 @@ const iolGroups = (jur: "pjsalta" | "pjcatamarca" | "pjmendoza", label: string):
 		{
 			row: "pending",
 			title: "Pendiente de verificación — chip ámbar",
-			whatUserSees: "Chip ámbar “Pendiente de verificación” + refresh. Fila expandida: pill VERDE con InfoCircle ámbar.",
+			whatUserSees:
+				"Chip ámbar “Pendiente de verificación” + refresh. Fila expandida: pill ÁMBAR “Pendiente de verificación · <portal>” (IOL-7, FolderView.tsx 628-636).",
 			cases: [
 				{
 					key: `${jur}.pending.new`,
@@ -2505,7 +2507,8 @@ const iolGroups = (jur: "pjsalta" | "pjcatamarca" | "pjmendoza", label: string):
 		{
 			row: "failed",
 			title: "Asociación fallida — chip rojo",
-			whatUserSees: "Chip rojo “Asociación fallida”. Fila expandida: pill VERDE con CloseCircle rojo.",
+			whatUserSees:
+				"Chip rojo “Asociación fallida”. Fila expandida: pill ROJA “Vinculación fallida · <portal>” con causaAssociationError en el tooltip (IOL-7, FolderView.tsx 618-626).",
 			cases: [
 				{
 					key: `${jur}.failed.zero`,

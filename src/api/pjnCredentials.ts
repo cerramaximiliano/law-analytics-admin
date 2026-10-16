@@ -415,8 +415,13 @@ export interface CausaUserViewEntry {
 	}>;
 	view: {
 		list: UserViewList;
-		expanded: { label: string; accent: "red" | "amber" | "green"; badge: string | null };
-		detail: { chip: { label: string; accent: "red" | "amber" | "green"; badge: string | null }; gate: UserViewGate };
+		/** Ícono de la fuente de la lista (FolderSourceBadge): cadena propia por jurisdicción, puede diferir de `list`. */
+		sourceBadge?: { accent: "red" | "amber" | "green"; glyph: "ok" | "warn" | "lock"; state?: string; to?: string } | null;
+		pjnState?: string | null;
+		scbaState?: string | null;
+		inMainTable?: boolean;
+		expanded: { label: string; accent: "red" | "amber" | "green" | "blue"; badge: string | null };
+		detail: { chip: { label: string; accent: "red" | "amber" | "green" | "blue"; badge: string | null }; gate: UserViewGate };
 		hiddenFromList: boolean;
 		inAttentionTable: boolean;
 		contentBlocked: boolean;
