@@ -216,3 +216,21 @@ npm install
 ---
 
 Usa VS Code con auto-formatting on save para mantener consistencia en el estilo del código.
+
+## Vista del usuario (causas/user-view-guide, diálogo y tab Carpetas de users/resources)
+
+La fuente de verdad es el hub: `admin-api/services/folderUserView.js` (espejo literal del front, un estado
+por jurisdicción). El admin **no deriva estados**: renderiza `view` tal como llega.
+
+- `CausaUserViewDialog.tsx`: `ListRowReplica` (fila de la Carátula = `view.list`), `SourceBadgeReplica`
+  (ícono de la fuente = `view.sourceBadge`, cadena propia por jurisdicción que puede no coincidir con
+  `list`), `BindingPill` (pill = `view.expanded`, chip = `view.detail.chip`, tooltip por `badge`),
+  `GATE_META` (= `gateMeta` de `PendingVerificationView`). Los textos (`LIST_TOOLTIPS`, labels) son los
+  copys reales del front: si el front cambia un copy, cambiarlo acá.
+- Estados que **ya no se producen** (2026-10-16): `invalid` (verificada+inválida = `failed`, F7/F10) y
+  `ok_cred_error` (PJN sólo mira `requiresAction` → `cred_error`). Quedan documentados en
+  `ROW_LABEL/GATE_LABEL` de `UserViewGuide.tsx` y en `userViewGuideData.ts` como no producidos.
+- Tab Carpetas (`users/resources/index.tsx`): columna "Vista del usuario" con `FolderUserView`
+  (`api/adminResources.ts`), chip ámbar ⚠ si `flags.length`, clic → diálogo; switch "Solo anomalías de
+  visualización" = `viewFlagged=true` (barrido server-side, tope 5000).
+- Informe de la auditoría que motivó todo esto: hub `docs/admin/auditoria-vista-usuario-2026-10-16.md`.
