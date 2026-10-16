@@ -69,10 +69,12 @@ import MainCard from "components/MainCard";
 import CopyButton from "components/CopyButton";
 import { BRAND_BLUE, PRO_TEAL, LIVE_GREEN, headerShadow } from "themes/dashboardTokens";
 import PostalDocumentsAdminService, { PostalDocument, PostalDocumentStats } from "api/postalDocumentsAdmin";
+import CausaUserViewDialog from "../../causas/CausaUserViewDialog";
 import AdminResourcesService, {
 	ResourceType,
 	Resource,
 	FolderResource,
+	FolderUserView,
 	ContactResource,
 	CalculatorResource,
 	TaskResource,
@@ -183,6 +185,34 @@ const formatBytes = (bytes: number): string => {
 	const sizes = ["B", "KB", "MB", "GB"];
 	const i = Math.floor(Math.log(bytes) / Math.log(k));
 	return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+};
+
+// Etiquetas de la fila/gate que ve el usuario (espejo de ROW_LABEL/GATE_LABEL de UserViewGuide).
+const USER_VIEW_ROW_META: Record<string, { label: string; color: "success" | "warning" | "error" | "default" | "info" }> = {
+	ok: { label: "OK", color: "success" },
+	ok_cred_error: { label: "OK · cred. rechazada", color: "warning" },
+	cred_error: { label: "Credencial requiere acción", color: "warning" },
+	pending: { label: "Pendiente de verificación", color: "warning" },
+	pending_selection: { label: "Seleccionar expediente", color: "warning" },
+	failed: { label: "Asociación fallida", color: "error" },
+	invalid: { label: "Causa inválida", color: "error" },
+	reserved: { label: "Reservada sin acceso", color: "error" },
+	reserved_covered: { label: "Reservada con acceso", color: "success" },
+	revoked: { label: "Acceso restringido", color: "warning" },
+	list_removed: { label: "Ya no en la lista", color: "warning" },
+	cred_status: { label: "Credencial MEV", color: "warning" },
+	unlinked: { label: "Desvinculada", color: "warning" },
+	plain: { label: "Sin indicador", color: "default" },
+};
+const USER_VIEW_GATE_LABEL: Record<string, string> = {
+	archived: "archivada",
+	pending: "gate pendiente",
+	pending_selection: "gate varias coincidencias",
+	failed: "gate asociación fallida",
+	invalid: "gate inválida",
+	reserved: "gate reservada (sin credencial)",
+	reserved_revoked: "gate acceso restringido",
+	cred_error: "gate credencial requiere acción",
 };
 
 const getColumnsByType = (type: ResourceType, theme: any): ColumnDef[] => {
@@ -640,6 +670,9 @@ const UserResources: React.FC = () => {
 	const isEmailsTab = currentType === "emails";
 	// Fila desplegada del tab Emails: se carga bajo demanda, un usuario por vez.
 	const [expandedEmailUser, setExpandedEmailUser] = useState<string | null>(null);
+	// Vista del usuario (tab Carpetas): diálogo por carpeta + filtro "solo anomalías de visualización".
+	const [userViewFolderId, setUserViewFolderId] = useState<string | null>(null);
+	const [viewFlaggedOnly, setViewFlaggedOnly] = useState<boolean>(() => searchParams.get("flagged") === "1");
 	const isFolderTab = currentType === "folder";
 
 	/**
@@ -843,10 +876,79 @@ const UserResources: React.FC = () => {
 				return <Tooltip title={tooltip}>{chip}</Tooltip>;
 			},
 		};
+		// Vista del usuario: la fila que ve en su lista + gate del detalle + anomalías
+		// (misma lógica que /admin/causas/user-view-guide, calculada en admin-api).
+		// Caso que la motivó: carpeta EJE fallida que seguía llamándose "Pendiente de
+		// verificación: 4787/2026" — el error se detectó a ojo desde esta tab.
+		const userViewColumn: ColumnDef = {
+			id: "userView",
+			label: "Vista del usuario",
+			sortable: false,
+			render: (r) => {
+				const f = r as FolderResource;
+				const uv: FolderUserView | null | undefined = f.userView;
+				if (!uv) {
+					return (
+						<Typography variant="caption" color="text.secondary">
+							manual
+						</Typography>
+					);
+				}
+				const meta = USER_VIEW_ROW_META[uv.row] || { label: uv.row, color: "default" as const };
+				const hasFlags = uv.flags.length > 0;
+				const tooltip = (
+					<Box>
+						<Typography variant="caption" sx={{ display: "block", fontWeight: 600 }}>
+							Lista: {meta.label}
+							{uv.hiddenFromList
+								? " · no aparece (archivada)"
+								: uv.inAttentionTable
+								? " · en “requieren tu atención”"
+								: uv.inMainTable
+								? " · tabla principal"
+								: " · EN NINGUNA TABLA"}
+						</Typography>
+						<Typography variant="caption" sx={{ display: "block", opacity: 0.85 }}>
+							Detalle: {uv.gate ? USER_VIEW_GATE_LABEL[uv.gate] || `gate ${uv.gate}` : "completo"}
+							{uv.contentBlocked ? " · 403 en movimientos/PDFs" : ""}
+						</Typography>
+						{uv.expandedLabel && (
+							<Typography variant="caption" sx={{ display: "block", opacity: 0.7 }}>
+								Pill: {uv.expandedLabel}
+							</Typography>
+						)}
+						{hasFlags && (
+							<Box sx={{ mt: 0.5 }}>
+								{uv.flags.map((fl, i) => (
+									<Typography key={i} variant="caption" sx={{ display: "block", color: "warning.light" }}>
+										⚠ {fl}
+									</Typography>
+								))}
+							</Box>
+						)}
+						<Typography variant="caption" sx={{ display: "block", opacity: 0.6, mt: 0.5 }}>
+							Clic: abrir la vista del usuario
+						</Typography>
+					</Box>
+				);
+				return (
+					<Tooltip title={tooltip}>
+						<Chip
+							label={hasFlags ? `⚠ ${meta.label}` : meta.label}
+							size="small"
+							color={hasFlags ? "warning" : meta.color}
+							variant={hasFlags ? "filled" : "outlined"}
+							onClick={() => setUserViewFolderId(f._id)}
+							sx={{ height: 20, fontSize: "0.7rem", cursor: "pointer", fontWeight: hasFlags ? 600 : 400 }}
+						/>
+					</Tooltip>
+				);
+			},
+		};
 		// Insertar antes de "amount" si existe, sino antes de "createdAt".
 		const idx = baseColumns.findIndex((c) => c.id === "amount");
 		const insertAt = idx >= 0 ? idx : baseColumns.length - 1;
-		return [...baseColumns.slice(0, insertAt), notifColumn, ...baseColumns.slice(insertAt)];
+		return [...baseColumns.slice(0, insertAt), userViewColumn, notifColumn, ...baseColumns.slice(insertAt)];
 	}, [baseColumns, isFolderTab, folderNotifStatus, folderNotifLoading]);
 
 	// Fetch stats
@@ -876,6 +978,7 @@ const UserResources: React.FC = () => {
 				search: search || undefined,
 				sortBy,
 				sortOrder,
+				viewFlagged: currentType === "folder" && viewFlaggedOnly ? true : undefined,
 			});
 			if (response.success) {
 				setResources(response.data);
@@ -886,7 +989,7 @@ const UserResources: React.FC = () => {
 		} finally {
 			setLoading(false);
 		}
-	}, [currentType, page, rowsPerPage, search, sortBy, sortOrder, isUsersTab]);
+	}, [currentType, page, rowsPerPage, search, sortBy, sortOrder, isUsersTab, viewFlaggedOnly]);
 
 	// Fetch users with resources
 	const fetchUsers = useCallback(async () => {
@@ -1263,6 +1366,24 @@ const UserResources: React.FC = () => {
 						),
 					}}
 				/>
+				{isFolderTab && (
+					<Tooltip title="Solo carpetas cuya visualización en la app es incoherente: nombre provisorio con la verificación terminada, CUIJ interno visible, invisible en ambas tablas, pendiente hace más de 24 h, etc. Barre hasta 5000 carpetas del filtro actual.">
+						<FormControlLabel
+							sx={{ ml: 0, whiteSpace: "nowrap" }}
+							control={
+								<Switch
+									size="small"
+									checked={viewFlaggedOnly}
+									onChange={(e) => {
+										setViewFlaggedOnly(e.target.checked);
+										setPage(0);
+									}}
+								/>
+							}
+							label={<Typography variant="body2">Solo anomalías de visualización</Typography>}
+						/>
+					</Tooltip>
+				)}
 			</Box>
 
 			{/* Activity Tab Content */}
@@ -2973,6 +3094,9 @@ const UserResources: React.FC = () => {
 					</TableContainer>
 				</>
 			)}
+
+			{/* Vista del usuario de una carpeta (misma que /admin/causas y /admin/folders) */}
+			<CausaUserViewDialog open={!!userViewFolderId} onClose={() => setUserViewFolderId(null)} folderId={userViewFolderId} />
 
 			{/* Dialog de confirmación de retry bulk */}
 			<Dialog open={retryDialogOpen} onClose={() => setRetryDialogOpen(false)} maxWidth="sm" fullWidth>

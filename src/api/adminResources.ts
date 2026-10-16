@@ -35,9 +35,30 @@ export interface FolderResource extends BaseResource {
 	source?: string;
 	judFolder?: {
 		numberJudFolder?: string;
+		cuij?: string;
 		_id?: string;
 	} | null;
 	amount?: number;
+	previousSyncSource?: string | null;
+	causaAssociationError?: string | null;
+	/** Lo que ve el usuario (calculado en admin-api con la misma lógica que /admin/causas/user-view-guide). null = carpeta manual. */
+	userView?: FolderUserView | null;
+}
+
+export interface FolderUserView {
+	jurisdiction: string | null;
+	jurisdictionLabel: string | null;
+	/** Fila de la lista del usuario: ok, pending, failed, invalid, reserved, cred_error, unlinked, plain, … */
+	row: string;
+	expandedLabel: string | null;
+	/** Gate del detalle: null = detalle completo. */
+	gate: string | null;
+	inMainTable: boolean;
+	inAttentionTable: boolean;
+	hiddenFromList: boolean;
+	contentBlocked: boolean;
+	/** Anomalías de visualización (nombre provisorio con estado final, CUIJ interno visible, invisible, …). */
+	flags: string[];
 }
 
 export interface ContactResource extends BaseResource {
@@ -96,6 +117,8 @@ export interface ResourceFilters {
 	userId?: string;
 	sortBy?: string;
 	sortOrder?: "asc" | "desc";
+	/** Solo carpetas con anomalía de visualización (type=folder). */
+	viewFlagged?: boolean;
 }
 
 export interface PaginationInfo {
@@ -220,6 +243,7 @@ class AdminResourcesService {
 		if (filters.sortBy) params.append("sortBy", filters.sortBy);
 		if (filters.sortOrder) params.append("sortOrder", filters.sortOrder);
 
+		if (filters.viewFlagged) params.append("viewFlagged", "true");
 		const response = await adminAxios.get<ResourcesResponse>(`/api/user-resources/all?${params.toString()}`);
 		return response.data;
 	}
