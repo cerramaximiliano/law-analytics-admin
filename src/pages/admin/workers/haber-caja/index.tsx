@@ -7,9 +7,10 @@ import ResumenTab from "./ResumenTab";
 import CasosTable from "./CasosTable";
 import ReglasTab from "./ReglasTab";
 import CargasTab from "./CargasTab";
+import BlueCorpTab from "./BlueCorpTab";
 
 // Slugs del tab en la URL (?tab=...)
-const TABS = ["resumen", "revision", "casos", "cargas", "reglas"] as const;
+const TABS = ["resumen", "revision", "casos", "bluecorp", "cargas", "reglas"] as const;
 const BASE_REVISION: CasosParams = { fuente: "detalleBeneficio", revision: "requerida" };
 const BASE_CASOS: CasosParams = {};
 
@@ -49,12 +50,14 @@ export default function HaberCajaRelevamientoPage() {
 					<Tab value="resumen" label="Resumen" />
 					<Tab value="revision" label="Revisión manual" />
 					<Tab value="casos" label="Casos" />
+					<Tab value="bluecorp" label="BlueCorp" />
 					<Tab value="cargas" label="PRPA originales" />
 					<Tab value="reglas" label="Reglas y desvíos" />
 				</Tabs>
 				{tab === "resumen" && <ResumenTab />}
 				{tab === "revision" && <CasosTable base={BASE_REVISION} modoRevision />}
 				{tab === "casos" && <CasosTable base={BASE_CASOS} />}
+				{tab === "bluecorp" && <BlueCorpTab />}
 				{tab === "cargas" && <CargasTab />}
 				{tab === "reglas" && <ReglasTab />}
 			</Stack>

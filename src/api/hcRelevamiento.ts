@@ -321,6 +321,131 @@ export interface DesviosResponse {
 	abiertos: { componente: string; conMotivoOcr: boolean; n: number }[];
 }
 
+// ── Evaluador BlueCorp (anexos del haber de caja de las liquidaciones de programa) ─────────────────────────────────
+export type VistaPrograma = "sinFad" | "sinTope14" | "abiertos" | "todos";
+
+/** Conteos por fila del anexo frente al motor (perfil bluecorp). */
+export interface FilasPrograma {
+	filas: number;
+	ok: number;
+	res298: number;
+	moneda: number;
+	coefDistinto: number;
+	tope9: number;
+	sinTope9: number;
+	/** el motor y la columna que suma de BlueCorp topean la actualizada igual */
+	tope14: number;
+	/** el motor topea (máximo a la cesación) y BlueCorp no */
+	sinTope14: number;
+	/** BlueCorp topea y el motor no */
+	tope14SinNorma: number;
+}
+
+/** Fila donde el motor y BlueCorp topean distinto (detalle guardado por el evaluador). */
+export interface FilaTope14 {
+	clase: "sinTope14" | "tope14SinNorma";
+	periodo: string;
+	importe: number;
+	topeArt9: number | null;
+	coeficiente: number | null;
+	actualizada: number;
+	otrosTopes: number | null;
+	computada: number | null;
+	coeficienteMotor: number | null;
+	topeMotor: number | null;
+	actualizadaMotor: number | null;
+}
+
+export interface ImpresosPrograma {
+	W?: number | null;
+	Wactualizado?: number | null;
+	sumatoria?: number | null;
+	R?: number | null;
+	PBU?: number | null;
+	PC?: number | null;
+	PAP?: number | null;
+}
+
+export interface AnexoListItem {
+	_id: string;
+	fadMes: string | null;
+	estado: EstadoCaso;
+	componentes: Partial<Record<Componente, ComponenteEval>>;
+	desvios: Desvio[];
+	causas: string[];
+	filas?: FilasPrograma;
+	impresos?: ImpresosPrograma;
+	causaYear?: number;
+	res298?: boolean;
+	evaluadoEn?: string;
+}
+
+export interface AnexosParams {
+	vista?: VistaPrograma;
+	estado?: string;
+	componente?: Componente;
+	page?: number;
+	limit?: number;
+}
+
+export interface AnexosResponse {
+	docs: AnexoListItem[];
+	total: number;
+	page: number;
+	limit: number;
+	pages: number;
+}
+
+export interface ProgramaResumenResponse {
+	ultima: {
+		_id: string;
+		motorVersion: string;
+		versionHub: string | null;
+		totalAnexos: number;
+		evaluados: number;
+		porEstado: Record<string, number>;
+		porDesvio: Record<string, number>;
+		porCausa: Record<string, number>;
+		filas: FilasPrograma;
+		componentes: Record<string, Record<string, number>>;
+		segundos: number;
+	} | null;
+	estados: Record<string, number>;
+	vistas: Record<VistaPrograma, number>;
+	filasSinTope14: number;
+}
+
+export interface FilaAnexo {
+	periodo: string;
+	dias?: number;
+	importe: number;
+	moneda?: string;
+	topeArt9?: number | null;
+	coeficiente?: number | null;
+	actualizada?: number | null;
+	actualizadaTopeada?: number | null;
+	computada?: number | null;
+	marca?: string;
+}
+
+export interface AnexoDetalle {
+	evaluacion: (AnexoListItem & { filasTope14?: FilaTope14[] }) | null;
+	prpa: {
+		_id: string;
+		version?: string;
+		fechas?: Record<string, string | null>;
+		impresos?: ImpresosPrograma & Record<string, unknown>;
+		prpa?: FilaAnexo[];
+		anexo?: Record<string, any>;
+		calidad?: { ok?: boolean; advertencias?: string[]; huecos?: number; periodoDesde?: string; periodoHasta?: string };
+		url?: string;
+		causaNumber?: number;
+		causaYear?: number;
+		movFecha?: string;
+		extraidoEn?: string;
+	} | null;
+}
+
 const BASE = "/api/hc-relevamiento";
 
 const HcRelevamientoService = {
@@ -367,6 +492,21 @@ const HcRelevamientoService = {
 
 	async getDesvios(): Promise<DesviosResponse> {
 		const res = await workersAxios.get<{ success: boolean; data: DesviosResponse }>(`${BASE}/desvios`);
+		return res.data.data;
+	},
+
+	async getProgramaResumen(): Promise<ProgramaResumenResponse> {
+		const res = await workersAxios.get<{ success: boolean; data: ProgramaResumenResponse }>(`${BASE}/programa/resumen`);
+		return res.data.data;
+	},
+
+	async listProgramaAnexos(params: AnexosParams = {}): Promise<AnexosResponse> {
+		const res = await workersAxios.get<{ success: boolean; data: AnexosResponse }>(`${BASE}/programa/anexos`, { params });
+		return res.data.data;
+	},
+
+	async getProgramaAnexo(id: string): Promise<AnexoDetalle> {
+		const res = await workersAxios.get<{ success: boolean; data: AnexoDetalle }>(`${BASE}/programa/anexos/${id}`);
 		return res.data.data;
 	},
 };
