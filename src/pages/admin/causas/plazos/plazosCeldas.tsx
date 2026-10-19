@@ -19,6 +19,16 @@ export function FuenteChips({ r }: { r: PlazoNotificacion }) {
 					<Chip size="small" color="info" variant="outlined" label="bandeja" />
 				</Tooltip>
 			)}
+			{r.source?.primeraSync && (
+				<Tooltip title="Cédula de la primera población de una causa recién agregada: se entrega solo si vence mañana o después">
+					<Chip size="small" color="warning" variant="outlined" label="primera sync" />
+				</Tooltip>
+			)}
+			{r.bandeja?.tardia && (
+				<Tooltip title="La bandeja la levantó después de su día: se entrega solo si vence mañana o después">
+					<Chip size="small" color="warning" variant="outlined" label="tardía" />
+				</Tooltip>
+			)}
 			{texto && (
 				<Tooltip title={`El plazo se leyó de: ${TEXTO[texto] || texto}`}>
 					<Chip size="small" variant="outlined" label={TEXTO[texto] || texto} />

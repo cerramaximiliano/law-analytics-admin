@@ -119,7 +119,7 @@ export interface PlazoNotificacion {
 	/** "bandeja" si la creó la bandeja del PJN (base usuarios). */
 	fuente?: string | null;
 	/** Presente si la cédula pasó por la bandeja, aunque la haya creado otro worker (se reconcilió). */
-	bandeja?: { numeroCedula?: string | null } | null;
+	bandeja?: { numeroCedula?: string | null; tardia?: boolean } | null;
 	/** Usuarios dueños de carpetas de la causa (base usuarios). */
 	usuarios?: Array<{ userId: string; email: string | null }>;
 	/** Vencimientos: fragmento del texto del que salió el plazo. */
@@ -127,7 +127,7 @@ export interface PlazoNotificacion {
 	plazo?: PlazoComputado | null;
 	detectedAt: string;
 	processedAt?: string | null;
-	source?: { worker: string; collectionName: string; collectedAt: string };
+	source?: { worker: string; collectionName: string; collectedAt: string; primeraSync?: boolean };
 }
 
 export interface PlazoNormativaRegla {
