@@ -195,6 +195,7 @@ export default function NotificacionesTab() {
 	const [fuero, setFueroParam] = useQueryParam("fuero");
 	const [via, setViaParam] = useQueryParam("via");
 	const [causaId, setCausaIdParam] = useQueryParam("causaId");
+	const [norma, setNormaParam] = useQueryParam("norma");
 	const [textoFuente, setTextoFuenteParam] = useQueryParam("textoFuente");
 	// Usuario: correo (o parte) o userId; se resuelve en el servidor contra las carpetas de la causa.
 	const [usuario, setUsuarioParam] = useQueryParam("usuario");
@@ -220,6 +221,7 @@ export default function NotificacionesTab() {
 				fuero: fuero || undefined,
 				via: (esUsuarios && via) || undefined,
 				causaId: causaId || undefined,
+				norma: norma || undefined,
 				textoFuente: (esUsuarios && textoFuente) || undefined,
 				...(esUsuarios && usuario ? (/^[0-9a-f]{24}$/i.test(usuario) ? { userId: usuario } : { email: usuario }) : {}),
 			});
@@ -230,7 +232,7 @@ export default function NotificacionesTab() {
 		} finally {
 			setLoading(false);
 		}
-	}, [page, rowsPerPage, status, fuero, via, causaId, textoFuente, usuario, esUsuarios, enqueueSnackbar]);
+	}, [page, rowsPerPage, status, fuero, via, causaId, norma, textoFuente, usuario, esUsuarios, enqueueSnackbar]);
 
 	useEffect(() => {
 		fetchList();
@@ -302,6 +304,7 @@ export default function NotificacionesTab() {
 						sx={{ minWidth: 220 }}
 					/>
 				)}
+				{norma && <Chip size="small" color="warning" label={`regla ${norma}`} onDelete={() => { setNormaParam(""); setPage(0); }} />}
 				{causaId && <Chip size="small" label={`causa ${causaId.slice(-6)}`} onDelete={() => { setCausaIdParam(""); setPage(0); }} />}
 				<Box sx={{ flex: 1 }} />
 				<Button size="small" onClick={reprocesarParsed}>

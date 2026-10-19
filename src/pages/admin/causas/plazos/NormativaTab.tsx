@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link as RouterLink } from "react-router-dom";
 import {
 	Alert,
 	Button,
@@ -7,6 +8,7 @@ import {
 	DialogActions,
 	DialogContent,
 	DialogTitle,
+	Link,
 	Paper,
 	Skeleton,
 	Stack,
@@ -18,10 +20,12 @@ import {
 	TableHead,
 	TableRow,
 	TextField,
+	Tooltip,
 	Typography,
 } from "@mui/material";
 import { useSnackbar } from "notistack";
-import { getNormativa, createNormativa, updateNormativa, PlazoNormativaRegla } from "api/plazos";
+import { getNormativa, createNormativa, updateNormativa, getPlazosPendientes, referenciasEnAtlas, PlazoNormativaRegla, PendienteRegla } from "api/plazos";
+import { useQueryParam } from "hooks/useTabParam";
 
 const EMPTY: Partial<PlazoNormativaRegla> & { _id: string } = {
 	_id: "",
@@ -95,7 +99,8 @@ export function ReglaDialog({
 			norma: form.norma,
 			prioridad: Number(form.prioridad),
 			habilitado: form.habilitado,
-			verificado: form.verificado,
+			// Al editar, la verificación se cambia desde la tabla (pide confirmación y nota).
+			...(isNew ? { verificado: form.verificado } : {}),
 			notas: form.notas,
 		};
 		try {
@@ -161,8 +166,14 @@ export function ReglaDialog({
 							<Typography variant="body2">Habilitada</Typography>
 						</Stack>
 						<Stack direction="row" alignItems="center">
-							<Switch checked={form.verificado} onChange={(e) => setForm({ ...form, verificado: e.target.checked })} />
-							<Typography variant="body2">Verificada jurídicamente</Typography>
+							<Switch
+								checked={form.verificado}
+								disabled={!isNew}
+								onChange={(e) => setForm({ ...form, verificado: e.target.checked })}
+							/>
+							<Typography variant="body2">
+								Verificada jurídicamente{!isNew ? " (se cambia desde la tabla, con nota)" : ""}
+							</Typography>
 						</Stack>
 					</Stack>
 				</Stack>
@@ -177,11 +188,86 @@ export function ReglaDialog({
 	);
 }
 
+const BASE_TXT = referenciasEnAtlas ? "Atlas (pjn/api)" : "rs0 (pjn/cache-api) — la base que leen los workers hoy";
+const fechaCorta = (d?: string | null) => (d ? new Date(d).toLocaleDateString("es-AR") : "—");
+
+/** Confirmación para verificar o quitar la verificación: deja quién, cuándo y por qué. */
+function VerificarDialog({
+	regla,
+	retiene,
+	onClose,
+	onDone,
+}: {
+	regla: PlazoNormativaRegla | null;
+	retiene?: PendienteRegla;
+	onClose: () => void;
+	onDone: (r: PlazoNormativaRegla) => void;
+}) {
+	const { enqueueSnackbar } = useSnackbar();
+	const [nota, setNota] = useState("");
+	const [guardando, setGuardando] = useState(false);
+	useEffect(() => setNota(""), [regla?._id]);
+	if (!regla) return null;
+	const verificar = !regla.verificado;
+	const guardar = async () => {
+		setGuardando(true);
+		try {
+			const r = await updateNormativa(regla._id, { verificado: verificar, nota: nota.trim() });
+			onDone(r);
+			enqueueSnackbar(verificar ? "Regla verificada" : "Verificación quitada", { variant: "success" });
+			onClose();
+		} catch (err: any) {
+			enqueueSnackbar(err?.response?.data?.message || "Error", { variant: "error" });
+		} finally {
+			setGuardando(false);
+		}
+	};
+	return (
+		<Dialog open onClose={onClose} maxWidth="sm" fullWidth>
+			<DialogTitle>{verificar ? "Verificar regla" : "Quitar verificación"}</DialogTitle>
+			<DialogContent dividers>
+				<Stack spacing={2}>
+					<Typography variant="body2">
+						<b>{regla.label}</b> — {regla.plazoDias}d {regla.tipoPlazo} · {regla.norma}
+					</Typography>
+					<Alert severity={verificar ? "warning" : "info"} variant="outlined">
+						{verificar
+							? "Verificada significa que un abogado confirmó la regla en la revisión legal. A partir de ahora sus plazos llegan a los usuarios."
+							: "Sin verificar, los plazos de esta regla dejan de llegar a los usuarios (los del texto de la cédula siguen pasando)."}
+						{retiene ? ` Hoy retiene ${retiene.retenidos} plazo(s), ${retiene.ultimos7d} de los últimos 7 días.` : ""}
+					</Alert>
+					<Typography variant="caption" color="text.secondary">
+						Escribe en: <b>{BASE_TXT}</b>. El worker la toma en ≤10 minutos.
+					</Typography>
+					<TextField
+						size="small"
+						label={verificar ? "Nota (obligatoria): qué revisaste y con qué criterio" : "Nota (opcional)"}
+						value={nota}
+						onChange={(e) => setNota(e.target.value)}
+						multiline
+						minRows={3}
+						autoFocus
+					/>
+				</Stack>
+			</DialogContent>
+			<DialogActions>
+				<Button onClick={onClose}>Cancelar</Button>
+				<Button variant="contained" color={verificar ? "warning" : "primary"} disabled={guardando || (verificar && nota.trim().length < 5)} onClick={guardar}>
+					{verificar ? "Verificar" : "Quitar verificación"}
+				</Button>
+			</DialogActions>
+		</Dialog>
+	);
+}
+
 export default function NormativaTab() {
 	const { enqueueSnackbar } = useSnackbar();
 	const [rows, setRows] = useState<PlazoNormativaRegla[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [editing, setEditing] = useState<(Partial<PlazoNormativaRegla> & { _id: string }) | null>(null);
+	const [verificando, setVerificando] = useState<PlazoNormativaRegla | null>(null);
+	const [retenidos, setRetenidos] = useState<Map<string, PendienteRegla> | null>(null);
+	const [regla, setReglaParam] = useQueryParam("regla");
 
 	const fetchList = useCallback(async () => {
 		try {
@@ -196,12 +282,18 @@ export default function NormativaTab() {
 
 	useEffect(() => {
 		fetchList();
+		// Plazos que cada regla retiene hoy: sale de las cédulas de usuarios (Atlas), no de la base de las reglas.
+		getPlazosPendientes()
+			.then((p) => setRetenidos(new Map(p.reglasSinVerificar.map((r) => [r.normaId, r]))))
+			.catch(() => setRetenidos(null));
 	}, [fetchList]);
 
-	const toggle = async (r: PlazoNormativaRegla, field: "habilitado" | "verificado", value: boolean) => {
+	const visibles = useMemo(() => (regla ? rows.filter((r) => r._id === regla) : rows), [rows, regla]);
+
+	const toggle = async (r: PlazoNormativaRegla, value: boolean) => {
 		try {
-			await updateNormativa(r._id, { [field]: value });
-			setRows((prev) => prev.map((x) => (x._id === r._id ? { ...x, [field]: value } : x)));
+			await updateNormativa(r._id, { habilitado: value });
+			setRows((prev) => prev.map((x) => (x._id === r._id ? { ...x, habilitado: value } : x)));
 		} catch (err: any) {
 			enqueueSnackbar(err?.response?.data?.message || "Error", { variant: "error" });
 		}
@@ -209,6 +301,10 @@ export default function NormativaTab() {
 
 	return (
 		<Stack spacing={2}>
+			<Alert severity={referenciasEnAtlas ? "info" : "warning"} variant="outlined">
+				Las reglas se leen y se escriben en <b>{BASE_TXT}</b>. Solo las reglas <b>verificadas</b> (un abogado las confirmó en la revisión
+				legal) y los plazos que salen del texto de la cédula llegan al usuario. Cuando termine la revisión, las reglas pasan a Atlas (P8).
+			</Alert>
 			<Alert severity="info" sx={{ "& .MuiAlert-message": { width: "100%" } }}>
 				<Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
 					¿Quién crea esta tabla?
@@ -222,10 +318,11 @@ export default function NormativaTab() {
 					con el dataset solo identificará el acto — el plazo lo pone siempre esta tabla.
 				</Typography>
 			</Alert>
-			<Stack direction="row" justifyContent="space-between" alignItems="center">
+			<Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1} flexWrap="wrap" useFlexGap>
 				<Typography variant="body2" color="text.secondary">
 					First-match-wins por prioridad ascendente. Las reglas específicas (fuero/objeto) deben tener prioridad menor que las genéricas.
 				</Typography>
+				{regla && <Chip size="small" color="warning" label={`solo ${regla}`} onDelete={() => setReglaParam("")} />}
 				<Button size="small" variant="contained" onClick={() => setEditing({ ...EMPTY })}>
 					Nueva regla
 				</Button>
@@ -241,6 +338,7 @@ export default function NormativaTab() {
 							<TableCell>Plazo</TableCell>
 							<TableCell>Norma</TableCell>
 							<TableCell>Verif.</TableCell>
+							<TableCell>Retiene (hoy / 7 d)</TableCell>
 							<TableCell>Habil.</TableCell>
 						</TableRow>
 					</TableHead>
@@ -248,42 +346,89 @@ export default function NormativaTab() {
 						{loading
 							? Array.from({ length: 6 }).map((_, i) => (
 									<TableRow key={i}>
-										<TableCell colSpan={8}>
+										<TableCell colSpan={9}>
 											<Skeleton />
 										</TableCell>
 									</TableRow>
 							  ))
-							: rows.map((r) => (
-									<TableRow key={r._id} hover>
-										<TableCell>{r.prioridad}</TableCell>
-										<TableCell sx={{ cursor: "pointer" }} onClick={() => setEditing(r)}>
-											<Typography variant="body2" sx={{ fontWeight: 600 }}>
-												{r.label}
-											</Typography>
-											<Typography variant="caption" sx={{ fontFamily: "monospace" }} color="text.secondary">
-												{r._id}
-											</Typography>
-										</TableCell>
-										<TableCell>{(r.fuero || []).join(",")}</TableCell>
-										<TableCell>{(((r as any).objetos as string[]) || ["*"]).join(",")}</TableCell>
-										<TableCell>
-											{r.plazoDias}d {r.tipoPlazo}
-										</TableCell>
-										<TableCell>
-											<Chip size="small" variant="outlined" label={r.norma} />
-										</TableCell>
-										<TableCell>
-											<Switch size="small" checked={r.verificado} onChange={(e) => toggle(r, "verificado", e.target.checked)} />
-										</TableCell>
-										<TableCell>
-											<Switch size="small" checked={r.habilitado} onChange={(e) => toggle(r, "habilitado", e.target.checked)} />
-										</TableCell>
-									</TableRow>
-							  ))}
+							: visibles.map((r) => {
+									const ret = retenidos?.get(r._id);
+									return (
+										<TableRow key={r._id} hover>
+											<TableCell>{r.prioridad}</TableCell>
+											<TableCell sx={{ cursor: "pointer" }} onClick={() => setEditing(r)}>
+												<Typography variant="body2" sx={{ fontWeight: 600 }}>
+													{r.label}
+												</Typography>
+												<Typography variant="caption" sx={{ fontFamily: "monospace" }} color="text.secondary">
+													{r._id}
+												</Typography>
+											</TableCell>
+											<TableCell>{(r.fuero || []).join(",")}</TableCell>
+											<TableCell>{(((r as any).objetos as string[]) || ["*"]).join(",")}</TableCell>
+											<TableCell>
+												{r.plazoDias}d {r.tipoPlazo}
+											</TableCell>
+											<TableCell>
+												<Chip size="small" variant="outlined" label={r.norma} />
+											</TableCell>
+											<TableCell>
+												<Tooltip
+													title={
+														r.verificadoAt
+															? `${r.verificado ? "Verificada" : "Verificación quitada"} el ${fechaCorta(r.verificadoAt)} por ${r.verificadoPor || "—"}${
+																	r.verificadoNota ? `: ${r.verificadoNota}` : ""
+															  }`
+															: "Sin constancia de quién la verificó"
+													}
+												>
+													<span>
+														<Switch size="small" checked={r.verificado} onChange={() => setVerificando(r)} />
+													</span>
+												</Tooltip>
+											</TableCell>
+											<TableCell>
+												{retenidos === null ? (
+													"—"
+												) : ret ? (
+													<Stack spacing={0.25}>
+														<Link
+															component={RouterLink}
+															variant="body2"
+															to={`/admin/causas/plazos?tab=notificaciones&base=usuarios&status=computed&norma=${encodeURIComponent(r._id)}`}
+														>
+															{ret.retenidos.toLocaleString("es-AR")} / {ret.ultimos7d.toLocaleString("es-AR")}
+														</Link>
+														<Link
+															component={RouterLink}
+															variant="caption"
+															to={`/admin/causas/plazos?tab=revision-legal&base=usuarios&regla=${encodeURIComponent(r._id)}`}
+														>
+															revisar con muestra
+														</Link>
+													</Stack>
+												) : (
+													<Typography variant="caption" color="text.secondary">
+														{r.verificado ? "—" : "0"}
+													</Typography>
+												)}
+											</TableCell>
+											<TableCell>
+												<Switch size="small" checked={r.habilitado} onChange={(e) => toggle(r, e.target.checked)} />
+											</TableCell>
+										</TableRow>
+									);
+							  })}
 					</TableBody>
 				</Table>
 			</TableContainer>
 			{editing && <ReglaDialog regla={editing} onClose={() => setEditing(null)} onSaved={fetchList} />}
+			<VerificarDialog
+				regla={verificando}
+				retiene={verificando ? retenidos?.get(verificando._id) : undefined}
+				onClose={() => setVerificando(null)}
+				onDone={(r) => setRows((prev) => prev.map((x) => (x._id === r._id ? { ...x, ...r } : x)))}
+			/>
 		</Stack>
 	);
 }

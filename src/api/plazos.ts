@@ -146,6 +146,10 @@ export interface PlazoNormativaRegla {
 	habilitado: boolean;
 	verificado: boolean;
 	notas: string;
+	/** Quién, cuándo y por qué se verificó (o se quitó la verificación). */
+	verificadoPor?: string | null;
+	verificadoAt?: string | null;
+	verificadoNota?: string | null;
 }
 
 export interface FeriadoJudicial {
@@ -177,6 +181,9 @@ export const getNotificaciones = async (params: {
 	fuente?: string;
 	/** Por dónde entró la cédula (base usuarios): app-update | mis-causas | bandeja */
 	via?: string;
+	/** Regla aplicada (plazo.norma.clave) y si estaba verificada */
+	norma?: string;
+	normaVerificada?: boolean;
 	/** Cómo se extrajo el texto: resolucion | cuerpo_cedula | cedula */
 	textoFuente?: string;
 	/** Base usuarios: cédulas de las causas de este usuario (id o parte del correo). */
@@ -246,7 +253,7 @@ export const createNormativa = async (regla: Partial<PlazoNormativaRegla> & { _i
 	return data.data;
 };
 
-export const updateNormativa = async (id: string, cambios: Partial<PlazoNormativaRegla>): Promise<PlazoNormativaRegla> => {
+export const updateNormativa = async (id: string, cambios: Partial<PlazoNormativaRegla> & { nota?: string }): Promise<PlazoNormativaRegla> => {
 	const { data } = await axRef().patch(`/api/admin/plazos/normativa/${id}`, cambios);
 	return data.data;
 };
