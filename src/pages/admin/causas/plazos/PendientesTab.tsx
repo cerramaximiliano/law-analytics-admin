@@ -143,13 +143,29 @@ function Reglas({ items }: { items: PendienteRegla[] }) {
 							<TableCell align="right">{fmt(r.retenidos)}</TableCell>
 							<TableCell align="right">{fmt(r.ultimos7d)}</TableCell>
 							<TableCell align="right">
-								<Link
-									component={RouterLink}
-									to={`/admin/causas/plazos?tab=normativa&regla=${encodeURIComponent(r.normaId)}`}
-									variant="body2"
-								>
-									Revisar
-								</Link>
+								<Stack direction="row" spacing={1.5} justifyContent="flex-end">
+									<Link
+										component={RouterLink}
+										to={`/admin/causas/plazos?tab=notificaciones&base=usuarios&status=computed&norma=${encodeURIComponent(r.normaId)}`}
+										variant="body2"
+									>
+										Ver plazos
+									</Link>
+									<Link
+										component={RouterLink}
+										to={`/admin/causas/plazos?tab=revision-legal&base=usuarios&regla=${encodeURIComponent(r.normaId)}`}
+										variant="body2"
+									>
+										Muestra
+									</Link>
+									<Link
+										component={RouterLink}
+										to={`/admin/causas/plazos?tab=normativa&regla=${encodeURIComponent(r.normaId)}`}
+										variant="body2"
+									>
+										Revisar
+									</Link>
+								</Stack>
 							</TableCell>
 						</TableRow>
 					))}
