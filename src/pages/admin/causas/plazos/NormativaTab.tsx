@@ -303,7 +303,7 @@ export default function NormativaTab() {
 		<Stack spacing={2}>
 			<Alert severity={referenciasEnAtlas ? "info" : "warning"} variant="outlined">
 				Las reglas se leen y se escriben en <b>{BASE_TXT}</b>. Solo las reglas <b>verificadas</b> (un abogado las confirmó en la revisión
-				legal) y los plazos que salen del texto de la cédula llegan al usuario. Cuando termine la revisión, las reglas pasan a Atlas (P8).
+				legal) y los plazos que salen del texto de la cédula llegan al usuario. {referenciasEnAtlas ? "Los workers leen de esta misma base (desde P8)." : "Cuando termine la revisión, las reglas pasan a Atlas (P8)."}
 			</Alert>
 			<Alert severity="info" sx={{ "& .MuiAlert-message": { width: "100%" } }}>
 				<Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>

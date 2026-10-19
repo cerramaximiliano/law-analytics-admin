@@ -30,7 +30,7 @@ const ax = (): AxiosInstance => (baseActual === "usuarios" ? pjnAtlasAxios : wor
 // Reglas y feriados: la copia maestra pasa a Atlas cuando los plazos-worker lean de ahí (F2).
 // Hasta entonces se editan en el rs0, que es lo que leen los workers. La semilla en Atlas
 // (16 reglas, 241 feriados) se copió el 10/10; al cambiar este flag, re-sincronizarla antes.
-const REFERENCIAS_EN_ATLAS = false;
+const REFERENCIAS_EN_ATLAS = true;
 const axRef = (): AxiosInstance => (REFERENCIAS_EN_ATLAS ? pjnAtlasAxios : workersAxios);
 export const referenciasEnAtlas = REFERENCIAS_EN_ATLAS;
 

@@ -760,7 +760,7 @@ export default function FeriadosTab() {
 				</Alert>
 			)}
 			<Alert severity={referenciasEnAtlas ? "info" : "warning"} variant="outlined">
-				El calendario se lee y se escribe en <b>{BASE_TXT}</b>. Cuando termine la revisión, pasa a Atlas (P8).
+				El calendario se lee y se escribe en <b>{BASE_TXT}</b>. {referenciasEnAtlas ? "Los workers leen de esta misma base (desde P8)." : "Cuando termine la revisión, pasa a Atlas (P8)."}
 			</Alert>
 			<Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" useFlexGap>
 				<TextField select size="small" label="Año" value={anio} onChange={(e) => setAnio(Number(e.target.value))} sx={{ minWidth: 110 }}>
