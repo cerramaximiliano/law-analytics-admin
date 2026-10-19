@@ -10,6 +10,7 @@ import {
 	LinearProgress,
 	Link,
 	Skeleton,
+	Slider,
 	Stack,
 	TextField,
 	Tooltip,
@@ -111,6 +112,24 @@ const TaskDetailDrawer: React.FC<TaskDetailDrawerProps> = ({
 			onChanged();
 		} catch (e: any) {
 			enqueueSnackbar(e?.message || "No se pudo actualizar la subtarea", { variant: "error" });
+		}
+	};
+
+	// Avance manual: se mueve el slider en local y se guarda al soltar.
+	const [progressDraft, setProgressDraft] = useState<number | null>(null);
+	const saveProgress = async (value: number) => {
+		if (!detail || value === detail.progress) {
+			setProgressDraft(null);
+			return;
+		}
+		try {
+			const res = await AdminTasksService.updateTask(detail._id, { progress: value });
+			if (res.success) setDetail(res.data);
+			onChanged();
+		} catch (e: any) {
+			enqueueSnackbar(e?.message || "No se pudo actualizar el progreso", { variant: "error" });
+		} finally {
+			setProgressDraft(null);
 		}
 	};
 
@@ -338,6 +357,27 @@ const TaskDetailDrawer: React.FC<TaskDetailDrawerProps> = ({
 								</Box>
 							)}
 
+							<Box>
+								<SectionLabel>Progreso · {progressDraft ?? t.progress}%</SectionLabel>
+								<Slider
+									size="small"
+									min={0}
+									max={100}
+									step={5}
+									value={progressDraft ?? t.progress}
+									onChange={(_, v) => setProgressDraft(v as number)}
+									onChangeCommitted={(_, v) => void saveProgress(v as number)}
+									valueLabelDisplay="auto"
+									aria-label="Progreso de la tarea"
+									sx={{ mx: 1, width: "calc(100% - 16px)" }}
+								/>
+								{t.subtasks.length > 0 && (
+									<Typography variant="caption" color="text.secondary">
+										Se actualiza solo al tildar subtareas; también podés ajustarlo a mano.
+									</Typography>
+								)}
+							</Box>
+
 							{t.subtasks.length > 0 && (
 								<Box>
 									<SectionLabel>
@@ -432,7 +472,6 @@ const TaskDetailDrawer: React.FC<TaskDetailDrawerProps> = ({
 								<SectionLabel>Datos</SectionLabel>
 								<Box sx={{ display: "grid", gridTemplateColumns: "auto 1fr", columnGap: 2, rowGap: 0.5 }}>
 									{[
-										["Progreso", `${t.progress}%`],
 										["Proyecto", t.project],
 										["Módulo", t.module],
 										["Asignado a", t.assignedTo],
