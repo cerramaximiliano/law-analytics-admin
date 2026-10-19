@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import {
 	Chip,
+	Link,
 	MenuItem,
 	Paper,
 	Skeleton,
@@ -16,13 +17,16 @@ import {
 	Typography,
 } from "@mui/material";
 import { useSnackbar } from "notistack";
-import { getVencimientos, PlazoNotificacion } from "api/plazos";
+import { Link as RouterLink } from "react-router-dom";
+import { getPlazosBase, getVencimientos, PlazoNotificacion } from "api/plazos";
+import { FuenteChips, UsuariosChips } from "./plazosCeldas";
 
 const FUEROS = ["", "CIV", "CSS", "CNT", "COM"];
 const hoy = () => new Date().toISOString().slice(0, 10);
 
 export default function VencimientosTab() {
 	const { enqueueSnackbar } = useSnackbar();
+	const esUsuarios = getPlazosBase() === "usuarios";
 	const [rows, setRows] = useState<PlazoNotificacion[]>([]);
 	const [count, setCount] = useState(0);
 	const [page, setPage] = useState(0);
@@ -81,13 +85,16 @@ export default function VencimientosTab() {
 							<TableCell>Carátula</TableCell>
 							<TableCell>Plazo</TableCell>
 							<TableCell>Fundamento</TableCell>
+							{esUsuarios && <TableCell>Fuente / extractor</TableCell>}
+							{esUsuarios && <TableCell>Usuario</TableCell>}
+							{esUsuarios && <TableCell>Cédula</TableCell>}
 						</TableRow>
 					</TableHead>
 					<TableBody>
 						{loading
 							? Array.from({ length: 8 }).map((_, i) => (
 									<TableRow key={i}>
-										<TableCell colSpan={7}>
+										<TableCell colSpan={esUsuarios ? 10 : 7}>
 											<Skeleton />
 										</TableCell>
 									</TableRow>
@@ -112,19 +119,46 @@ export default function VencimientosTab() {
 											<TableCell>
 												{r.plazo ? `${r.plazo.plazoDias}d ${r.plazo.tipoPlazo}` : "—"}
 											</TableCell>
-											<TableCell>
+											<TableCell sx={{ maxWidth: 360 }}>
 												{r.plazo?.fuente === "texto" ? (
 													<Chip size="small" color="primary" variant="outlined" label="texto expreso" />
 												) : (
 													<Chip size="small" variant="outlined" label={r.plazo?.norma?.cita || "norma"} />
 												)}
+												{r.fragmento && (
+													<Typography
+														variant="caption"
+														color="text.secondary"
+														title={r.fragmento}
+														sx={{ display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", mt: 0.25 }}
+													>
+														«{r.fragmento}»
+													</Typography>
+												)}
 											</TableCell>
+											{esUsuarios && (
+												<TableCell>
+													<FuenteChips r={r} />
+												</TableCell>
+											)}
+											{esUsuarios && (
+												<TableCell>
+													<UsuariosChips r={r} />
+												</TableCell>
+											)}
+											{esUsuarios && (
+												<TableCell>
+													<Link component={RouterLink} to={`/admin/causas/plazos?base=usuarios&cedula=${encodeURIComponent(`${r.causaId}:${r.sourceId}`)}`} variant="body2">
+														Ver cédula
+													</Link>
+												</TableCell>
+											)}
 										</TableRow>
 									);
 								})}
 						{!loading && rows.length === 0 && (
 							<TableRow>
-								<TableCell colSpan={7}>
+								<TableCell colSpan={esUsuarios ? 10 : 7}>
 									<Typography variant="body2" color="text.secondary" align="center" sx={{ py: 3 }}>
 										Sin vencimientos futuros computados
 									</Typography>

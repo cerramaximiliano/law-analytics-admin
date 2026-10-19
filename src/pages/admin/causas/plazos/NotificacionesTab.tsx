@@ -25,6 +25,7 @@ import {
 import { useSnackbar } from "notistack";
 import { getNotificaciones, getNotificacion, getPlazosBase, reprocessNotificacion, reprocessParsed, PlazoNotificacion } from "api/plazos";
 import { useQueryParam } from "hooks/useTabParam";
+import { FuenteChips, UsuariosChips } from "./plazosCeldas";
 
 const STATUS_COLOR: Record<string, "default" | "success" | "warning" | "error" | "info" | "primary"> = {
 	computed: "success",
@@ -44,6 +45,9 @@ const FUEROS = ["", "CIV", "CSS", "CNT", "COM"];
 const STATUSES = ["", "pending", "computed", "parsed", "extracted", "revision_manual", "esperando_documento", "ocr_needed", "no_url", "failed", "not_pdf"];
 // Por dónde entró la cédula (solo base de usuarios).
 const VIAS: Array<[string, string]> = [["", "Todas"], ["app-update", "app-update"], ["mis-causas", "Mis Causas"], ["bandeja", "bandeja del PJN"]];
+
+// De qué texto salió el plazo (solo base de usuarios).
+const TEXTOS: Array<[string, string]> = [["", "Todos"], ["resolucion", "Resolución"], ["cuerpo_cedula", "Cuerpo de la cédula"], ["cedula", "Cédula entera"]];
 
 const day = (v?: string | null) => (v ? String(v).slice(0, 10) : "—");
 
@@ -191,6 +195,10 @@ export default function NotificacionesTab() {
 	const [fuero, setFueroParam] = useQueryParam("fuero");
 	const [via, setViaParam] = useQueryParam("via");
 	const [causaId, setCausaIdParam] = useQueryParam("causaId");
+	const [textoFuente, setTextoFuenteParam] = useQueryParam("textoFuente");
+	// Usuario: correo (o parte) o userId; se resuelve en el servidor contra las carpetas de la causa.
+	const [usuario, setUsuarioParam] = useQueryParam("usuario");
+	const [usuarioInput, setUsuarioInput] = useState(usuario || "");
 	// En la base de usuarios la fila abre el detalle unificado (?plazo=, lo monta la página).
 	const [, setPlazoParam] = useQueryParam("plazo");
 	const [rows, setRows] = useState<PlazoNotificacion[]>([]);
@@ -212,6 +220,8 @@ export default function NotificacionesTab() {
 				fuero: fuero || undefined,
 				via: (esUsuarios && via) || undefined,
 				causaId: causaId || undefined,
+				textoFuente: (esUsuarios && textoFuente) || undefined,
+				...(esUsuarios && usuario ? (/^[0-9a-f]{24}$/i.test(usuario) ? { userId: usuario } : { email: usuario }) : {}),
 			});
 			setRows(resp.data);
 			setCount(resp.count);
@@ -220,7 +230,7 @@ export default function NotificacionesTab() {
 		} finally {
 			setLoading(false);
 		}
-	}, [page, rowsPerPage, status, fuero, via, causaId, esUsuarios, enqueueSnackbar]);
+	}, [page, rowsPerPage, status, fuero, via, causaId, textoFuente, usuario, esUsuarios, enqueueSnackbar]);
 
 	useEffect(() => {
 		fetchList();
@@ -262,6 +272,36 @@ export default function NotificacionesTab() {
 						))}
 					</TextField>
 				)}
+				{esUsuarios && (
+					<TextField select size="small" label="Texto de" value={textoFuente} onChange={(e) => { setTextoFuenteParam(e.target.value); setPage(0); }} sx={{ minWidth: 170 }}>
+						{TEXTOS.map(([v, l]) => (
+							<MenuItem key={v} value={v}>
+								{l}
+							</MenuItem>
+						))}
+					</TextField>
+				)}
+				{esUsuarios && (
+					<TextField
+						size="small"
+						label="Usuario (correo o id)"
+						value={usuarioInput}
+						onChange={(e) => setUsuarioInput(e.target.value)}
+						onKeyDown={(e) => {
+							if (e.key === "Enter") {
+								setUsuarioParam(usuarioInput.trim());
+								setPage(0);
+							}
+						}}
+						onBlur={() => {
+							if (usuarioInput.trim() !== usuario) {
+								setUsuarioParam(usuarioInput.trim());
+								setPage(0);
+							}
+						}}
+						sx={{ minWidth: 220 }}
+					/>
+				)}
 				{causaId && <Chip size="small" label={`causa ${causaId.slice(-6)}`} onDelete={() => { setCausaIdParam(""); setPage(0); }} />}
 				<Box sx={{ flex: 1 }} />
 				<Button size="small" onClick={reprocesarParsed}>
@@ -275,18 +315,21 @@ export default function NotificacionesTab() {
 						<TableRow>
 							<TableCell>Detectada</TableCell>
 							<TableCell>Causa</TableCell>
+							{esUsuarios && <TableCell>Carátula</TableCell>}
+							{esUsuarios && <TableCell>Usuario</TableCell>}
 							<TableCell>Fuero / Objeto</TableCell>
 							<TableCell>Tipo</TableCell>
 							<TableCell>Status</TableCell>
 							<TableCell>Plazo</TableCell>
 							<TableCell>Vence</TableCell>
+							{esUsuarios && <TableCell>Fuente / extractor</TableCell>}
 						</TableRow>
 					</TableHead>
 					<TableBody>
 						{loading
 							? Array.from({ length: 8 }).map((_, i) => (
 									<TableRow key={i}>
-										<TableCell colSpan={7}>
+										<TableCell colSpan={esUsuarios ? 10 : 7}>
 											<Skeleton />
 										</TableCell>
 									</TableRow>
@@ -297,6 +340,16 @@ export default function NotificacionesTab() {
 										<TableCell>
 											{r.number}/{r.year}
 										</TableCell>
+										{esUsuarios && (
+											<TableCell sx={{ maxWidth: 240, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={r.caratula || ""}>
+												{r.caratula || "—"}
+											</TableCell>
+										)}
+										{esUsuarios && (
+											<TableCell>
+												<UsuariosChips r={r} />
+											</TableCell>
+										)}
 										<TableCell>
 											{r.fuero}
 											{r.objeto ? ` · ${r.objeto}` : ""}
@@ -309,11 +362,16 @@ export default function NotificacionesTab() {
 											{r.plazo ? `${r.plazo.plazoDias}d ${r.plazo.tipoPlazo} (${r.plazo.fuente})` : "—"}
 										</TableCell>
 										<TableCell>{r.plazo?.vencimiento || "—"}</TableCell>
+										{esUsuarios && (
+											<TableCell>
+												<FuenteChips r={r} />
+											</TableCell>
+										)}
 									</TableRow>
 								))}
 						{!loading && rows.length === 0 && (
 							<TableRow>
-								<TableCell colSpan={7}>
+								<TableCell colSpan={esUsuarios ? 10 : 7}>
 									<Typography variant="body2" color="text.secondary" align="center" sx={{ py: 3 }}>
 										Sin notificaciones para los filtros elegidos
 									</Typography>

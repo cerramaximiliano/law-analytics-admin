@@ -113,7 +113,17 @@ export interface PlazoNotificacion {
 		menciones?: Array<{ valor: number; unidad: string; tipoPlazo: string; score: number; snippet: string }>;
 		textExcerpt?: string;
 		extractorVersion?: number;
+		/** De qué texto salió: resolución notificada, cuerpo de la cédula o la cédula entera (base usuarios). */
+		textoFuente?: "resolucion" | "cuerpo_cedula" | "cedula" | null;
 	} | null;
+	/** "bandeja" si la creó la bandeja del PJN (base usuarios). */
+	fuente?: string | null;
+	/** Presente si la cédula pasó por la bandeja, aunque la haya creado otro worker (se reconcilió). */
+	bandeja?: { numeroCedula?: string | null } | null;
+	/** Usuarios dueños de carpetas de la causa (base usuarios). */
+	usuarios?: Array<{ userId: string; email: string | null }>;
+	/** Vencimientos: fragmento del texto del que salió el plazo. */
+	fragmento?: string | null;
 	plazo?: PlazoComputado | null;
 	detectedAt: string;
 	processedAt?: string | null;
@@ -167,6 +177,11 @@ export const getNotificaciones = async (params: {
 	fuente?: string;
 	/** Por dónde entró la cédula (base usuarios): app-update | mis-causas | bandeja */
 	via?: string;
+	/** Cómo se extrajo el texto: resolucion | cuerpo_cedula | cedula */
+	textoFuente?: string;
+	/** Base usuarios: cédulas de las causas de este usuario (id o parte del correo). */
+	userId?: string;
+	email?: string;
 	causaId?: string;
 	desde?: string;
 	hasta?: string;
@@ -196,6 +211,10 @@ export const getVencimientos = async (params: {
 	fuero?: string;
 	desde?: string;
 	hasta?: string;
+	via?: string;
+	textoFuente?: string;
+	userId?: string;
+	email?: string;
 }): Promise<Paginated<PlazoNotificacion>> => {
 	const { data } = await ax().get("/api/admin/plazos/vencimientos", { params });
 	return data;
