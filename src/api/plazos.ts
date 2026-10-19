@@ -83,6 +83,15 @@ export interface PlazoComputado {
 	tipoPlazo: "habiles" | "corridos";
 	version: number;
 	computedAt: string;
+	/** Estado del calendario de inhábiles al calcular (lo agrega plazos-worker). */
+	calendario?: PlazoCalendario | null;
+}
+
+export interface PlazoCalendario {
+	estado: "ok" | "sin_confirmar" | "fuera_de_cobertura";
+	hasta?: string | null;
+	/** Días inhábiles sin verificar que caen dentro del plazo (lista o cantidad). */
+	diasSinVerificar?: string[] | number | null;
 }
 
 export interface PlazoNotificacion {
@@ -852,6 +861,27 @@ export interface PendienteCredencial {
 	lastRunAt: string | null;
 }
 
+export interface CoberturaCalendario {
+	hasta: string | null;
+	ultimoAnio: number | null;
+	diasRestantes: number | null;
+	aniosIncompletos: number[];
+}
+
+export interface DiaSinVerificar {
+	fecha: string;
+	tipo: string;
+	descripcion?: string;
+}
+
+export interface PendienteCalendario {
+	cobertura: CoberturaCalendario | null;
+	sinVerificar: DiaSinVerificar[];
+	plazosFueraDeCobertura: number;
+	alerta: boolean;
+	error?: string;
+}
+
 export interface PlazosPendientes {
 	generadoAt: string;
 	resumen: {
@@ -862,6 +892,8 @@ export interface PlazosPendientes {
 		carpetasSinParte: number;
 		entregasSinFeedback: number;
 		credencialesBandeja: number;
+		calendarioAlerta?: number;
+		diasSinVerificar?: number;
 		cuentasActivas: number;
 		eventos: number;
 		avisos: number;
@@ -869,6 +901,7 @@ export interface PlazosPendientes {
 		entregas: number;
 	};
 	decisiones: PendienteDecision[];
+	calendario: PendienteCalendario;
 	reglasSinVerificar: PendienteRegla[];
 	carpetasSinParte: PendienteCarpeta[];
 	entregasSinFeedback: PendienteEntrega[];
@@ -878,5 +911,31 @@ export interface PlazosPendientes {
 /** Siempre contra Atlas: los pendientes son de la base de usuarios. */
 export const getPlazosPendientes = async (fresh = false): Promise<PlazosPendientes> => {
 	const { data } = await pjnAtlasAxios.get("/api/admin/plazos/pendientes", { params: fresh ? { fresh: 1 } : undefined });
+	return data.data;
+};
+
+// ── Calendario judicial: cobertura y generación de un año (base de referencias) ─
+export interface CoberturaFeriados {
+	cobertura: CoberturaCalendario;
+	sinVerificar: DiaSinVerificar[];
+}
+
+export interface GenerarAnioResultado {
+	anio: number;
+	total: number;
+	agregan: string[];
+	existentes: number;
+	sinVerificar: number;
+	aplicado: boolean;
+}
+
+export const getCoberturaFeriados = async (): Promise<CoberturaFeriados> => {
+	const { data } = await axRef().get("/api/admin/plazos/feriados/cobertura");
+	return data.data;
+};
+
+/** Sin `aplicar` devuelve el diff; con `aplicar: true` inserta SOLO lo que falta (nunca pisa ni borra). */
+export const generarAnioFeriados = async (anio: number, aplicar = false): Promise<GenerarAnioResultado> => {
+	const { data } = await axRef().post("/api/admin/plazos/feriados/generar", { anio, aplicar });
 	return data.data;
 };

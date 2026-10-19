@@ -19,7 +19,7 @@ import {
 import { useSnackbar } from "notistack";
 import { Link as RouterLink } from "react-router-dom";
 import { getPlazosBase, getVencimientos, PlazoNotificacion } from "api/plazos";
-import { FuenteChips, UsuariosChips } from "./plazosCeldas";
+import { CalendarioChip, FuenteChips, UsuariosChips } from "./plazosCeldas";
 
 const FUEROS = ["", "CIV", "CSS", "CNT", "COM"];
 const hoy = () => new Date().toISOString().slice(0, 10);
@@ -109,7 +109,10 @@ export default function VencimientosTab() {
 													<Chip size="small" label={`${rest}d`} color={rest <= 1 ? "error" : rest <= 3 ? "warning" : "default"} variant="outlined" />
 												)}
 											</TableCell>
-											<TableCell>{r.plazo?.vencimientoConGracia || "—"}</TableCell>
+											<TableCell>
+												{r.plazo?.vencimientoConGracia || "—"}
+												<CalendarioChip calendario={r.plazo?.calendario} />
+											</TableCell>
 											<TableCell>
 												{r.number}/{r.year} [{r.fuero}]
 											</TableCell>

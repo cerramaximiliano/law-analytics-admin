@@ -1,5 +1,5 @@
 import { Chip, Stack, Tooltip } from "@mui/material";
-import type { PlazoNotificacion } from "api/plazos";
+import type { PlazoCalendario, PlazoNotificacion } from "api/plazos";
 
 // Celdas compartidas por Notificaciones y Vencimientos (base de usuarios).
 
@@ -62,5 +62,24 @@ export function UsuariosChips({ r }: { r: PlazoNotificacion }) {
 				</Tooltip>
 			)}
 		</Stack>
+	);
+}
+
+/** Estado del calendario de inhábiles con el que se calculó el plazo; no muestra nada si está todo en orden. */
+export function CalendarioChip({ calendario }: { calendario?: PlazoCalendario | null }) {
+	if (!calendario || calendario.estado === "ok") return null;
+	if (calendario.estado === "fuera_de_cobertura") {
+		return (
+			<Tooltip title={`El vencimiento cae después de donde llega el calendario${calendario.hasta ? ` (${calendario.hasta})` : ""}: no se propone al usuario`}>
+				<Chip size="small" color="error" label="fuera del calendario" />
+			</Tooltip>
+		);
+	}
+	const dias = Array.isArray(calendario.diasSinVerificar) ? calendario.diasSinVerificar : null;
+	const n = dias ? dias.length : typeof calendario.diasSinVerificar === "number" ? calendario.diasSinVerificar : null;
+	return (
+		<Tooltip title={dias?.length ? `Días inhábiles sin confirmar dentro del plazo: ${dias.join(", ")}` : "Hay días inhábiles sin confirmar dentro del plazo"}>
+			<Chip size="small" color="warning" variant="outlined" label={`calendario sin confirmar${n ? ` (${n} día${n === 1 ? "" : "s"})` : ""}`} />
+		</Tooltip>
 	);
 }

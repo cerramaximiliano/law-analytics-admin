@@ -21,6 +21,7 @@ import {
 import { CloseCircle, Refresh, TickCircle } from "iconsax-react";
 import {
 	getPlazosPendientes,
+	PendienteCalendario,
 	PendienteCarpeta,
 	PendienteCredencial,
 	PendienteDecision,
@@ -113,6 +114,69 @@ function Decisiones({ items }: { items: PendienteDecision[] }) {
 					</Paper>
 				);
 			})}
+		</Stack>
+	);
+}
+
+function Calendario({ c }: { c: PendienteCalendario }) {
+	const cob = c.cobertura;
+	const dd = (f: string) => f.split("-").reverse().join("/");
+	return (
+		<Stack spacing={1.5}>
+			{c.error && <Alert severity="warning">{c.error}</Alert>}
+			<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap alignItems="center">
+				{cob && (
+					<Chip
+						size="small"
+						color={c.alerta ? "error" : "success"}
+						label={cob.hasta ? `Cubre hasta el ${dd(cob.hasta)} (${cob.diasRestantes} días)` : "Sin cobertura del año en curso"}
+					/>
+				)}
+				{c.alerta && (
+					<Link component={RouterLink} to="/admin/causas/plazos?tab=feriados&base=usuarios" variant="body2">
+						Generar el año siguiente
+					</Link>
+				)}
+				<Chip
+					size="small"
+					variant="outlined"
+					color={c.plazosFueraDeCobertura ? "error" : "default"}
+					label={`${fmt(c.plazosFueraDeCobertura)} plazo(s) de cuentas activas retenidos por quedar fuera del calendario`}
+				/>
+			</Stack>
+			<Typography variant="subtitle2">Días inhábiles sin verificar en los próximos 90 días</Typography>
+			{c.sinVerificar.length === 0 ? (
+				<Vacio />
+			) : (
+				<Box sx={{ overflowX: "auto" }}>
+					<Table size="small">
+						<TableHead>
+							<TableRow>
+								<TableCell>Día</TableCell>
+								<TableCell>Tipo</TableCell>
+								<TableCell>Motivo</TableCell>
+								<TableCell />
+							</TableRow>
+						</TableHead>
+						<TableBody>
+							{c.sinVerificar.map((d) => (
+								<TableRow key={d.fecha} hover>
+									<TableCell sx={{ fontFamily: "monospace" }}>{d.fecha}</TableCell>
+									<TableCell>
+										<Chip size="small" variant="outlined" label={d.tipo} />
+									</TableCell>
+									<TableCell>{d.descripcion || "—"}</TableCell>
+									<TableCell align="right">
+										<Link component={RouterLink} to={`/admin/causas/plazos?tab=feriados&base=usuarios&fecha=${d.fecha}`} variant="body2">
+											Ver en el calendario
+										</Link>
+									</TableCell>
+								</TableRow>
+							))}
+						</TableBody>
+					</Table>
+				</Box>
+			)}
 		</Stack>
 	);
 }
@@ -348,6 +412,13 @@ export default function PendientesTab({ onTotal }: { onTotal?: (n: number) => vo
 				nota="Cada una muestra qué falta para poder decidir, medido sobre los datos reales."
 			>
 				<Decisiones items={d.decisiones} />
+			</Seccion>
+			<Seccion
+				titulo="Calendario judicial"
+				n={(r.calendarioAlerta ?? 0) + (r.diasSinVerificar ?? 0)}
+				nota="Los vencimientos se calculan contra este calendario: si no cubre la fecha, el plazo no se propone; si hay días sin confirmar, queda marcado."
+			>
+				<Calendario c={d.calendario} />
 			</Seccion>
 			<BetaPanel />
 			<Seccion

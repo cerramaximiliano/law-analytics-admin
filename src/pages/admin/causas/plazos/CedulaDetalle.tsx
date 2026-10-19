@@ -34,6 +34,7 @@ import { getCedulaDetalle, reprocessNotificacion, CedulaDetalle as Detalle } fro
 import RagExtraccionService from "api/ragExtraccion";
 import PdfCanvasViewer from "components/PdfCanvasViewer";
 import CausaUserViewDialog from "../CausaUserViewDialog";
+import { CalendarioChip } from "./plazosCeldas";
 
 const fmtFecha = (v?: string | null) => (v ? new Date(v).toLocaleString("es-AR") : "—");
 const fmtDia = (v?: string | null) => (v ? String(v).slice(0, 10).split("-").reverse().join("/") : "—");
@@ -399,6 +400,11 @@ export default function CedulaDetalle({
 													{p.plazo.vencimientoConGracia ? ` (cargo: ${fmtDia(p.plazo.vencimientoConGracia)})` : ""}
 												</Fila>
 												<Fila label="Plazo">{`${p.plazo.plazoDias} días ${p.plazo.tipoPlazo}`}</Fila>
+												{p.plazo.calendario && p.plazo.calendario.estado !== "ok" && (
+													<Fila label="Calendario">
+														<CalendarioChip calendario={p.plazo.calendario} />
+													</Fila>
+												)}
 												<Fila label="Fundamento">
 													{p.plazo.fuente === "texto"
 														? "plazo expreso en la cédula"

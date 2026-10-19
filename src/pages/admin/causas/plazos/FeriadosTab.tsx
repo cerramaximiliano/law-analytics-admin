@@ -28,11 +28,16 @@ import {
 } from "@mui/material";
 import { ArrowLeft2, ArrowRight2, Trash } from "iconsax-react";
 import { useSnackbar } from "notistack";
+import { useQueryParam } from "hooks/useTabParam";
 import {
 	getFeriados,
 	createFeriados,
 	updateFeriado,
 	deleteFeriado,
+	getCoberturaFeriados,
+	generarAnioFeriados,
+	CoberturaFeriados,
+	GenerarAnioResultado,
 	reemplazarBloqueFeria,
 	referenciasEnAtlas,
 	BloqueDiff,
@@ -432,6 +437,102 @@ function EditarFeriaDialog({
 	);
 }
 
+/** Genera el calendario de un año (feriados fijos y trasladables, ferias): muestra el diff y solo inserta lo que falta. */
+function GenerarAnioDialog({
+	open,
+	anioSugerido,
+	onClose,
+	onSaved,
+}: {
+	open: boolean;
+	anioSugerido: number;
+	onClose: () => void;
+	onSaved: () => void;
+}) {
+	const { enqueueSnackbar } = useSnackbar();
+	const [anio, setAnio] = useState(anioSugerido);
+	const [diff, setDiff] = useState<GenerarAnioResultado | null>(null);
+	const [cargando, setCargando] = useState(false);
+	useEffect(() => {
+		if (open) {
+			setAnio(anioSugerido);
+			setDiff(null);
+		}
+	}, [open, anioSugerido]);
+
+	const llamar = async (aplicar: boolean) => {
+		setCargando(true);
+		try {
+			const r = await generarAnioFeriados(anio, aplicar);
+			if (aplicar) {
+				enqueueSnackbar(`Calendario ${anio}: ${r.agregan.length} día(s) cargado(s), ${r.sinVerificar} sin verificar`, {
+					variant: "success",
+				});
+				onSaved();
+				onClose();
+			} else setDiff(r);
+		} catch (err: any) {
+			enqueueSnackbar(err?.response?.data?.message || "Error generando el año", { variant: "error" });
+		} finally {
+			setCargando(false);
+		}
+	};
+
+	return (
+		<Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+			<DialogTitle>Generar el calendario de un año</DialogTitle>
+			<DialogContent dividers>
+				<Stack spacing={2} sx={{ pt: 0.5 }}>
+					<Alert severity={referenciasEnAtlas ? "info" : "warning"} variant="outlined">
+						Escribe en <b>{BASE_TXT}</b>. Solo agrega los días que faltan: nunca pisa ni borra lo que ya cargaste.
+					</Alert>
+					<Typography variant="body2" color="text.secondary">
+						Los feriados trasladables y la feria de julio (estimada: las dos semanas que terminan el último viernes de julio) quedan{" "}
+						<b>sin verificar</b>: hay que confirmarlos contra el decreto o la acordada. Los puentes turísticos no se estiman: se cargan a
+						mano cuando se publican.
+					</Typography>
+					<TextField
+						size="small"
+						type="number"
+						label="Año"
+						value={anio}
+						onChange={(e) => {
+							setAnio(Number(e.target.value));
+							setDiff(null);
+						}}
+						inputProps={{ min: 2020, max: 2100 }}
+					/>
+					{diff && (
+						<Stack spacing={1}>
+							<Typography variant="body2">
+								{diff.total} día(s) inhábil(es) en {diff.anio}: ya estaban {diff.existentes}, se agregan <b>{diff.agregan.length}</b>
+								{diff.agregan.length ? `, de los cuales ${diff.sinVerificar} quedan sin verificar` : ""}.
+							</Typography>
+							{diff.agregan.length > 0 && (
+								<Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap sx={{ maxHeight: 160, overflow: "auto" }}>
+									{diff.agregan.map((f) => (
+										<Chip key={f} size="small" variant="outlined" color="success" label={f.slice(5)} />
+									))}
+								</Stack>
+							)}
+							{diff.agregan.length === 0 && <Alert severity="info">Ese año ya está completo: no hay nada para agregar.</Alert>}
+						</Stack>
+					)}
+				</Stack>
+			</DialogContent>
+			<DialogActions>
+				<Button onClick={onClose}>Cancelar</Button>
+				<Button disabled={cargando || !(anio >= 2020 && anio <= 2100)} onClick={() => llamar(false)}>
+					Ver cambios
+				</Button>
+				<Button variant="contained" disabled={cargando || !diff || diff.agregan.length === 0} onClick={() => llamar(true)}>
+					Agregar {diff?.agregan.length || ""} día(s)
+				</Button>
+			</DialogActions>
+		</Dialog>
+	);
+}
+
 const TIPO_COLOR = (tipo: string): "error" | "info" | "warning" | "secondary" =>
 	tipo.startsWith("feria_")
 		? "info"
@@ -448,14 +549,19 @@ function CalendarioMes({
 	anio,
 	rows,
 	onElegir,
+	resaltar,
 }: {
 	anio: number;
 	rows: FeriadoJudicial[];
 	onElegir: (fecha: string, existente: FeriadoJudicial | null) => void;
+	/** Día al que se llegó con ?fecha=: se abre su mes y se marca. */
+	resaltar?: string;
 }) {
 	const theme = useTheme();
-	const [mes, setMes] = useState(anio === anioActual ? new Date().getMonth() : 0);
-	useEffect(() => setMes(anio === anioActual ? new Date().getMonth() : 0), [anio]);
+	const mesInicial = () =>
+		resaltar && resaltar.startsWith(`${anio}-`) ? Number(resaltar.slice(5, 7)) - 1 : anio === anioActual ? new Date().getMonth() : 0;
+	const [mes, setMes] = useState(mesInicial);
+	useEffect(() => setMes(mesInicial()), [anio, resaltar]);
 	const porFecha = useMemo(() => {
 		const m = new Map<string, FeriadoJudicial[]>();
 		for (const r of rows) m.set(r.fecha, [...(m.get(r.fecha) || []), r]);
@@ -526,14 +632,17 @@ function CalendarioMes({
 									p: 0.5,
 									borderRadius: 0.75,
 									border: 1,
-									borderColor: f === hoy ? "primary.main" : color ? alpha(color, 0.5) : "divider",
+									borderColor: f === hoy || f === resaltar ? "primary.main" : color ? alpha(color, 0.5) : "divider",
 									bgcolor: color ? alpha(color, principal?.habilitado === false ? 0.05 : 0.16) : finde ? "action.hover" : "transparent",
 									opacity: principal?.habilitado === false ? 0.6 : 1,
 									"&:hover": { borderColor: "primary.main" },
 								}}
 							>
 								<Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-									<Typography variant="caption" sx={{ fontWeight: f === hoy ? 700 : 400 }}>
+									<Typography
+										variant="caption"
+										sx={{ fontWeight: f === hoy || f === resaltar ? 700 : 400, textDecoration: f === resaltar ? "underline" : "none" }}
+									>
 										{d}
 									</Typography>
 									{principal && !principal.verificado && (
@@ -574,7 +683,11 @@ export default function FeriadosTab() {
 	const { enqueueSnackbar } = useSnackbar();
 	const [rows, setRows] = useState<FeriadoJudicial[]>([]);
 	const [loading, setLoading] = useState(true);
-	const [anio, setAnio] = useState(anioActual);
+	const [anio, setAnio] = useState(() =>
+		/^\d{4}-\d{2}-\d{2}$/.test(new URLSearchParams(window.location.search).get("fecha") || "")
+			? Number((new URLSearchParams(window.location.search).get("fecha") as string).slice(0, 4))
+			: anioActual,
+	);
 	const [soloSinVerificar, setSoloSinVerificar] = useState(false);
 	const [alta, setAlta] = useState(false);
 	const [altaFecha, setAltaFecha] = useState<string | undefined>(undefined);
@@ -583,6 +696,10 @@ export default function FeriadosTab() {
 	const [editarFeria, setEditarFeria] = useState(false);
 	const [editarFeriaInicial, setEditarFeriaInicial] = useState<FeriadoJudicial | null>(null);
 	const [aBorrar, setABorrar] = useState<FeriadoJudicial | null>(null);
+	const [generar, setGenerar] = useState(false);
+	const [cob, setCob] = useState<CoberturaFeriados | null>(null);
+	// ?fecha=YYYY-MM-DD (desde Pendientes): abre el año y el mes de ese día y lo marca.
+	const [fechaParam] = useQueryParam("fecha");
 
 	const fetchList = useCallback(async () => {
 		try {
@@ -601,6 +718,17 @@ export default function FeriadosTab() {
 		fetchList();
 	}, [fetchList]);
 
+	const cargarCobertura = useCallback(() => {
+		getCoberturaFeriados()
+			.then(setCob)
+			.catch(() => setCob(null));
+	}, []);
+	useEffect(() => cargarCobertura(), [cargarCobertura]);
+	const alRefrescar = () => {
+		fetchList();
+		cargarCobertura();
+	};
+
 	const toggle = async (r: FeriadoJudicial, field: "verificado" | "habilitado", value: boolean) => {
 		try {
 			await updateFeriado(r._id, { [field]: value });
@@ -614,6 +742,23 @@ export default function FeriadosTab() {
 
 	return (
 		<Stack spacing={2}>
+			{cob && (
+				<Alert
+					severity={cob.cobertura.hasta && (cob.cobertura.diasRestantes ?? 0) >= 120 ? "success" : "error"}
+					action={
+						<Button color="inherit" size="small" onClick={() => setGenerar(true)}>
+							Generar año
+						</Button>
+					}
+				>
+					{cob.cobertura.hasta
+						? `El calendario cubre hasta el ${cob.cobertura.hasta.split("-").reverse().join("/")} (${cob.cobertura.diasRestantes} días)${
+								(cob.cobertura.diasRestantes ?? 0) < 120 ? ": faltan menos de 120 días, generá el año siguiente" : ""
+						  }.`
+						: "El calendario no cubre el año en curso: los vencimientos que se calculen quedan fuera del calendario."}
+					{cob.sinVerificar.length > 0 && ` Hay ${cob.sinVerificar.length} día(s) sin verificar en los próximos 90 días.`}
+				</Alert>
+			)}
 			<Alert severity={referenciasEnAtlas ? "info" : "warning"} variant="outlined">
 				El calendario se lee y se escribe en <b>{BASE_TXT}</b>. Cuando termine la revisión, pasa a Atlas (P8).
 			</Alert>
@@ -643,6 +788,9 @@ export default function FeriadosTab() {
 				>
 					Editar feria (rango)
 				</Button>
+				<Button size="small" onClick={() => setGenerar(true)}>
+					Generar año
+				</Button>
 				<Button
 					size="small"
 					variant="contained"
@@ -658,6 +806,7 @@ export default function FeriadosTab() {
 
 			<CalendarioMes
 				anio={anio}
+				resaltar={/^\d{4}-\d{2}-\d{2}$/.test(fechaParam || "") ? fechaParam : undefined}
 				rows={todos}
 				onElegir={(f, ex) => {
 					setAltaFecha(f);
@@ -721,19 +870,25 @@ export default function FeriadosTab() {
 				fecha={altaFecha}
 				existente={altaExistente}
 				onClose={() => setAlta(false)}
-				onSaved={fetchList}
+				onSaved={alRefrescar}
 				onEditarFeria={(f) => {
 					setAlta(false);
 					setEditarFeriaInicial(f);
 					setEditarFeria(true);
 				}}
 			/>
+			<GenerarAnioDialog
+				open={generar}
+				anioSugerido={(cob?.cobertura.ultimoAnio ?? anioActual) + 1}
+				onClose={() => setGenerar(false)}
+				onSaved={alRefrescar}
+			/>
 			<EditarFeriaDialog
 				open={editarFeria}
 				rows={todos}
 				inicial={editarFeriaInicial}
 				onClose={() => setEditarFeria(false)}
-				onSaved={fetchList}
+				onSaved={alRefrescar}
 			/>
 			<Dialog open={!!aBorrar} onClose={() => setABorrar(null)} maxWidth="xs" fullWidth>
 				<DialogTitle>Borrar día inhábil</DialogTitle>
@@ -754,7 +909,7 @@ export default function FeriadosTab() {
 								await deleteFeriado(aBorrar._id);
 								enqueueSnackbar(`${aBorrar.fecha} borrado`, { variant: "success" });
 								setABorrar(null);
-								fetchList();
+								alRefrescar();
 							} catch (err: any) {
 								enqueueSnackbar(err?.response?.data?.message || "Error borrando", { variant: "error" });
 							}
