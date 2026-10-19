@@ -704,7 +704,7 @@ export const getRevisionMuestras = async (): Promise<RevisionMuestra[]> => {
 	return data.data;
 };
 
-export const crearRevisionMuestra = async (body: { nombre?: string; desde?: string }): Promise<{ muestra: string; total: number }> => {
+export const crearRevisionMuestra = async (body: { nombre?: string; desde?: string; regla?: string; cantidad?: number }): Promise<{ muestra: string; total: number }> => {
 	// $sample sobre una colección grande: más margen que el timeout por defecto
 	const { data } = await ax().post("/api/admin/plazos/revision-legal/muestras", body, { timeout: 150000 });
 	return data.data;

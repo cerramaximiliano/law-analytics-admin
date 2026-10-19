@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useQueryParam } from "hooks/useTabParam";
 import {
 	Box,
 	Button,
@@ -35,6 +36,8 @@ import {
 	getRevisionItems,
 	getRevisionMuestras,
 	getRevisionStats,
+	getNormativa,
+	PlazoNormativaRegla,
 	guardarRevisionVeredicto,
 	RevisionItem,
 	RevisionMuestra,
@@ -254,15 +257,34 @@ function RevisarDialog({ id, onClose, onSaved }: { id: string | null; onClose: (
 	);
 }
 
-function CrearMuestraDialog({ open, onClose, onCreated }: { open: boolean; onClose: () => void; onCreated: (m: string) => void }) {
+function CrearMuestraDialog({
+	open,
+	reglaInicial,
+	onClose,
+	onCreated,
+}: {
+	open: boolean;
+	reglaInicial?: string;
+	onClose: () => void;
+	onCreated: (m: string) => void;
+}) {
 	const { enqueueSnackbar } = useSnackbar();
+	const [regla, setRegla] = useState(reglaInicial || "");
+	const [cantidad, setCantidad] = useState(15);
+	const [reglas, setReglas] = useState<PlazoNormativaRegla[]>([]);
+	useEffect(() => {
+		if (open) setRegla(reglaInicial || "");
+	}, [open, reglaInicial]);
+	useEffect(() => {
+		if (open) getNormativa().then(setReglas).catch(() => setReglas([]));
+	}, [open]);
 	const [nombre, setNombre] = useState("");
 	const [desde, setDesde] = useState(new Date(Date.now() - 120 * 864e5).toISOString().slice(0, 10));
 	const [saving, setSaving] = useState(false);
 	const crear = async () => {
 		setSaving(true);
 		try {
-			const r = await crearRevisionMuestra({ nombre: nombre || undefined, desde });
+			const r = await crearRevisionMuestra({ nombre: nombre || undefined, desde, ...(regla ? { regla, cantidad } : {}) });
 			enqueueSnackbar(`Muestra "${r.muestra}" creada con ${r.total} cédulas`, { variant: "success" });
 			onCreated(r.muestra);
 		} catch (e: any) {
@@ -276,9 +298,32 @@ function CrearMuestraDialog({ open, onClose, onCreated }: { open: boolean; onClo
 			<DialogTitle>Nueva muestra</DialogTitle>
 			<DialogContent dividers>
 				<Stack spacing={2}>
-					<Typography variant="body2" color="text.secondary">
-						Unas 100 cédulas: 22 con plazo del texto (confianza alta), 8 (media), 6 por cada regla no verificada, 2 por cada regla
-						verificada y 12 sin plazo. Se toma una foto del cálculo, así el veredicto no cambia si la cédula se reprocesa.
+					<TextField select size="small" label="Qué muestrear" value={regla} onChange={(e) => setRegla(e.target.value)}>
+						<MenuItem value="">General por estrato (~100 cédulas)</MenuItem>
+						{reglas.map((r) => (
+							<MenuItem key={r._id} value={r._id}>
+								Solo la regla: {r.label} {r.verificado ? "" : "(sin verificar)"}
+							</MenuItem>
+						))}
+					</TextField>
+					{regla ? (
+						<TextField
+							size="small"
+							type="number"
+							label="Cédulas de esta regla"
+							value={cantidad}
+							onChange={(e) => setCantidad(Math.min(100, Math.max(1, Number(e.target.value) || 1)))}
+							helperText="Se toman al azar entre las calculadas con esta regla. Al revisarlas podés verificarla desde Normativa."
+						/>
+					) : (
+						<Typography variant="body2" color="text.secondary">
+							Unas 100 cédulas: 22 con plazo del texto (confianza alta), 8 (media), 6 por cada regla no verificada, 2 por cada regla
+							verificada y 12 sin plazo.
+						</Typography>
+					)}
+					<Typography variant="caption" color="text.secondary">
+						Se toma una foto del cálculo, así el veredicto no cambia si la cédula se reprocesa. La muestra se guarda en{" "}
+						<b>{getPlazosBase() === "usuarios" ? "Atlas (cédulas de usuarios)" : "rs0 (caché)"}</b>.
 					</Typography>
 					<TextField size="small" label="Nombre (opcional)" value={nombre} onChange={(e) => setNombre(e.target.value)} />
 					<TextField
@@ -355,6 +400,11 @@ export default function RevisionLegalTab() {
 	const [stats, setStats] = useState<RevisionStats | null>(null);
 	const [abierto, setAbierto] = useState<string | null>(null);
 	const [crear, setCrear] = useState(false);
+	// ?regla=<id> (desde Normativa o Pendientes) abre la creación de una muestra de esa regla.
+	const [reglaParam, setReglaParam] = useQueryParam("regla");
+	useEffect(() => {
+		if (reglaParam) setCrear(true);
+	}, [reglaParam]);
 	const limit = 25;
 
 	const cargarMuestras = useCallback(
@@ -555,9 +605,14 @@ export default function RevisionLegalTab() {
 			<RevisarDialog id={abierto} onClose={() => setAbierto(null)} onSaved={alGuardar} />
 			<CrearMuestraDialog
 				open={crear}
-				onClose={() => setCrear(false)}
+				reglaInicial={reglaParam || undefined}
+				onClose={() => {
+					setCrear(false);
+					setReglaParam("");
+				}}
 				onCreated={(m) => {
 					setCrear(false);
+					setReglaParam("");
 					setPage(0);
 					cargarMuestras(m);
 				}}
