@@ -90,7 +90,7 @@ function Decisiones({ items }: { items: PendienteDecision[] }) {
 						<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap sx={{ mt: 1 }}>
 							<Typography variant="caption" color="text.secondary">
 								Impacto: {d.impacto.texto}
-								{d.impacto.n !== undefined ? ` (${fmt(d.impacto.n)})` : ""}
+								{d.impacto.n ? ` (${fmt(d.impacto.n)})` : ""}
 							</Typography>
 							<Box sx={{ flex: 1 }} />
 							{d.accion.link && d.estado !== "hecho" ? (
