@@ -9,6 +9,8 @@ import {
 	Link,
 	Paper,
 	Skeleton,
+	ToggleButton,
+	ToggleButtonGroup,
 	Stack,
 	Table,
 	TableBody,
@@ -20,8 +22,12 @@ import {
 } from "@mui/material";
 import { CloseCircle, Refresh, TickCircle } from "iconsax-react";
 import {
+	fijarTipoProceso,
 	getPlazosPendientes,
+	getTipoProcesoPendientes,
 	PendienteCalendario,
+	TipoProceso,
+	TipoProcesoPendiente,
 	PendienteCarpeta,
 	PendienteCredencial,
 	PendienteDecision,
@@ -29,6 +35,7 @@ import {
 	PendienteRegla,
 	PlazosPendientes,
 } from "api/plazos";
+import { useSnackbar } from "notistack";
 import BetaPanel from "./BetaPanel";
 
 const fmt = (n?: number) => (n ?? 0).toLocaleString("es-AR");
@@ -178,6 +185,139 @@ function Calendario({ c }: { c: PendienteCalendario }) {
 				</Box>
 			)}
 		</Stack>
+	);
+}
+
+const FUENTE_EVIDENCIA: Record<string, string> = {
+	expreso: "lo declara la resolución",
+	plazo_demanda: "por el plazo del traslado de demanda",
+	plazo_agravios: "por el plazo del traslado de agravios",
+	operador: "lo fijó el operador",
+};
+
+/** Causas con cédulas sin vencimiento porque su plazo depende del tipo de proceso y no se conoce: el operador lo fija. */
+function TiposProceso({ onCambio }: { onCambio: () => void }) {
+	const { enqueueSnackbar } = useSnackbar();
+	const [items, setItems] = useState<TipoProcesoPendiente[] | null>(null);
+	const [total, setTotal] = useState(0);
+	const [guardando, setGuardando] = useState<string | null>(null);
+
+	const cargar = useCallback(async () => {
+		try {
+			const r = await getTipoProcesoPendientes();
+			setItems(r.data);
+			setTotal(r.total);
+		} catch {
+			setItems([]);
+		}
+	}, []);
+	useEffect(() => {
+		cargar();
+	}, [cargar]);
+
+	const fijar = async (causaId: string, tipo: TipoProceso | null) => {
+		setGuardando(causaId);
+		try {
+			const r = await fijarTipoProceso(causaId, tipo);
+			enqueueSnackbar(tipo ? `Tipo fijado: ${tipo}. ${r.reencoladas} cédula(s) vuelven a calcularse.` : "Se quitó el dato del operador", {
+				variant: "success",
+			});
+			await cargar();
+			onCambio();
+		} catch (err: any) {
+			enqueueSnackbar(err?.response?.data?.message || "No se pudo fijar el tipo de proceso", { variant: "error" });
+		} finally {
+			setGuardando(null);
+		}
+	};
+
+	if (items === null) return <Skeleton variant="rounded" height={60} />;
+	if (!items.length) return <Vacio />;
+	return (
+		<Box sx={{ overflowX: "auto" }}>
+			<Table size="small">
+				<TableHead>
+					<TableRow>
+						<TableCell>Causa</TableCell>
+						<TableCell>Usuario</TableCell>
+						<TableCell>Cédulas</TableCell>
+						<TableCell>Evidencia</TableCell>
+						<TableCell>Tipo de proceso</TableCell>
+					</TableRow>
+				</TableHead>
+				<TableBody>
+					{items.map((t) => (
+						<TableRow key={t.causaId} hover>
+							<TableCell sx={{ maxWidth: 320 }}>
+								<Typography variant="body2" noWrap>
+									{t.fuero} {t.expediente} · {t.caratula || "—"}
+								</Typography>
+							</TableCell>
+							<TableCell>
+								{t.usuarios[0]?.email || "—"}
+								{t.usuarios.length > 1 ? ` +${t.usuarios.length - 1}` : ""}
+							</TableCell>
+							<TableCell>
+								<Stack spacing={0.25}>
+									{t.cedulas.slice(0, 3).map((c) => (
+										<Link
+											key={c.plazoNotificacionId}
+											component={RouterLink}
+											to={`/admin/causas/plazos?base=usuarios&cedula=${encodeURIComponent(c.cedula)}`}
+											variant="body2"
+											title={c.snippet || ""}
+										>
+											{c.label || c.acto || "cédula"}
+										</Link>
+									))}
+									{t.cantidadCedulas > 3 && (
+										<Typography variant="caption" color="text.secondary">
+											+{t.cantidadCedulas - 3} más
+										</Typography>
+									)}
+								</Stack>
+							</TableCell>
+							<TableCell sx={{ maxWidth: 280 }}>
+								{t.conflicto && <Chip size="small" color="error" label="evidencias en conflicto" sx={{ mb: 0.5 }} />}
+								{t.evidencias.length === 0 ? (
+									<Typography variant="caption" color="text.secondary">
+										Sin evidencia en las resoluciones
+									</Typography>
+								) : (
+									t.evidencias.slice(-2).map((e, i) => (
+										<Typography key={i} variant="caption" color="text.secondary" sx={{ display: "block" }} title={e.frase || ""}>
+											{e.tipo} · {FUENTE_EVIDENCIA[e.fuente] || e.fuente}
+											{e.frase ? ` «${e.frase.slice(0, 80)}»` : ""}
+										</Typography>
+									))
+								)}
+							</TableCell>
+							<TableCell>
+								<ToggleButtonGroup
+									size="small"
+									exclusive
+									disabled={guardando === t.causaId}
+									value={t.fuente === "operador" ? t.tipo : null}
+									onChange={(_, v: TipoProceso | null) => fijar(t.causaId, v)}
+								>
+									<ToggleButton value="ordinario" sx={{ textTransform: "none", py: 0.25 }}>
+										Ordinario
+									</ToggleButton>
+									<ToggleButton value="sumario" sx={{ textTransform: "none", py: 0.25 }}>
+										Sumario / sumarísimo
+									</ToggleButton>
+								</ToggleButtonGroup>
+							</TableCell>
+						</TableRow>
+					))}
+				</TableBody>
+			</Table>
+			{total > items.length && (
+				<Typography variant="caption" color="text.secondary">
+					Se muestran {items.length} de {fmt(total)} causas.
+				</Typography>
+			)}
+		</Box>
 	);
 }
 
@@ -421,6 +561,13 @@ export default function PendientesTab({ onTotal }: { onTotal?: (n: number) => vo
 				<Calendario c={d.calendario} />
 			</Seccion>
 			<BetaPanel />
+			<Seccion
+				titulo="Cédulas sin vencimiento: falta el tipo de proceso"
+				n={r.sinTipoProceso ?? 0}
+				nota="El plazo de algunos actos (traslado de demanda, de agravios) depende de si el juicio es ordinario o sumario. Si ninguna resolución lo declara, elegilo vos: las cédulas de esa causa se recalculan."
+			>
+				<TiposProceso onCambio={() => cargar(true)} />
+			</Seccion>
 			<Seccion
 				titulo="Reglas sin verificar que retienen plazos"
 				n={r.reglasSinVerificar}

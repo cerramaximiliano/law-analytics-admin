@@ -24,7 +24,7 @@ import {
 	Typography,
 } from "@mui/material";
 import { useSnackbar } from "notistack";
-import { getNormativa, createNormativa, updateNormativa, getPlazosPendientes, referenciasEnAtlas, PlazoNormativaRegla, PendienteRegla } from "api/plazos";
+import { getNormativa, createNormativa, updateNormativa, getPlazosPendientes, referenciasEnAtlas, PlazoNormativaRegla, PendienteRegla, TipoProceso } from "api/plazos";
 import { useQueryParam } from "hooks/useTabParam";
 
 const EMPTY: Partial<PlazoNormativaRegla> & { _id: string } = {
@@ -42,6 +42,7 @@ const EMPTY: Partial<PlazoNormativaRegla> & { _id: string } = {
 	habilitado: true,
 	verificado: false,
 	notas: "",
+	tipoProceso: null,
 };
 
 const lines = (arr?: string[]) => (arr || []).join("\n");
@@ -102,6 +103,7 @@ export function ReglaDialog({
 			// Al editar, la verificación se cambia desde la tabla (pide confirmación y nota).
 			...(isNew ? { verificado: form.verificado } : {}),
 			notas: form.notas,
+			tipoProceso: form.tipoProceso || null,
 		};
 		try {
 			if (isNew) await createNormativa({ _id: form._id, ...payload });
@@ -141,6 +143,19 @@ export function ReglaDialog({
 							<option value="corridos">corridos</option>
 						</TextField>
 						<TextField size="small" type="number" label="Prioridad (menor = antes)" value={form.prioridad} onChange={set("prioridad")} />
+						<TextField
+							size="small"
+							select
+							SelectProps={{ native: true }}
+							label="Tipo de proceso"
+							value={form.tipoProceso || ""}
+							onChange={set("tipoProceso")}
+							helperText="Solo para actos cuyo plazo depende del trámite"
+						>
+							<option value="">cualquiera</option>
+							<option value="ordinario">ordinario</option>
+							<option value="sumario">sumario / sumarísimo</option>
+						</TextField>
 					</Stack>
 					<TextField size="small" label="Norma (cita legal — obligatoria)" value={form.norma} onChange={set("norma")} />
 					<TextField
@@ -265,6 +280,7 @@ export default function NormativaTab() {
 	const [rows, setRows] = useState<PlazoNormativaRegla[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [editing, setEditing] = useState<(Partial<PlazoNormativaRegla> & { _id: string }) | null>(null);
+	const [esVariante, setEsVariante] = useState(false);
 	const [verificando, setVerificando] = useState<PlazoNormativaRegla | null>(null);
 	const [retenidos, setRetenidos] = useState<Map<string, PendienteRegla> | null>(null);
 	const [regla, setReglaParam] = useQueryParam("regla");
@@ -288,7 +304,28 @@ export default function NormativaTab() {
 			.catch(() => setRetenidos(null));
 	}, [fetchList]);
 
-	const visibles = useMemo(() => (regla ? rows.filter((r) => r._id === regla) : rows), [rows, regla]);
+	// Agrupadas por acto: las variantes por tipo de proceso (mismo acto) quedan juntas; cada una se verifica por separado.
+	const visibles = useMemo(() => {
+		const base = regla ? rows.filter((r) => r._id === regla) : rows;
+		const grupos = new Map<string, PlazoNormativaRegla[]>();
+		for (const r of base) grupos.set(r.acto, [...(grupos.get(r.acto) || []), r]);
+		return [...grupos.values()]
+			.map((g) => g.sort((a, b) => a.prioridad - b.prioridad || (a.tipoProceso || "").localeCompare(b.tipoProceso || "")))
+			.sort((a, b) => a[0].prioridad - b[0].prioridad)
+			.flat();
+	}, [rows, regla]);
+	const variantesDe = useMemo(() => {
+		const m = new Map<string, number>();
+		for (const r of rows) m.set(r.acto, (m.get(r.acto) || 0) + 1);
+		return m;
+	}, [rows]);
+
+	// Copia la regla con otro tipo de proceso (sin verificar) para completar una variante.
+	const nuevaVariante = (r: PlazoNormativaRegla) => {
+		setEsVariante(true);
+		const tipo: TipoProceso = r.tipoProceso === "sumario" ? "ordinario" : "sumario";
+		setEditing({ ...r, _id: `${r._id.replace(/_(ordinario|sumario)$/, "")}_${tipo}`, tipoProceso: tipo, verificado: false, verificadoPor: null, verificadoAt: null, verificadoNota: null, notas: "" });
+	};
 
 	const toggle = async (r: PlazoNormativaRegla, value: boolean) => {
 		try {
@@ -323,7 +360,10 @@ export default function NormativaTab() {
 					First-match-wins por prioridad ascendente. Las reglas específicas (fuero/objeto) deben tener prioridad menor que las genéricas.
 				</Typography>
 				{regla && <Chip size="small" color="warning" label={`solo ${regla}`} onDelete={() => setReglaParam("")} />}
-				<Button size="small" variant="contained" onClick={() => setEditing({ ...EMPTY })}>
+				<Button size="small" variant="contained" onClick={() => {
+						setEsVariante(false);
+						setEditing({ ...EMPTY });
+					}}>
 					Nueva regla
 				</Button>
 			</Stack>
@@ -340,25 +380,38 @@ export default function NormativaTab() {
 							<TableCell>Verif.</TableCell>
 							<TableCell>Retiene (hoy / 7 d)</TableCell>
 							<TableCell>Habil.</TableCell>
+							<TableCell />
 						</TableRow>
 					</TableHead>
 					<TableBody>
 						{loading
 							? Array.from({ length: 6 }).map((_, i) => (
 									<TableRow key={i}>
-										<TableCell colSpan={9}>
+										<TableCell colSpan={10}>
 											<Skeleton />
 										</TableCell>
 									</TableRow>
 							  ))
 							: visibles.map((r) => {
 									const ret = retenidos?.get(r._id);
+									const conVariantes = (variantesDe.get(r.acto) || 0) > 1;
 									return (
-										<TableRow key={r._id} hover>
+										<TableRow key={r._id} hover sx={conVariantes ? { bgcolor: "action.hover" } : undefined}>
 											<TableCell>{r.prioridad}</TableCell>
-											<TableCell sx={{ cursor: "pointer" }} onClick={() => setEditing(r)}>
+											<TableCell sx={{ cursor: "pointer" }} onClick={() => {
+													setEsVariante(false);
+													setEditing(r);
+												}}>
 												<Typography variant="body2" sx={{ fontWeight: 600 }}>
-													{r.label}
+													{r.label}{" "}
+													{r.tipoProceso && (
+														<Chip
+															size="small"
+															color={r.tipoProceso === "ordinario" ? "primary" : "secondary"}
+															variant="outlined"
+															label={r.tipoProceso === "ordinario" ? "ordinario" : "sumario"}
+														/>
+													)}
 												</Typography>
 												<Typography variant="caption" sx={{ fontFamily: "monospace" }} color="text.secondary">
 													{r._id}
@@ -416,13 +469,20 @@ export default function NormativaTab() {
 											<TableCell>
 												<Switch size="small" checked={r.habilitado} onChange={(e) => toggle(r, e.target.checked)} />
 											</TableCell>
+											<TableCell>
+												<Tooltip title="Crea una copia de esta regla para el otro tipo de proceso (sin verificar)">
+													<Link component="button" variant="caption" onClick={() => nuevaVariante(r)}>
+														+ variante por tipo de proceso
+													</Link>
+												</Tooltip>
+											</TableCell>
 										</TableRow>
 									);
 							  })}
 					</TableBody>
 				</Table>
 			</TableContainer>
-			{editing && <ReglaDialog regla={editing} onClose={() => setEditing(null)} onSaved={fetchList} />}
+			{editing && <ReglaDialog regla={editing} esNueva={esVariante ? true : undefined} onClose={() => setEditing(null)} onSaved={fetchList} />}
 			<VerificarDialog
 				regla={verificando}
 				retiene={verificando ? retenidos?.get(verificando._id) : undefined}

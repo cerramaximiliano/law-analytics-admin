@@ -37,6 +37,7 @@ const STATUS_COLOR: Record<string, "default" | "success" | "warning" | "error" |
 	revision_manual: "warning",
 	no_url: "default",
 	esperando_documento: "info",
+	requiere_tipo_proceso: "warning",
 	failed: "error",
 	not_pdf: "error",
 };
@@ -50,6 +51,7 @@ const STATUSES = [
 	"extracted",
 	"revision_manual",
 	"esperando_documento",
+	"requiere_tipo_proceso",
 	"ocr_needed",
 	"no_url",
 	"failed",

@@ -55,7 +55,8 @@ export type PlazoProcessingStatus =
 	| "not_pdf"
 	| "computed"
 	| "revision_manual"
-	| "esperando_documento";
+	| "esperando_documento"
+	| "requiere_tipo_proceso";
 
 export interface PlazoComputado {
 	fuente: "texto" | "norma";
@@ -139,6 +140,29 @@ export interface PlazoNotificacion {
 	source?: { worker: string; collectionName: string; collectedAt: string; primeraSync?: boolean };
 }
 
+export type TipoProceso = "ordinario" | "sumario";
+
+export interface TipoProcesoEvidencia {
+	tipo: TipoProceso;
+	fuente: "expreso" | "plazo_demanda" | "plazo_agravios" | "operador";
+	movementId: string | null;
+	fecha: string | null;
+	frase: string | null;
+	operador: string | null;
+}
+
+export interface TipoProcesoCausa {
+	_id?: string;
+	fuero?: string;
+	tipo: TipoProceso | null;
+	fuente: TipoProcesoEvidencia["fuente"] | null;
+	movementId?: string | null;
+	fecha?: string | null;
+	frase?: string | null;
+	conflicto?: boolean;
+	evidencias: TipoProcesoEvidencia[];
+}
+
 export interface PlazoNormativaRegla {
 	_id: string;
 	label: string;
@@ -159,6 +183,8 @@ export interface PlazoNormativaRegla {
 	verificadoPor?: string | null;
 	verificadoAt?: string | null;
 	verificadoNota?: string | null;
+	/** Variante por tipo de proceso (P21): null = cualquiera. Un acto que depende del trámite tiene una regla por tipo. */
+	tipoProceso?: TipoProceso | null;
 }
 
 export interface FeriadoJudicial {
@@ -553,6 +579,8 @@ export interface CedulaDetalle {
 		texto: string | null;
 		chars: number | null;
 	} | null;
+	/** Tipo de proceso de la causa (ordinario | sumario) con la evidencia de la que salió. */
+	tipoProceso?: TipoProcesoCausa | null;
 	/** Movimientos de la causa adjuntos a la cédula (escritos, otras resoluciones). */
 	adjuntosRemitidos?: Array<{ movementId: string; tipo: string | null; fecha: string | null; detalle: string | null }>;
 }
@@ -892,6 +920,7 @@ export interface PlazosPendientes {
 		carpetasSinParte: number;
 		entregasSinFeedback: number;
 		credencialesBandeja: number;
+		sinTipoProceso?: number;
 		calendarioAlerta?: number;
 		diasSinVerificar?: number;
 		cuentasActivas: number;
@@ -937,5 +966,32 @@ export const getCoberturaFeriados = async (): Promise<CoberturaFeriados> => {
 /** Sin `aplicar` devuelve el diff; con `aplicar: true` inserta SOLO lo que falta (nunca pisa ni borra). */
 export const generarAnioFeriados = async (anio: number, aplicar = false): Promise<GenerarAnioResultado> => {
 	const { data } = await axRef().post("/api/admin/plazos/feriados/generar", { anio, aplicar });
+	return data.data;
+};
+
+// ── Tipo de proceso de la causa (P21, Atlas) ───────────────────────────────────
+export interface TipoProcesoPendiente {
+	causaId: string;
+	fuero: string;
+	expediente: string | null;
+	caratula: string | null;
+	cedulas: Array<{ plazoNotificacionId: string; cedula: string; acto: string | null; label: string | null; snippet: string | null }>;
+	cantidadCedulas: number;
+	usuarios: Array<{ userId: string; email: string | null }>;
+	tipo: TipoProceso | null;
+	fuente: TipoProcesoEvidencia["fuente"] | null;
+	conflicto: boolean;
+	evidencias: TipoProcesoEvidencia[];
+}
+
+/** Causas con cédulas sin vencimiento porque falta el tipo de proceso. */
+export const getTipoProcesoPendientes = async (): Promise<{ total: number; data: TipoProcesoPendiente[] }> => {
+	const { data } = await pjnAtlasAxios.get("/api/admin/plazos/tipo-proceso/pendientes");
+	return { total: data.total, data: data.data };
+};
+
+/** Fija el tipo de proceso como operador (gana siempre) y re-encola las cédulas de la causa; null quita el del operador. */
+export const fijarTipoProceso = async (causaId: string, tipo: TipoProceso | null): Promise<{ tipo: TipoProceso | null; reencoladas: number }> => {
+	const { data } = await pjnAtlasAxios.put(`/api/admin/plazos/tipo-proceso/${causaId}`, { tipo });
 	return data.data;
 };

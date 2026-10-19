@@ -400,6 +400,9 @@ export default function CedulaDetalle({
 													{p.plazo.vencimientoConGracia ? ` (cargo: ${fmtDia(p.plazo.vencimientoConGracia)})` : ""}
 												</Fila>
 												<Fila label="Plazo">{`${p.plazo.plazoDias} días ${p.plazo.tipoPlazo}`}</Fila>
+												{p.plazo.norma && (p.plazo.norma as any).tipoProceso && (
+													<Fila label="Variante">regla para proceso {(p.plazo.norma as any).tipoProceso}</Fila>
+												)}
 												{p.plazo.calendario && p.plazo.calendario.estado !== "ok" && (
 													<Fila label="Calendario">
 														<CalendarioChip calendario={p.plazo.calendario} />
@@ -422,6 +425,52 @@ export default function CedulaDetalle({
 													? `Sin vencimiento todavía (${p.processingStatus}).`
 													: "Esta cédula no tiene registro de plazo (fuero sin reglas, fuera de la ventana o anterior a la detección)."}
 											</Typography>
+										)}
+										{(p?.processingStatus === "requiere_tipo_proceso" || d.tipoProceso) && (
+											<Box sx={{ mt: 1.5 }}>
+												<Typography variant="subtitle2" gutterBottom>
+													Tipo de proceso de la causa
+												</Typography>
+												{p?.processingStatus === "requiere_tipo_proceso" && (
+													<Fila label="Estado">
+														<Chip size="small" color="warning" label="requiere tipo de proceso: sin vencimiento hasta saberlo" />
+													</Fila>
+												)}
+												{(p?.extraccion as any)?.tipoProceso?.label && (
+													<Fila label="Acto">
+														{(p?.extraccion as any).tipoProceso.label}
+														{(p?.extraccion as any).tipoProceso.snippet ? ` — «${(p?.extraccion as any).tipoProceso.snippet}»` : ""}
+													</Fila>
+												)}
+												{d.tipoProceso ? (
+													<>
+														<Fila label="Tipo">
+															{d.tipoProceso.tipo ? <b>{d.tipoProceso.tipo}</b> : "sin determinar"}
+															{d.tipoProceso.fuente ? ` (${d.tipoProceso.fuente})` : ""}
+															{d.tipoProceso.conflicto ? " · evidencias en conflicto" : ""}
+														</Fila>
+														{d.tipoProceso.evidencias.map((e, i) => (
+															<Fila key={i} label={`Evidencia ${i + 1}`}>
+																{e.tipo} · {e.fuente}
+																{e.operador ? ` · ${e.operador}` : ""}
+																{e.frase ? ` «${e.frase}»` : ""}
+																{e.movementId && (
+																	<>
+																		{" · "}
+																		<Link href={`/admin/causas/plazos?base=usuarios&cedula=${encodeURIComponent(e.movementId)}`} underline="hover">
+																			ver movimiento
+																		</Link>
+																	</>
+																)}
+															</Fila>
+														))}
+													</>
+												) : (
+													<Typography variant="body2" color="text.secondary">
+														Ninguna resolución declaró el tipo todavía. Se puede fijar en Pendientes → «falta el tipo de proceso».
+													</Typography>
+												)}
+											</Box>
 										)}
 										<Divider sx={{ my: 1.5 }} />
 										<Typography variant="subtitle2" gutterBottom>
