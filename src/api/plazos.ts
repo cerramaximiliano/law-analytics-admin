@@ -626,6 +626,31 @@ export const updateFeriado = async (id: string, cambios: Partial<FeriadoJudicial
 	return data.data;
 };
 
+export const deleteFeriado = async (id: string): Promise<void> => {
+	await axRef().delete(`/api/admin/plazos/feriados/${encodeURIComponent(id)}`);
+};
+
+export interface BloqueDiff {
+	aplicado: boolean;
+	agregan: string[];
+	quitan: string[];
+	conflictos: { fecha: string; tipo: string }[];
+	quedan: number;
+}
+
+/** Reemplaza un bloque de feria (feria_*) por otro rango. Sin `aplicar` devuelve solo el diff. */
+export const reemplazarBloqueFeria = async (body: {
+	tipo: string;
+	bloqueDesde: string;
+	bloqueHasta: string;
+	desde: string;
+	hasta: string;
+	aplicar?: boolean;
+}): Promise<BloqueDiff> => {
+	const { data } = await axRef().put("/api/admin/plazos/feriados/bloque", body);
+	return data.data;
+};
+
 // ── Revisión legal (fase F0) ───────────────────────────────────────────────────
 
 export type Destinatario = "actor" | "demandado" | "perito" | "tercero" | "otro";

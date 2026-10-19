@@ -4,6 +4,7 @@ import {
 	Box,
 	Button,
 	Chip,
+	IconButton,
 	Dialog,
 	DialogActions,
 	DialogContent,
@@ -25,9 +26,18 @@ import {
 	alpha,
 	useTheme,
 } from "@mui/material";
-import { ArrowLeft2, ArrowRight2 } from "iconsax-react";
+import { ArrowLeft2, ArrowRight2, Trash } from "iconsax-react";
 import { useSnackbar } from "notistack";
-import { getFeriados, createFeriados, updateFeriado, referenciasEnAtlas, FeriadoJudicial } from "api/plazos";
+import {
+	getFeriados,
+	createFeriados,
+	updateFeriado,
+	deleteFeriado,
+	reemplazarBloqueFeria,
+	referenciasEnAtlas,
+	BloqueDiff,
+	FeriadoJudicial,
+} from "api/plazos";
 
 const TIPOS = [
 	"feriado_nacional",
@@ -53,14 +63,18 @@ function AltaDialog({
 	existente,
 	onClose,
 	onSaved,
+	onEditarFeria,
 }: {
 	open: boolean;
 	fecha?: string;
 	existente?: FeriadoJudicial | null;
 	onClose: () => void;
 	onSaved: () => void;
+	onEditarFeria?: (f: FeriadoJudicial) => void;
 }) {
 	const { enqueueSnackbar } = useSnackbar();
+	const [confirmaBorrar, setConfirmaBorrar] = useState(false);
+	useEffect(() => setConfirmaBorrar(false), [open, existente]);
 	const [form, setForm] = useState({
 		modo: "dia",
 		fecha: "",
@@ -87,8 +101,34 @@ function AltaDialog({
 		});
 	}, [open, fecha, existente]);
 
+	const borrar = async () => {
+		if (!existente) return;
+		try {
+			await deleteFeriado(existente._id);
+			enqueueSnackbar(`${existente.fecha} borrado`, { variant: "success" });
+			onSaved();
+			onClose();
+		} catch (err: any) {
+			enqueueSnackbar(err?.response?.data?.message || "Error borrando el día", { variant: "error" });
+		}
+	};
+
 	const save = async () => {
 		try {
+			// Día existente: se edita (y si cambió la fecha, se mueve). No se vuelve a "cargar" encima.
+			if (existente) {
+				await updateFeriado(existente._id, {
+					...(form.fecha && form.fecha !== existente.fecha ? { fecha: form.fecha } : {}),
+					tipo: form.tipo,
+					descripcion: form.descripcion,
+					fuente: form.fuente,
+					verificado: form.verificado,
+				});
+				enqueueSnackbar(form.fecha !== existente.fecha ? `Movido al ${form.fecha}` : "Día actualizado", { variant: "success" });
+				onSaved();
+				onClose();
+				return;
+			}
 			const payload: any = { tipo: form.tipo, descripcion: form.descripcion, fuente: form.fuente, verificado: form.verificado };
 			if (form.modo === "dia") payload.fecha = form.fecha;
 			else {
@@ -112,15 +152,17 @@ function AltaDialog({
 					<Alert severity={referenciasEnAtlas ? "info" : "warning"} variant="outlined">
 						Escribe en <b>{BASE_TXT}</b>. El worker lo toma en ≤15 minutos.
 					</Alert>
-					<TextField select size="small" label="Modo" value={form.modo} onChange={(e) => setForm({ ...form, modo: e.target.value })}>
-						<MenuItem value="dia">Un día</MenuItem>
-						<MenuItem value="rango">Rango (feria/asueto extendido)</MenuItem>
-					</TextField>
+					{!existente && (
+						<TextField select size="small" label="Modo" value={form.modo} onChange={(e) => setForm({ ...form, modo: e.target.value })}>
+							<MenuItem value="dia">Un día</MenuItem>
+							<MenuItem value="rango">Rango (feria/asueto extendido)</MenuItem>
+						</TextField>
+					)}
 					{form.modo === "dia" ? (
 						<TextField
 							size="small"
 							type="date"
-							label="Fecha"
+							label={existente ? "Fecha (cambiarla mueve el día)" : "Fecha"}
 							value={form.fecha}
 							onChange={(e) => setForm({ ...form, fecha: e.target.value })}
 							InputLabelProps={{ shrink: true }}
@@ -171,9 +213,219 @@ function AltaDialog({
 				</Stack>
 			</DialogContent>
 			<DialogActions>
+				{existente &&
+					(confirmaBorrar ? (
+						<>
+							<Typography variant="body2" color="error">
+								¿Borrar {existente.fecha}?
+							</Typography>
+							<Button color="error" variant="contained" onClick={borrar}>
+								Sí, borrar
+							</Button>
+							<Button onClick={() => setConfirmaBorrar(false)}>No</Button>
+						</>
+					) : (
+						<>
+							<Button color="error" onClick={() => setConfirmaBorrar(true)}>
+								Borrar
+							</Button>
+							{existente.tipo.startsWith("feria_") && onEditarFeria && (
+								<Button onClick={() => onEditarFeria(existente)}>Editar feria completa</Button>
+							)}
+						</>
+					))}
+				<Box sx={{ flex: 1 }} />
 				<Button onClick={onClose}>Cancelar</Button>
 				<Button variant="contained" onClick={save}>
-					Cargar
+					{existente ? "Guardar" : "Cargar"}
+				</Button>
+			</DialogActions>
+		</Dialog>
+	);
+}
+
+/** Rachas de días consecutivos de cada feria (tipo feria_*) del año: cada una es un "bloque" editable. */
+function bloquesDeFeria(rows: FeriadoJudicial[]): Array<{ tipo: string; desde: string; hasta: string; dias: number }> {
+	const out: Array<{ tipo: string; desde: string; hasta: string; dias: number }> = [];
+	const porTipo = new Map<string, string[]>();
+	for (const r of rows) if (r.tipo.startsWith("feria_")) porTipo.set(r.tipo, [...(porTipo.get(r.tipo) || []), r.fecha]);
+	const siguiente = (f: string) => new Date(Date.parse(`${f}T00:00:00Z`) + 86400000).toISOString().slice(0, 10);
+	for (const [tipo, fechas] of porTipo) {
+		const ord = [...new Set(fechas)].sort();
+		let ini = ord[0];
+		let prev = ord[0];
+		let n = 1;
+		for (const f of ord.slice(1)) {
+			if (f === siguiente(prev)) {
+				prev = f;
+				n++;
+			} else {
+				out.push({ tipo, desde: ini, hasta: prev, dias: n });
+				ini = f;
+				prev = f;
+				n = 1;
+			}
+		}
+		out.push({ tipo, desde: ini, hasta: prev, dias: n });
+	}
+	return out.sort((a, b) => a.desde.localeCompare(b.desde));
+}
+
+/** Edita el rango de una feria: muestra el diff (días que se agregan y que se quitan) antes de aplicar. */
+function EditarFeriaDialog({
+	open,
+	rows,
+	inicial,
+	onClose,
+	onSaved,
+}: {
+	open: boolean;
+	rows: FeriadoJudicial[];
+	inicial?: FeriadoJudicial | null;
+	onClose: () => void;
+	onSaved: () => void;
+}) {
+	const { enqueueSnackbar } = useSnackbar();
+	const bloques = useMemo(() => bloquesDeFeria(rows), [rows]);
+	const [idx, setIdx] = useState(0);
+	const [desde, setDesde] = useState("");
+	const [hasta, setHasta] = useState("");
+	const [diff, setDiff] = useState<BloqueDiff | null>(null);
+	const [cargando, setCargando] = useState(false);
+
+	useEffect(() => {
+		if (!open) return;
+		const i = Math.max(
+			0,
+			inicial ? bloques.findIndex((b) => b.tipo === inicial.tipo && inicial.fecha >= b.desde && inicial.fecha <= b.hasta) : 0,
+		);
+		setIdx(i);
+		setDiff(null);
+	}, [open, inicial, bloques]);
+	const bloque = bloques[idx];
+	useEffect(() => {
+		if (bloque) {
+			setDesde(bloque.desde);
+			setHasta(bloque.hasta);
+			setDiff(null);
+		}
+	}, [bloque]);
+
+	const llamar = async (aplicar: boolean) => {
+		if (!bloque) return;
+		setCargando(true);
+		try {
+			const r = await reemplazarBloqueFeria({
+				tipo: bloque.tipo,
+				bloqueDesde: bloque.desde,
+				bloqueHasta: bloque.hasta,
+				desde,
+				hasta,
+				aplicar,
+			});
+			if (aplicar) {
+				enqueueSnackbar(`Feria actualizada: +${r.agregan.length} / −${r.quitan.length} día(s)`, { variant: "success" });
+				onSaved();
+				onClose();
+			} else setDiff(r);
+		} catch (err: any) {
+			if (err?.response?.data?.data) setDiff(err.response.data.data);
+			enqueueSnackbar(err?.response?.data?.message || "Error", { variant: "error" });
+		} finally {
+			setCargando(false);
+		}
+	};
+	const sinCambios = bloque && desde === bloque.desde && hasta === bloque.hasta;
+
+	return (
+		<Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+			<DialogTitle>Editar rango de una feria</DialogTitle>
+			<DialogContent dividers>
+				<Stack spacing={2} sx={{ pt: 0.5 }}>
+					<Alert severity={referenciasEnAtlas ? "info" : "warning"} variant="outlined">
+						Escribe en <b>{BASE_TXT}</b>. Reemplaza el bloque: crea los días que faltan y borra los que quedan fuera.
+					</Alert>
+					{!bloques.length ? (
+						<Typography variant="body2">No hay ferias cargadas en este año.</Typography>
+					) : (
+						<>
+							<TextField select size="small" label="Feria" value={idx} onChange={(e) => setIdx(Number(e.target.value))}>
+								{bloques.map((b, i) => (
+									<MenuItem key={`${b.tipo}${b.desde}`} value={i}>
+										{b.tipo} · {b.desde} → {b.hasta} ({b.dias} días)
+									</MenuItem>
+								))}
+							</TextField>
+							<Stack direction="row" spacing={2}>
+								<TextField
+									size="small"
+									type="date"
+									label="Desde"
+									value={desde}
+									onChange={(e) => {
+										setDesde(e.target.value);
+										setDiff(null);
+									}}
+									InputLabelProps={{ shrink: true }}
+									sx={{ flex: 1 }}
+								/>
+								<TextField
+									size="small"
+									type="date"
+									label="Hasta"
+									value={hasta}
+									onChange={(e) => {
+										setHasta(e.target.value);
+										setDiff(null);
+									}}
+									InputLabelProps={{ shrink: true }}
+									sx={{ flex: 1 }}
+								/>
+							</Stack>
+							{diff && (
+								<Stack spacing={1}>
+									<Typography variant="body2">
+										Quedan {diff.quedan} día(s) · se agregan {diff.agregan.length} · se quitan {diff.quitan.length}
+									</Typography>
+									{diff.agregan.length > 0 && (
+										<Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+											<Chip size="small" color="success" label="Se agregan" />
+											{diff.agregan.map((f) => (
+												<Chip key={f} size="small" color="success" variant="outlined" label={f.slice(5)} />
+											))}
+										</Stack>
+									)}
+									{diff.quitan.length > 0 && (
+										<Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+											<Chip size="small" color="error" label="Se quitan" />
+											{diff.quitan.map((f) => (
+												<Chip key={f} size="small" color="error" variant="outlined" label={f.slice(5)} />
+											))}
+										</Stack>
+									)}
+									{diff.conflictos.length > 0 && (
+										<Alert severity="error">
+											Ya son otro tipo de día inhábil: {diff.conflictos.map((c) => `${c.fecha} (${c.tipo})`).join(", ")}. Borralos o movelos
+											primero.
+										</Alert>
+									)}
+								</Stack>
+							)}
+						</>
+					)}
+				</Stack>
+			</DialogContent>
+			<DialogActions>
+				<Button onClick={onClose}>Cancelar</Button>
+				<Button disabled={!bloque || cargando || !!sinCambios || !desde || !hasta} onClick={() => llamar(false)}>
+					Ver cambios
+				</Button>
+				<Button
+					variant="contained"
+					disabled={!diff || cargando || diff.conflictos.length > 0 || (diff.agregan.length === 0 && diff.quitan.length === 0)}
+					onClick={() => llamar(true)}
+				>
+					Aplicar
 				</Button>
 			</DialogActions>
 		</Dialog>
@@ -181,12 +433,26 @@ function AltaDialog({
 }
 
 const TIPO_COLOR = (tipo: string): "error" | "info" | "warning" | "secondary" =>
-	tipo.startsWith("feria_") ? "info" : tipo.startsWith("feriado") ? "error" : tipo === "dia_no_laborable" || tipo === "puente_turistico" ? "warning" : "secondary";
+	tipo.startsWith("feria_")
+		? "info"
+		: tipo.startsWith("feriado")
+		? "error"
+		: tipo === "dia_no_laborable" || tipo === "puente_turistico"
+		? "warning"
+		: "secondary";
 
 const iso = (y: number, m: number, d: number) => `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
 
 /** Calendario mensual con los días inhábiles marcados; clic en un día → alta o edición. */
-function CalendarioMes({ anio, rows, onElegir }: { anio: number; rows: FeriadoJudicial[]; onElegir: (fecha: string, existente: FeriadoJudicial | null) => void }) {
+function CalendarioMes({
+	anio,
+	rows,
+	onElegir,
+}: {
+	anio: number;
+	rows: FeriadoJudicial[];
+	onElegir: (fecha: string, existente: FeriadoJudicial | null) => void;
+}) {
 	const theme = useTheme();
 	const [mes, setMes] = useState(anio === anioActual ? new Date().getMonth() : 0);
 	useEffect(() => setMes(anio === anioActual ? new Date().getMonth() : 0), [anio]);
@@ -239,7 +505,18 @@ function CalendarioMes({ anio, rows, onElegir }: { anio: number; rows: FeriadoJu
 					return (
 						<Tooltip
 							key={i}
-							title={lista.length ? lista.map((x) => `${x.tipo}${x.descripcion ? ` · ${x.descripcion}` : ""}${x.verificado ? "" : " (sin verificar)"}${x.habilitado ? "" : " (deshabilitado)"}`).join(" | ") : "Clic para cargar como inhábil"}
+							title={
+								lista.length
+									? lista
+											.map(
+												(x) =>
+													`${x.tipo}${x.descripcion ? ` · ${x.descripcion}` : ""}${x.verificado ? "" : " (sin verificar)"}${
+														x.habilitado ? "" : " (deshabilitado)"
+													}`,
+											)
+											.join(" | ")
+									: "Clic para cargar como inhábil"
+							}
 						>
 							<Box
 								onClick={() => onElegir(f, principal || null)}
@@ -259,10 +536,24 @@ function CalendarioMes({ anio, rows, onElegir }: { anio: number; rows: FeriadoJu
 									<Typography variant="caption" sx={{ fontWeight: f === hoy ? 700 : 400 }}>
 										{d}
 									</Typography>
-									{principal && !principal.verificado && <Typography variant="caption" color="warning.main">●</Typography>}
+									{principal && !principal.verificado && (
+										<Typography variant="caption" color="warning.main">
+											●
+										</Typography>
+									)}
 								</Stack>
 								{principal && (
-									<Typography variant="caption" sx={{ display: "block", lineHeight: 1.15, fontSize: 10, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+									<Typography
+										variant="caption"
+										sx={{
+											display: "block",
+											lineHeight: 1.15,
+											fontSize: 10,
+											overflow: "hidden",
+											textOverflow: "ellipsis",
+											whiteSpace: "nowrap",
+										}}
+									>
 										{principal.descripcion || principal.tipo}
 									</Typography>
 								)}
@@ -272,7 +563,8 @@ function CalendarioMes({ anio, rows, onElegir }: { anio: number; rows: FeriadoJu
 				})}
 			</Box>
 			<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.75 }}>
-				● = sin verificar. {delMes.length ? `${delMes.length} día(s) inhábil(es) en ${MESES[mes]}.` : `Sin días inhábiles cargados en ${MESES[mes]}.`}
+				● = sin verificar.{" "}
+				{delMes.length ? `${delMes.length} día(s) inhábil(es) en ${MESES[mes]}.` : `Sin días inhábiles cargados en ${MESES[mes]}.`}
 			</Typography>
 		</Box>
 	);
@@ -288,6 +580,9 @@ export default function FeriadosTab() {
 	const [altaFecha, setAltaFecha] = useState<string | undefined>(undefined);
 	const [altaExistente, setAltaExistente] = useState<FeriadoJudicial | null>(null);
 	const [todos, setTodos] = useState<FeriadoJudicial[]>([]);
+	const [editarFeria, setEditarFeria] = useState(false);
+	const [editarFeriaInicial, setEditarFeriaInicial] = useState<FeriadoJudicial | null>(null);
+	const [aBorrar, setABorrar] = useState<FeriadoJudicial | null>(null);
 
 	const fetchList = useCallback(async () => {
 		try {
@@ -341,6 +636,15 @@ export default function FeriadosTab() {
 				</Typography>
 				<Button
 					size="small"
+					onClick={() => {
+						setEditarFeriaInicial(null);
+						setEditarFeria(true);
+					}}
+				>
+					Editar feria (rango)
+				</Button>
+				<Button
+					size="small"
 					variant="contained"
 					onClick={() => {
 						setAltaFecha(undefined);
@@ -372,13 +676,14 @@ export default function FeriadosTab() {
 							<TableCell>Fuente</TableCell>
 							<TableCell>Verificado</TableCell>
 							<TableCell>Habilitado</TableCell>
+							<TableCell />
 						</TableRow>
 					</TableHead>
 					<TableBody>
 						{loading
 							? Array.from({ length: 8 }).map((_, i) => (
 									<TableRow key={i}>
-										<TableCell colSpan={6}>
+										<TableCell colSpan={7}>
 											<Skeleton />
 										</TableCell>
 									</TableRow>
@@ -399,12 +704,66 @@ export default function FeriadosTab() {
 										<TableCell>
 											<Switch size="small" checked={r.habilitado} onChange={(e) => toggle(r, "habilitado", e.target.checked)} />
 										</TableCell>
+										<TableCell>
+											<Tooltip title="Borrar este día">
+												<IconButton size="small" color="error" onClick={() => setABorrar(r)}>
+													<Trash size={16} />
+												</IconButton>
+											</Tooltip>
+										</TableCell>
 									</TableRow>
 							  ))}
 					</TableBody>
 				</Table>
 			</TableContainer>
-			<AltaDialog open={alta} fecha={altaFecha} existente={altaExistente} onClose={() => setAlta(false)} onSaved={fetchList} />
+			<AltaDialog
+				open={alta}
+				fecha={altaFecha}
+				existente={altaExistente}
+				onClose={() => setAlta(false)}
+				onSaved={fetchList}
+				onEditarFeria={(f) => {
+					setAlta(false);
+					setEditarFeriaInicial(f);
+					setEditarFeria(true);
+				}}
+			/>
+			<EditarFeriaDialog
+				open={editarFeria}
+				rows={todos}
+				inicial={editarFeriaInicial}
+				onClose={() => setEditarFeria(false)}
+				onSaved={fetchList}
+			/>
+			<Dialog open={!!aBorrar} onClose={() => setABorrar(null)} maxWidth="xs" fullWidth>
+				<DialogTitle>Borrar día inhábil</DialogTitle>
+				<DialogContent dividers>
+					<Typography variant="body2">
+						¿Borrar <b>{aBorrar?.fecha}</b> ({aBorrar?.tipo}
+						{aBorrar?.descripcion ? ` · ${aBorrar.descripcion}` : ""})? Se borra de <b>{BASE_TXT}</b> y queda registrado quién y cuándo.
+					</Typography>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => setABorrar(null)}>Cancelar</Button>
+					<Button
+						color="error"
+						variant="contained"
+						onClick={async () => {
+							if (!aBorrar) return;
+							try {
+								await deleteFeriado(aBorrar._id);
+								enqueueSnackbar(`${aBorrar.fecha} borrado`, { variant: "success" });
+								setABorrar(null);
+								fetchList();
+							} catch (err: any) {
+								enqueueSnackbar(err?.response?.data?.message || "Error borrando", { variant: "error" });
+							}
+						}}
+					>
+						Borrar
+					</Button>
+				</DialogActions>
+			</Dialog>
 		</Stack>
 	);
 }

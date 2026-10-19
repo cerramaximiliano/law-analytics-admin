@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Box, Chip, Stack, Tab, Tabs, ToggleButton, ToggleButtonGroup, Typography, alpha, useTheme } from "@mui/material";
 import MainCard from "components/MainCard";
 import { getPlazosPendientes, getStats, getPlazosBase, setPlazosBase, PlazosBase, referenciasEnAtlas } from "api/plazos";
-import { useQueryParam, useTabIndexParam } from "hooks/useTabParam";
+import { useQueryParam, useTabParam } from "hooks/useTabParam";
 import CrossViewLinks from "components/admin/CrossViewLink";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 import NotificacionesTab from "./NotificacionesTab";
@@ -16,20 +16,12 @@ import PendientesTab from "./PendientesTab";
 import CedulaDetalle from "./CedulaDetalle";
 
 // Pestañas en la URL (?tab=) para poder enlazar desde el flujo y otras vistas.
-const TAB_SLUGS = [
-	"notificaciones",
-	"vencimientos",
-	"normativa",
-	"feriados",
-	"dataset",
-	"monitoreo",
-	"revision-legal",
-	"pendientes",
-] as const;
+// Cada base muestra solo las pestañas que le corresponden: Pendientes es de usuarios (y va primera), el dataset de la caché.
+const SLUGS_USUARIOS = ["pendientes", "notificaciones", "vencimientos", "normativa", "feriados", "monitoreo", "revision-legal"] as const;
+const SLUGS_CACHE = ["notificaciones", "vencimientos", "normativa", "feriados", "dataset", "monitoreo", "revision-legal"] as const;
 
 export default function PlazosPage() {
 	const theme = useTheme();
-	const [tab, setTab] = useTabIndexParam("tab", TAB_SLUGS);
 	// ?base=usuarios|cache manda sobre la elección guardada (links desde otras vistas).
 	const [baseParam, setBaseParam] = useQueryParam("base");
 	// Detalle unificado de una cédula de usuario: ?cedula=<causaId:sourceId> o ?plazo=<id>.
@@ -42,6 +34,8 @@ export default function PlazosPage() {
 		}
 		return getPlazosBase();
 	});
+	const slugs = base === "usuarios" ? SLUGS_USUARIOS : SLUGS_CACHE;
+	const [tab, setTab] = useTabParam("tab", slugs);
 	const [pendientes, setPendientes] = useState<number | null>(null);
 	const [stats, setStats] = useState<{ total: number; porStatus: Record<string, number>; vencimientosProximos: number } | null>(null);
 
@@ -65,8 +59,6 @@ export default function PlazosPage() {
 		setPlazosBase(b);
 		setBase(b);
 		setBaseParam(b);
-		if (b === "usuarios" && tab === 4) setTab(0); // el dataset vive solo en la caché
-		if (b === "cache" && tab === 7) setTab(0); // los pendientes son de la base de usuarios
 	};
 
 	const isDark = theme.palette.mode === "dark";
@@ -126,45 +118,47 @@ export default function PlazosPage() {
 						scrollButtons="auto"
 						allowScrollButtonsMobile
 						value={tab}
-						onChange={(_, v) => setTab(v)}
+						onChange={(_, v: string) => setTab(v)}
 						sx={{ "& .MuiTab-root": { textTransform: "none", fontWeight: 500 } }}
 					>
-						<Tab label="Notificaciones" />
-						<Tab label="Vencimientos" />
-						<Tab label="Normativa" />
-						<Tab label="Feriados" />
-						<Tab label="Dataset" disabled={base === "usuarios"} />
-						<Tab label="Monitoreo" />
-						<Tab label="Revisión legal" />
-						<Tab
-							disabled={base === "cache"}
-							label={
-								<Stack direction="row" spacing={0.75} alignItems="center">
-									<span>Pendientes</span>
-									{pendientes !== null && (
-										<Chip size="small" color={pendientes ? "warning" : "success"} label={pendientes} sx={{ height: 18 }} />
-									)}
-								</Stack>
-							}
-						/>
+						{base === "usuarios" && (
+							<Tab
+								value="pendientes"
+								label={
+									<Stack direction="row" spacing={0.75} alignItems="center">
+										<span>Pendientes</span>
+										{pendientes !== null && (
+											<Chip size="small" color={pendientes ? "warning" : "success"} label={pendientes} sx={{ height: 18 }} />
+										)}
+									</Stack>
+								}
+							/>
+						)}
+						<Tab value="notificaciones" label="Notificaciones" />
+						<Tab value="vencimientos" label="Vencimientos" />
+						<Tab value="normativa" label="Normativa" />
+						<Tab value="feriados" label="Feriados" />
+						{base === "cache" && <Tab value="dataset" label="Dataset" />}
+						<Tab value="monitoreo" label="Monitoreo" />
+						<Tab value="revision-legal" label="Revisión legal" />
 					</Tabs>
 				</Box>
 
-				{(tab === 2 || tab === 3) && (
+				{(tab === "normativa" || tab === "feriados") && (
 					<Typography variant="caption" color="text.secondary">
 						Reglas y feriados son los mismos para las dos bases (se editan en{" "}
 						{referenciasEnAtlas ? "Atlas" : "el rs0, que es lo que leen los workers hoy"}).
 					</Typography>
 				)}
 				{/* key={base}: al cambiar de base, cada pestaña se vuelve a montar y relee de la API elegida */}
-				{tab === 0 && <NotificacionesTab key={base} />}
-				{tab === 1 && <VencimientosTab key={base} />}
-				{tab === 2 && <NormativaTab />}
-				{tab === 3 && <FeriadosTab />}
-				{tab === 4 && base === "cache" && <DatasetTab />}
-				{tab === 5 && <MonitoreoTab key={base} />}
-				{tab === 6 && <RevisionLegalTab key={base} />}
-				{tab === 7 && base === "usuarios" && <PendientesTab key={base} onTotal={setPendientes} />}
+				{tab === "notificaciones" && <NotificacionesTab key={base} />}
+				{tab === "vencimientos" && <VencimientosTab key={base} />}
+				{tab === "normativa" && <NormativaTab />}
+				{tab === "feriados" && <FeriadosTab />}
+				{tab === "dataset" && base === "cache" && <DatasetTab />}
+				{tab === "monitoreo" && <MonitoreoTab key={base} />}
+				{tab === "revision-legal" && <RevisionLegalTab key={base} />}
+				{tab === "pendientes" && base === "usuarios" && <PendientesTab key={base} onTotal={setPendientes} />}
 				<CedulaDetalle
 					open={!!(cedulaParam || plazoParam)}
 					movementId={cedulaParam || null}

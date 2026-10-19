@@ -42,12 +42,34 @@ const STATUS_COLOR: Record<string, "default" | "success" | "warning" | "error" |
 };
 
 const FUEROS = ["", "CIV", "CSS", "CNT", "COM"];
-const STATUSES = ["", "pending", "computed", "parsed", "extracted", "revision_manual", "esperando_documento", "ocr_needed", "no_url", "failed", "not_pdf"];
+const STATUSES = [
+	"",
+	"pending",
+	"computed",
+	"parsed",
+	"extracted",
+	"revision_manual",
+	"esperando_documento",
+	"ocr_needed",
+	"no_url",
+	"failed",
+	"not_pdf",
+];
 // Por dónde entró la cédula (solo base de usuarios).
-const VIAS: Array<[string, string]> = [["", "Todas"], ["app-update", "app-update"], ["mis-causas", "Mis Causas"], ["bandeja", "bandeja del PJN"]];
+const VIAS: Array<[string, string]> = [
+	["", "Todas"],
+	["app-update", "app-update"],
+	["mis-causas", "Mis Causas"],
+	["bandeja", "bandeja del PJN"],
+];
 
 // De qué texto salió el plazo (solo base de usuarios).
-const TEXTOS: Array<[string, string]> = [["", "Todos"], ["resolucion", "Resolución"], ["cuerpo_cedula", "Cuerpo de la cédula"], ["cedula", "Cédula entera"]];
+const TEXTOS: Array<[string, string]> = [
+	["", "Todos"],
+	["resolucion", "Resolución"],
+	["cuerpo_cedula", "Cuerpo de la cédula"],
+	["cedula", "Cédula entera"],
+];
 
 const day = (v?: string | null) => (v ? String(v).slice(0, 10) : "—");
 
@@ -78,9 +100,7 @@ function DetalleDialog({ id, onClose, onChanged }: { id: string | null; onClose:
 	const p = doc?.plazo;
 	return (
 		<Dialog open={!!id} onClose={onClose} maxWidth="md" fullWidth>
-			<DialogTitle>
-				{doc ? `${doc.number}/${doc.year} [${doc.fuero}] — ${doc.tipoNotificacion}` : "Cargando…"}
-			</DialogTitle>
+			<DialogTitle>{doc ? `${doc.number}/${doc.year} [${doc.fuero}] — ${doc.tipoNotificacion}` : "Cargando…"}</DialogTitle>
 			<DialogContent dividers>
 				{!doc ? (
 					<Skeleton height={200} />
@@ -104,14 +124,21 @@ function DetalleDialog({ id, onClose, onChanged }: { id: string | null; onClose:
 								<Typography variant="subtitle1">Vencimiento computado</Typography>
 								<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 									<Chip size="small" color="success" label={`vence ${p.vencimiento}`} />
-									{p.vencimientoConGracia && <Chip size="small" variant="outlined" label={`gracia ${p.vencimientoConGracia} (2 primeras hs)`} />}
+									{p.vencimientoConGracia && (
+										<Chip size="small" variant="outlined" label={`gracia ${p.vencimientoConGracia} (2 primeras hs)`} />
+									)}
 									<Chip size="small" variant="outlined" label={`${p.plazoDias} días ${p.tipoPlazo}`} />
-									<Chip size="small" variant="outlined" label={`fuente: ${p.fuente}`} color={p.fuente === "texto" ? "primary" : "default"} />
+									<Chip
+										size="small"
+										variant="outlined"
+										label={`fuente: ${p.fuente}`}
+										color={p.fuente === "texto" ? "primary" : "default"}
+									/>
 									{p.confianza && <Chip size="small" variant="outlined" label={`confianza ${p.confianza}`} />}
 								</Stack>
 								<Typography variant="body2">
-									Notificada el <b>{p.fechaNotificacion}</b> (fuente: {p.fechaNotificacionFuente}) · perfeccionamiento {p.perfeccionamiento} ·
-									inicio {p.inicioPlazo}
+									Notificada el <b>{p.fechaNotificacion}</b> (fuente: {p.fechaNotificacionFuente}) · perfeccionamiento {p.perfeccionamiento}{" "}
+									· inicio {p.inicioPlazo}
 								</Typography>
 								{p.diasComputados && (
 									<Typography variant="body2" sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>
@@ -251,14 +278,34 @@ export default function NotificacionesTab() {
 	return (
 		<Stack spacing={2}>
 			<Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" useFlexGap>
-				<TextField select size="small" label="Status" value={status} onChange={(e) => { setStatus(e.target.value); setPage(0); }} sx={{ minWidth: 160 }}>
+				<TextField
+					select
+					size="small"
+					label="Status"
+					value={status}
+					onChange={(e) => {
+						setStatus(e.target.value);
+						setPage(0);
+					}}
+					sx={{ minWidth: 160 }}
+				>
 					{STATUSES.map((s) => (
 						<MenuItem key={s} value={s}>
 							{s || "Todos"}
 						</MenuItem>
 					))}
 				</TextField>
-				<TextField select size="small" label="Fuero" value={fuero} onChange={(e) => { setFuero(e.target.value); setPage(0); }} sx={{ minWidth: 120 }}>
+				<TextField
+					select
+					size="small"
+					label="Fuero"
+					value={fuero}
+					onChange={(e) => {
+						setFuero(e.target.value);
+						setPage(0);
+					}}
+					sx={{ minWidth: 120 }}
+				>
 					{FUEROS.map((f) => (
 						<MenuItem key={f} value={f}>
 							{f || "Todos"}
@@ -266,7 +313,17 @@ export default function NotificacionesTab() {
 					))}
 				</TextField>
 				{esUsuarios && (
-					<TextField select size="small" label="Entró por" value={via} onChange={(e) => { setViaParam(e.target.value); setPage(0); }} sx={{ minWidth: 150 }}>
+					<TextField
+						select
+						size="small"
+						label="Entró por"
+						value={via}
+						onChange={(e) => {
+							setViaParam(e.target.value);
+							setPage(0);
+						}}
+						sx={{ minWidth: 150 }}
+					>
 						{VIAS.map(([v, l]) => (
 							<MenuItem key={v} value={v}>
 								{l}
@@ -275,7 +332,17 @@ export default function NotificacionesTab() {
 					</TextField>
 				)}
 				{esUsuarios && (
-					<TextField select size="small" label="Texto de" value={textoFuente} onChange={(e) => { setTextoFuenteParam(e.target.value); setPage(0); }} sx={{ minWidth: 170 }}>
+					<TextField
+						select
+						size="small"
+						label="Texto de"
+						value={textoFuente}
+						onChange={(e) => {
+							setTextoFuenteParam(e.target.value);
+							setPage(0);
+						}}
+						sx={{ minWidth: 170 }}
+					>
 						{TEXTOS.map(([v, l]) => (
 							<MenuItem key={v} value={v}>
 								{l}
@@ -304,12 +371,33 @@ export default function NotificacionesTab() {
 						sx={{ minWidth: 220 }}
 					/>
 				)}
-				{norma && <Chip size="small" color="warning" label={`regla ${norma}`} onDelete={() => { setNormaParam(""); setPage(0); }} />}
-				{causaId && <Chip size="small" label={`causa ${causaId.slice(-6)}`} onDelete={() => { setCausaIdParam(""); setPage(0); }} />}
+				{norma && (
+					<Chip
+						size="small"
+						color="warning"
+						label={`regla ${norma}`}
+						onDelete={() => {
+							setNormaParam("");
+							setPage(0);
+						}}
+					/>
+				)}
+				{causaId && (
+					<Chip
+						size="small"
+						label={`causa ${causaId.slice(-6)}`}
+						onDelete={() => {
+							setCausaIdParam("");
+							setPage(0);
+						}}
+					/>
+				)}
 				<Box sx={{ flex: 1 }} />
-				<Button size="small" onClick={reprocesarParsed}>
-					Re-encolar «parsed» (tras ajustar reglas)
-				</Button>
+				{!esUsuarios && (
+					<Button size="small" onClick={reprocesarParsed}>
+						Re-encolar «parsed» (tras ajustar reglas)
+					</Button>
+				)}
 			</Stack>
 
 			<TableContainer component={Paper} elevation={0} sx={{ maxHeight: "calc(100dvh - 420px)" }}>
@@ -336,15 +424,23 @@ export default function NotificacionesTab() {
 											<Skeleton />
 										</TableCell>
 									</TableRow>
-								))
+							  ))
 							: rows.map((r) => (
-									<TableRow key={r._id} hover sx={{ cursor: "pointer" }} onClick={() => (esUsuarios ? setPlazoParam(r._id) : setDetalleId(r._id))}>
+									<TableRow
+										key={r._id}
+										hover
+										sx={{ cursor: "pointer" }}
+										onClick={() => (esUsuarios ? setPlazoParam(r._id) : setDetalleId(r._id))}
+									>
 										<TableCell>{day(r.detectedAt)}</TableCell>
 										<TableCell>
 											{r.number}/{r.year}
 										</TableCell>
 										{esUsuarios && (
-											<TableCell sx={{ maxWidth: 240, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={r.caratula || ""}>
+											<TableCell
+												sx={{ maxWidth: 240, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+												title={r.caratula || ""}
+											>
 												{r.caratula || "—"}
 											</TableCell>
 										)}
@@ -359,11 +455,14 @@ export default function NotificacionesTab() {
 										</TableCell>
 										<TableCell>{r.tipoNotificacion}</TableCell>
 										<TableCell>
-											<Chip size="small" label={r.processingStatus} color={STATUS_COLOR[r.processingStatus] || "default"} variant="outlined" />
+											<Chip
+												size="small"
+												label={r.processingStatus}
+												color={STATUS_COLOR[r.processingStatus] || "default"}
+												variant="outlined"
+											/>
 										</TableCell>
-										<TableCell>
-											{r.plazo ? `${r.plazo.plazoDias}d ${r.plazo.tipoPlazo} (${r.plazo.fuente})` : "—"}
-										</TableCell>
+										<TableCell>{r.plazo ? `${r.plazo.plazoDias}d ${r.plazo.tipoPlazo} (${r.plazo.fuente})` : "—"}</TableCell>
 										<TableCell>{r.plazo?.vencimiento || "—"}</TableCell>
 										{esUsuarios && (
 											<TableCell>
@@ -371,7 +470,7 @@ export default function NotificacionesTab() {
 											</TableCell>
 										)}
 									</TableRow>
-								))}
+							  ))}
 						{!loading && rows.length === 0 && (
 							<TableRow>
 								<TableCell colSpan={esUsuarios ? 10 : 7}>

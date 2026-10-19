@@ -28,6 +28,7 @@ import {
 	PendienteRegla,
 	PlazosPendientes,
 } from "api/plazos";
+import BetaPanel from "./BetaPanel";
 
 const fmt = (n?: number) => (n ?? 0).toLocaleString("es-AR");
 const fecha = (d?: string | null) => (d ? new Date(d).toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" }) : "—");
@@ -348,6 +349,7 @@ export default function PendientesTab({ onTotal }: { onTotal?: (n: number) => vo
 			>
 				<Decisiones items={d.decisiones} />
 			</Seccion>
+			<BetaPanel />
 			<Seccion
 				titulo="Reglas sin verificar que retienen plazos"
 				n={r.reglasSinVerificar}

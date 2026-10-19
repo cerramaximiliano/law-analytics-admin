@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
-import { Alert, Chip, CircularProgress, Divider, Grid, Paper, Stack, Typography } from "@mui/material";
+import { Alert, Button, Chip, CircularProgress, Divider, Grid, Paper, Stack, Typography } from "@mui/material";
 import { useSnackbar } from "notistack";
 import { getMonitor, PlazosMonitor } from "api/plazos";
 import WorkerHeartbeatChip from "components/admin/WorkerHeartbeatChip";
-import PlazosEtapas from "./PlazosEtapas";
+import { Link as RouterLink } from "react-router-dom";
 
 const fmt = (v?: string | null) => (v ? new Date(v).toLocaleString("es-AR") : "—");
 
@@ -110,7 +110,19 @@ export default function MonitoreoTab() {
 				<Alert severity="success">Subsistema saludable — sin alertas.</Alert>
 			)}
 
-			{esUsuarios && <PlazosEtapas />}
+			{esUsuarios && (
+				<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap alignItems="center">
+					<Typography variant="body2" color="text.secondary">
+						El detalle por etapa y la configuración están en:
+					</Typography>
+					<Button size="small" variant="outlined" component={RouterLink} to="/admin/flujos?tab=plazos">
+						Flujo de plazos (etapas)
+					</Button>
+					<Button size="small" variant="outlined" component={RouterLink} to="/admin/workers/plazos?base=usuarios">
+						Workers → Plazos
+					</Button>
+				</Stack>
+			)}
 
 			<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 				<Chip size="small" label={`hoy: ${m.hoy.detectadas} detectadas`} />
@@ -182,7 +194,13 @@ export default function MonitoreoTab() {
 
 				{w.datasetWorker && (
 					<Grid item xs={12} md={6}>
-						<WorkerCard nombre="plazos-dataset-worker" servidor="worker_01" alive={w.datasetWorker.alive} lastCycleAt={w.datasetWorker.lastCycleAt} enabled={w.datasetWorker.enabled}>
+						<WorkerCard
+							nombre="plazos-dataset-worker"
+							servidor="worker_01"
+							alive={w.datasetWorker.alive}
+							lastCycleAt={w.datasetWorker.lastCycleAt}
+							enabled={w.datasetWorker.enabled}
+						>
 							<Typography variant="body2">
 								Hoy: {w.datasetWorker.hoy?.count ?? 0} / {w.datasetWorker.dailyLimit ?? "—"} descargas
 							</Typography>
@@ -197,60 +215,62 @@ export default function MonitoreoTab() {
 				)}
 			</Grid>
 
-			<Divider />
-			<Grid container spacing={2}>
-				<Grid item xs={12} md={6}>
-					<Typography variant="subtitle2" sx={{ mb: 1 }}>
-						Cola (plazos-notificaciones{esUsuarios ? ", origen usuario" : ""})
-					</Typography>
-					<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-						{Object.keys(m.cola).length === 0 && (
-							<Typography variant="caption" color="text.secondary">
-								Sin cédulas todavía.
-							</Typography>
+			{!esUsuarios && <Divider />}
+			{!esUsuarios && (
+				<Grid container spacing={2}>
+					<Grid item xs={12} md={6}>
+						<Typography variant="subtitle2" sx={{ mb: 1 }}>
+							Cola (plazos-notificaciones{esUsuarios ? ", origen usuario" : ""})
+						</Typography>
+						<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+							{Object.keys(m.cola).length === 0 && (
+								<Typography variant="caption" color="text.secondary">
+									Sin cédulas todavía.
+								</Typography>
+							)}
+							{Object.entries(m.cola).map(([k, v]) => (
+								<Chip key={k} size="small" variant="outlined" label={`${COLA_LABELS[k] || k}: ${v}`} />
+							))}
+						</Stack>
+					</Grid>
+					<Grid item xs={12} md={6}>
+						{esUsuarios ? (
+							<>
+								<Typography variant="subtitle2" sx={{ mb: 1 }}>
+									Por dónde entraron las cédulas
+								</Typography>
+								<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+									{Object.keys(m.porFuente || {}).length === 0 && (
+										<Typography variant="caption" color="text.secondary">
+											Sin cédulas todavía.
+										</Typography>
+									)}
+									{Object.entries(m.porFuente || {}).map(([k, v]) => (
+										<Chip key={k} size="small" variant="outlined" label={`${FUENTE_LABELS[k] || k}: ${v}`} />
+									))}
+								</Stack>
+							</>
+						) : (
+							<>
+								<Typography variant="subtitle2" sx={{ mb: 1 }}>
+									Updaters de la caché (update-movimientos, por fuero)
+								</Typography>
+								<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+									{m.updaters.map((u) => (
+										<Chip
+											key={u.fuero}
+											size="small"
+											color={u.enabled ? "success" : "default"}
+											variant="outlined"
+											label={`${u.fuero}${u.enabled ? "" : " (off)"}${u.processedToday != null ? ` · hoy: ${u.processedToday}` : ""}`}
+										/>
+									))}
+								</Stack>
+							</>
 						)}
-						{Object.entries(m.cola).map(([k, v]) => (
-							<Chip key={k} size="small" variant="outlined" label={`${COLA_LABELS[k] || k}: ${v}`} />
-						))}
-					</Stack>
+					</Grid>
 				</Grid>
-				<Grid item xs={12} md={6}>
-					{esUsuarios ? (
-						<>
-							<Typography variant="subtitle2" sx={{ mb: 1 }}>
-								Por dónde entraron las cédulas
-							</Typography>
-							<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-								{Object.keys(m.porFuente || {}).length === 0 && (
-									<Typography variant="caption" color="text.secondary">
-										Sin cédulas todavía.
-									</Typography>
-								)}
-								{Object.entries(m.porFuente || {}).map(([k, v]) => (
-									<Chip key={k} size="small" variant="outlined" label={`${FUENTE_LABELS[k] || k}: ${v}`} />
-								))}
-							</Stack>
-						</>
-					) : (
-						<>
-							<Typography variant="subtitle2" sx={{ mb: 1 }}>
-								Updaters de la caché (update-movimientos, por fuero)
-							</Typography>
-							<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-								{m.updaters.map((u) => (
-									<Chip
-										key={u.fuero}
-										size="small"
-										color={u.enabled ? "success" : "default"}
-										variant="outlined"
-										label={`${u.fuero}${u.enabled ? "" : " (off)"}${u.processedToday != null ? ` · hoy: ${u.processedToday}` : ""}`}
-									/>
-								))}
-							</Stack>
-						</>
-					)}
-				</Grid>
-			</Grid>
+			)}
 			<Typography variant="caption" color="text.secondary">
 				Actualizado: {fmt(m.generatedAt)} — auto-refresh cada 15s.
 			</Typography>
