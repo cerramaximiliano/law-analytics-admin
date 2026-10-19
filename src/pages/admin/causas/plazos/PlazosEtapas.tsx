@@ -10,7 +10,7 @@ import { Link as RouterLink } from "react-router-dom";
 import { Alert, Box, Chip, IconButton, Paper, Skeleton, Stack, Tooltip, Typography, alpha, useMediaQuery, useTheme } from "@mui/material";
 import type { Theme } from "@mui/material/styles";
 import { ArrowDown2, ArrowRight2, Refresh } from "iconsax-react";
-import { getFlujoUsuarios, PlazosFlujo, PlazosFlujoEtapa } from "api/plazos";
+import { getFlujoUsuarios, getPlazosPendientes, PlazosFlujo, PlazosFlujoEtapa } from "api/plazos";
 import { BRAND_BLUE, STALE_AMBER } from "themes/dashboardTokens";
 
 const fmt = (n?: number) => (n ?? 0).toLocaleString("es-AR");
@@ -117,8 +117,13 @@ function Etapa({ e, cuello, compacta }: { e: PlazosFlujoEtapa; cuello: boolean; 
 export default function PlazosEtapas() {
 	const [f, setF] = useState<PlazosFlujo | null>(null);
 	const [error, setError] = useState<string | null>(null);
+	const [pendientes, setPendientes] = useState<number | null>(null);
 
 	const cargar = useCallback(async () => {
+		// El total de pendientes es un adorno: si falla, el panel sigue igual.
+		getPlazosPendientes()
+			.then((p) => setPendientes(p.resumen.total))
+			.catch(() => setPendientes(null));
 		try {
 			setF(await getFlujoUsuarios());
 			setError(null);
@@ -135,11 +140,11 @@ export default function PlazosEtapas() {
 
 	if (error && !f) return <Alert severity="warning">{error}</Alert>;
 	if (!f) return <Skeleton variant="rectangular" height={150} sx={{ borderRadius: 2 }} />;
-	return <PlazosEtapasVista f={f} onRefresh={cargar} />;
+	return <PlazosEtapasVista f={f} onRefresh={cargar} pendientes={pendientes} />;
 }
 
 /** Vista pura (sin fetch): también sirve para renderizarla con datos de ejemplo. */
-export function PlazosEtapasVista({ f, onRefresh }: { f: PlazosFlujo; onRefresh?: () => void }) {
+export function PlazosEtapasVista({ f, onRefresh, pendientes }: { f: PlazosFlujo; onRefresh?: () => void; pendientes?: number | null }) {
 	const theme = useTheme();
 	const compacta = useMediaQuery(theme.breakpoints.down("lg"));
 
@@ -167,6 +172,16 @@ export function PlazosEtapasVista({ f, onRefresh }: { f: PlazosFlujo; onRefresh?
 					color={f.alcance.dryRun ? "warning" : "success"}
 					label={f.alcance.dryRun ? "entrega: DRY RUN" : "entrega: real"}
 				/>
+				{pendientes != null && (
+					<Chip
+						size="small"
+						clickable
+						component={RouterLink}
+						to="/admin/causas/plazos?tab=pendientes&base=usuarios"
+						color={pendientes ? "warning" : "success"}
+						label={pendientes ? `${fmt(pendientes)} pendientes tuyos` : "nada pendiente"}
+					/>
+				)}
 				<Typography variant="caption" color="text.secondary">
 					Base de usuarios (Atlas) · {new Date(f.generatedAt).toLocaleTimeString("es-AR")}
 				</Typography>

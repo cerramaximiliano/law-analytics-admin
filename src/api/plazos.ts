@@ -746,3 +746,86 @@ export const getPlazosBeta = async (): Promise<PlazosBeta> => {
 	const { data } = await ax().get("/api/admin/plazos/beta");
 	return data.data;
 };
+
+// ── Pendientes del usuario (Atlas) ─────────────────────────────────────────────
+export interface PendienteDecision {
+	id: "P3" | "P4" | "P5" | "P6" | "P8";
+	titulo: string;
+	estado: "listo_para_decidir" | "bloqueado" | "esperando" | "hecho";
+	requisitos: { texto: string; ok: boolean }[];
+	impacto: { texto: string; n?: number };
+	accion: { texto: string; link?: string };
+}
+
+export interface PendienteRegla {
+	normaId: string;
+	label: string;
+	fueros: string[];
+	retenidos: number;
+	ultimos7d: number;
+}
+
+export interface PendienteCarpeta {
+	folderId: string;
+	userId: string;
+	email: string | null;
+	causaId: string;
+	fuero: string;
+	expediente: string | null;
+	caratula: string | null;
+	intervinientes: number;
+	parteDetectada: string | null;
+	cedulasRecientes: number;
+	linkFront: string;
+}
+
+export interface PendienteEntrega {
+	plazoNotificacionId: string;
+	cedula: string;
+	folderId: string | null;
+	userId: string | null;
+	email: string | null;
+	accion: string;
+	confirmadoPor: string | null;
+	entregadoAt: string | null;
+	vencimiento: string | null;
+}
+
+export interface PendienteCredencial {
+	credentialsId: string;
+	userId: string | null;
+	email: string | null;
+	consecutiveErrors: number;
+	code: string | null;
+	lastSuccessAt: string | null;
+	lastRunAt: string | null;
+}
+
+export interface PlazosPendientes {
+	generadoAt: string;
+	resumen: {
+		total: number;
+		decisionesListas: number;
+		reglasSinVerificar: number;
+		plazosRetenidos: number;
+		carpetasSinParte: number;
+		entregasSinFeedback: number;
+		credencialesBandeja: number;
+		cuentasActivas: number;
+		eventos: number;
+		avisos: number;
+		respuestas: number;
+		entregas: number;
+	};
+	decisiones: PendienteDecision[];
+	reglasSinVerificar: PendienteRegla[];
+	carpetasSinParte: PendienteCarpeta[];
+	entregasSinFeedback: PendienteEntrega[];
+	credencialesBandeja: PendienteCredencial[];
+}
+
+/** Siempre contra Atlas: los pendientes son de la base de usuarios. */
+export const getPlazosPendientes = async (fresh = false): Promise<PlazosPendientes> => {
+	const { data } = await pjnAtlasAxios.get("/api/admin/plazos/pendientes", { params: fresh ? { fresh: 1 } : undefined });
+	return data.data;
+};

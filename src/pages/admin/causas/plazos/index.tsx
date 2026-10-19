@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Box, Chip, Stack, Tab, Tabs, ToggleButton, ToggleButtonGroup, Typography, alpha, useTheme } from "@mui/material";
 import MainCard from "components/MainCard";
-import { getStats, getPlazosBase, setPlazosBase, PlazosBase, referenciasEnAtlas } from "api/plazos";
+import { getPlazosPendientes, getStats, getPlazosBase, setPlazosBase, PlazosBase, referenciasEnAtlas } from "api/plazos";
 import { useQueryParam, useTabIndexParam } from "hooks/useTabParam";
 import CrossViewLinks from "components/admin/CrossViewLink";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
@@ -12,10 +12,20 @@ import FeriadosTab from "./FeriadosTab";
 import DatasetTab from "./DatasetTab";
 import MonitoreoTab from "./MonitoreoTab";
 import RevisionLegalTab from "./RevisionLegalTab";
+import PendientesTab from "./PendientesTab";
 import CedulaDetalle from "./CedulaDetalle";
 
 // Pestañas en la URL (?tab=) para poder enlazar desde el flujo y otras vistas.
-const TAB_SLUGS = ["notificaciones", "vencimientos", "normativa", "feriados", "dataset", "monitoreo", "revision-legal"] as const;
+const TAB_SLUGS = [
+	"notificaciones",
+	"vencimientos",
+	"normativa",
+	"feriados",
+	"dataset",
+	"monitoreo",
+	"revision-legal",
+	"pendientes",
+] as const;
 
 export default function PlazosPage() {
 	const theme = useTheme();
@@ -32,6 +42,7 @@ export default function PlazosPage() {
 		}
 		return getPlazosBase();
 	});
+	const [pendientes, setPendientes] = useState<number | null>(null);
 	const [stats, setStats] = useState<{ total: number; porStatus: Record<string, number>; vencimientosProximos: number } | null>(null);
 
 	// Los contadores del encabezado se piden una vez por base (no en cada pestaña) y nunca
@@ -41,6 +52,12 @@ export default function PlazosPage() {
 		getStats()
 			.then(setStats)
 			.catch(() => setStats(null));
+		setPendientes(null);
+		if (base === "usuarios") {
+			getPlazosPendientes()
+				.then((p) => setPendientes(p.resumen.total))
+				.catch(() => setPendientes(null));
+		}
 	}, [base]);
 
 	const cambiarBase = (b: PlazosBase | null) => {
@@ -49,6 +66,7 @@ export default function PlazosPage() {
 		setBase(b);
 		setBaseParam(b);
 		if (b === "usuarios" && tab === 4) setTab(0); // el dataset vive solo en la caché
+		if (b === "cache" && tab === 7) setTab(0); // los pendientes son de la base de usuarios
 	};
 
 	const isDark = theme.palette.mode === "dark";
@@ -118,6 +136,17 @@ export default function PlazosPage() {
 						<Tab label="Dataset" disabled={base === "usuarios"} />
 						<Tab label="Monitoreo" />
 						<Tab label="Revisión legal" />
+						<Tab
+							disabled={base === "cache"}
+							label={
+								<Stack direction="row" spacing={0.75} alignItems="center">
+									<span>Pendientes</span>
+									{pendientes !== null && (
+										<Chip size="small" color={pendientes ? "warning" : "success"} label={pendientes} sx={{ height: 18 }} />
+									)}
+								</Stack>
+							}
+						/>
 					</Tabs>
 				</Box>
 
@@ -135,6 +164,7 @@ export default function PlazosPage() {
 				{tab === 4 && base === "cache" && <DatasetTab />}
 				{tab === 5 && <MonitoreoTab key={base} />}
 				{tab === 6 && <RevisionLegalTab key={base} />}
+				{tab === 7 && base === "usuarios" && <PendientesTab key={base} onTotal={setPendientes} />}
 				<CedulaDetalle
 					open={!!(cedulaParam || plazoParam)}
 					movementId={cedulaParam || null}
