@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import {
 	Alert,
+	Autocomplete,
 	Button,
 	Chip,
 	Dialog,
@@ -48,6 +49,42 @@ const EMPTY: Partial<PlazoNormativaRegla> & { _id: string } = {
 	instancias: [],
 };
 
+// Fueros del PJN (siglas de pjn-models). "*" = todos.
+const FUEROS: { sigla: string; nombre: string }[] = [
+	{ sigla: "*", nombre: "Todos" },
+	{ sigla: "CIV", nombre: "Civil" },
+	{ sigla: "COM", nombre: "Comercial" },
+	{ sigla: "CSS", nombre: "Seguridad Social" },
+	{ sigla: "CNT", nombre: "Trabajo" },
+	{ sigla: "CCF", nombre: "Civil y Comercial Federal" },
+	{ sigla: "CAF", nombre: "Contencioso Administrativo Federal" },
+	{ sigla: "FBB", nombre: "Federal de Bahía Blanca" },
+	{ sigla: "FCB", nombre: "Federal de Córdoba" },
+	{ sigla: "FCR", nombre: "Federal de Comodoro Rivadavia" },
+	{ sigla: "FCT", nombre: "Federal de Corrientes" },
+	{ sigla: "FGR", nombre: "Federal de General Roca" },
+	{ sigla: "FLP", nombre: "Federal de La Plata" },
+	{ sigla: "FMP", nombre: "Federal de Mar del Plata" },
+	{ sigla: "FMZ", nombre: "Federal de Mendoza" },
+	{ sigla: "FPA", nombre: "Federal de Paraná" },
+	{ sigla: "FPO", nombre: "Federal de Posadas" },
+	{ sigla: "FRE", nombre: "Federal de Resistencia" },
+	{ sigla: "FRO", nombre: "Federal de Rosario" },
+	{ sigla: "FSA", nombre: "Federal de Salta" },
+	{ sigla: "FSM", nombre: "Federal de San Martín" },
+	{ sigla: "FTU", nombre: "Federal de Tucumán" },
+	{ sigla: "CNE", nombre: "Electoral" },
+	{ sigla: "CPE", nombre: "Penal Económico" },
+	{ sigla: "CFP", nombre: "Criminal y Correccional Federal" },
+	{ sigla: "CCC", nombre: "Criminal y Correccional" },
+	{ sigla: "CPF", nombre: "Casación Penal Federal" },
+	{ sigla: "CPN", nombre: "Penal Nacional" },
+	{ sigla: "CSJ", nombre: "Corte Suprema" },
+];
+// Fueros que se rigen por el CPCCN (civil, comercial, seguridad social y federales con competencia civil).
+const FUEROS_CPCCN = ["CIV", "COM", "CSS", "CCF", "CAF", "FBB", "FCB", "FCR", "FCT", "FGR", "FLP", "FMP", "FMZ", "FPA", "FPO", "FRE", "FRO", "FSA", "FSM", "FTU"];
+const nombreFuero = (sigla: string) => FUEROS.find((f) => f.sigla === sigla)?.nombre || sigla;
+
 const lines = (arr?: string[]) => (arr || []).join("\n");
 const fromLines = (s: string) =>
 	s
@@ -74,7 +111,7 @@ export function ReglaDialog({
 		if (regla) {
 			setForm({
 				...regla,
-				fueroStr: (regla.fuero || ["*"]).join(","),
+				fueros: regla.fuero?.length ? regla.fuero : ["*"],
 				objetosStr: ((regla as any).objetos || ["*"]).join(","),
 				matchersStr: lines(regla.matchers),
 				matchersDetalleStr: lines(regla.matchersDetalle),
@@ -91,10 +128,7 @@ export function ReglaDialog({
 		const payload: any = {
 			label: form.label,
 			acto: form.acto,
-			fuero: form.fueroStr
-				.split(",")
-				.map((x: string) => x.trim())
-				.filter(Boolean),
+			fuero: form.fueros?.length ? form.fueros : ["*"],
 			objetos: form.objetosStr
 				.split(",")
 				.map((x: string) => x.trim())
@@ -139,7 +173,6 @@ export function ReglaDialog({
 					<TextField size="small" label="Label" value={form.label} onChange={set("label")} />
 					<Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
 						<TextField size="small" label="Acto (slug)" value={form.acto} onChange={set("acto")} sx={{ flex: 1 }} />
-						<TextField size="small" label="Fueros (coma, * = todos)" value={form.fueroStr} onChange={set("fueroStr")} sx={{ flex: 1 }} />
 						<TextField
 							size="small"
 							label="Instancias (primera, camara, corte; vacío = todas)"
@@ -154,6 +187,22 @@ export function ReglaDialog({
 							onChange={set("objetosStr")}
 							sx={{ flex: 1 }}
 						/>
+					</Stack>
+					<Stack direction="row" spacing={1} alignItems="flex-start">
+						<Autocomplete
+							multiple
+							size="small"
+							sx={{ flex: 1 }}
+							options={FUEROS.map((f) => f.sigla)}
+							value={form.fueros || []}
+							onChange={(_, v) => setForm({ ...form, fueros: v[v.length - 1] === "*" ? ["*"] : v.filter((x) => x !== "*") })}
+							getOptionLabel={(sigla) => (sigla === "*" ? "* (todos)" : `${sigla} — ${nombreFuero(sigla)}`)}
+							renderTags={(v, getTagProps) => v.map((sigla, i) => <Chip size="small" label={sigla} {...getTagProps({ index: i })} key={sigla} />)}
+							renderInput={(params) => <TextField {...params} label="Fueros" helperText="Elegí de la lista (siglas de pjn-models)" />}
+						/>
+						<Button size="small" variant="outlined" sx={{ mt: 0.5, whiteSpace: "nowrap" }} onClick={() => setForm({ ...form, fueros: FUEROS_CPCCN })}>
+							Fueros CPCCN
+						</Button>
 					</Stack>
 					<Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
 						<TextField size="small" type="number" label="Plazo (días)" value={form.plazoDias} onChange={set("plazoDias")} />
@@ -405,6 +454,7 @@ export default function NormativaTab() {
 							<TableCell>Prior.</TableCell>
 							<TableCell>Regla</TableCell>
 							<TableCell>Fuero</TableCell>
+							<TableCell>Tipo de proceso</TableCell>
 							<TableCell>Objetos</TableCell>
 							<TableCell>Plazo</TableCell>
 							<TableCell>Norma</TableCell>
@@ -418,7 +468,7 @@ export default function NormativaTab() {
 						{loading
 							? Array.from({ length: 6 }).map((_, i) => (
 									<TableRow key={i}>
-										<TableCell colSpan={10}>
+										<TableCell colSpan={11}>
 											<Skeleton />
 										</TableCell>
 									</TableRow>
@@ -449,10 +499,21 @@ export default function NormativaTab() {
 												</Typography>
 											</TableCell>
 											<TableCell>
-												{(r.fuero || []).join(",")}
+												<Tooltip title={(r.fuero?.length ? r.fuero : ["*"]).map(nombreFuero).join(", ")}>
+													<span>{(r.fuero || []).length > 6 ? `${r.fuero.slice(0, 5).join(",")} +${r.fuero.length - 5}` : (r.fuero || []).join(",")}</span>
+												</Tooltip>
 												{!!r.instancias?.length && (
 													<Typography variant="caption" display="block" color="text.secondary">
 														{r.instancias.join(", ")}
+													</Typography>
+												)}
+											</TableCell>
+											<TableCell>
+												{r.tipoProceso ? (
+													<Chip size="small" variant="outlined" color={r.tipoProceso === "ordinario" ? "primary" : "secondary"} label={r.tipoProceso === "ordinario" ? "ordinario" : "sumario / sumarísimo"} />
+												) : (
+													<Typography variant="caption" color="text.secondary">
+														cualquiera
 													</Typography>
 												)}
 											</TableCell>
