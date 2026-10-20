@@ -140,11 +140,11 @@ export interface PlazoNotificacion {
 	source?: { worker: string; collectionName: string; collectedAt: string; primeraSync?: boolean };
 }
 
-export type TipoProceso = "ordinario" | "sumario";
+export type TipoProceso = "ordinario" | "sumario" | "especial";
 
 export interface TipoProcesoEvidencia {
 	tipo: TipoProceso;
-	fuente: "expreso" | "plazo_demanda" | "plazo_agravios" | "operador";
+	fuente: "expreso" | "plazo_demanda" | "plazo_agravios" | "objeto" | "objeto_especial" | "norma" | "operador";
 	movementId: string | null;
 	fecha: string | null;
 	frase: string | null;
@@ -160,6 +160,8 @@ export interface TipoProcesoCausa {
 	fecha?: string | null;
 	frase?: string | null;
 	conflicto?: boolean;
+	/** Sugerencia del detector cuando no hay tipo vigente: no vale hasta que el operador la confirma. */
+	sugerencia?: { tipo: TipoProceso; motivo: string | null } | null;
 	evidencias: TipoProcesoEvidencia[];
 }
 
@@ -981,6 +983,7 @@ export interface TipoProcesoPendiente {
 	tipo: TipoProceso | null;
 	fuente: TipoProcesoEvidencia["fuente"] | null;
 	conflicto: boolean;
+	sugerencia?: { tipo: TipoProceso; motivo: string | null } | null;
 	evidencias: TipoProcesoEvidencia[];
 }
 
@@ -993,5 +996,24 @@ export const getTipoProcesoPendientes = async (): Promise<{ total: number; data:
 /** Fija el tipo de proceso como operador (gana siempre) y re-encola las cédulas de la causa; null quita el del operador. */
 export const fijarTipoProceso = async (causaId: string, tipo: TipoProceso | null): Promise<{ tipo: TipoProceso | null; reencoladas: number }> => {
 	const { data } = await pjnAtlasAxios.put(`/api/admin/plazos/tipo-proceso/${causaId}`, { tipo });
+	return data.data;
+};
+
+export interface TipoProcesoCobertura {
+	porTipo: Array<{ fuero: string; tipo: TipoProceso | null; fuente: string | null; causas: number }>;
+	sinTipo: number;
+	sugeridas: Array<{
+		causaId: string;
+		fuero: string;
+		expediente: string | null;
+		caratula: string | null;
+		objeto: string | null;
+		sugerencia: { tipo: TipoProceso; motivo: string | null };
+	}>;
+}
+
+/** Causas con tipo de proceso por fuero y tipo, y las sin tipo con sugerencia del detector. */
+export const getTipoProcesoCobertura = async (): Promise<TipoProcesoCobertura> => {
+	const { data } = await pjnAtlasAxios.get("/api/admin/plazos/tipo-proceso/cobertura");
 	return data.data;
 };

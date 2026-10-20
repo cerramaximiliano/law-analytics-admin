@@ -24,7 +24,9 @@ import { CloseCircle, Refresh, TickCircle } from "iconsax-react";
 import {
 	fijarTipoProceso,
 	getPlazosPendientes,
+	getTipoProcesoCobertura,
 	getTipoProcesoPendientes,
+	TipoProcesoCobertura,
 	PendienteCalendario,
 	TipoProceso,
 	TipoProcesoPendiente,
@@ -193,7 +195,12 @@ const FUENTE_EVIDENCIA: Record<string, string> = {
 	plazo_demanda: "por el plazo del traslado de demanda",
 	plazo_agravios: "por el plazo del traslado de agravios",
 	operador: "lo fijó el operador",
+	objeto: "por el objeto del juicio",
+	objeto_especial: "el objeto corresponde a un proceso especial",
+	norma: "por la norma del fuero (CNT: ley 18.345)",
 };
+
+const TIPO_LABEL: Record<TipoProceso, string> = { ordinario: "Ordinario", sumario: "Sumario / sumarísimo", especial: "Proceso especial" };
 
 /** Causas con cédulas sin vencimiento porque su plazo depende del tipo de proceso y no se conoce: el operador lo fija. */
 function TiposProceso({ onCambio }: { onCambio: () => void }) {
@@ -279,6 +286,25 @@ function TiposProceso({ onCambio }: { onCambio: () => void }) {
 							</TableCell>
 							<TableCell sx={{ maxWidth: 280 }}>
 								{t.conflicto && <Chip size="small" color="error" label="evidencias en conflicto" sx={{ mb: 0.5 }} />}
+								{t.sugerencia && (
+									<Stack direction="row" spacing={0.5} alignItems="center" sx={{ mb: 0.5 }} flexWrap="wrap" useFlexGap>
+										<Chip
+											size="small"
+											color="info"
+											variant="outlined"
+											label={`sugerencia: ${t.sugerencia.tipo}`}
+											title={t.sugerencia.motivo || ""}
+										/>
+										<Link
+											component="button"
+											variant="caption"
+											disabled={guardando === t.causaId}
+											onClick={() => fijar(t.causaId, t.sugerencia!.tipo)}
+										>
+											confirmar
+										</Link>
+									</Stack>
+								)}
 								{t.evidencias.length === 0 ? (
 									<Typography variant="caption" color="text.secondary">
 										Sin evidencia en las resoluciones
@@ -306,6 +332,9 @@ function TiposProceso({ onCambio }: { onCambio: () => void }) {
 									<ToggleButton value="sumario" sx={{ textTransform: "none", py: 0.25 }}>
 										Sumario / sumarísimo
 									</ToggleButton>
+									<ToggleButton value="especial" sx={{ textTransform: "none", py: 0.25 }}>
+										Especial
+									</ToggleButton>
 								</ToggleButtonGroup>
 							</TableCell>
 						</TableRow>
@@ -318,6 +347,127 @@ function TiposProceso({ onCambio }: { onCambio: () => void }) {
 				</Typography>
 			)}
 		</Box>
+	);
+}
+
+/** Cobertura del tipo de proceso: causas con tipo por fuero, y las sin tipo con la sugerencia del detector (se confirma con un clic). */
+function CoberturaTipoProceso({ onCambio }: { onCambio: () => void }) {
+	const { enqueueSnackbar } = useSnackbar();
+	const [c, setC] = useState<TipoProcesoCobertura | null>(null);
+	const [guardando, setGuardando] = useState<string | null>(null);
+	const cargar = useCallback(async () => {
+		try {
+			setC(await getTipoProcesoCobertura());
+		} catch {
+			setC({ porTipo: [], sinTipo: 0, sugeridas: [] });
+		}
+	}, []);
+	useEffect(() => {
+		cargar();
+	}, [cargar]);
+	if (!c) return <Skeleton variant="rounded" height={60} />;
+
+	const fueros = [...new Set(c.porTipo.map((x) => x.fuero))].sort();
+	const n = (fuero: string, tipo: TipoProceso) =>
+		c.porTipo.filter((x) => x.fuero === fuero && x.tipo === tipo).reduce((a, x) => a + x.causas, 0);
+	const sin = (fuero: string) => c.porTipo.filter((x) => x.fuero === fuero && !x.tipo).reduce((a, x) => a + x.causas, 0);
+	const confirmar = async (causaId: string, tipo: TipoProceso) => {
+		setGuardando(causaId);
+		try {
+			const r = await fijarTipoProceso(causaId, tipo);
+			enqueueSnackbar(`Tipo fijado: ${tipo}. ${r.reencoladas} cédula(s) vuelven a calcularse.`, { variant: "success" });
+			await cargar();
+			onCambio();
+		} catch (err: any) {
+			enqueueSnackbar(err?.response?.data?.message || "No se pudo fijar el tipo", { variant: "error" });
+		} finally {
+			setGuardando(null);
+		}
+	};
+	return (
+		<Stack spacing={1.5}>
+			<Box sx={{ overflowX: "auto" }}>
+				<Table size="small">
+					<TableHead>
+						<TableRow>
+							<TableCell>Fuero</TableCell>
+							<TableCell align="right">Ordinario</TableCell>
+							<TableCell align="right">Sumario</TableCell>
+							<TableCell align="right">Especial</TableCell>
+							<TableCell align="right">Sin tipo</TableCell>
+						</TableRow>
+					</TableHead>
+					<TableBody>
+						{fueros.map((f) => (
+							<TableRow key={f}>
+								<TableCell>{f}</TableCell>
+								<TableCell align="right">{fmt(n(f, "ordinario"))}</TableCell>
+								<TableCell align="right">{fmt(n(f, "sumario"))}</TableCell>
+								<TableCell align="right">{fmt(n(f, "especial"))}</TableCell>
+								<TableCell align="right">{fmt(sin(f))}</TableCell>
+							</TableRow>
+						))}
+					</TableBody>
+				</Table>
+			</Box>
+			<Typography variant="subtitle2">Sin tipo, con sugerencia del detector ({fmt(c.sugeridas.length)})</Typography>
+			{c.sugeridas.length === 0 ? (
+				<Vacio />
+			) : (
+				<Box sx={{ overflowX: "auto" }}>
+					<Table size="small">
+						<TableHead>
+							<TableRow>
+								<TableCell>Causa</TableCell>
+								<TableCell>Objeto</TableCell>
+								<TableCell>Sugerencia</TableCell>
+								<TableCell />
+							</TableRow>
+						</TableHead>
+						<TableBody>
+							{c.sugeridas.map((x) => (
+								<TableRow key={x.causaId} hover>
+									<TableCell sx={{ maxWidth: 300 }}>
+										<Typography variant="body2" noWrap>
+											{x.fuero} {x.expediente} · {x.caratula || "—"}
+										</Typography>
+									</TableCell>
+									<TableCell sx={{ maxWidth: 220 }}>
+										<Typography variant="caption" noWrap>
+											{x.objeto || "—"}
+										</Typography>
+									</TableCell>
+									<TableCell>
+										<Chip
+											size="small"
+											color="info"
+											variant="outlined"
+											label={TIPO_LABEL[x.sugerencia.tipo]}
+											title={x.sugerencia.motivo || ""}
+										/>
+										{x.sugerencia.motivo && (
+											<Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+												{x.sugerencia.motivo}
+											</Typography>
+										)}
+									</TableCell>
+									<TableCell align="right">
+										<Link
+											component="button"
+											variant="body2"
+											disabled={guardando === x.causaId}
+											onClick={() => confirmar(x.causaId, x.sugerencia.tipo)}
+										>
+											Confirmar
+										</Link>
+									</TableCell>
+								</TableRow>
+							))}
+						</TableBody>
+					</Table>
+				</Box>
+			)}
+		</Stack>
 	);
 }
 
@@ -567,6 +717,12 @@ export default function PendientesTab({ onTotal }: { onTotal?: (n: number) => vo
 				nota="El plazo de algunos actos (traslado de demanda, de agravios) depende de si el juicio es ordinario o sumario. Si ninguna resolución lo declara, elegilo vos: las cédulas de esa causa se recalculan."
 			>
 				<TiposProceso onCambio={() => cargar(true)} />
+			</Seccion>
+			<Seccion
+				titulo="Cobertura del tipo de proceso"
+				nota="Causas con tipo detectado por fuero. El detector sugiere por el objeto del juicio; una sugerencia no vale hasta que la confirmás."
+			>
+				<CoberturaTipoProceso onCambio={() => cargar(true)} />
 			</Seccion>
 			<Seccion
 				titulo="Reglas sin verificar que retienen plazos"

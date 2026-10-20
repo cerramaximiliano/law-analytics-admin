@@ -20,6 +20,8 @@ import {
 	Grid,
 	Link,
 	Stack,
+	ToggleButton,
+	ToggleButtonGroup,
 	Tab,
 	Table,
 	TableBody,
@@ -30,7 +32,7 @@ import {
 	Typography,
 } from "@mui/material";
 import { useSnackbar } from "notistack";
-import { getCedulaDetalle, reprocessNotificacion, CedulaDetalle as Detalle } from "api/plazos";
+import { fijarTipoProceso, getCedulaDetalle, reprocessNotificacion, CedulaDetalle as Detalle, TipoProceso } from "api/plazos";
 import RagExtraccionService from "api/ragExtraccion";
 import PdfCanvasViewer from "components/PdfCanvasViewer";
 import CausaUserViewDialog from "../CausaUserViewDialog";
@@ -86,6 +88,16 @@ const METODO_VINCULO: Record<string, string> = {
 	fecha: "por la fecha (única resolución de ese día)",
 	adjunto: "por las páginas adjuntas",
 };
+const FUENTE_TIPO_PROCESO: Record<string, string> = {
+	expreso: "lo declara la resolución",
+	plazo_demanda: "plazo del traslado de demanda",
+	plazo_agravios: "plazo del traslado de agravios",
+	objeto: "objeto del juicio",
+	objeto_especial: "objeto: proceso especial",
+	norma: "norma del fuero (CNT: ley 18.345)",
+	operador: "operador",
+};
+
 const FUENTE_RESOLUCION: Record<string, string> = {
 	transcripcion: "La cédula transcribe la resolución.",
 	copia_adjunta: "La resolución va como copia adjunta a la cédula.",
@@ -446,12 +458,18 @@ export default function CedulaDetalle({
 													<>
 														<Fila label="Tipo">
 															{d.tipoProceso.tipo ? <b>{d.tipoProceso.tipo}</b> : "sin determinar"}
-															{d.tipoProceso.fuente ? ` (${d.tipoProceso.fuente})` : ""}
+															{d.tipoProceso.fuente ? ` (${FUENTE_TIPO_PROCESO[d.tipoProceso.fuente] || d.tipoProceso.fuente})` : ""}
 															{d.tipoProceso.conflicto ? " · evidencias en conflicto" : ""}
 														</Fila>
+														{!d.tipoProceso.tipo && d.tipoProceso.sugerencia && (
+															<Fila label="Sugerencia">
+																<Chip size="small" color="info" variant="outlined" label={d.tipoProceso.sugerencia.tipo} />
+																{d.tipoProceso.sugerencia.motivo ? ` ${d.tipoProceso.sugerencia.motivo}` : ""} (no vale hasta confirmarla)
+															</Fila>
+														)}
 														{d.tipoProceso.evidencias.map((e, i) => (
 															<Fila key={i} label={`Evidencia ${i + 1}`}>
-																{e.tipo} · {e.fuente}
+																{e.tipo} · {FUENTE_TIPO_PROCESO[e.fuente] || e.fuente}
 																{e.operador ? ` · ${e.operador}` : ""}
 																{e.frase ? ` «${e.frase}»` : ""}
 																{e.movementId && (
@@ -467,9 +485,38 @@ export default function CedulaDetalle({
 													</>
 												) : (
 													<Typography variant="body2" color="text.secondary">
-														Ninguna resolución declaró el tipo todavía. Se puede fijar en Pendientes → «falta el tipo de proceso».
+														Ninguna resolución declaró el tipo todavía. Podés fijarlo acá abajo.
 													</Typography>
 												)}
+												<Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1 }}>
+													<Typography variant="caption" color="text.secondary">
+														Fijar como operador:
+													</Typography>
+													<ToggleButtonGroup
+														size="small"
+														exclusive
+														value={d.tipoProceso?.fuente === "operador" ? d.tipoProceso.tipo : null}
+														onChange={async (_, v: TipoProceso | null) => {
+															try {
+																const r = await fijarTipoProceso(String(d.plazo?.causaId ?? d.movementId?.split(":")[0]), v);
+																enqueueSnackbar(v ? `Tipo fijado: ${v}. ${r.reencoladas} cédula(s) vuelven a calcularse.` : "Se quitó el dato del operador", { variant: "success" });
+																cargar();
+															} catch (err: any) {
+																enqueueSnackbar(err?.response?.data?.message || "No se pudo fijar el tipo", { variant: "error" });
+															}
+														}}
+													>
+														<ToggleButton value="ordinario" sx={{ textTransform: "none", py: 0.25 }}>
+															Ordinario
+														</ToggleButton>
+														<ToggleButton value="sumario" sx={{ textTransform: "none", py: 0.25 }}>
+															Sumario
+														</ToggleButton>
+														<ToggleButton value="especial" sx={{ textTransform: "none", py: 0.25 }}>
+															Especial
+														</ToggleButton>
+													</ToggleButtonGroup>
+												</Stack>
 											</Box>
 										)}
 										<Divider sx={{ my: 1.5 }} />
