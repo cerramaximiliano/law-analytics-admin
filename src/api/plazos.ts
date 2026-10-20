@@ -191,6 +191,8 @@ export interface PlazoNormativaRegla {
 	excluye?: string[];
 	// P22: false = reconoce el acto pero no propone vencimiento (la cédula va a revisión manual).
 	proponeVencimiento?: boolean;
+	// P22: instancias a las que aplica ('primera' | 'camara' | 'corte'); vacío = todas.
+	instancias?: string[];
 }
 
 export interface FeriadoJudicial {

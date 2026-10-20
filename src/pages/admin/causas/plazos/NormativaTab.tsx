@@ -45,6 +45,7 @@ const EMPTY: Partial<PlazoNormativaRegla> & { _id: string } = {
 	tipoProceso: null,
 	excluye: [],
 	proponeVencimiento: true,
+	instancias: [],
 };
 
 const lines = (arr?: string[]) => (arr || []).join("\n");
@@ -78,6 +79,7 @@ export function ReglaDialog({
 				matchersStr: lines(regla.matchers),
 				matchersDetalleStr: lines(regla.matchersDetalle),
 				excluyeStr: lines(regla.excluye),
+				instanciasStr: (regla.instancias || []).join(","),
 				proponeVencimiento: regla.proponeVencimiento !== false,
 			});
 		}
@@ -100,6 +102,10 @@ export function ReglaDialog({
 			matchers: fromLines(form.matchersStr),
 			matchersDetalle: fromLines(form.matchersDetalleStr),
 			excluye: fromLines(form.excluyeStr),
+			instancias: (form.instanciasStr || "")
+				.split(",")
+				.map((x: string) => x.trim().toLowerCase())
+				.filter(Boolean),
 			proponeVencimiento: form.proponeVencimiento,
 			plazoDias: Number(form.plazoDias),
 			tipoPlazo: form.tipoPlazo,
@@ -134,6 +140,13 @@ export function ReglaDialog({
 					<Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
 						<TextField size="small" label="Acto (slug)" value={form.acto} onChange={set("acto")} sx={{ flex: 1 }} />
 						<TextField size="small" label="Fueros (coma, * = todos)" value={form.fueroStr} onChange={set("fueroStr")} sx={{ flex: 1 }} />
+						<TextField
+							size="small"
+							label="Instancias (primera, camara, corte; vacío = todas)"
+							value={form.instanciasStr}
+							onChange={set("instanciasStr")}
+							sx={{ flex: 1 }}
+						/>
 						<TextField
 							size="small"
 							label="Objetos (regex, coma, * = todos)"
@@ -435,7 +448,14 @@ export default function NormativaTab() {
 													{r._id}
 												</Typography>
 											</TableCell>
-											<TableCell>{(r.fuero || []).join(",")}</TableCell>
+											<TableCell>
+												{(r.fuero || []).join(",")}
+												{!!r.instancias?.length && (
+													<Typography variant="caption" display="block" color="text.secondary">
+														{r.instancias.join(", ")}
+													</Typography>
+												)}
+											</TableCell>
 											<TableCell>{(((r as any).objetos as string[]) || ["*"]).join(",")}</TableCell>
 											<TableCell>
 												{r.proponeVencimiento === false ? (
