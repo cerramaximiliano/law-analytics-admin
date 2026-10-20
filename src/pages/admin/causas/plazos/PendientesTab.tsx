@@ -197,7 +197,8 @@ const FUENTE_EVIDENCIA: Record<string, string> = {
 	operador: "lo fijó el operador",
 	objeto: "por el objeto del juicio",
 	objeto_especial: "el objeto corresponde a un proceso especial",
-	norma: "por la norma del fuero (CNT: ley 18.345)",
+	norma: "por la norma del fuero (CNT: ley 18.345; CSS: ordinario del CPCCN)",
+	usuario: "lo indicó un usuario en su carpeta",
 };
 
 const TIPO_LABEL: Record<TipoProceso, string> = { ordinario: "Ordinario", sumario: "Sumario / sumarísimo", especial: "Proceso especial" };

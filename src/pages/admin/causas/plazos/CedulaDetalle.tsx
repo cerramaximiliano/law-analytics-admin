@@ -94,7 +94,8 @@ const FUENTE_TIPO_PROCESO: Record<string, string> = {
 	plazo_agravios: "plazo del traslado de agravios",
 	objeto: "objeto del juicio",
 	objeto_especial: "objeto: proceso especial",
-	norma: "norma del fuero (CNT: ley 18.345)",
+	norma: "norma del fuero (CNT: ley 18.345; CSS: ordinario del CPCCN)",
+	usuario: "lo indicó un usuario en su carpeta",
 	operador: "operador",
 };
 

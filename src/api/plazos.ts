@@ -144,7 +144,7 @@ export type TipoProceso = "ordinario" | "sumario" | "especial";
 
 export interface TipoProcesoEvidencia {
 	tipo: TipoProceso;
-	fuente: "expreso" | "plazo_demanda" | "plazo_agravios" | "objeto" | "objeto_especial" | "norma" | "operador";
+	fuente: "expreso" | "plazo_demanda" | "plazo_agravios" | "objeto" | "objeto_especial" | "norma" | "usuario" | "operador";
 	movementId: string | null;
 	fecha: string | null;
 	frase: string | null;
