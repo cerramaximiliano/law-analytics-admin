@@ -187,6 +187,10 @@ export interface PlazoNormativaRegla {
 	verificadoNota?: string | null;
 	/** Variante por tipo de proceso (P21): null = cualquiera. Un acto que depende del trámite tiene una regla por tipo. */
 	tipoProceso?: TipoProceso | null;
+	// P22: contextos que no son el acto (regex sobre la oración donde matcheó).
+	excluye?: string[];
+	// P22: false = reconoce el acto pero no propone vencimiento (la cédula va a revisión manual).
+	proponeVencimiento?: boolean;
 }
 
 export interface FeriadoJudicial {

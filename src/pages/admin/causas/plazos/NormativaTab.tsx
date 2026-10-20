@@ -43,6 +43,8 @@ const EMPTY: Partial<PlazoNormativaRegla> & { _id: string } = {
 	verificado: false,
 	notas: "",
 	tipoProceso: null,
+	excluye: [],
+	proponeVencimiento: true,
 };
 
 const lines = (arr?: string[]) => (arr || []).join("\n");
@@ -75,6 +77,8 @@ export function ReglaDialog({
 				objetosStr: ((regla as any).objetos || ["*"]).join(","),
 				matchersStr: lines(regla.matchers),
 				matchersDetalleStr: lines(regla.matchersDetalle),
+				excluyeStr: lines(regla.excluye),
+				proponeVencimiento: regla.proponeVencimiento !== false,
 			});
 		}
 	}, [regla]);
@@ -95,6 +99,8 @@ export function ReglaDialog({
 				.filter(Boolean),
 			matchers: fromLines(form.matchersStr),
 			matchersDetalle: fromLines(form.matchersDetalleStr),
+			excluye: fromLines(form.excluyeStr),
+			proponeVencimiento: form.proponeVencimiento,
 			plazoDias: Number(form.plazoDias),
 			tipoPlazo: form.tipoPlazo,
 			norma: form.norma,
@@ -174,11 +180,23 @@ export function ReglaDialog({
 						multiline
 						minRows={2}
 					/>
+					<TextField
+						size="small"
+						label="Excluye (una regex por línea): si la oración donde matcheó contiene alguna, se busca la siguiente aparición"
+						value={form.excluyeStr}
+						onChange={set("excluyeStr")}
+						multiline
+						minRows={2}
+					/>
 					<TextField size="small" label="Notas" value={form.notas} onChange={set("notas")} multiline minRows={2} />
 					<Stack direction="row" spacing={3}>
 						<Stack direction="row" alignItems="center">
 							<Switch checked={form.habilitado} onChange={(e) => setForm({ ...form, habilitado: e.target.checked })} />
 							<Typography variant="body2">Habilitada</Typography>
+						</Stack>
+						<Stack direction="row" alignItems="center">
+							<Switch checked={form.proponeVencimiento} onChange={(e) => setForm({ ...form, proponeVencimiento: e.target.checked })} />
+							<Typography variant="body2">Propone vencimiento (apagado: la cédula va a revisión manual)</Typography>
 						</Stack>
 						<Stack direction="row" alignItems="center">
 							<Switch
@@ -420,7 +438,22 @@ export default function NormativaTab() {
 											<TableCell>{(r.fuero || []).join(",")}</TableCell>
 											<TableCell>{(((r as any).objetos as string[]) || ["*"]).join(",")}</TableCell>
 											<TableCell>
-												{r.plazoDias}d {r.tipoPlazo}
+												{r.proponeVencimiento === false ? (
+													<Tooltip title="Reconoce el acto pero no propone vencimiento: la cédula va a revisión manual">
+														<Chip size="small" color="warning" variant="outlined" label="revisar" />
+													</Tooltip>
+												) : (
+													<>
+														{r.plazoDias}d {r.tipoPlazo}
+													</>
+												)}
+												{!!r.excluye?.length && (
+													<Tooltip title={`Excluye: ${r.excluye.join(" · ")}`}>
+														<Typography variant="caption" display="block" color="text.secondary">
+															{r.excluye.length} exclusión(es)
+														</Typography>
+													</Tooltip>
+												)}
 											</TableCell>
 											<TableCell>
 												<Chip size="small" variant="outlined" label={r.norma} />
