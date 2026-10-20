@@ -12,6 +12,7 @@ export const COLOR_ESTADO: Record<string, string> = {
 	insumo: STALE_AMBER,
 	abierto: ROJO,
 	sentencia: GRIS,
+	docente: GRIS,
 	descartado: GRIS,
 	fuera_de_alcance: GRIS,
 	error_motor: ROJO,

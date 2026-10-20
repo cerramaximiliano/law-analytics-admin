@@ -8,6 +8,7 @@ export type EstadoCaso =
 	| "insumo"
 	| "abierto"
 	| "sentencia"
+	| "docente"
 	| "descartado"
 	| "fuera_de_alcance"
 	| "error_motor"
@@ -47,6 +48,7 @@ export const ESTADO_LABEL: Record<EstadoCaso, string> = {
 	insumo: "Insumo",
 	abierto: "Abierto",
 	sentencia: "Sentencia",
+	docente: "Jubilación docente",
 	descartado: "Descartado",
 	fuera_de_alcance: "Fuera de alcance",
 	error_motor: "Error del motor",
@@ -111,8 +113,25 @@ export interface CasoListItem {
 	revision?: RevisionEval;
 	impresos?: Impresos;
 	recalculos?: string[];
+	/** jubilación docente (Ley 24.016): suplemento hasta el 82 % del cargo; insumo para el motor del régimen */
+	docente?: DocenteEval;
 	evaluadoEn?: string;
 	versionHub?: string;
+}
+
+export interface DocenteEval {
+	suplementoMensual: number | null;
+	suplementoRetroactivo: number | null;
+	totalHaberActividad: number | null;
+	totalHaber: number | null;
+	porcentajeImpreso: number | null;
+	porcentaje: number | null;
+	sumaHaber: number | null;
+	factorTotal: number | null;
+	factorMotor: number | null;
+	factorPC: number | null;
+	factorPAP: number | null;
+	controles: { porcentaje82: boolean | null; sumaIgualTotal: boolean | null; movilidadComoTotal: boolean | null };
 }
 
 export interface CasosParams {

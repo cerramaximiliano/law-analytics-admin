@@ -353,6 +353,21 @@ export default function CasoDrawer({ id: idInicial, onClose, onGuardado }: Props
 								Causas: {ev.causas.join(" · ")}
 							</Typography>
 						)}
+						{ev?.docente && (
+							<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
+								Jubilación docente (sección aparte, insumo para el motor del régimen
+								{ev.estadoReferencia ? `; ley general: ${ev.estadoReferencia}` : ""}): suplemento {fmtNum(ev.docente.suplementoMensual)}
+								{ev.docente.suplementoRetroactivo ? ` (retroactivo ${fmtNum(ev.docente.suplementoRetroactivo)})` : ""} · haber en actividad{" "}
+								{fmtNum(ev.docente.totalHaberActividad)} · total {fmtNum(ev.docente.totalHaber)}
+								{ev.docente.porcentaje ? ` (${fmtNum(ev.docente.porcentaje * 100)} %)` : ""} · mensual {fmtNum(ev.docente.sumaHaber)}
+								{ev.docente.factorTotal ? ` (×${fmtNum(ev.docente.factorTotal, 4)})` : ""}
+								{ev.docente.factorPC ? ` · PC ×${fmtNum(ev.docente.factorPC, 4)} · PAP ×${fmtNum(ev.docente.factorPAP, 4)}` : ""}
+								{ev.docente.factorMotor ? ` (ley general ×${fmtNum(ev.docente.factorMotor, 4)})` : ""} · controles:{" "}
+								{Object.entries(ev.docente.controles)
+									.map(([k, v]) => `${k} ${v === null ? "sin dato" : v ? "sí" : "no"}`)
+									.join(", ")}
+							</Typography>
+						)}
 						{ev?.filas && (
 							<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
 								Filas contra el actualizado impreso: {ev.filas.ok} exactas
