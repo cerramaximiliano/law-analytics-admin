@@ -42,7 +42,19 @@ interface Props {
 	modoRevision?: boolean;
 }
 
-const ESTADOS = ["abierto", "insumo", "explicado", "cerrado", "error_motor", "sin_comparables", "descartado", "reemplazado", "sentencia", "docente"];
+const ESTADOS = [
+	"abierto",
+	"insumo",
+	"explicado",
+	"cerrado",
+	"error_motor",
+	"sin_comparables",
+	"descartado",
+	"reemplazado",
+	"sentencia",
+	"docente",
+	"investigador",
+];
 
 export default function CasosTable({ base, modoRevision }: Props) {
 	const theme = useTheme();

@@ -353,21 +353,28 @@ export default function CasoDrawer({ id: idInicial, onClose, onGuardado }: Props
 								Causas: {ev.causas.join(" · ")}
 							</Typography>
 						)}
-						{ev?.docente && (
-							<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
-								Jubilación docente (sección aparte, insumo para el motor del régimen
-								{ev.estadoReferencia ? `; ley general: ${ev.estadoReferencia}` : ""}): suplemento {fmtNum(ev.docente.suplementoMensual)}
-								{ev.docente.suplementoRetroactivo ? ` (retroactivo ${fmtNum(ev.docente.suplementoRetroactivo)})` : ""} · haber en actividad{" "}
-								{fmtNum(ev.docente.totalHaberActividad)} · total {fmtNum(ev.docente.totalHaber)}
-								{ev.docente.porcentaje ? ` (${fmtNum(ev.docente.porcentaje * 100)} %)` : ""} · mensual {fmtNum(ev.docente.sumaHaber)}
-								{ev.docente.factorTotal ? ` (×${fmtNum(ev.docente.factorTotal, 4)})` : ""}
-								{ev.docente.factorPC ? ` · PC ×${fmtNum(ev.docente.factorPC, 4)} · PAP ×${fmtNum(ev.docente.factorPAP, 4)}` : ""}
-								{ev.docente.factorMotor ? ` (ley general ×${fmtNum(ev.docente.factorMotor, 4)})` : ""} · controles:{" "}
-								{Object.entries(ev.docente.controles)
-									.map(([k, v]) => `${k} ${v === null ? "sin dato" : v ? "sí" : "no"}`)
-									.join(", ")}
-							</Typography>
-						)}
+						{(() => {
+							const rg = ev?.docente || ev?.investigador;
+							if (!rg) return null;
+							return (
+								<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
+									{ev?.docente ? "Jubilación docente" : "Jubilación de investigador científico"} (sección aparte, insumo para el motor del
+									régimen
+									{rg.detectadoPor === "prestacion" ? "; detectada por la prestación" : ""}
+									{ev?.estadoReferencia ? `; ley general: ${ev.estadoReferencia}` : ""}): suplemento {fmtNum(rg.suplementoMensual)}
+									{rg.suplementoRetroactivo ? ` (retroactivo ${fmtNum(rg.suplementoRetroactivo)})` : ""} · haber en actividad{" "}
+									{fmtNum(rg.totalHaberActividad)} · total {fmtNum(rg.totalHaber)}
+									{rg.porcentaje ? ` (${fmtNum(rg.porcentaje * 100)} %)` : ""} · mensual {fmtNum(rg.sumaHaber)}
+									{rg.factorTotal ? ` (×${fmtNum(rg.factorTotal, 4)})` : ""}
+									{rg.totalMovido ? ` · total con movilidad general ${fmtNum(rg.totalMovido)}` : ""}
+									{rg.factorPC ? ` · PC ×${fmtNum(rg.factorPC, 4)} · PAP ×${fmtNum(rg.factorPAP, 4)}` : ""}
+									{rg.factorMotor ? ` (ley general ×${fmtNum(rg.factorMotor, 4)})` : ""} · controles:{" "}
+									{Object.entries(rg.controles)
+										.map(([k, v]) => `${k} ${v === null ? "sin dato" : v ? "sí" : "no"}`)
+										.join(", ")}
+								</Typography>
+							);
+						})()}
 						{ev?.filas && (
 							<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
 								Filas contra el actualizado impreso: {ev.filas.ok} exactas

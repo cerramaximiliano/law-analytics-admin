@@ -30,6 +30,7 @@ const ORDEN_CONSTANCIAS: EstadoCaso[] = [
 	"abierto",
 	"insumo",
 	"docente",
+	"investigador",
 	"error_motor",
 	"sin_comparables",
 	"descartado",

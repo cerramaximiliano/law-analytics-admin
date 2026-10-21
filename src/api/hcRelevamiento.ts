@@ -9,6 +9,7 @@ export type EstadoCaso =
 	| "abierto"
 	| "sentencia"
 	| "docente"
+	| "investigador"
 	| "descartado"
 	| "fuera_de_alcance"
 	| "error_motor"
@@ -49,6 +50,7 @@ export const ESTADO_LABEL: Record<EstadoCaso, string> = {
 	abierto: "Abierto",
 	sentencia: "Sentencia",
 	docente: "Jubilación docente",
+	investigador: "Jubilación de investigador científico",
 	descartado: "Descartado",
 	fuera_de_alcance: "Fuera de alcance",
 	error_motor: "Error del motor",
@@ -115,11 +117,16 @@ export interface CasoListItem {
 	recalculos?: string[];
 	/** jubilación docente (Ley 24.016): suplemento hasta el 82 % del cargo; insumo para el motor del régimen */
 	docente?: DocenteEval;
+	/** jubilación de investigador científico (régimen especial, 85 % del cargo en lo impreso): mismos campos que la docente */
+	investigador?: DocenteEval;
 	evaluadoEn?: string;
 	versionHub?: string;
 }
 
 export interface DocenteEval {
+	regimen?: "docente" | "investigador";
+	/** concepto del suplemento o tipo de prestación ("DOC.", "INV.C.") */
+	detectadoPor?: "concepto" | "prestacion";
 	suplementoMensual: number | null;
 	suplementoRetroactivo: number | null;
 	totalHaberActividad: number | null;
@@ -131,7 +138,9 @@ export interface DocenteEval {
 	factorMotor: number | null;
 	factorPC: number | null;
 	factorPAP: number | null;
-	controles: { porcentaje82: boolean | null; sumaIgualTotal: boolean | null; movilidadComoTotal: boolean | null };
+	/** TOTAL impreso movido con la movilidad general (FAD, acuerdo], redondeo mes a mes */
+	totalMovido?: number | null;
+	controles: Record<string, boolean | null>;
 }
 
 export interface CasosParams {
