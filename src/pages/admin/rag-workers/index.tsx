@@ -118,7 +118,7 @@ const RagWorkersPage = () => {
 			component: <WorkerIndexationTab />,
 		},
 		{
-			label: "Extracción de cédulas",
+			label: "Extracción de texto",
 			value: "extraccion",
 			icon: <DocumentText size={20} />,
 			component: <ExtraccionTab />,
