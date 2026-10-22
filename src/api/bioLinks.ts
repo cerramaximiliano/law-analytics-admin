@@ -3,7 +3,13 @@ import mktAxios from "utils/mktAxios";
 // ==================== Tipos ====================
 
 /** Icono del set fijo dibujado en la página de links. */
-export type BioLinkIcono = "home" | "libro" | "lapiz" | "link";
+export type BioLinkIcono = "home" | "libro" | "lapiz" | "link" | "app";
+
+/** En qué dispositivos se muestra el link (la página detecta el del visitante). */
+export type BioLinkPlataforma = "todas" | "android" | "ios" | "desktop";
+
+/** Insignia oficial de tienda a la derecha de la tarjeta. */
+export type BioLinkInsignia = "ninguna" | "google-play";
 
 export interface BioLink {
 	_id: string;
@@ -11,6 +17,9 @@ export interface BioLink {
 	descripcion: string;
 	url: string;
 	icono: BioLinkIcono;
+	/** Links viejos sin el campo: "todas". */
+	plataforma?: BioLinkPlataforma;
+	insignia?: BioLinkInsignia;
 	/** Solo los habilitados se muestran en links.lawanalytics.app. */
 	habilitado: boolean;
 	orden: number;
@@ -23,6 +32,8 @@ export interface BioLinkPayload {
 	descripcion?: string;
 	url?: string;
 	icono?: BioLinkIcono;
+	plataforma?: BioLinkPlataforma;
+	insignia?: BioLinkInsignia;
 	habilitado?: boolean;
 	orden?: number;
 }

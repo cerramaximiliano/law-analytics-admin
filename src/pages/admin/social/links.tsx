@@ -47,13 +47,36 @@ import { Add, Edit2, ExportSquare, Refresh, Trash } from "iconsax-react";
 
 // project imports
 import MainCard from "components/MainCard";
-import { BioLink, BioLinkIcono, BioLinkPayload, createBioLink, deleteBioLink, listBioLinks, updateBioLink } from "api/bioLinks";
+import {
+	BioLink,
+	BioLinkIcono,
+	BioLinkInsignia,
+	BioLinkPayload,
+	BioLinkPlataforma,
+	createBioLink,
+	deleteBioLink,
+	listBioLinks,
+	updateBioLink,
+} from "api/bioLinks";
 
 const ICONO_LABEL: Record<BioLinkIcono, string> = {
 	home: "Grilla (app)",
 	libro: "Libro (jurisprudencia)",
 	lapiz: "Lápiz (educativo)",
 	link: "Enlace (genérico)",
+	app: "Teléfono (app)",
+};
+
+const PLATAFORMA_LABEL: Record<BioLinkPlataforma, string> = {
+	todas: "Todos los dispositivos",
+	android: "Solo Android",
+	ios: "Solo iPhone / iPad",
+	desktop: "Solo computadora",
+};
+
+const INSIGNIA_LABEL: Record<BioLinkInsignia, string> = {
+	ninguna: "Sin insignia",
+	"google-play": "Google Play (oficial)",
 };
 
 const VACIO: BioLinkPayload & { titulo: string; url: string } = {
@@ -61,6 +84,8 @@ const VACIO: BioLinkPayload & { titulo: string; url: string } = {
 	descripcion: "",
 	url: "https://",
 	icono: "link",
+	plataforma: "todas",
+	insignia: "ninguna",
 	habilitado: false,
 	orden: 10,
 };
@@ -103,6 +128,8 @@ const LinksBio = () => {
 						descripcion: link.descripcion,
 						url: link.url,
 						icono: link.icono,
+						plataforma: link.plataforma ?? "todas",
+						insignia: link.insignia ?? "ninguna",
 						habilitado: link.habilitado,
 						orden: link.orden,
 				  },
@@ -228,7 +255,13 @@ const LinksBio = () => {
 									{link.url}
 								</Typography>
 								<Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mt: 1 }} gap={1}>
-									<Chip size="small" variant="outlined" label={ICONO_LABEL[link.icono] || link.icono} />
+									<Stack direction="row" gap={0.5} flexWrap="wrap" useFlexGap>
+										<Chip size="small" variant="outlined" label={ICONO_LABEL[link.icono] || link.icono} />
+										{link.plataforma && link.plataforma !== "todas" && (
+											<Chip size="small" color="info" variant="outlined" label={PLATAFORMA_LABEL[link.plataforma]} />
+										)}
+										{link.insignia === "google-play" && <Chip size="small" variant="outlined" label="Insignia Google Play" />}
+									</Stack>
 									<Stack direction="row" sx={{ flexShrink: 0 }}>
 										<IconButton size="small" onClick={() => abrirEditor(link)}>
 											<Edit2 size={17} />
@@ -280,7 +313,13 @@ const LinksBio = () => {
 											</Typography>
 										</TableCell>
 										<TableCell>
-											<Chip size="small" variant="outlined" label={ICONO_LABEL[link.icono] || link.icono} />
+											<Stack direction="row" gap={0.5} flexWrap="wrap" useFlexGap>
+												<Chip size="small" variant="outlined" label={ICONO_LABEL[link.icono] || link.icono} />
+												{link.plataforma && link.plataforma !== "todas" && (
+													<Chip size="small" color="info" variant="outlined" label={PLATAFORMA_LABEL[link.plataforma]} />
+												)}
+												{link.insignia === "google-play" && <Chip size="small" variant="outlined" label="Insignia Google Play" />}
+											</Stack>
 										</TableCell>
 										<TableCell align="center">
 											<Switch size="small" checked={link.habilitado} onChange={() => toggleHabilitado(link)} />
@@ -341,6 +380,34 @@ const LinksBio = () => {
 									{(Object.keys(ICONO_LABEL) as BioLinkIcono[]).map((k) => (
 										<MenuItem key={k} value={k}>
 											{ICONO_LABEL[k]}
+										</MenuItem>
+									))}
+								</Select>
+							</FormControl>
+							<FormControl size="small" sx={{ minWidth: 220 }}>
+								<InputLabel>Mostrar en</InputLabel>
+								<Select
+									value={form.plataforma ?? "todas"}
+									label="Mostrar en"
+									onChange={(e) => setForm((f) => ({ ...f, plataforma: e.target.value as BioLinkPlataforma }))}
+								>
+									{(Object.keys(PLATAFORMA_LABEL) as BioLinkPlataforma[]).map((k) => (
+										<MenuItem key={k} value={k}>
+											{PLATAFORMA_LABEL[k]}
+										</MenuItem>
+									))}
+								</Select>
+							</FormControl>
+							<FormControl size="small" sx={{ minWidth: 220 }}>
+								<InputLabel>Insignia</InputLabel>
+								<Select
+									value={form.insignia ?? "ninguna"}
+									label="Insignia"
+									onChange={(e) => setForm((f) => ({ ...f, insignia: e.target.value as BioLinkInsignia }))}
+								>
+									{(Object.keys(INSIGNIA_LABEL) as BioLinkInsignia[]).map((k) => (
+										<MenuItem key={k} value={k}>
+											{INSIGNIA_LABEL[k]}
 										</MenuItem>
 									))}
 								</Select>
