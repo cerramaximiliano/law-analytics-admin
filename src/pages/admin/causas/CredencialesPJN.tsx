@@ -55,6 +55,7 @@ import {
 	Sms,
 	Lock,
 	Warning2,
+	DocumentText,
 } from "iconsax-react";
 import { enqueueSnackbar } from "notistack";
 import MainCard from "components/MainCard";
@@ -73,6 +74,7 @@ import pjnCredentialsService, {
 	CredentialErrorEntry,
 	PjnAdminAlert,
 } from "api/pjnCredentials";
+import BandejaEvidenciaDialog from "./BandejaEvidenciaDialog";
 import EmailLogsService from "api/emailLogs";
 import { EmailLog } from "types/email-log";
 
@@ -482,6 +484,7 @@ const CredencialesPJN = () => {
 	// Detalle del historial de errores (traído aparte, incluye screenshots pre-firmados de S3)
 	const [errorHistoryDetail, setErrorHistoryDetail] = useState<CredentialErrorEntry[]>([]);
 	const [errorHistoryLoading, setErrorHistoryLoading] = useState(false);
+	const [bandejaDialog, setBandejaDialog] = useState<PjnCredential | null>(null);
 	// Lightbox para ver el screenshot en grande
 	const [screenshotLightbox, setScreenshotLightbox] = useState<{ url: string; label: string } | null>(null);
 
@@ -1725,6 +1728,11 @@ const CredencialesPJN = () => {
 																color={cred.bandejaNotificationsEnabled ? "success" : "default"}
 															>
 																<Sms size={18} variant={cred.bandejaNotificationsEnabled ? "Bold" : "Linear"} />
+															</IconButton>
+														</Tooltip>
+														<Tooltip title="Bandeja: estado y evidencia de fallos">
+															<IconButton size="small" onClick={() => setBandejaDialog(cred)} color="default">
+																<DocumentText size={18} />
 															</IconButton>
 														</Tooltip>
 														<Tooltip title="Actualizar contraseña">
@@ -2998,6 +3006,13 @@ const CredencialesPJN = () => {
 					<Button onClick={() => setErrorHistoryDialog({ open: false, credential: null })}>Cerrar</Button>
 				</DialogActions>
 			</Dialog>
+
+			<BandejaEvidenciaDialog
+				open={!!bandejaDialog}
+				credentialId={bandejaDialog?._id || null}
+				title={bandejaDialog ? `${bandejaDialog.userName} — ${bandejaDialog.cuilMasked}` : undefined}
+				onClose={() => setBandejaDialog(null)}
+			/>
 
 			{/* Lightbox del screenshot de error de login */}
 			<Dialog open={!!screenshotLightbox} onClose={() => setScreenshotLightbox(null)} maxWidth="lg">

@@ -807,6 +807,52 @@ export interface CredentialErrorEntry {
 	screenshotUrl: string | null; // URL pre-firmada (válida ~5 min) o null
 }
 
+// Evidencia de fallos del worker de bandeja (bandeja-sync-state.errorHistory)
+export interface BandejaHttpResult {
+	status: number | null;
+	message: string | null;
+	body: string | null;
+}
+
+export interface BandejaErrorEntry {
+	timestamp: string | null;
+	capturedAt: string | null;
+	code: string | null;
+	message: string | null;
+	consecutiveErrors: number | null;
+	http: { notif?: BandejaHttpResult | null; escritos?: BandejaHttpResult | null } | null;
+	token: {
+		azp?: string;
+		aud?: string | string[];
+		scope?: string;
+		realmRoles?: string[];
+		clientRoles?: Record<string, string[]>;
+		exp?: number | string;
+	} | null;
+	/** true si pasaron >90 días: la regla S3 ya borró las capturas. */
+	expired: boolean;
+	screenshots: Array<{
+		label: string | null;
+		url: string | null;
+		s3Key: string | null;
+		textSnippet: string | null;
+		screenshotUrl: string | null; // pre-firmada (~5 min); null si expiró
+	}>;
+}
+
+export interface BandejaState {
+	credentialsId: string;
+	consecutiveErrors: number;
+	consecutiveNoAccess: number;
+	excludedUntil: string | null;
+	excludedReason: string | null;
+	lastError: { code?: string; message?: string; timestamp?: string } | null;
+	lastRunAt: string | null;
+	lastSuccessAt: string | null;
+	lastPlazos: Record<string, number> | null;
+	errorHistory: BandejaErrorEntry[];
+}
+
 export interface CausaScreenshotEntry {
 	_id: string;
 	type: "search_error" | "scraping_error" | "degraded_scrape" | "processing_exception" | "login_error" | "empty_movements" | "other";
@@ -884,6 +930,12 @@ class PjnCredentialsService {
 	 */
 	async getErrorHistory(id: string): Promise<{ success: boolean; data: CredentialErrorEntry[]; count: number }> {
 		const response = await adminAxios.get(`/api/pjn-credentials/${id}/error-history`);
+		return response.data;
+	}
+
+	/** Estado del worker de bandeja + evidencia de fallos (null si no hay doc). */
+	async getBandejaState(id: string): Promise<{ success: boolean; data: BandejaState | null }> {
+		const response = await adminAxios.get(`/api/pjn-credentials/${id}/bandeja`);
 		return response.data;
 	}
 
