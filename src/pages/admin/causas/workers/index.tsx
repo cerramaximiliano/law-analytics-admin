@@ -123,10 +123,12 @@ const WORKER_TABS: WorkerTab[] = [
 		label: "Intervinientes",
 		value: "intervinientes",
 		icon: <People size={20} />,
-		description: "Extrae partes y letrados de cada causa desde el PJN",
+		description:
+			"pjn-extra-info: partes y letrados de las causas públicas sin credencial activa (las de credencial las lee pjn-mis-causas-intervinientes en worker-cloud-02)",
 		status: "active",
-		host: "app",
-		ip: "18.228.63.73",
+		host: "worker_02",
+		ip: "100.98.180.101",
+		flowView: "/admin/flujos?tab=intervinientes",
 	},
 	{
 		label: "Stuck documents",
@@ -470,11 +472,11 @@ const WorkersConfig = () => {
 								</Typography>
 							</Box>
 							<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap sx={{ flexShrink: 0 }}>
-								{current.dataView && (
+								{(current.dataView || current.flowView) && (
 									<CrossViewLinks
 										current="worker"
-										to={{ datos: current.dataView.to, flujo: current.flowView }}
-										tooltips={{ datos: current.dataView.tooltip }}
+										to={{ datos: current.dataView?.to, flujo: current.flowView }}
+										tooltips={{ datos: current.dataView?.tooltip }}
 									/>
 								)}
 								{current.status && (

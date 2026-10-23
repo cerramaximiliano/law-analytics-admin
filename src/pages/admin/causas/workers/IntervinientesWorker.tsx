@@ -54,6 +54,8 @@ import { useSnackbar } from "notistack";
 import CopyButton from "components/CopyButton";
 import { useTabIndexParam } from "hooks/useTabParam";
 import WorkerSubTabs, { SubTabDef } from "./WorkerSubTabs";
+import IntervinientesPjnFlow from "../../flujos/IntervinientesPjnFlow";
+import { describirCron } from "../../flujos/intervinientesPjnFlowData";
 import ExtraInfoConfigService, {
 	ExtraInfoConfig,
 	ExtraInfoStatus,
@@ -357,7 +359,18 @@ const IntervinientesWorker = () => {
 	// Criterios de elegibilidad
 	const reextractDays = config?.eligibility?.reextractAfterDays;
 	const eligibilityCriteria = [
-		{ field: "source", condition: "in ['app', 'cache']", description: "Causa importada desde la app (no pjn-login)", active: true },
+		{
+			field: "source",
+			condition: "in ['app', 'cache', 'pjn-login']",
+			description: "Causa dada de alta desde la app, el caché o Mis Causas",
+			active: true,
+		},
+		{
+			field: "hasActiveCredential",
+			condition: "!== true",
+			description: "Sin credencial activa. Las de credencial activa las lee pjn-mis-causas-intervinientes (worker-cloud-02)",
+			active: true,
+		},
 		{ field: "verified", condition: "=== true", description: "Documento verificado en PJN", active: config?.eligibility?.requireVerified },
 		{ field: "isValid", condition: "=== true", description: "Expediente existe y es accesible", active: config?.eligibility?.requireValid },
 		{ field: "isPrivate", condition: "!== true", description: "No es documento privado", active: config?.eligibility?.excludePrivate },
@@ -375,138 +388,6 @@ const IntervinientesWorker = () => {
 				? `Re-extrae si fue procesado hace más de ${reextractDays} días`
 				: "Re-extracción deshabilitada (no se vuelven a procesar)",
 			active: !!reextractDays,
-		},
-	];
-
-	// Flujo del worker
-	const workerFlow = [
-		{
-			phase: "1. Disparo del Cron",
-			description: "El cron se ejecuta cada 30 minutos (configurable)",
-			steps: [
-				"El cron verifica dos condiciones antes de iniciar:",
-				"",
-				"A) ¿Hay un ciclo en progreso?",
-				"  → Si isProcessing === true, salta este turno",
-				"  → Esto evita que se solapen dos ciclos de scraping",
-				"",
-				"B) ¿Estamos dentro del horario permitido?",
-				"  → Verifica schedule.respectWorkingHours en la configuración",
-				"  → Si activo: revisa días (schedule.workDays) y horas (workStartHour/workEndHour)",
-				"  → Si respectWorkingHours=false: trabaja 24/7 sin restricción",
-				"  → Fuera de horario: no ejecuta, espera al próximo cron",
-				"",
-				"C) ¿Cambió la configuración?",
-				"  → Cada 5 ciclos verifica si cronExpression cambió en MongoDB",
-				"  → Si cambió: reinicia el cron con la nueva expresión",
-				"  → Cambios desde la UI se aplican sin reiniciar el worker",
-			],
-			color: theme.palette.grey[600],
-		},
-		{
-			phase: "2. Elegibilidad de Causas",
-			description: "Qué causas pueden ser procesadas",
-			steps: [
-				"Se consultan TODAS las colecciones: civil, ss, trabajo, comercial",
-				"Una causa es ELEGIBLE si cumple TODOS estos criterios:",
-				"",
-				"  ✓ source in ['app', 'cache']",
-				"     Causa importada desde la app (excluye pjn-login)",
-				"",
-				"  ✓ verified === true",
-				"     La causa fue verificada previamente en PJN",
-				"",
-				"  ✓ isValid === true",
-				"     El expediente existe y es accesible",
-				"",
-				"  ✓ isPrivate !== true",
-				"     No es un documento privado del usuario",
-				"",
-				"  ✓ lastUpdate existe",
-				"     Tiene al menos una actualización registrada",
-				"",
-				"  ✓ detailsLoaded !== true (O re-extracción)",
-				"     Aún no fue procesado por este worker",
-				"     O si está configurado reextractAfterDays > 0:",
-				"     detailsLastUpdate tiene más de N días",
-				"",
-				"IMPORTANTE: La elegibilidad NO depende de usuarios ni folders.",
-				"Se procesan TODAS las causas que cumplan estos criterios.",
-				"",
-				"NOTA: Por defecto reextractAfterDays = null (sin re-extracción).",
-			],
-			color: theme.palette.primary.main,
-		},
-		{
-			phase: "3. Extracción (Scraping)",
-			description: "Se ejecuta para cada causa elegible del batch",
-			steps: [
-				"Para cada causa elegible (hasta batch_size por ciclo):",
-				"",
-				"1. Abre navegador Puppeteer (headless)",
-				"2. Navega a https://scw.pjn.gov.ar",
-				"3. Completa formulario: fuero, número, año",
-				"4. Resuelve captcha PJN con Capsolver",
-				"5. Verifica que el expediente exista",
-				"6. Click en pestaña 'Intervinientes'",
-				"7. Extrae la tabla completa:",
-				"   • PARTES: tipo, nombre, tomo/folio, IEJ",
-				"   • LETRADOS: tipo, nombre, matrícula, IEJ",
-				"8. Normaliza nombres (para deduplicar variantes)",
-				"9. Guarda en colección 'intervinientes'",
-				"",
-				"Este paso SIEMPRE ocurre para causas elegibles.",
-			],
-			color: theme.palette.info.main,
-		},
-		{
-			phase: "4. Sincronización a Contactos",
-			description: "CONDICIONAL: Solo para usuarios con opt-in",
-			steps: [
-				"Después de extraer intervinientes de una causa:",
-				"",
-				"1. Busca folders vinculados a esa causa (por causaId)",
-				"2. Para CADA folder encontrado:",
-				"",
-				"   → Obtiene el userId del folder",
-				"   → Consulta preferencia del usuario:",
-				"     user.preferences.pjn.syncContactsFromIntervinientes",
-				"",
-				"   SI syncContactsFromIntervinientes === true:",
-				"     • Obtiene límites de suscripción (maxContacts)",
-				"     • Verifica espacio disponible",
-				"     • Crea contactos con importSource='interviniente'",
-				"     • Vincula contacto al folder",
-				"     • Actualiza folder.contactsCount",
-				"",
-				"   SI syncContactsFromIntervinientes === false (o no existe):",
-				"     • No hace nada para ese usuario",
-				"     • Los intervinientes quedan en la colección",
-				"     • Disponibles para sincronizar si activa la preferencia",
-			],
-			color: theme.palette.warning.main,
-		},
-		{
-			phase: "5. Finalización",
-			description: "Marca la causa como procesada",
-			steps: [
-				"Independientemente del resultado de sync:",
-				"",
-				"1. Actualiza la causa en su colección:",
-				"   • detailsLoaded = true",
-				"   • detailsLastUpdate = new Date()",
-				"",
-				"2. Actualiza estadísticas diarias:",
-				"   • processed, success/errors",
-				"   • intervinientesExtracted, contactsSynced",
-				"   • Contadores por fuero",
-				"",
-				"3. Cierra la página del navegador",
-				"4. Espera 2 segundos antes del siguiente documento",
-				"",
-				"La causa NO volverá a procesarse (detailsLoaded = true)",
-			],
-			color: theme.palette.success.main,
 		},
 	];
 
@@ -620,9 +501,9 @@ const IntervinientesWorker = () => {
 									/>
 								) : (
 									<>
-										<Chip label={config?.schedule?.cronExpression || "*/30 * * * *"} size="small" sx={{ fontFamily: "monospace" }} />
+										<Chip label={config?.schedule?.cronExpression || "(sin cron)"} size="small" sx={{ fontFamily: "monospace" }} />
 										<Typography variant="caption" color="text.secondary">
-											Cada 30 minutos
+											{describirCron(config?.schedule?.cronExpression, config?.schedule?.timezone)}
 										</Typography>
 									</>
 								)}
@@ -879,83 +760,21 @@ const IntervinientesWorker = () => {
 	);
 
 	// Contenido del tab de Flujo
+	// Mismo diagrama que /admin/flujos?tab=intervinientes: una sola fuente para el pipeline
+	// de los dos workers (este y el de pjn-mis-causas) y los disparadores del hub.
 	const FlowContent = () => (
 		<Stack spacing={{ xs: 1.5, sm: 2, md: 3 }}>
 			<Card variant="outlined">
 				<CardContent>
-					<Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-						Flujo del Worker
-					</Typography>
-
-					{workerFlow.map((phase, phaseIndex) => (
-						<Box key={phaseIndex} sx={{ mb: 3 }}>
-							<Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 1.5 }}>
-								<Box
-									sx={{
-										width: 32,
-										height: 32,
-										borderRadius: "50%",
-										backgroundColor: alpha(phase.color, 0.1),
-										display: "flex",
-										alignItems: "center",
-										justifyContent: "center",
-									}}
-								>
-									<Typography variant="body2" fontWeight="bold" sx={{ color: phase.color }}>
-										{phaseIndex + 1}
-									</Typography>
-								</Box>
-								<Box>
-									<Typography variant="subtitle2" fontWeight="bold">
-										{phase.phase}
-									</Typography>
-									<Typography variant="caption" color="text.secondary">
-										{phase.description}
-									</Typography>
-								</Box>
-							</Stack>
-
-							<Box sx={{ ml: 2, pl: 3, borderLeft: `2px solid ${alpha(phase.color, 0.3)}` }}>
-								{phase.steps.map((step, stepIndex) => (
-									<Stack key={stepIndex} direction="row" spacing={1} alignItems="flex-start" sx={{ mb: 0.75 }}>
-										<Box
-											sx={{
-												width: 6,
-												height: 6,
-												borderRadius: "50%",
-												backgroundColor: phase.color,
-												mt: 0.75,
-												flexShrink: 0,
-											}}
-										/>
-										<Typography variant="body2" sx={{ fontFamily: step.startsWith("  →") ? "monospace" : "inherit" }}>
-											{step}
-										</Typography>
-									</Stack>
-								))}
-							</Box>
-
-							{phaseIndex < workerFlow.length - 1 && <Divider sx={{ mt: 2 }} />}
-						</Box>
-					))}
+					<IntervinientesPjnFlow />
 				</CardContent>
 			</Card>
-
-			<Alert severity="warning" variant="outlined" sx={{ mb: 2 }}>
-				<Typography variant="body2">
-					<strong>Resumen de elegibilidad:</strong> La extracción de intervinientes ocurre para TODAS las causas que cumplan los criterios
-					técnicos (verificadas, válidas, no privadas, con updates, no procesadas). La sincronización a contactos es un paso adicional que
-					SOLO ocurre para usuarios que habilitaron la preferencia.
-				</Typography>
-			</Alert>
 			<Alert severity="info" variant="outlined">
-				<Typography variant="body2" component="div">
-					<strong>Beneficios de este diseño:</strong>
-					<ul style={{ margin: "8px 0 0 0", paddingLeft: "20px" }}>
-						<li>Los intervinientes están disponibles inmediatamente cuando un usuario active la preferencia.</li>
-						<li>No hay que re-procesar causas cuando nuevos usuarios habilitan sync.</li>
-						<li>Los datos de intervinientes se pueden usar para otras funcionalidades futuras.</li>
-					</ul>
+				<Typography variant="body2">
+					<strong>Elegibilidad:</strong> este worker lee TODAS las causas públicas sin credencial activa que cumplan los criterios de la
+					pestaña Configuración, tengan o no carpeta (salvo los incidentes, que solo entran si alguien los sigue). La sincronización a
+					contactos es un paso aparte que SOLO ocurre para los dueños de carpeta con la preferencia activa; sin ella las partes igual se ven
+					en la carpeta.
 				</Typography>
 			</Alert>
 		</Stack>

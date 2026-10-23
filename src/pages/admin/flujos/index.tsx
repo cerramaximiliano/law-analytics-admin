@@ -27,6 +27,7 @@ import PostalWorkersFlow from "./PostalWorkersFlow";
 import MisCausasWorkersFlow from "./MisCausasWorkersFlow";
 import MisCausasRepoFlow from "./MisCausasRepoFlow";
 import PlazosFlow from "./PlazosFlow";
+import IntervinientesPjnFlow from "./IntervinientesPjnFlow";
 import CausasFlowDiagram from "../causas/flujos/FlowDiagram";
 import { mainSpecs } from "../causas/flujos/flowData";
 import NotificationsFlowDiagram from "../notifications/components/FlowDiagram";
@@ -149,6 +150,15 @@ const TABS: FlowTab[] = [
 		hrefLabel: "Configuración y estado del plazos-worker",
 	},
 	{
+		label: "Intervinientes PJN",
+		slug: "intervinientes",
+		esWorker: true,
+		intro:
+			"De la pestaña Intervinientes del PJN al contacto en la carpeta: qué worker lee cada causa según tenga o no credencial activa (pjn-extra-info en worker_02 con captcha, pjn-mis-causas-intervinientes en worker-cloud-02 con login), qué causas no tienen lector, y los cuatro momentos en que el hub convierte partes y letrados en contactos — siempre solo con la preferencia del dueño. Refleja en vivo el cron, los fueros y la relectura de extra-info.",
+		href: "/admin/causas/workers?worker=intervinientes",
+		hrefLabel: "Operar pjn-extra-info (config, estadísticas, usuarios con sync)",
+	},
+	{
 		label: "Data plane",
 		slug: "data-plane",
 		intro:
@@ -266,7 +276,9 @@ const FlujosEcosistema: React.FC = () => {
 
 					{tab === 10 && <PlazosFlow />}
 
-					{tab === 11 && (
+					{tab === 11 && <IntervinientesPjnFlow />}
+
+					{tab === 12 && (
 						// El data plane no se embebe: es una página con panel de detalle propio
 						// y su valor está en poder clickear cada nodo. Duplicar acá una versión
 						// recortada daría dos fuentes de verdad para el mismo diagrama.
