@@ -46,6 +46,15 @@ import CausasService from "api/causas";
 import { CausasMEVService, CausaMEV } from "api/causasMEV";
 import MEVWorkersService, { NavigationCodeDoc } from "api/workersMEV";
 import { JudicialMovementsService, JudicialMovement } from "api/judicialMovements";
+import CausasCoverageService, { CausaCoveragePendientesResponse } from "api/causasCoverage";
+import CoverageChips, {
+	ActualizacionChip,
+	COVERAGE_CATEGORIAS,
+	COVERAGE_FLAG_META,
+	COVERAGE_CATEGORIA_LABELS,
+	PENDIENTE_ESTADO_META,
+	sumDefinitivos,
+} from "./CoverageChips";
 import {
 	CloseCircle,
 	Link as LinkIcon,
@@ -184,6 +193,10 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 	const [loadingNavCode, setLoadingNavCode] = useState(false);
 	const [isReVerifying, setIsReVerifying] = useState(false);
 
+	// Estados para tab de cobertura de textos (solo PJN)
+	const [coverageData, setCoverageData] = useState<CausaCoveragePendientesResponse | null>(null);
+	const [loadingCoverage, setLoadingCoverage] = useState(false);
+
 	// Resetear estados cuando se abre el modal
 	useEffect(() => {
 		if (open && causa) {
@@ -203,6 +216,9 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 			// Reset navigation code state
 			setNavigationCodeData(null);
 			setLoadingNavCode(false);
+			// Reset cobertura de textos
+			setCoverageData(null);
+			setLoadingCoverage(false);
 			// Cargar notificaciones judiciales
 			loadJudicialMovements();
 		}
@@ -409,11 +425,38 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 		setHistoryPage(0);
 	};
 
+	// Cobertura de textos + pendientes de la causa (admin-api /api/causas-coverage/:id/pendientes)
+	const loadCoverage = async () => {
+		if (!causa) return;
+		try {
+			setLoadingCoverage(true);
+			const causaId = typeof causa._id === "string" ? causa._id : causa._id.$oid;
+			const response = await CausasCoverageService.getPendientes(causaId);
+			if (response.success) {
+				setCoverageData(response);
+			} else {
+				throw new Error("Respuesta sin éxito");
+			}
+		} catch (error) {
+			console.error("Error al cargar la cobertura de textos:", error);
+			enqueueSnackbar("Error al cargar la cobertura de textos", {
+				variant: "error",
+				anchorOrigin: { vertical: "bottom", horizontal: "right" },
+			});
+		} finally {
+			setLoadingCoverage(false);
+		}
+	};
+
 	const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
 		setActiveTab(newValue);
 		// Lazy load navigation code data cuando se selecciona el tab de navegación (tab 4, solo MEV)
 		if (newValue === 4 && apiService === "mev") {
 			loadNavigationCode();
+		}
+		// Lazy load cobertura de textos (tab 4, solo PJN) — se carga una vez por apertura
+		if (newValue === 4 && apiService === "pjn" && !coverageData && !loadingCoverage) {
+			loadCoverage();
 		}
 	};
 
@@ -963,6 +1006,7 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 						<Tab label={`Historial (${updateHistory.length})`} />
 						<Tab label="JSON" />
 						{apiService === "mev" && <Tab label="Navegación" />}
+						{apiService === "pjn" && <Tab label="Cobertura" />}
 					</Tabs>
 				</Box>
 
@@ -1631,6 +1675,272 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 							</Box>
 						</Box>
 					)}
+
+					{/* Tab Panel 4: Cobertura de textos (solo PJN) */}
+					{activeTab === 4 &&
+						apiService === "pjn" &&
+						(() => {
+							if (loadingCoverage && !coverageData) {
+								return (
+									<Box display="flex" justifyContent="center" alignItems="center" p={4}>
+										<CircularProgress />
+									</Box>
+								);
+							}
+
+							const cobertura = coverageData?.cobertura;
+							const pendientes = coverageData?.pendientes || [];
+							const ragApagado = coverageData?.ragApagado || [];
+
+							const headerActions = (
+								<Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between" sx={{ mb: 1.5 }}>
+									<Typography variant="caption" color="text.secondary">
+										{coverageData?.computedAt ? `Calculado: ${formatDate(coverageData.computedAt)}` : ""}
+									</Typography>
+									<Button
+										size="small"
+										variant="outlined"
+										startIcon={loadingCoverage ? <CircularProgress size={14} /> : <Refresh2 size={16} />}
+										onClick={loadCoverage}
+										disabled={loadingCoverage}
+									>
+										Actualizar
+									</Button>
+								</Stack>
+							);
+
+							if (!coverageData || !cobertura) {
+								return (
+									<Box>
+										{headerActions}
+										<Alert severity="info">Sin datos de cobertura para esta causa.</Alert>
+									</Box>
+								);
+							}
+
+							if (!cobertura.causaEncontrada) {
+								return (
+									<Box>
+										{headerActions}
+										<Alert severity="warning">La causa no fue encontrada por el servicio de cobertura (fuente: {cobertura.fuente}).</Alert>
+									</Box>
+								);
+							}
+
+							const textos = cobertura.textos;
+							const resumen: Array<{ label: string; value: string | number }> = [
+								{ label: "Con texto", value: `${textos.conTexto} / ${textos.total}` },
+								{ label: "Pendientes", value: textos.pendiente },
+								{ label: "Sin PDF", value: textos.sinPdf },
+								{ label: "OCR", value: textos.needsOcr },
+								{ label: "Fallidos", value: textos.failed },
+								{ label: "Definitivos", value: textos.definitivos },
+							];
+
+							const truncate = (s: string | null | undefined, n = 90): string => {
+								if (!s) return "—";
+								return s.length > n ? `${s.slice(0, n)}…` : s;
+							};
+
+							return (
+								<Box>
+									{headerActions}
+
+									<Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" useFlexGap sx={{ mb: 2 }}>
+										<CoverageChips coverage={cobertura} />
+										<ActualizacionChip coverage={cobertura} />
+										<Typography variant="caption" color="text.secondary">
+											{cobertura.movimientos} movimientos · {cobertura.sinCuerpo} sin cuerpo
+											{cobertura.nuevos?.total > 0 &&
+												` · ${cobertura.nuevos.total} nuevos (72 h): ${cobertura.nuevos.sinPdf} sin PDF, ${cobertura.nuevos.pendiente} sin texto`}
+										</Typography>
+									</Stack>
+
+									<Grid container spacing={1.5} sx={{ mb: 2 }}>
+										{resumen.map((item) => (
+											<Grid item xs={4} sm={2} key={item.label}>
+												<Box
+													sx={{
+														p: 1,
+														borderRadius: 1,
+														border: `1px solid ${headerBorder(isDark)}`,
+														textAlign: "center",
+													}}
+												>
+													<Typography variant="caption" color="text.secondary" display="block">
+														{item.label}
+													</Typography>
+													<Typography variant="body2" fontWeight={700} sx={{ fontVariantNumeric: "tabular-nums" }}>
+														{item.value}
+													</Typography>
+												</Box>
+											</Grid>
+										))}
+									</Grid>
+
+									<Typography variant="subtitle2" sx={{ mb: 1 }}>
+										Por categoría
+									</Typography>
+									<TableContainer sx={{ mb: 2 }}>
+										<Table size="small">
+											<TableHead>
+												<TableRow>
+													<TableCell>Categoría</TableCell>
+													<TableCell align="right">Con texto</TableCell>
+													<TableCell align="right">Total</TableCell>
+													<TableCell align="right">Pendientes</TableCell>
+													<TableCell align="right">Sin PDF</TableCell>
+													<TableCell align="right">OCR</TableCell>
+													<TableCell align="right">Fallidos</TableCell>
+													<TableCell align="right">Definitivos</TableCell>
+													<TableCell>Flag</TableCell>
+												</TableRow>
+											</TableHead>
+											<TableBody>
+												{COVERAGE_CATEGORIAS.map((meta) => {
+													const cat = cobertura.categorias?.[meta.key];
+													const flag = cobertura.flags?.[meta.key] || "sin_documentos";
+													const flagMeta = COVERAGE_FLAG_META[flag];
+													const apagado = ragApagado.includes(meta.key);
+													return (
+														<TableRow key={meta.key} hover>
+															<TableCell>
+																<Tooltip title={meta.descripcion}>
+																	<Typography variant="body2" component="span">
+																		{COVERAGE_CATEGORIA_LABELS[meta.key]}
+																	</Typography>
+																</Tooltip>
+																{apagado && (
+																	<Typography variant="caption" color="text.secondary" sx={{ ml: 0.5 }}>
+																		(etapa apagada)
+																	</Typography>
+																)}
+															</TableCell>
+															<TableCell align="right">{cat?.conTexto ?? 0}</TableCell>
+															<TableCell align="right">{cat?.total ?? 0}</TableCell>
+															<TableCell align="right">{cat?.pendiente ?? 0}</TableCell>
+															<TableCell align="right">{cat?.sinPdf ?? 0}</TableCell>
+															<TableCell align="right">{cat?.needsOcr ?? 0}</TableCell>
+															<TableCell align="right">{cat?.failed ?? 0}</TableCell>
+															<TableCell align="right">
+																{cat?.definitivos ? (
+																	<Tooltip
+																		title={`Reservada ${cat.definitivos.reservada} · Muy grande ${cat.definitivos.muy_grande} · Otros ${cat.definitivos.otros}`}
+																	>
+																		<span>{sumDefinitivos(cat)}</span>
+																	</Tooltip>
+																) : (
+																	0
+																)}
+															</TableCell>
+															<TableCell>
+																<Tooltip title={flagMeta.descripcion}>
+																	<Chip
+																		label={flagMeta.label}
+																		size="small"
+																		color={flagMeta.color}
+																		variant={flag === "sin_documentos" ? "outlined" : "filled"}
+																		sx={{
+																			height: 20,
+																			fontSize: "0.7rem",
+																			...(flag === "sin_documentos" && { color: "text.disabled", borderColor: "divider" }),
+																			...(flag === "no_habilitado" && { bgcolor: "action.selected", color: "text.secondary" }),
+																		}}
+																	/>
+																</Tooltip>
+															</TableCell>
+														</TableRow>
+													);
+												})}
+											</TableBody>
+										</Table>
+									</TableContainer>
+
+									<Stack direction="row" spacing={1} alignItems="baseline" sx={{ mb: 1 }}>
+										<Typography variant="subtitle2">Movimientos sin texto ({pendientes.length})</Typography>
+										{ragApagado.length > 0 && (
+											<Typography variant="caption" color="text.secondary">
+												Etapas RAG apagadas:{" "}
+												{ragApagado.map((k) => COVERAGE_CATEGORIA_LABELS[k as keyof typeof COVERAGE_CATEGORIA_LABELS] || k).join(", ")}
+											</Typography>
+										)}
+									</Stack>
+									{pendientes.length === 0 ? (
+										<Alert severity="success" sx={{ py: 0.5 }}>
+											No hay movimientos sin texto.
+										</Alert>
+									) : (
+										<TableContainer>
+											<Table size="small">
+												<TableHead>
+													<TableRow>
+														<TableCell>Fecha</TableCell>
+														<TableCell>Tipo</TableCell>
+														<TableCell>Detalle</TableCell>
+														<TableCell>Categoría</TableCell>
+														<TableCell>Estado</TableCell>
+														<TableCell>Motivo</TableCell>
+													</TableRow>
+												</TableHead>
+												<TableBody>
+													{pendientes.map((p) => {
+														const estadoMeta = PENDIENTE_ESTADO_META[p.estado] || { label: p.estado, color: "default" as const };
+														return (
+															<TableRow key={p.id} hover>
+																<TableCell sx={{ whiteSpace: "nowrap" }}>
+																	<Typography variant="caption">{p.fecha ? formatDateOnly(p.fecha) : "—"}</Typography>
+																</TableCell>
+																<TableCell sx={{ maxWidth: 140 }}>
+																	<Typography variant="caption" sx={{ wordBreak: "break-word" }}>
+																		{p.tipo || "—"}
+																	</Typography>
+																</TableCell>
+																<TableCell sx={{ maxWidth: 320 }}>
+																	<Tooltip title={p.detalle || ""} disableHoverListener={!p.detalle || p.detalle.length <= 90}>
+																		<Typography variant="caption" sx={{ wordBreak: "break-word" }}>
+																			{truncate(p.detalle)}
+																		</Typography>
+																	</Tooltip>
+																</TableCell>
+																<TableCell sx={{ whiteSpace: "nowrap" }}>
+																	<Typography variant="caption">
+																		{COVERAGE_CATEGORIA_LABELS[p.categoria as keyof typeof COVERAGE_CATEGORIA_LABELS] || p.categoria || "—"}
+																	</Typography>
+																</TableCell>
+																<TableCell sx={{ whiteSpace: "nowrap" }}>
+																	<Stack direction="row" spacing={0.5} alignItems="center">
+																		<Chip
+																			label={estadoMeta.label}
+																			size="small"
+																			color={estadoMeta.color}
+																			variant={p.estado === "failed_definitivo" ? "outlined" : "filled"}
+																			sx={{ height: 20, fontSize: "0.7rem" }}
+																		/>
+																		{p.ragApagado && (
+																			<Tooltip title="La etapa RAG que procesa esta categoría está apagada">
+																				<Typography variant="caption" color="text.secondary">
+																					etapa apagada
+																				</Typography>
+																			</Tooltip>
+																		)}
+																	</Stack>
+																</TableCell>
+																<TableCell sx={{ maxWidth: 200 }}>
+																	<Typography variant="caption" color="text.secondary" sx={{ wordBreak: "break-word" }}>
+																		{p.motivo || "—"}
+																		{p.pdfBytes ? ` · ${(p.pdfBytes / 1024 / 1024).toFixed(1)} MB` : ""}
+																	</Typography>
+																</TableCell>
+															</TableRow>
+														);
+													})}
+												</TableBody>
+											</Table>
+										</TableContainer>
+									)}
+								</Box>
+							);
+						})()}
 
 					{/* Tab Panel 4: Navegación (solo MEV) */}
 					{activeTab === 4 &&

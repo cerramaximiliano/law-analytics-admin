@@ -32,6 +32,8 @@ import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import FoldersService, { Folder, FolderStats } from "api/folders";
 import UserStatsService, { SyncFolderStatsResult, SyncFolderStatsBulkResult } from "api/userStats";
+import CausasCoverageService, { CausaCoverage } from "api/causasCoverage";
+import CoverageChips from "../causas/CoverageChips";
 import {
 	Refresh,
 	Eye,
@@ -98,6 +100,9 @@ const FoldersPage = () => {
 	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [totalCount, setTotalCount] = useState(0);
 	const [stats, setStats] = useState<FolderStats | null>(null);
+	// Cobertura de texto de las causas PJN de la página (admin-api /api/causas-coverage) — no bloquea la tabla
+	const [coverage, setCoverage] = useState<Record<string, CausaCoverage>>({});
+	const [loadingCoverage, setLoadingCoverage] = useState(false);
 
 	// Filtros
 	const [searchText, setSearchText] = useState<string>("");
@@ -243,6 +248,7 @@ const FoldersPage = () => {
 				setFolders(response.data);
 				setTotalCount(response.pagination.total);
 				setStats(response.stats);
+				fetchCoverage(response.data);
 			}
 		} catch (error) {
 			enqueueSnackbar("Error al cargar las carpetas", {
@@ -252,6 +258,30 @@ const FoldersPage = () => {
 			console.error(error);
 		} finally {
 			setLoading(false);
+		}
+	};
+
+	// Carpeta vinculada a una causa PJN (flag pjn o causaType de las colecciones PJN)
+	const PJN_CAUSA_TYPES = ["CausasCivil", "CausasComercial", "CausasSegSocial", "CausasSegSoc", "CausasTrabajo"];
+	const isPjnFolder = (folder: Folder): boolean =>
+		Boolean(folder.causaId) && (folder.pjn === true || (!!folder.causaType && PJN_CAUSA_TYPES.includes(folder.causaType)));
+
+	// Cobertura de texto de las causas PJN de la página (error silencioso → "—")
+	const fetchCoverage = async (rows: Folder[]) => {
+		const causaIds = rows.filter(isPjnFolder).map((f) => f.causaId as string);
+		if (causaIds.length === 0) {
+			setCoverage({});
+			return;
+		}
+		try {
+			setLoadingCoverage(true);
+			const data = await CausasCoverageService.getBatch(causaIds);
+			setCoverage(data);
+		} catch (error) {
+			console.error("Error al cargar la cobertura de textos:", error);
+			setCoverage({});
+		} finally {
+			setLoadingCoverage(false);
 		}
 	};
 
@@ -653,6 +683,11 @@ const FoldersPage = () => {
 											<TableCell>Expediente</TableCell>
 											<TableCell align="center">Causa</TableCell>
 											<TableCell align="center">Verificada</TableCell>
+											<TableCell>
+												<Tooltip title="Cobertura de texto (solo PJN): R resoluciones · C cédulas · E escritos · D DEO · Dg diligenciadas. Verde completo / ámbar en curso / rojo incompleto / gris no habilitado">
+													<span>Textos</span>
+												</Tooltip>
+											</TableCell>
 											<TableCell>Actualización</TableCell>
 											<TableCell align="center">Acciones</TableCell>
 										</TableRow>
@@ -779,6 +814,15 @@ const FoldersPage = () => {
 														) : (
 															<Typography variant="caption" color="text.secondary">
 																-
+															</Typography>
+														)}
+													</TableCell>
+													<TableCell sx={{ whiteSpace: "nowrap" }}>
+														{isPjnFolder(folder) ? (
+															<CoverageChips coverage={coverage[folder.causaId as string]} loading={loadingCoverage} compact />
+														) : (
+															<Typography variant="caption" color="text.secondary">
+																—
 															</Typography>
 														)}
 													</TableCell>

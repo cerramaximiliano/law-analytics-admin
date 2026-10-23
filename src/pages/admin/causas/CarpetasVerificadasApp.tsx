@@ -39,6 +39,8 @@ import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import { CausasPjnService, Causa, EligibilityStats } from "api/causasPjn";
 import { JudicialMovementsService, JudicialMovement } from "api/judicialMovements";
+import CausasCoverageService, { CausaCoverage } from "api/causasCoverage";
+import CoverageChips, { ActualizacionChip, CoverageLegend } from "./CoverageChips";
 import {
 	Refresh,
 	Eye,
@@ -125,6 +127,9 @@ const CarpetasVerificadasApp = () => {
 	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [totalCount, setTotalCount] = useState(0);
 	const [totalInDatabase, setTotalInDatabase] = useState(0);
+	// Cobertura de texto por causa (admin-api /api/causas-coverage) — carga aparte, no bloquea la tabla
+	const [coverage, setCoverage] = useState<Record<string, CausaCoverage>>({});
+	const [loadingCoverage, setLoadingCoverage] = useState(false);
 	const [fueroFilter, setFueroFilter] = useState<string>("todos");
 	const [actualizableFilter, setActualizableFilter] = useState<string>("todos");
 	const [privadaFilter, setPrivadaFilter] = useState<string>("todos");
@@ -273,6 +278,7 @@ const CarpetasVerificadasApp = () => {
 				setCausas(response.data);
 				setTotalCount(response.count || 0);
 				setTotalInDatabase(response.totalInDatabase || 0);
+				fetchCoverage(response.data.map((c) => getId(c._id)));
 			}
 		} catch (error) {
 			enqueueSnackbar("Error al cargar las carpetas verificadas", {
@@ -282,6 +288,24 @@ const CarpetasVerificadasApp = () => {
 			console.error(error);
 		} finally {
 			setLoading(false);
+		}
+	};
+
+	// Cobertura de texto de las causas de la página (no bloquea la tabla; error silencioso → "—")
+	const fetchCoverage = async (causaIds: string[]) => {
+		if (causaIds.length === 0) {
+			setCoverage({});
+			return;
+		}
+		try {
+			setLoadingCoverage(true);
+			const data = await CausasCoverageService.getBatch(causaIds);
+			setCoverage(data);
+		} catch (error) {
+			console.error("Error al cargar la cobertura de textos:", error);
+			setCoverage({});
+		} finally {
+			setLoadingCoverage(false);
 		}
 	};
 
@@ -1135,6 +1159,9 @@ const CarpetasVerificadasApp = () => {
 						<Alert severity="info">No se encontraron carpetas verificadas con los filtros seleccionados</Alert>
 					) : (
 						<Card>
+							<Box sx={{ px: 2, pt: 1.5, pb: 1 }}>
+								<CoverageLegend />
+							</Box>
 							<TableContainer>
 								<Table>
 									<TableHead>
@@ -1149,6 +1176,8 @@ const CarpetasVerificadasApp = () => {
 											<TableCell>Fecha Creación</TableCell>
 											<TableCell>Última Act.</TableCell>
 											<TableCell>Fecha Últ. Mov.</TableCell>
+											<TableCell>Textos</TableCell>
+											<TableCell>Al día</TableCell>
 											<TableCell align="center">Actualizable</TableCell>
 											<TableCell align="center">Privada</TableCell>
 											<TableCell align="center">Archivada</TableCell>
@@ -1291,6 +1320,12 @@ const CarpetasVerificadasApp = () => {
 													>
 														{formatDateUTC(causa.fechaUltimoMovimiento)}
 													</Typography>
+												</TableCell>
+												<TableCell sx={{ whiteSpace: "nowrap" }}>
+													<CoverageChips coverage={coverage[getId(causa._id)]} loading={loadingCoverage} compact />
+												</TableCell>
+												<TableCell sx={{ whiteSpace: "nowrap" }}>
+													<ActualizacionChip coverage={coverage[getId(causa._id)]} loading={loadingCoverage} compact />
 												</TableCell>
 												<TableCell align="center">
 													{causa.update ? (
