@@ -17,8 +17,6 @@ import { FlowSpec, FlowNode, FlowEdge } from "../causas/flujos/flowTypes";
 export interface IntervinientesPjnInfo {
 	/** Cron de pjn-extra-info (schedule.cronExpression), ej. "0 4 * * *". */
 	extraInfoCron?: string;
-	/** Zona del cron (schedule.timezone); si falta se asume UTC. */
-	extraInfoTimezone?: string;
 	/** processing_mode de pjn-extra-info: all | civil | ss | trabajo | comercial. */
 	processingMode?: string;
 	/** eligibility.reextractAfterDays: null/0 = nunca relee. */
@@ -37,19 +35,21 @@ const MODO_FUEROS: Record<string, string> = {
 	comercial: "solo COM",
 };
 
-/** "0 4 * * *" → "diario 01:00 ART"; cualquier otra cosa se muestra tal cual. */
-export function describirCron(cron?: string, timezone?: string): string {
+/** "0 4 * * *" → "diario 01:00 ART"; cualquier otra cosa se muestra tal cual.
+ *  El worker programa node-cron SIN opción timezone, así que la expresión se evalúa en
+ *  la hora del box (worker_02 está en UTC): 04:00 UTC = 01:00 ART. schedule.timezone
+ *  solo rige el horario laboral (respectWorkingHours), no el cron. */
+export function describirCron(cron?: string): string {
 	if (!cron) return "cron (config)";
 	const m = /^0\s+(\d{1,2})\s+\*\s+\*\s+\*$/.exec(cron.trim());
 	if (!m) return cron;
-	const hora = Number(m[1]);
-	const enArt = timezone?.startsWith("America/Argentina") ?? false;
-	const horaArt = enArt ? hora : (hora - 3 + 24) % 24;
-	return `diario ${String(horaArt).padStart(2, "0")}:00 ART`;
+	const horaUtc = Number(m[1]);
+	const horaArt = (horaUtc - 3 + 24) % 24;
+	return `diario ${String(horaArt).padStart(2, "0")}:00 ART (${String(horaUtc).padStart(2, "0")}:00 UTC)`;
 }
 
 export function buildIntervinientesPjnSpec(info: IntervinientesPjnInfo = {}): FlowSpec {
-	const cron = describirCron(info.extraInfoCron, info.extraInfoTimezone);
+	const cron = describirCron(info.extraInfoCron);
 	const fueros = MODO_FUEROS[info.processingMode ?? ""] ?? "fueros según processing_mode";
 	const relee = info.reextractAfterDays && info.reextractAfterDays > 0 ? `relee cada ${info.reextractAfterDays} días` : "sin relectura";
 	const extraOff = info.extraInfoEnabled === false;
@@ -171,8 +171,8 @@ export function buildIntervinientesPjnSpec(info: IntervinientesPjnInfo = {}): Fl
 		{ id: "e1", from: "causa", to: "miscausas", kind: "ok", label: "credencial activa", fromSide: "right", toSide: "left" },
 		{ id: "e2", from: "causa", to: "extrainfo", kind: "ok", label: "sin credencial activa", fromSide: "right", toSide: "left" },
 		{ id: "e3", from: "causa", to: "sinlector", kind: "problem", label: "nadie la lee", fromSide: "bottom", toSide: "top" },
-		{ id: "e4", from: "miscausas", to: "portallogin", label: "login SSO · número o listado" },
-		{ id: "e5", from: "extrainfo", to: "portalpub", label: "número + captcha" },
+		{ id: "e4", from: "miscausas", to: "portallogin", label: "login SSO" },
+		{ id: "e5", from: "extrainfo", to: "portalpub", label: "captcha" },
 		{ id: "e6", from: "portallogin", to: "interv", kind: "ok", label: "pestaña Intervinientes" },
 		{ id: "e7", from: "portalpub", to: "interv", kind: "ok", label: "pestaña Intervinientes" },
 		{ id: "e8", from: "interv", to: "hub", kind: "handoff", label: "partes ya descargadas", fromSide: "bottom", toSide: "top" },

@@ -27,7 +27,6 @@ const IntervinientesPjnFlow: React.FC = () => {
 				const st = stRes?.data;
 				setInfo({
 					extraInfoCron: cfg?.schedule?.cronExpression,
-					extraInfoTimezone: cfg?.schedule?.timezone,
 					processingMode: cfg?.processing_mode,
 					reextractAfterDays: cfg?.eligibility?.reextractAfterDays,
 					extraInfoEnabled: cfg?.enabled,
@@ -57,7 +56,7 @@ const IntervinientesPjnFlow: React.FC = () => {
 			<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }} flexWrap="wrap" useFlexGap>
 				<Chip
 					size="small"
-					label={`pjn-extra-info ${describirCron(info.extraInfoCron, info.extraInfoTimezone)}`}
+					label={`pjn-extra-info ${describirCron(info.extraInfoCron)}`}
 					color={info.extraInfoEnabled === false ? "error" : "default"}
 					sx={mono}
 				/>

@@ -503,7 +503,7 @@ const IntervinientesWorker = () => {
 									<>
 										<Chip label={config?.schedule?.cronExpression || "(sin cron)"} size="small" sx={{ fontFamily: "monospace" }} />
 										<Typography variant="caption" color="text.secondary">
-											{describirCron(config?.schedule?.cronExpression, config?.schedule?.timezone)}
+											{describirCron(config?.schedule?.cronExpression)}
 										</Typography>
 									</>
 								)}
