@@ -38,6 +38,21 @@ import WorkerStatistics from "./WorkerStatistics";
 import { useTabIndexParam } from "hooks/useTabParam";
 import WorkerSubTabs, { SubTabDef } from "./WorkerSubTabs";
 
+// Umbral de lastUpdate por nivel de prioridad (configuracion-app-update.threshold_hours_por_nivel; pjn-models prioridadCola).
+type NivelPrioridad = "alta" | "media" | "baja" | "archivo";
+const NIVELES_PRIORIDAD: Array<{ key: NivelPrioridad; short: string }> = [
+	{ key: "alta", short: "A" },
+	{ key: "media", short: "M" },
+	{ key: "baja", short: "B" },
+	{ key: "archivo", short: "Ar" },
+];
+// Defaults que aplica el worker cuando el campo no existe en la config (pjn-models prioridadCola.UMBRAL_DEFAULT).
+const UMBRAL_NIVEL_DEFAULT: Record<NivelPrioridad, number | null> = { alta: 6, media: null, baja: null, archivo: 24 };
+const umbralNivel = (config: WorkerConfig, nivel: NivelPrioridad): string => {
+	const v = config.threshold_hours_por_nivel ? config.threshold_hours_por_nivel[nivel] : UMBRAL_NIVEL_DEFAULT[nivel];
+	return v === null || v === undefined ? "—" : String(v);
+};
+
 // Enums para el worker de actualización
 const UPDATE_MODE_OPTIONS = [
 	{ value: "all", label: "Todos los documentos" },
@@ -126,6 +141,7 @@ const AppUpdateWorker = () => {
 			enabled: config.enabled,
 			batch_size: config.batch_size,
 			last_update_threshold_hours: config.last_update_threshold_hours,
+			threshold_hours_por_nivel: { ...(config.threshold_hours_por_nivel || {}) },
 		});
 	};
 
@@ -258,8 +274,8 @@ const AppUpdateWorker = () => {
 							<TableCell>Modo</TableCell>
 							<TableCell align="center">Lote</TableCell>
 							<TableCell align="center">
-								<Tooltip title="Cada cuántas horas una causa vuelve a ser elegible para re-scrape. Este es el umbral que rige la cadencia real del worker (last_update_threshold_hours).">
-									<span style={{ borderBottom: "1px dotted currentColor", cursor: "help" }}>Umbral (h)</span>
+								<Tooltip title="Cada cuántas horas una causa vuelve a ser elegible para re-scrape (last_update_threshold_hours). Debajo, el umbral por nivel de prioridad de la causa (alta / media / baja / archivo): vacío = usa el general. Defaults del worker: alta 6 h, archivo 24 h.">
+									<span style={{ borderBottom: "1px dotted currentColor", cursor: "help" }}>Umbral (h) · por nivel</span>
 								</Tooltip>
 							</TableCell>
 							<TableCell align="center">Verificados</TableCell>
@@ -316,15 +332,48 @@ const AppUpdateWorker = () => {
 									</TableCell>
 									<TableCell align="center">
 										{isEditing ? (
-											<TextField
-												size="small"
-												type="number"
-												value={editValues.last_update_threshold_hours || ""}
-												onChange={(e) => setEditValues({ ...editValues, last_update_threshold_hours: Number(e.target.value) })}
-												sx={{ width: 60 }}
-											/>
+											<Stack spacing={0.5} alignItems="center">
+												<TextField
+													size="small"
+													type="number"
+													label="General"
+													value={editValues.last_update_threshold_hours || ""}
+													onChange={(e) => setEditValues({ ...editValues, last_update_threshold_hours: Number(e.target.value) })}
+													sx={{ width: 90 }}
+												/>
+												<Stack direction="row" spacing={0.5}>
+													{NIVELES_PRIORIDAD.map((n) => (
+														<TextField
+															key={n.key}
+															size="small"
+															type="number"
+															label={n.short}
+															placeholder="gral."
+															value={editValues.threshold_hours_por_nivel?.[n.key] ?? ""}
+															onChange={(e) =>
+																setEditValues({
+																	...editValues,
+																	threshold_hours_por_nivel: {
+																		...(editValues.threshold_hours_por_nivel || {}),
+																		[n.key]: e.target.value === "" ? null : Number(e.target.value),
+																	},
+																})
+															}
+															inputProps={{ min: 1 }}
+															sx={{ width: 62 }}
+														/>
+													))}
+												</Stack>
+											</Stack>
 										) : (
-											<Typography variant="body2">{config.last_update_threshold_hours || 0}</Typography>
+											<Stack spacing={0} alignItems="center">
+												<Typography variant="body2">{config.last_update_threshold_hours || 0}</Typography>
+												<Tooltip title="Umbral por nivel de prioridad (alta · media · baja · archivo). — = usa el general.">
+													<Typography variant="caption" color="text.secondary" sx={{ whiteSpace: "nowrap" }}>
+														{NIVELES_PRIORIDAD.map((n) => `${n.short} ${umbralNivel(config, n.key)}`).join(" · ")}
+													</Typography>
+												</Tooltip>
+											</Stack>
 										)}
 									</TableCell>
 									<TableCell align="center">

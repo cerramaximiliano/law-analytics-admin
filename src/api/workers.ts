@@ -677,6 +677,14 @@ export interface WorkerConfig {
 	documents_checked?: number;
 	documents_failed?: number;
 	last_update_threshold_hours?: number;
+	// Umbral de lastUpdate por nivel de prioridad de la causa (prioridad.nivel, lo escribe el hub).
+	// null = usar last_update_threshold_hours. Defaults del worker: alta 6, archivo 24.
+	threshold_hours_por_nivel?: {
+		alta?: number | null;
+		media?: number | null;
+		baja?: number | null;
+		archivo?: number | null;
+	};
 	// Historial de rangos completados
 	rangeHistory?: Array<{
 		version?: number;
