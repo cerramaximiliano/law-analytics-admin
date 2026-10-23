@@ -17,7 +17,7 @@ export type CoverageCategoriaKey = "resolucion" | "cedula" | "escrito" | "dilige
  */
 export type CoverageFlag = "completo" | "en_curso" | "incompleto" | "no_habilitado" | "sin_documentos";
 
-export type ActualizacionEstado = "al_dia" | "atrasada" | "cooldown" | "no_actualizable" | "sin_dato";
+export type ActualizacionEstado = "al_dia" | "atrasada" | "cooldown" | "no_actualizable" | "privada" | "sin_dato";
 
 export interface CoverageDefinitivos {
 	/** Ninguna carpeta con credencial ve el movimiento */

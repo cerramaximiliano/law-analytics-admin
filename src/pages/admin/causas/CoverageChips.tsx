@@ -78,6 +78,8 @@ export const ACTUALIZACION_META: Record<ActualizacionEstado, { label: string; co
 	atrasada: { label: "Atrasada", color: "warning" },
 	cooldown: { label: "Cooldown", color: "error" },
 	no_actualizable: { label: "No actualizable", color: "default" },
+	// Expediente privado: el portal público no lo entrega; solo se actualiza con credencial (Mis Causas).
+	privada: { label: "Privada", color: "default" },
 	sin_dato: { label: "—", color: "default" },
 };
 
@@ -316,7 +318,7 @@ export const ActualizacionChip = ({ coverage, loading = false, compact = false }
 				fontWeight: 600,
 				"& .MuiChip-label": { px: 0.8 },
 				...(estado === "sin_dato" && { color: "text.disabled", borderColor: "divider" }),
-				...(estado === "no_actualizable" && { bgcolor: "action.selected", color: "text.secondary" }),
+				...((estado === "no_actualizable" || estado === "privada") && { bgcolor: "action.selected", color: "text.secondary" }),
 			}}
 		/>
 	);
