@@ -41,6 +41,7 @@ import { CausasPjnService, Causa, EligibilityStats } from "api/causasPjn";
 import { JudicialMovementsService, JudicialMovement } from "api/judicialMovements";
 import CausasCoverageService, { CausaCoverage } from "api/causasCoverage";
 import CoverageChips, { ActualizacionChip, CoverageLegend, PrioridadChip } from "./CoverageChips";
+import CoverageStatsCard from "./CoverageStatsCard";
 import {
 	Refresh,
 	Eye,
@@ -1151,6 +1152,7 @@ const CarpetasVerificadasApp = () => {
 
 				{/* Tabla */}
 				<Grid item xs={12}>
+					<CoverageStatsCard sx={{ mb: 2 }} />
 					{loading ? (
 						<Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
 							<CircularProgress />

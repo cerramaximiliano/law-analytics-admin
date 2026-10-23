@@ -187,6 +187,60 @@ export interface CausaCoveragePendientesResponse extends CoverageMeta {
 	pendientes: CoveragePendiente[];
 }
 
+/**
+ * Resumen agregado de cobertura (`GET /api/causas-coverage/resumen`), escrito por el cron horario
+ * del hub a los :05. Solo cuenta causas PJN con carpetas.
+ *
+ * - todoAlDia              → las 5 categorías de texto completas (o sin documentos) **y** actualización al día
+ * - textosCompletos        → solo lo primero (sin mirar la actualización)
+ * - soloFaltaDiligenciadas → lo único que falta son cédulas/mandamientos diligenciados (etapa RAG apagada)
+ * - actualizadas           → actualización en estado `al_dia`
+ */
+export interface CoverageStatsGrupoChico {
+	causas: number;
+	todoAlDia: number;
+	textosCompletos: number;
+	soloFaltaDiligenciadas: number;
+	actualizadas: number;
+	docsPendientes: number;
+	docsSinPdf: number;
+}
+
+export interface CoverageStatsGrupo extends CoverageStatsGrupoChico {
+	/** categoría → flag → cantidad de causas */
+	porCategoria: Record<string, Record<string, number>>;
+	/** estado de actualización → cantidad de causas */
+	porActualizacion: Record<string, number>;
+	docsNeedsOcr: number;
+	docsFailed: number;
+}
+
+export interface CoverageStatsLatest {
+	at: string;
+	version: number;
+	/** vivas = alguna carpeta no archivada · archivadas = solo carpetas archivadas */
+	grupos: { total: CoverageStatsGrupo; vivas: CoverageStatsGrupo; archivadas: CoverageStatsGrupo };
+	porNivel: Partial<Record<PrioridadNivel, CoverageStatsGrupo>>;
+	porFuero: Partial<Record<PjnCausaType | string, CoverageStatsGrupo>>;
+}
+
+export interface CoverageStatsSeriePunto {
+	/** YYYY-MM-DD */
+	dia: string;
+	at: string;
+	vivas: CoverageStatsGrupoChico;
+	archivadas: CoverageStatsGrupoChico;
+	total: CoverageStatsGrupoChico;
+}
+
+export interface CoverageStatsResponse {
+	success: boolean;
+	ragApagado: string[];
+	/** null si el cron horario todavía no corrió */
+	latest: CoverageStatsLatest | null;
+	serie: CoverageStatsSeriePunto[];
+}
+
 /** Tope de ids por request del backend */
 export const COVERAGE_BATCH_MAX = 50;
 /** Por encima de esta cantidad se usa POST (la query string de GET queda larga) */
@@ -237,6 +291,12 @@ class CausasCoverageService {
 		const body: { causaType: string; manual: number | null; nota?: string } = { causaType, manual };
 		if (nota && nota.trim().length > 0) body.nota = nota.trim();
 		const response = await adminAxios.patch<PrioridadMutationResponse>(`/api/causas-coverage/${causaId}/prioridad`, body);
+		return response.data;
+	}
+
+	/** Resumen agregado (último snapshot horario + serie diaria de los últimos `dias` días). */
+	async getResumen(dias = 30): Promise<CoverageStatsResponse> {
+		const response = await adminAxios.get<CoverageStatsResponse>("/api/causas-coverage/resumen", { params: { dias } });
 		return response.data;
 	}
 
