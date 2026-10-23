@@ -33,7 +33,7 @@ import MainCard from "components/MainCard";
 import FoldersService, { Folder, FolderStats } from "api/folders";
 import UserStatsService, { SyncFolderStatsResult, SyncFolderStatsBulkResult } from "api/userStats";
 import CausasCoverageService, { CausaCoverage } from "api/causasCoverage";
-import CoverageChips from "../causas/CoverageChips";
+import CoverageChips, { PrioridadChip } from "../causas/CoverageChips";
 import {
 	Refresh,
 	Eye,
@@ -819,7 +819,14 @@ const FoldersPage = () => {
 													</TableCell>
 													<TableCell sx={{ whiteSpace: "nowrap" }}>
 														{isPjnFolder(folder) ? (
-															<CoverageChips coverage={coverage[folder.causaId as string]} loading={loadingCoverage} compact />
+															<Stack spacing={0.5} alignItems="flex-start">
+																<CoverageChips coverage={coverage[folder.causaId as string]} loading={loadingCoverage} compact />
+																<PrioridadChip
+																	prioridad={coverage[folder.causaId as string]?.prioridad}
+																	loading={loadingCoverage}
+																	compact
+																/>
+															</Stack>
 														) : (
 															<Typography variant="caption" color="text.secondary">
 																—

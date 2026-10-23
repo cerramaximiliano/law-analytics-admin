@@ -61,6 +61,40 @@ export interface CoverageActualizacion {
 	fechaUltimoMovimiento: string | null;
 }
 
+/** alta ≥ 70 · media 40–69 · baja 10–39 · archivo < 10 */
+export type PrioridadNivel = "alta" | "media" | "baja" | "archivo";
+
+export interface PrioridadComponentes {
+	carpetas: number;
+	plan: number;
+	addon: number;
+	prueba: number;
+	usuarios: number;
+	actividad: number;
+	cola: number;
+}
+
+/**
+ * Prioridad de extracción de textos de una causa (calculada por el cron horario del hub).
+ * `score` es el valor efectivo (= `manual` si hay override), `automatico` el calculado sin override.
+ * `motivos`: 'manual', 'carpeta_viva', 'solo_archivadas', 'sin_carpetas', 'plan_<plan>', 'addon_mcp',
+ * 'cuenta_prueba', 'usuarios_N', 'mov_7d'|'mov_30d'|'mov_180d', 'cola_Nd'.
+ */
+export interface Prioridad {
+	score: number;
+	automatico: number;
+	nivel: PrioridadNivel;
+	motivos: string[];
+	componentes: PrioridadComponentes;
+	/** Override fijado desde el admin; null si no hay */
+	manual: number | null;
+	manualPor?: string;
+	manualEn?: string;
+	manualNota?: string;
+	computedAt: string;
+	version: string;
+}
+
 export interface CausaCoverage {
 	fuente: string;
 	causaEncontrada: boolean;
@@ -71,7 +105,52 @@ export interface CausaCoverage {
 	textos: CoverageTextos;
 	nuevos: CoverageNuevos;
 	actualizacion: CoverageActualizacion;
+	/** Desde cuándo hay documentos esperando texto (ISO) */
+	pendientesDesde: string | null;
+	/** null si el cron todavía no calculó la causa */
+	prioridad: Prioridad | null;
 }
+
+export interface PrioridadMutationResponse {
+	success: boolean;
+	prioridad: {
+		causaId: string;
+		causaType: string;
+		score: number;
+		nivel: PrioridadNivel;
+		motivos: string[];
+	};
+}
+
+/** Nombre de modelo PJN que espera el backend en `causaType` */
+export type PjnCausaType = "CausasCivil" | "CausasComercial" | "CausasSegSocial" | "CausasTrabajo";
+
+const FUERO_TO_CAUSA_TYPE: Record<string, PjnCausaType> = {
+	CIV: "CausasCivil",
+	COM: "CausasComercial",
+	CSS: "CausasSegSocial",
+	CNT: "CausasTrabajo",
+	Civil: "CausasCivil",
+	Comercial: "CausasComercial",
+	"Seguridad Social": "CausasSegSocial",
+	Trabajo: "CausasTrabajo",
+};
+
+/**
+ * Mapea el fuero PJN (código CIV/COM/CSS/CNT o nombre legible) al nombre de modelo
+ * que espera el backend. Devuelve null si el fuero no es de los cuatro soportados.
+ */
+export const fueroToCausaType = (fuero: string | null | undefined): PjnCausaType | null => {
+	if (!fuero) return null;
+	return FUERO_TO_CAUSA_TYPE[fuero] || FUERO_TO_CAUSA_TYPE[fuero.toUpperCase()] || null;
+};
+
+/** Normaliza variantes históricas del nombre de modelo (p. ej. `CausasSegSoc` → `CausasSegSocial`) */
+export const normalizeCausaType = (causaType: string | null | undefined): string | null => {
+	if (!causaType) return null;
+	if (causaType === "CausasSegSoc") return "CausasSegSocial";
+	return causaType;
+};
 
 export type CoveragePendienteEstado = "pendiente" | "sin_pdf" | "needs_ocr" | "failed" | "failed_definitivo";
 
@@ -146,6 +225,25 @@ class CausasCoverageService {
 	async getPendientes(causaId: string, limit = 500): Promise<CausaCoveragePendientesResponse> {
 		const response = await adminAxios.get<CausaCoveragePendientesResponse>(`/api/causas-coverage/${causaId}/pendientes`, {
 			params: { limit },
+		});
+		return response.data;
+	}
+
+	/**
+	 * Fija (o quita, con `manual: null`) el override manual de prioridad de una causa.
+	 * `causaType` es el nombre del modelo PJN (ver `fueroToCausaType` / `normalizeCausaType`).
+	 */
+	async setPrioridadManual(causaId: string, causaType: string, manual: number | null, nota?: string): Promise<PrioridadMutationResponse> {
+		const body: { causaType: string; manual: number | null; nota?: string } = { causaType, manual };
+		if (nota && nota.trim().length > 0) body.nota = nota.trim();
+		const response = await adminAxios.patch<PrioridadMutationResponse>(`/api/causas-coverage/${causaId}/prioridad`, body);
+		return response.data;
+	}
+
+	/** Recalcula la prioridad automática de una causa ahora (sin esperar al cron horario). */
+	async recomputePrioridad(causaId: string, causaType: string): Promise<PrioridadMutationResponse> {
+		const response = await adminAxios.post<PrioridadMutationResponse>(`/api/causas-coverage/${causaId}/prioridad/recompute`, {
+			causaType,
 		});
 		return response.data;
 	}

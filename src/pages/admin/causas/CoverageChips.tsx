@@ -1,4 +1,5 @@
 import { Badge, Box, Chip, Skeleton, Stack, Tooltip, Typography } from "@mui/material";
+import { UserEdit } from "iconsax-react";
 import {
 	CausaCoverage,
 	CoverageCategoria,
@@ -6,6 +7,9 @@ import {
 	CoverageFlag,
 	ActualizacionEstado,
 	CoveragePendienteEstado,
+	Prioridad,
+	PrioridadComponentes,
+	PrioridadNivel,
 } from "api/causasCoverage";
 
 /**
@@ -83,6 +87,59 @@ export const PENDIENTE_ESTADO_META: Record<CoveragePendienteEstado, { label: str
 	needs_ocr: { label: "Necesita OCR", color: "error" },
 	failed: { label: "Fallido", color: "error" },
 	failed_definitivo: { label: "Definitivo", color: "default" },
+};
+
+export const PRIORIDAD_NIVEL_META: Record<PrioridadNivel, { label: string; color: ChipColor; descripcion: string }> = {
+	alta: { label: "Alta", color: "error", descripcion: "Score ≥ 70: se extrae primero" },
+	media: { label: "Media", color: "warning", descripcion: "Score 40–69" },
+	baja: { label: "Baja", color: "info", descripcion: "Score 10–39" },
+	archivo: { label: "Archivo", color: "default", descripcion: "Score < 10: solo carpetas archivadas o sin carpetas" },
+};
+
+export const PRIORIDAD_COMPONENTES_META: Array<{ key: keyof PrioridadComponentes; label: string; descripcion: string }> = [
+	{ key: "carpetas", label: "Carpetas", descripcion: "Carpetas vivas vs. solo archivadas / sin carpetas" },
+	{ key: "plan", label: "Plan", descripcion: "Mejor plan entre los usuarios que siguen la causa" },
+	{ key: "addon", label: "Add-on", descripcion: "Algún usuario con add-on Conectores de IA" },
+	{ key: "prueba", label: "Prueba", descripcion: "Penalización por cuenta de prueba" },
+	{ key: "usuarios", label: "Usuarios", descripcion: "Cantidad de usuarios que siguen la causa" },
+	{ key: "actividad", label: "Actividad", descripcion: "Movimientos recientes (7 / 30 / 180 días)" },
+	{ key: "cola", label: "Cola", descripcion: "Días con documentos esperando texto" },
+];
+
+const PLAN_LABELS: Record<string, string> = {
+	premium: "Premium",
+	pro: "Pro",
+	standard: "Standard",
+	free: "Free",
+};
+
+/** Traduce una clave de `prioridad.motivos` a texto legible. */
+export const describePrioridadMotivo = (motivo: string, prioridad?: Prioridad | null): string => {
+	if (motivo === "manual") {
+		const por = prioridad?.manualPor ? ` por ${prioridad.manualPor}` : "";
+		const en = prioridad?.manualEn ? ` el ${formatDateTime(prioridad.manualEn)}` : "";
+		const nota = prioridad?.manualNota ? `: ${prioridad.manualNota}` : "";
+		return `Fijada a mano${por}${en}${nota}`;
+	}
+	if (motivo === "carpeta_viva") return "Carpeta viva";
+	if (motivo === "solo_archivadas") return "Solo carpetas archivadas";
+	if (motivo === "sin_carpetas") return "Sin carpetas";
+	if (motivo === "addon_mcp") return "Add-on Conectores de IA";
+	if (motivo === "cuenta_prueba") return "Cuenta de prueba";
+
+	const plan = /^plan_(\w+)$/.exec(motivo);
+	if (plan) return `Plan ${PLAN_LABELS[plan[1]] || plan[1]}`;
+
+	const usuarios = /^usuarios_(\d+)$/.exec(motivo);
+	if (usuarios) return `${usuarios[1]} usuario${usuarios[1] === "1" ? "" : "s"}`;
+
+	const mov = /^mov_(\d+)d$/.exec(motivo);
+	if (mov) return `Movimiento en los últimos ${mov[1]} días`;
+
+	const cola = /^cola_(\d+)d$/.exec(motivo);
+	if (cola) return `${cola[1]} día${cola[1] === "1" ? "" : "s"} con documentos en cola`;
+
+	return motivo;
 };
 
 export const sumDefinitivos = (cat: CoverageCategoria | undefined): number => {
@@ -283,20 +340,145 @@ export const ActualizacionChip = ({ coverage, loading = false, compact = false }
 	);
 };
 
+export interface PrioridadChipProps {
+	/** `null` → todavía no calculada por el cron; `undefined` → sin cobertura cargada */
+	prioridad?: Prioridad | null;
+	loading?: boolean;
+	compact?: boolean;
+	/** Versión grande para el detalle de la causa */
+	large?: boolean;
+}
+
+const PrioridadTooltip = ({ prioridad }: { prioridad: Prioridad }) => {
+	const meta = PRIORIDAD_NIVEL_META[prioridad.nivel] || PRIORIDAD_NIVEL_META.archivo;
+	const hasManual = prioridad.manual !== null && prioridad.manual !== undefined;
+	const componentes = prioridad.componentes || ({} as Partial<PrioridadComponentes>);
+	return (
+		<Box sx={{ fontSize: "0.75rem", lineHeight: 1.5, maxWidth: 320 }}>
+			<Typography variant="caption" fontWeight={700} display="block">
+				Prioridad {meta.label} · {prioridad.score}
+				{hasManual && " (manual)"}
+			</Typography>
+			<Typography variant="caption" display="block" sx={{ opacity: 0.85, mb: 0.5 }}>
+				{meta.descripcion}
+			</Typography>
+			<div>Automática: {prioridad.automatico}</div>
+			{hasManual && <div>Manual: {prioridad.manual}</div>}
+			{prioridad.motivos?.length > 0 && (
+				<Box sx={{ mt: 0.5 }}>
+					<Typography variant="caption" fontWeight={700} display="block">
+						Motivos
+					</Typography>
+					{prioridad.motivos.map((m) => (
+						<div key={m}>· {describePrioridadMotivo(m, prioridad)}</div>
+					))}
+				</Box>
+			)}
+			<Box sx={{ mt: 0.5 }}>
+				<Typography variant="caption" fontWeight={700} display="block">
+					Componentes
+				</Typography>
+				<div>
+					{PRIORIDAD_COMPONENTES_META.map((c, i) => (
+						<span key={c.key}>
+							{i > 0 && " · "}
+							{c.label} {componentes[c.key] ?? 0}
+						</span>
+					))}
+				</div>
+			</Box>
+			<Typography variant="caption" display="block" sx={{ opacity: 0.75, mt: 0.5 }}>
+				Calculada: {formatDateTime(prioridad.computedAt)}
+				{prioridad.version ? ` · v${prioridad.version}` : ""}
+			</Typography>
+		</Box>
+	);
+};
+
+/** Chip de prioridad de extracción de textos (nivel + score; pin si hay override manual). */
+export const PrioridadChip = ({ prioridad, loading = false, compact = false, large = false }: PrioridadChipProps) => {
+	if (loading) {
+		return <Skeleton variant="rounded" width={compact ? 56 : 72} height={large ? 28 : compact ? 18 : 20} />;
+	}
+
+	if (prioridad === undefined) {
+		return (
+			<Typography variant="caption" color="text.secondary">
+				—
+			</Typography>
+		);
+	}
+
+	const baseSx = {
+		height: large ? 28 : compact ? 18 : 20,
+		fontSize: large ? "0.85rem" : compact ? "0.65rem" : "0.7rem",
+		fontWeight: 700,
+		"& .MuiChip-label": { px: large ? 1.2 : 0.8 },
+		"& .MuiChip-icon": { ml: large ? 0.8 : 0.5, mr: -0.3 },
+	};
+
+	if (prioridad === null) {
+		return (
+			<Tooltip title="La prioridad todavía no fue calculada por el cron horario" arrow>
+				<Chip
+					label="Sin calcular"
+					size="small"
+					variant="outlined"
+					sx={{ ...baseSx, fontWeight: 600, color: "text.disabled", borderColor: "divider" }}
+				/>
+			</Tooltip>
+		);
+	}
+
+	const meta = PRIORIDAD_NIVEL_META[prioridad.nivel] || PRIORIDAD_NIVEL_META.archivo;
+	const hasManual = prioridad.manual !== null && prioridad.manual !== undefined;
+	const label = `${meta.label} · ${prioridad.score}${hasManual && !compact ? " (manual)" : ""}`;
+
+	return (
+		<Tooltip title={<PrioridadTooltip prioridad={prioridad} />} arrow>
+			<Chip
+				label={label}
+				size="small"
+				color={meta.color}
+				variant="filled"
+				icon={hasManual ? <UserEdit size={large ? 16 : compact ? 11 : 13} variant="Bold" color="currentColor" /> : undefined}
+				sx={{
+					...baseSx,
+					...(prioridad.nivel === "archivo" && { bgcolor: "action.selected", color: "text.secondary" }),
+				}}
+			/>
+		</Tooltip>
+	);
+};
+
 /** Leyenda compacta para cabeceras de tabla */
 export const CoverageLegend = () => (
-	<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
-		<Typography variant="caption" color="text.secondary">
-			<b>Textos</b>: R resoluciones · C cédulas · E escritos · D DEO · Dg diligenciadas.
-		</Typography>
-		<Chip label="completo" size="small" color="success" sx={chipSx(true)} />
-		<Chip label="en curso" size="small" color="warning" sx={chipSx(true)} />
-		<Chip label="incompleto" size="small" color="error" sx={chipSx(true)} />
-		<Chip label="no habilitado" size="small" sx={{ ...chipSx(true), bgcolor: "action.selected", color: "text.secondary" }} />
-		<Chip label="—" size="small" variant="outlined" sx={{ ...chipSx(true), color: "text.disabled", borderColor: "divider" }} />
-		<Typography variant="caption" color="text.secondary">
-			sin documentos
-		</Typography>
+	<Stack spacing={0.5}>
+		<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+			<Typography variant="caption" color="text.secondary">
+				<b>Textos</b>: R resoluciones · C cédulas · E escritos · D DEO · Dg diligenciadas.
+			</Typography>
+			<Chip label="completo" size="small" color="success" sx={chipSx(true)} />
+			<Chip label="en curso" size="small" color="warning" sx={chipSx(true)} />
+			<Chip label="incompleto" size="small" color="error" sx={chipSx(true)} />
+			<Chip label="no habilitado" size="small" sx={{ ...chipSx(true), bgcolor: "action.selected", color: "text.secondary" }} />
+			<Chip label="—" size="small" variant="outlined" sx={{ ...chipSx(true), color: "text.disabled", borderColor: "divider" }} />
+			<Typography variant="caption" color="text.secondary">
+				sin documentos
+			</Typography>
+		</Stack>
+		<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+			<Typography variant="caption" color="text.secondary">
+				<b>Prioridad</b> de extracción (0–100, según carpetas vivas, plan, add-on, usuarios, actividad y cola):
+			</Typography>
+			<Chip label="alta ≥70" size="small" color="error" sx={chipSx(true)} />
+			<Chip label="media 40–69" size="small" color="warning" sx={chipSx(true)} />
+			<Chip label="baja 10–39" size="small" color="info" sx={chipSx(true)} />
+			<Chip label="archivo <10" size="small" sx={{ ...chipSx(true), bgcolor: "action.selected", color: "text.secondary" }} />
+			<Typography variant="caption" color="text.secondary">
+				· el ícono <UserEdit size={11} variant="Bold" style={{ verticalAlign: "middle" }} /> marca un override manual
+			</Typography>
+		</Stack>
 	</Stack>
 );
 

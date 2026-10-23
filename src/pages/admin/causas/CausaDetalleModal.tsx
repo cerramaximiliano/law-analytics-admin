@@ -46,13 +46,16 @@ import CausasService from "api/causas";
 import { CausasMEVService, CausaMEV } from "api/causasMEV";
 import MEVWorkersService, { NavigationCodeDoc } from "api/workersMEV";
 import { JudicialMovementsService, JudicialMovement } from "api/judicialMovements";
-import CausasCoverageService, { CausaCoveragePendientesResponse } from "api/causasCoverage";
+import CausasCoverageService, { CausaCoveragePendientesResponse, fueroToCausaType } from "api/causasCoverage";
 import CoverageChips, {
 	ActualizacionChip,
+	PrioridadChip,
 	COVERAGE_CATEGORIAS,
 	COVERAGE_FLAG_META,
 	COVERAGE_CATEGORIA_LABELS,
 	PENDIENTE_ESTADO_META,
+	PRIORIDAD_COMPONENTES_META,
+	describePrioridadMotivo,
 	sumDefinitivos,
 } from "./CoverageChips";
 import {
@@ -196,6 +199,10 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 	// Estados para tab de cobertura de textos (solo PJN)
 	const [coverageData, setCoverageData] = useState<CausaCoveragePendientesResponse | null>(null);
 	const [loadingCoverage, setLoadingCoverage] = useState(false);
+	// Override manual de prioridad de extracción (tab Cobertura)
+	const [prioridadManualInput, setPrioridadManualInput] = useState("");
+	const [prioridadNotaInput, setPrioridadNotaInput] = useState("");
+	const [savingPrioridad, setSavingPrioridad] = useState<"set" | "clear" | "recompute" | null>(null);
 
 	// Resetear estados cuando se abre el modal
 	useEffect(() => {
@@ -219,6 +226,9 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 			// Reset cobertura de textos
 			setCoverageData(null);
 			setLoadingCoverage(false);
+			setPrioridadManualInput("");
+			setPrioridadNotaInput("");
+			setSavingPrioridad(null);
 			// Cargar notificaciones judiciales
 			loadJudicialMovements();
 		}
@@ -434,6 +444,10 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 			const response = await CausasCoverageService.getPendientes(causaId);
 			if (response.success) {
 				setCoverageData(response);
+				// Prellenar el formulario de override con el valor vigente
+				const prioridad = response.cobertura?.prioridad;
+				setPrioridadManualInput(prioridad?.manual !== null && prioridad?.manual !== undefined ? String(prioridad.manual) : "");
+				setPrioridadNotaInput(prioridad?.manualNota || "");
 			} else {
 				throw new Error("Respuesta sin éxito");
 			}
@@ -445,6 +459,69 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 			});
 		} finally {
 			setLoadingCoverage(false);
+		}
+	};
+
+	// Acciones sobre la prioridad de extracción (PATCH /prioridad, POST /prioridad/recompute)
+	const runPrioridadAction = async (action: "set" | "clear" | "recompute") => {
+		if (!causa) return;
+		const causaId = typeof causa._id === "string" ? causa._id : causa._id.$oid;
+		const causaType = fueroToCausaType(normalizeFuero((causa as Causa).fuero));
+		if (!causaType) {
+			enqueueSnackbar("No se pudo determinar el fuero de la causa", {
+				variant: "error",
+				anchorOrigin: { vertical: "bottom", horizontal: "right" },
+			});
+			return;
+		}
+
+		let manual: number | null = null;
+		if (action === "set") {
+			const parsed = Number(prioridadManualInput);
+			if (prioridadManualInput.trim() === "" || !Number.isFinite(parsed) || parsed < 0 || parsed > 100) {
+				enqueueSnackbar("La prioridad manual debe ser un número entre 0 y 100", {
+					variant: "warning",
+					anchorOrigin: { vertical: "bottom", horizontal: "right" },
+				});
+				return;
+			}
+			manual = Math.round(parsed);
+		}
+
+		try {
+			setSavingPrioridad(action);
+			const response =
+				action === "recompute"
+					? await CausasCoverageService.recomputePrioridad(causaId, causaType)
+					: await CausasCoverageService.setPrioridadManual(causaId, causaType, manual, action === "set" ? prioridadNotaInput : undefined);
+			if (!response.success) throw new Error("Respuesta sin éxito");
+
+			const mensaje =
+				action === "set"
+					? `Prioridad manual fijada en ${response.prioridad.score} (${response.prioridad.nivel})`
+					: action === "clear"
+					? `Override quitado · prioridad automática ${response.prioridad.score} (${response.prioridad.nivel})`
+					: `Prioridad recalculada: ${response.prioridad.score} (${response.prioridad.nivel})`;
+			enqueueSnackbar(mensaje, {
+				variant: "success",
+				anchorOrigin: { vertical: "bottom", horizontal: "right" },
+			});
+			await loadCoverage();
+		} catch (error) {
+			console.error("Error al actualizar la prioridad:", error);
+			enqueueSnackbar(
+				action === "set"
+					? "Error al fijar la prioridad manual"
+					: action === "clear"
+					? "Error al quitar el override de prioridad"
+					: "Error al recalcular la prioridad",
+				{
+					variant: "error",
+					anchorOrigin: { vertical: "bottom", horizontal: "right" },
+				},
+			);
+		} finally {
+			setSavingPrioridad(null);
 		}
 	};
 
@@ -1742,9 +1819,170 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 								return s.length > n ? `${s.slice(0, n)}…` : s;
 							};
 
+							const prioridad = cobertura.prioridad ?? null;
+							const hasManual = prioridad?.manual !== null && prioridad?.manual !== undefined;
+							const busyPrioridad = savingPrioridad !== null || loadingCoverage;
+
 							return (
 								<Box>
 									{headerActions}
+
+									{/* Prioridad de extracción */}
+									<Box
+										sx={{
+											p: 1.5,
+											mb: 2,
+											borderRadius: 1,
+											border: `1px solid ${headerBorder(isDark)}`,
+										}}
+									>
+										<Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" useFlexGap sx={{ mb: 1 }}>
+											<Typography variant="subtitle2">Prioridad de extracción</Typography>
+											<PrioridadChip prioridad={prioridad} large />
+											{prioridad && (
+												<Typography variant="caption" color="text.secondary">
+													automática {prioridad.automatico}
+													{hasManual && ` · manual ${prioridad.manual}`}
+													{` · calculada ${formatDate(prioridad.computedAt)}`}
+												</Typography>
+											)}
+											{cobertura.pendientesDesde && (
+												<Typography variant="caption" color="text.secondary">
+													· en cola desde {formatDate(cobertura.pendientesDesde)}
+												</Typography>
+											)}
+										</Stack>
+
+										{prioridad ? (
+											<Grid container spacing={1.5} alignItems="flex-start">
+												<Grid item xs={12} md={7}>
+													<TableContainer>
+														<Table size="small">
+															<TableHead>
+																<TableRow>
+																	<TableCell>Componente</TableCell>
+																	<TableCell align="right">Puntos</TableCell>
+																</TableRow>
+															</TableHead>
+															<TableBody>
+																{PRIORIDAD_COMPONENTES_META.map((c) => (
+																	<TableRow key={c.key} hover>
+																		<TableCell>
+																			<Tooltip title={c.descripcion}>
+																				<Typography variant="body2" component="span">
+																					{c.label}
+																				</Typography>
+																			</Tooltip>
+																		</TableCell>
+																		<TableCell align="right" sx={{ fontVariantNumeric: "tabular-nums" }}>
+																			{prioridad.componentes?.[c.key] ?? 0}
+																		</TableCell>
+																	</TableRow>
+																))}
+																<TableRow>
+																	<TableCell sx={{ fontWeight: 700 }}>Automática</TableCell>
+																	<TableCell align="right" sx={{ fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>
+																		{prioridad.automatico}
+																	</TableCell>
+																</TableRow>
+															</TableBody>
+														</Table>
+													</TableContainer>
+													{prioridad.motivos?.length > 0 && (
+														<Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap sx={{ mt: 1 }}>
+															{prioridad.motivos.map((m) => (
+																<Chip
+																	key={m}
+																	label={describePrioridadMotivo(m, prioridad)}
+																	size="small"
+																	variant="outlined"
+																	color={m === "manual" ? "primary" : "default"}
+																	sx={{ height: 22, fontSize: "0.7rem" }}
+																/>
+															))}
+														</Stack>
+													)}
+												</Grid>
+												<Grid item xs={12} md={5}>
+													<Stack spacing={1}>
+														<TextField
+															label="Prioridad manual (0–100)"
+															type="number"
+															size="small"
+															value={prioridadManualInput}
+															onChange={(e) => setPrioridadManualInput(e.target.value)}
+															inputProps={{ min: 0, max: 100, step: 1 }}
+															disabled={busyPrioridad}
+															fullWidth
+														/>
+														<TextField
+															label="Nota"
+															size="small"
+															value={prioridadNotaInput}
+															onChange={(e) => setPrioridadNotaInput(e.target.value)}
+															placeholder="Motivo del override (opcional)"
+															disabled={busyPrioridad}
+															fullWidth
+														/>
+														<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+															<Button
+																size="small"
+																variant="contained"
+																startIcon={savingPrioridad === "set" ? <CircularProgress size={14} color="inherit" /> : <Save2 size={16} />}
+																onClick={() => runPrioridadAction("set")}
+																disabled={busyPrioridad || prioridadManualInput.trim() === ""}
+															>
+																Fijar prioridad manual
+															</Button>
+															{hasManual && (
+																<Button
+																	size="small"
+																	variant="outlined"
+																	color="warning"
+																	startIcon={
+																		savingPrioridad === "clear" ? <CircularProgress size={14} color="inherit" /> : <CloseSquare size={16} />
+																	}
+																	onClick={() => runPrioridadAction("clear")}
+																	disabled={busyPrioridad}
+																>
+																	Quitar override
+																</Button>
+															)}
+															<Button
+																size="small"
+																variant="outlined"
+																startIcon={savingPrioridad === "recompute" ? <CircularProgress size={14} /> : <Refresh2 size={16} />}
+																onClick={() => runPrioridadAction("recompute")}
+																disabled={busyPrioridad}
+															>
+																Recalcular
+															</Button>
+														</Stack>
+														{hasManual && (
+															<Typography variant="caption" color="text.secondary">
+																{describePrioridadMotivo("manual", prioridad)}
+															</Typography>
+														)}
+													</Stack>
+												</Grid>
+											</Grid>
+										) : (
+											<Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" useFlexGap>
+												<Typography variant="caption" color="text.secondary">
+													El cron horario todavía no calculó la prioridad de esta causa.
+												</Typography>
+												<Button
+													size="small"
+													variant="outlined"
+													startIcon={savingPrioridad === "recompute" ? <CircularProgress size={14} /> : <Refresh2 size={16} />}
+													onClick={() => runPrioridadAction("recompute")}
+													disabled={busyPrioridad}
+												>
+													Calcular ahora
+												</Button>
+											</Stack>
+										)}
+									</Box>
 
 									<Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" useFlexGap sx={{ mb: 2 }}>
 										<CoverageChips coverage={cobertura} />

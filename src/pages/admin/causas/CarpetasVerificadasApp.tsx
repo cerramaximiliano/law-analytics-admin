@@ -40,7 +40,7 @@ import MainCard from "components/MainCard";
 import { CausasPjnService, Causa, EligibilityStats } from "api/causasPjn";
 import { JudicialMovementsService, JudicialMovement } from "api/judicialMovements";
 import CausasCoverageService, { CausaCoverage } from "api/causasCoverage";
-import CoverageChips, { ActualizacionChip, CoverageLegend } from "./CoverageChips";
+import CoverageChips, { ActualizacionChip, CoverageLegend, PrioridadChip } from "./CoverageChips";
 import {
 	Refresh,
 	Eye,
@@ -1178,6 +1178,7 @@ const CarpetasVerificadasApp = () => {
 											<TableCell>Fecha Últ. Mov.</TableCell>
 											<TableCell>Textos</TableCell>
 											<TableCell>Al día</TableCell>
+											<TableCell>Prioridad</TableCell>
 											<TableCell align="center">Actualizable</TableCell>
 											<TableCell align="center">Privada</TableCell>
 											<TableCell align="center">Archivada</TableCell>
@@ -1326,6 +1327,9 @@ const CarpetasVerificadasApp = () => {
 												</TableCell>
 												<TableCell sx={{ whiteSpace: "nowrap" }}>
 													<ActualizacionChip coverage={coverage[getId(causa._id)]} loading={loadingCoverage} compact />
+												</TableCell>
+												<TableCell sx={{ whiteSpace: "nowrap" }}>
+													<PrioridadChip prioridad={coverage[getId(causa._id)]?.prioridad} loading={loadingCoverage} compact />
 												</TableCell>
 												<TableCell align="center">
 													{causa.update ? (
