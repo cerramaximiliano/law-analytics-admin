@@ -234,3 +234,8 @@ por jurisdicción). El admin **no deriva estados**: renderiza `view` tal como ll
   (`api/adminResources.ts`), chip ámbar ⚠ si `flags.length`, clic → diálogo; switch "Solo anomalías de
   visualización" = `viewFlagged=true` (barrido server-side, tope 5000).
 - Informe de la auditoría que motivó todo esto: hub `docs/admin/auditoria-vista-usuario-2026-10-16.md`.
+
+## Coordinación de campañas (2026-10-24)
+
+`/admin/marketing/coordinacion`: reglas del tope por persona, prioridades por campaña, flujos y diferidos de los
+últimos 14 días, sobre `GET/PUT /api/scheduler/frequency` de la-marketing-service. Detalle: `docs/coordinacion-campanas.md`.
