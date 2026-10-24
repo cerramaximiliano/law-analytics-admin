@@ -43,6 +43,7 @@ import { Campaign, CampaignInput, CampaignType, AvailablePromo } from "types/cam
 import { CampaignService } from "store/reducers/campaign";
 import { SegmentService } from "store/reducers/segments";
 import { useSnackbar } from "notistack";
+import { DEFAULT_FREQUENCY_POLICY, getPolicy } from "utils/campaignCoordination";
 
 // Extend dayjs with timezone support
 dayjs.extend(utc);
@@ -88,6 +89,11 @@ interface FormValues {
 	recurringDayOfWeek: number;
 	recurringMonthOfYear: number;
 	recurringTime: string;
+	// Coordinador de campañas (frequencyPolicy)
+	priority: number;
+	exempt: boolean;
+	pausesLowerPriority: boolean;
+	perishable: boolean;
 }
 
 // validation schema
@@ -123,6 +129,11 @@ const validationSchema = Yup.object({
 	timezone: Yup.string().required("La zona horaria es requerida"),
 	throttleRate: Yup.number().min(1, "Mínimo 1 email por batch").max(1000, "Máximo 1000 emails por batch"),
 	dailyLimit: Yup.number().min(0, "El límite debe ser 0 o mayor").max(100000, "Máximo 100000 emails por día"),
+	priority: Yup.number()
+		.integer("Tiene que ser un número entero")
+		.min(0, "Mínimo 0")
+		.max(100, "Máximo 100")
+		.required("La prioridad es requerida"),
 	allowedDays: Yup.array().of(Yup.number()).min(1, "Debe seleccionar al menos un día"),
 	timeWindowStart: Yup.string().matches(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, "Formato inválido (HH:MM)"),
 	timeWindowEnd: Yup.string()
@@ -255,6 +266,11 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 		recurringDayOfWeek: 1,
 		recurringMonthOfYear: 1,
 		recurringTime: "09:00",
+		// Coordinador de campañas: defaults del backend
+		priority: DEFAULT_FREQUENCY_POLICY.priority,
+		exempt: DEFAULT_FREQUENCY_POLICY.exempt,
+		pausesLowerPriority: DEFAULT_FREQUENCY_POLICY.pausesLowerPriority,
+		perishable: DEFAULT_FREQUENCY_POLICY.perishable,
 	};
 
 	// Formik setup
@@ -302,6 +318,12 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 									syncWithSegment: values.syncWithSegment,
 							  },
 						promoDiscountId: values.promoDiscountId || null,
+						frequencyPolicy: {
+							priority: Number(values.priority),
+							exempt: values.exempt,
+							pausesLowerPriority: values.pausesLowerPriority,
+							perishable: values.perishable,
+						},
 						settings: {
 							...campaign.settings,
 							timezone: values.timezone,
@@ -344,6 +366,12 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 						category: values.category || undefined,
 						tags: tagsArray.length > 0 ? tagsArray : undefined,
 						promoDiscountId: values.promoDiscountId || null,
+						frequencyPolicy: {
+							priority: Number(values.priority),
+							exempt: values.exempt,
+							pausesLowerPriority: values.pausesLowerPriority,
+							perishable: values.perishable,
+						},
 						settings: {
 							timezone: values.timezone,
 							throttleRate: values.throttleRate,
@@ -458,6 +486,16 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 				recurringDayOfWeek: (campaign.settings as any)?.recurringSchedule?.dayOfWeek || 1,
 				recurringMonthOfYear: (campaign.settings as any)?.recurringSchedule?.monthOfYear || 1,
 				recurringTime: (campaign.settings as any)?.recurringSchedule?.time || "09:00",
+				// Coordinador de campañas
+				...(() => {
+					const policy = getPolicy(campaign);
+					return {
+						priority: policy.priority,
+						exempt: policy.exempt,
+						pausesLowerPriority: policy.pausesLowerPriority,
+						perishable: policy.perishable,
+					};
+				})(),
 			});
 		} else {
 			// Reset to defaults for create mode
@@ -921,6 +959,86 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 									InputLabelProps={{ shrink: true }}
 								/>
 							</FormControl>
+						</Grid>
+
+						<Grid item xs={12}>
+							<Divider />
+						</Grid>
+
+						{/* Coordinación de campañas (frequencyPolicy) */}
+						<Grid item xs={12}>
+							<Typography variant="h5" gutterBottom>
+								Coordinación
+							</Typography>
+							<Typography variant="body2" color="textSecondary" sx={{ mb: 1 }}>
+								Cómo convive esta campaña con las demás cuando le escriben a la misma persona (tope de correos por día y por semana). Las
+								reglas generales están en Marketing, Coordinación de campañas.
+							</Typography>
+						</Grid>
+
+						<Grid item xs={12} md={4}>
+							<TextField
+								fullWidth
+								id="priority"
+								name="priority"
+								label="Prioridad"
+								type="number"
+								value={formik.values.priority}
+								onChange={formik.handleChange}
+								onBlur={formik.handleBlur}
+								error={formik.touched.priority && Boolean(formik.errors.priority)}
+								helperText={
+									(formik.touched.priority && formik.errors.priority) ||
+									"0 a 100 (por defecto 50). Si dos campañas coinciden el mismo día, sale la de mayor prioridad y la otra se difiere."
+								}
+								inputProps={{ min: 0, max: 100, step: 5 }}
+							/>
+						</Grid>
+
+						<Grid item xs={12} md={8}>
+							<Stack spacing={0.5}>
+								<FormControlLabel
+									control={<Switch checked={formik.values.exempt} onChange={(e) => formik.setFieldValue("exempt", e.target.checked)} />}
+									label={
+										<Box>
+											<Typography variant="subtitle2">Exenta</Typography>
+											<Typography variant="caption" color="textSecondary">
+												No cuenta para el tope ni se difiere. Para avisos legales u operativos que tienen que salir sí o sí. Las categorías
+												exentas (p. ej. newsletter) ya lo son sin tocar esto.
+											</Typography>
+										</Box>
+									}
+								/>
+								<FormControlLabel
+									control={
+										<Switch
+											checked={formik.values.pausesLowerPriority}
+											onChange={(e) => formik.setFieldValue("pausesLowerPriority", e.target.checked)}
+										/>
+									}
+									label={
+										<Box>
+											<Typography variant="subtitle2">Pausa a las de menor prioridad</Typography>
+											<Typography variant="caption" color="textSecondary">
+												Mientras el contacto esté activo en esta campaña, las de menor prioridad no le envían; retoman cuando termina.
+											</Typography>
+										</Box>
+									}
+								/>
+								<FormControlLabel
+									control={
+										<Switch checked={formik.values.perishable} onChange={(e) => formik.setFieldValue("perishable", e.target.checked)} />
+									}
+									label={
+										<Box>
+											<Typography variant="subtitle2">Perecedera</Typography>
+											<Typography variant="caption" color="textSecondary">
+												Si el correo no entra por el tope, se saltea para ese contacto en vez de esperar (boletines con fecha).
+											</Typography>
+										</Box>
+									}
+								/>
+							</Stack>
 						</Grid>
 
 						<Grid item xs={12}>

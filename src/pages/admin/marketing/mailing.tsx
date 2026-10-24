@@ -65,6 +65,7 @@ import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import { COL_SM, COL_MD, COL_LG } from "utils/responsiveColumns";
+import { getPolicy } from "utils/campaignCoordination";
 
 // Extend dayjs with timezone support
 dayjs.extend(utc);
@@ -106,6 +107,34 @@ const StatusIndicator = styled(Box)<{ status: "online" | "offline" | "checking" 
 		"100%": { opacity: 1 },
 	},
 }));
+
+// Chip de prioridad del coordinador de campañas (frequencyPolicy) con las políticas en el tooltip.
+const PriorityChip = ({ campaign }: { campaign: Campaign }) => {
+	const policy = getPolicy(campaign);
+	const flags = [
+		policy.exempt && "exenta",
+		policy.pausesLowerPriority && "pausa a las de menor prioridad",
+		policy.perishable && "perecedera",
+	].filter(Boolean) as string[];
+	return (
+		<Tooltip
+			title={`Prioridad ${policy.priority}${flags.length ? ` · ${flags.join(", ")}` : ""}${
+				campaign.frequencyPolicy ? "" : " (por defecto)"
+			}`}
+		>
+			<Stack direction="row" spacing={0.5} alignItems="center">
+				<Chip
+					size="small"
+					label={policy.priority}
+					variant={campaign.frequencyPolicy ? "filled" : "outlined"}
+					color="primary"
+					sx={{ minWidth: 40, fontVariantNumeric: "tabular-nums", fontWeight: 600 }}
+				/>
+				{policy.exempt && <Chip size="small" label="Exenta" variant="outlined" color="secondary" />}
+			</Stack>
+		</Tooltip>
+	);
+};
 
 // ==============================|| ADMIN - MAILING CAMPAIGNS ||============================== //
 
@@ -753,6 +782,11 @@ const MailingCampaigns = () => {
 								<TableCell sx={COL_SM}>Tipo</TableCell>
 								<TableCell>Estado</TableCell>
 								<TableCell sx={COL_LG}>Categoría</TableCell>
+								<TableCell sx={COL_MD}>
+									<Tooltip title="Prioridad del coordinador de campañas (0–100). Se edita en Coordinación o al editar la campaña.">
+										<span>Prioridad</span>
+									</Tooltip>
+								</TableCell>
 								<TableCell align="right" sx={COL_SM}>
 									Contactos
 								</TableCell>
@@ -776,10 +810,10 @@ const MailingCampaigns = () => {
 						</TableHead>
 						<TableBody>
 							{loading ? (
-								<TableSkeleton columns={11} rows={10} />
+								<TableSkeleton columns={12} rows={10} />
 							) : campaigns.length === 0 ? (
 								<TableRow>
-									<TableCell colSpan={11} align="center" sx={{ py: 3 }}>
+									<TableCell colSpan={12} align="center" sx={{ py: 3 }}>
 										<Typography variant="subtitle1">No hay campañas disponibles</Typography>
 									</TableCell>
 								</TableRow>
@@ -812,6 +846,9 @@ const MailingCampaigns = () => {
 												<Chip label={statusInfo.label} color={statusInfo.color as any} size="small" />
 											</TableCell>
 											<TableCell sx={COL_LG}>{campaign.category || "-"}</TableCell>
+											<TableCell sx={COL_MD}>
+												<PriorityChip campaign={campaign} />
+											</TableCell>
 											<TableCell align="right" sx={COL_SM}>
 												{campaign.metrics?.totalContacts || 0}
 											</TableCell>

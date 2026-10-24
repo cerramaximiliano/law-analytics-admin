@@ -1,7 +1,7 @@
 import React from "react";
 import { Box, Button, ButtonGroup } from "@mui/material";
 import { useNavigate, useLocation } from "react-router-dom";
-import { People, Sms, DocumentText1, Component } from "iconsax-react";
+import { People, Sms, DocumentText1, Component, Hierarchy } from "iconsax-react";
 
 const MarketingQuickNav: React.FC = () => {
 	const navigate = useNavigate();
@@ -17,6 +17,11 @@ const MarketingQuickNav: React.FC = () => {
 			path: "/admin/marketing/mailing",
 			label: "Campañas",
 			icon: <Sms size={18} />,
+		},
+		{
+			path: "/admin/marketing/coordinacion",
+			label: "Coordinación",
+			icon: <Hierarchy size={18} />,
 		},
 		{
 			path: "/admin/marketing/templates",

@@ -1064,6 +1064,13 @@ const admin: NavItemType = {
 					breadcrumbs: true,
 				},
 				{
+					id: "coordinacion",
+					title: "Coordinación de campañas",
+					type: "item",
+					url: "/admin/marketing/coordinacion",
+					breadcrumbs: true,
+				},
+				{
 					id: "templates",
 					title: "Plantillas de Email",
 					type: "item",

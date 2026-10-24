@@ -73,6 +73,15 @@ export interface CampaignAudience {
 	exclusions: string[];
 }
 
+// Coordinador de campañas (la-marketing-service, frequencyGate): prioridad y política
+// de frecuencia por campaña. Se edita con el PUT de campañas.
+export interface FrequencyPolicy {
+	priority: number; // 0–100, default 50. Mayor prioridad gana el lugar del día.
+	exempt: boolean; // No cuenta para el tope por persona ni se difiere.
+	pausesLowerPriority: boolean; // Mientras el contacto está en esta, las de menor prioridad no le envían.
+	perishable: boolean; // Si no entra por el tope, se saltea en vez de diferirse.
+}
+
 export type CampaignType = "onetime" | "automated" | "sequence" | "recurring";
 export type CampaignStatus = "draft" | "active" | "paused" | "completed" | "archived";
 
@@ -96,6 +105,7 @@ export interface Campaign {
 	// de descuento ({{descuento.*}}, {{tablaPrecios}}) usa ese código en vez de la
 	// selección automática. Requerida para activar campañas cuyos emails usan descuento.
 	promoDiscountId?: string | null;
+	frequencyPolicy?: Partial<FrequencyPolicy>;
 	createdBy?: string;
 	lastModifiedBy?: string;
 	createdAt?: Date | string;
@@ -135,6 +145,7 @@ export interface CampaignInput {
 	audience?: Partial<CampaignAudience>;
 	settings?: Partial<CampaignSettings>;
 	promoDiscountId?: string | null;
+	frequencyPolicy?: Partial<FrequencyPolicy>;
 }
 
 // Código de descuento disponible para adjuntar a una campaña
@@ -336,4 +347,48 @@ export interface CampaignAudienceStats {
 export interface CampaignAudienceStatsResponse {
 	success: boolean;
 	data: CampaignAudienceStats;
+}
+
+// === Coordinador de campañas (GET/PUT /api/scheduler/frequency) ===
+
+export interface SchedulerFrequencyConfig {
+	enabled: boolean;
+	dryRun: boolean;
+	maxPerDay: number;
+	maxPerWeek: number;
+	maxDeferralDays: number;
+	reserveHours: number;
+	exemptCategories: string[];
+	timezone?: string;
+	updatedAt?: string;
+	updatedBy?: string;
+}
+
+// Conteo normalizado de diferidos de una campaña. `byReason` usa los motivos del
+// backend: daily_cap, weekly_cap, reserved_for:<campaignId>, paused_by:<campaignId>.
+export interface CampaignDeferredCount {
+	campaignId: string;
+	total: number;
+	byReason: Record<string, number>;
+}
+
+// Contadores de un día (colección scheduler-frequency-stats, día de Buenos Aires).
+export interface SchedulerFrequencyDay {
+	day: string; // YYYY-MM-DD
+	deferred: Record<string, CampaignDeferredCount>;
+	wouldDefer: Record<string, CampaignDeferredCount>; // lo que habría diferido en modo prueba
+	skipped: Record<string, CampaignDeferredCount>; // frequency_perishable / frequency_max_deferral
+}
+
+export interface SchedulerFrequencyState {
+	config: SchedulerFrequencyConfig;
+	// Contactos con un paso diferido ahora mismo (coordinador activo).
+	deferred: Record<string, CampaignDeferredCount>;
+	// Sumas de los últimos días (`daily`): habría diferido (modo prueba) y salteados.
+	wouldDefer: Record<string, CampaignDeferredCount>;
+	skipped: Record<string, CampaignDeferredCount>;
+	daily: SchedulerFrequencyDay[]; // más reciente primero
+	campaignNames: Record<string, string>;
+	// Respuesta cruda, por si el backend agrega campos que la UI todavía no muestra.
+	raw?: any;
 }

@@ -8,7 +8,10 @@ import {
 	CampaignAudienceStatsResponse,
 	AvailablePromo,
 	CampaignDiscountUsage,
+	SchedulerFrequencyConfig,
+	SchedulerFrequencyState,
 } from "types/campaign";
+import { normalizeFrequencyConfig, normalizeFrequencyResponse } from "utils/campaignCoordination";
 import { CampaignEmailResponse, SingleCampaignEmailResponse, CampaignEmailInput } from "types/campaign-email";
 import { ContactResponse } from "types/marketing-contact";
 import {
@@ -574,5 +577,20 @@ export const SuppressionService = {
 		} catch (error) {
 			throw error;
 		}
+	},
+};
+
+// Coordinador de campañas (la-marketing-service): tope por persona, prioridad, reserva.
+// GET devuelve la config + conteos de diferidos por campaña y motivo; PUT edita la config.
+export const SchedulerFrequencyService = {
+	getFrequency: async (): Promise<SchedulerFrequencyState> => {
+		const response = await mktAxios.get("/api/scheduler/frequency");
+		return normalizeFrequencyResponse(response.data);
+	},
+
+	// Acepta campos parciales; responde solo { config }.
+	updateFrequency: async (config: Partial<SchedulerFrequencyConfig>): Promise<SchedulerFrequencyConfig> => {
+		const response = await mktAxios.put("/api/scheduler/frequency", config);
+		return normalizeFrequencyConfig(response.data);
 	},
 };
