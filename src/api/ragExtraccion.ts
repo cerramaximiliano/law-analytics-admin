@@ -3,6 +3,8 @@ import ragAxios from "utils/ragAxios";
 // Extracción de texto y fichas del RAG por causa. Backend: pjn-rag-api /rag/admin/extraccion/*
 //   cedulas    → worker pjn-rag-cedulas (cédulas electrónicas: ficha, resolución, adjuntos por remisión)
 //   resultados → worker pjn-rag-cedulas-diligenciadas (cédulas/mandamientos en papel que vuelven diligenciados)
+//   escritos   → worker pjn-rag-escritos (escritos de parte: texto con poppler y tramos escrito / documental / escaneado)
+//   deo        → worker pjn-rag-deo (documentos electrónicos oficiados: solo texto)
 
 export type EtapaExtraccion = "cedulas" | "resultados" | "deo" | "escritos";
 
@@ -34,6 +36,11 @@ export interface ExtraccionResumen {
 	// diligenciadas: conteo por clase / resultado / quién la libró, y gasto de visión
 	notificaciones?: Array<{ clase?: string; resultado?: string; libradaPor?: string | null; n: number }>;
 	vision?: { usd: number; documentos: number };
+	// escritos y DEO: motor que leyó el PDF (poppler / pdfjs de respaldo / sin_dato) y docs con páginas ilegibles
+	motorPdf?: Record<string, number>;
+	conIlegibles?: number;
+	// escritos: docs con tramo escrito, con el escrito cerrado ("SERÁ JUSTICIA"…) y solo documentación (extracted)
+	tramos?: { conEscrito: number; escritoCerrado: number; soloDocumental: number };
 }
 
 export type MotivoSinVinculo = "sin_texto_de_resolucion" | "causa_sin_textos" | "sin_coincidencia";
@@ -107,6 +114,27 @@ export interface FichaCedula {
 	adjuntosSinOrigen?: number[];
 	tiposParser?: Array<{ tipo: string; paginas: number[] }>;
 	camposFaltantes?: string[];
+}
+
+// Tramo de un PDF de escrito de parte (pjn-rag-workers src/extractor/tramosEscrito.js)
+export interface TramoEscrito {
+	tipo: "escrito" | "documental" | "escaneado";
+	desde: number;
+	hasta: number;
+	// documental que parece otra cosa: copia de resolución, cédula u otro escrito
+	subtipo?: "resolucion" | "cedula" | "otro_escrito";
+	// solo el tramo escrito: terminó con el cierre ("SERÁ JUSTICIA", "Proveer de conformidad")
+	cerrado?: boolean;
+	// solo el tramo escrito: lo que está antes de "Señor Juez" en su primera página
+	titulo?: string;
+}
+
+// Ficha de la etapa escritos (DEO no tiene tramos: su ficha puede traer solo paginasIlegibles)
+export interface FichaEscrito {
+	tipo: "escrito";
+	tramos: TramoEscrito[];
+	// páginas con texto ilegible (fuentes sin tabla de caracteres): quedan sin texto y van al OCR
+	paginasIlegibles?: number[];
 }
 
 export interface Diligencia {
@@ -190,8 +218,11 @@ export interface ExtraccionItem {
 	textoChars?: number;
 	aliasDe?: string;
 	procesadoAt: string;
-	ficha?: Partial<FichaCedula> & Partial<FichaResultado>;
+	ficha?: Partial<FichaCedula> & Partial<FichaResultado> & Partial<FichaEscrito>;
 	vinculos?: Vinculos;
+	// escritos y DEO: 'poppler' normal; 'pdfjs' si poppler falló y se usó el respaldo (error del otro motor en errorPdfjs)
+	motorPdf?: "poppler" | "pdfjs";
+	errorPdfjs?: string;
 	vision?: {
 		usd?: number;
 		reutilizada?: boolean;
@@ -245,7 +276,7 @@ export interface ExtraccionDetalle {
 	estado:
 		| (ExtraccionItem & {
 				etapa?: string;
-				ficha?: FichaCedula & Partial<FichaResultado>;
+				ficha?: FichaCedula & Partial<FichaResultado> & Partial<FichaEscrito>;
 				paginasSinTexto?: number[];
 				producer?: string;
 				textHash?: string;
@@ -306,6 +337,10 @@ const RagExtraccionService = {
 			timeout: 60000,
 		});
 		return r.data as ArrayBuffer;
+	},
+	// Reproceso puntual: el movimiento vuelve a pending en Atlas y el worker de su etapa lo toma en el próximo ciclo.
+	async reprocesar(id: string): Promise<void> {
+		await ragAxios.post(`/rag/admin/extraccion/documentos/${encodeURIComponent(id)}/reprocesar`);
 	},
 };
 
