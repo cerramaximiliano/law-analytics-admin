@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
 	Dialog,
 	DialogTitle,
@@ -13,6 +13,7 @@ import {
 	CircularProgress,
 	Alert,
 	Chip,
+	Autocomplete,
 	FormControl,
 	InputLabel,
 	Select,
@@ -21,9 +22,11 @@ import {
 	FormControlLabel,
 	Switch,
 } from "@mui/material";
-import { Add, CloseCircle } from "iconsax-react";
+import { CloseCircle } from "iconsax-react";
 import { ContactStatus } from "types/marketing-contact";
 import { MarketingContactService } from "store/reducers/marketing-contacts";
+
+const isFueroTag = (tag: string) => tag === "judicial" || tag.startsWith("judicial_");
 
 interface EditContactModalProps {
 	open: boolean;
@@ -50,10 +53,25 @@ const EditContactModal: React.FC<EditContactModalProps> = ({ open, onClose, cont
 	const [company, setCompany] = useState<string>("");
 	const [position, setPosition] = useState<string>("");
 	const [status, setStatus] = useState<ContactStatus>("active");
-	const [tagInput, setTagInput] = useState<string>("");
 	const [tags, setTags] = useState<string[]>([]);
+	const [availableTags, setAvailableTags] = useState<string[]>([]);
 	const [isAppUser, setIsAppUser] = useState<boolean>(false);
 	const [isVerified, setIsVerified] = useState<boolean>(false);
+
+	// Etiquetas existentes, para elegirlas en lugar de escribirlas
+	useEffect(() => {
+		if (!open) return;
+		MarketingContactService.getTags(500)
+			.then((list) => setAvailableTags(list))
+			.catch((err) => console.error("Error cargando etiquetas:", err));
+	}, [open]);
+
+	// Fuero primero (agrupadas), después el resto; incluye las ya asignadas al contacto
+	const tagOptions = useMemo(
+		() =>
+			Array.from(new Set([...availableTags, ...tags])).sort((a, b) => Number(isFueroTag(b)) - Number(isFueroTag(a)) || a.localeCompare(b)),
+		[availableTags, tags],
+	);
 
 	// Cargar datos del contacto cuando cambie el ID
 	useEffect(() => {
@@ -104,7 +122,6 @@ const EditContactModal: React.FC<EditContactModalProps> = ({ open, onClose, cont
 		setPosition("");
 		setStatus("active" as ContactStatus);
 		setTags([]);
-		setTagInput("");
 		setFormError({});
 		setIsAppUser(false);
 		setIsVerified(false);
@@ -166,24 +183,6 @@ const EditContactModal: React.FC<EditContactModalProps> = ({ open, onClose, cont
 	};
 
 	// Manejar etiquetas
-	const handleAddTag = () => {
-		if (tagInput.trim() && !tags.includes(tagInput.trim())) {
-			setTags([...tags, tagInput.trim()]);
-			setTagInput("");
-		}
-	};
-
-	const handleRemoveTag = (tagToRemove: string) => {
-		setTags(tags.filter((tag) => tag !== tagToRemove));
-	};
-
-	const handleTagKeyPress = (e: React.KeyboardEvent) => {
-		if (e.key === "Enter") {
-			e.preventDefault();
-			handleAddTag();
-		}
-	};
-
 	return (
 		<Dialog
 			open={open}
@@ -343,44 +342,30 @@ const EditContactModal: React.FC<EditContactModalProps> = ({ open, onClose, cont
 							</Typography>
 							<Divider sx={{ mb: 2 }} />
 
-							<Grid container spacing={2} alignItems="center">
-								<Grid item xs>
+							<Autocomplete
+								multiple
+								freeSolo
+								disableCloseOnSelect
+								options={tagOptions}
+								groupBy={(option) => (isFueroTag(option) ? "Fuero PJN (email marketing)" : "Otras etiquetas")}
+								value={tags}
+								onChange={(_e, value) => setTags(Array.from(new Set(value.map((v) => v.trim()).filter(Boolean))))}
+								disabled={saving}
+								renderTags={(value, getTagProps) =>
+									value.map((option, index) => {
+										const { key, ...chipProps } = getTagProps({ index });
+										return <Chip key={key} label={option} color="primary" variant="outlined" {...chipProps} />;
+									})
+								}
+								renderInput={(params) => (
 									<TextField
-										fullWidth
-										label="Añadir etiqueta"
-										value={tagInput}
-										onChange={(e) => setTagInput(e.target.value)}
-										onKeyPress={handleTagKeyPress}
-										disabled={saving}
-										InputProps={{
-											endAdornment: (
-												<IconButton size="small" onClick={handleAddTag} disabled={!tagInput.trim() || saving}>
-													<Add />
-												</IconButton>
-											),
-										}}
+										{...params}
+										label="Etiquetas"
+										placeholder="Elegí una existente o escribí una nueva y Enter"
+										helperText="Las campañas de captación PJN no segmentan por etiqueta (usan el fuero, la antigüedad del último documento y el correo validado). Una etiqueta sola no inscribe al contacto en una campaña: para eso usá la inscripción directa a la campaña."
 									/>
-								</Grid>
-							</Grid>
-
-							<Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 2 }}>
-								{tags.length > 0 ? (
-									tags.map((tag, index) => (
-										<Chip
-											key={index}
-											label={tag}
-											onDelete={() => handleRemoveTag(tag)}
-											disabled={saving}
-											color="primary"
-											variant="outlined"
-										/>
-									))
-								) : (
-									<Typography variant="body2" color="textSecondary">
-										No hay etiquetas asignadas
-									</Typography>
 								)}
-							</Box>
+							/>
 						</Grid>
 					</Grid>
 				)}

@@ -191,9 +191,9 @@ export const MarketingContactService = {
 	},
 
 	// Get all tags for contacts
-	getTags: async (): Promise<string[]> => {
+	getTags: async (limit = 100): Promise<string[]> => {
 		try {
-			const response = await mktAxios.get<TagsResponse>("/api/tags/simple");
+			const response = await mktAxios.get<TagsResponse>("/api/tags/simple", { params: { limit } });
 			return response.data.data;
 		} catch (error) {
 			throw error;
