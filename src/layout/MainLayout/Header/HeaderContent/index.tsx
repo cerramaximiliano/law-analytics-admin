@@ -6,6 +6,7 @@ import { Box, useMediaQuery } from "@mui/material";
 import Profile from "./Profile";
 import MobileSection from "./MobileSection";
 import ThemeModeToggle from "./ThemeModeToggle";
+import ServerStatus from "./ServerStatus";
 
 // ==============================|| HEADER - CONTENT ||============================== //
 
@@ -15,6 +16,7 @@ const HeaderContent = () => {
 	return (
 		<>
 			<Box sx={{ width: "100%", ml: 1 }} />
+			<ServerStatus />
 			<ThemeModeToggle />
 			{!downLG && <Profile />}
 			{downLG && <MobileSection />}

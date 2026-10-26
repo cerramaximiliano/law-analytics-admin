@@ -31,7 +31,7 @@ import MainCard from "components/MainCard";
 import { useSearchParams } from "react-router-dom";
 import { useTabParam } from "hooks/useTabParam";
 import RepoSearch, { RepoHit } from "./RepoSearch";
-import InfrastructureService, { InfraBox } from "api/infrastructure";
+import InfrastructureService, { InfraBox, getBoxState } from "api/infrastructure";
 import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER, headerBorder, navHoverBg } from "themes/dashboardTokens";
 import BoxPanel from "./BoxPanel";
 import FailoverPanel from "./FailoverPanel";
@@ -51,6 +51,8 @@ const GROUP_ICON: Record<string, React.ReactNode> = {
 };
 
 /** Color de la barra de uso: verde, ámbar arriba de 80, rojo arriba de 90. */
+const STATE_COLOR = { up: LIVE_GREEN, degraded: STALE_AMBER, down: "#EF4444", unknown: "#94A3B8" };
+
 const usageColor = (pct: number | null) => (pct === null ? "#94A3B8" : pct >= 90 ? "#EF4444" : pct >= 80 ? STALE_AMBER : LIVE_GREEN);
 
 const MiniBar = ({ label, pct, hint }: { label: string; pct: number | null; hint?: string }) => (
@@ -128,7 +130,7 @@ const BoxCard = ({ box, onOpen }: { box: InfraBox; onOpen: () => void }) => {
 							mt: 0.75,
 							borderRadius: "50%",
 							flexShrink: 0,
-							bgcolor: unreachable ? theme.palette.error.main : live.reachable ? LIVE_GREEN : "#94A3B8",
+							bgcolor: STATE_COLOR[getBoxState(box)],
 						}}
 					/>
 				</Stack>
@@ -278,7 +280,7 @@ const InfrastructurePage = () => {
 		const observed = data.reduce((n, b) => n + b.processSummary.total - b.processSummary.unknown, 0);
 		const unobserved = data.reduce((n, b) => n + b.processSummary.unknown, 0);
 		const errored = data.reduce((n, b) => n + b.processSummary.errored, 0);
-		const down = data.filter((b) => b.agent === "malla" && !b.live.reachable).length;
+		const down = data.filter((b) => getBoxState(b) === "down").length;
 		const cost = data.reduce((n, b) => n + (b.monthlyCostUsd || 0), 0);
 		return { online, observed, unobserved, errored, down, cost };
 	}, [data]);
@@ -345,12 +347,7 @@ const InfrastructurePage = () => {
 													width: 7,
 													height: 7,
 													borderRadius: "50%",
-													bgcolor:
-														box.agent === "malla" && !box.live.reachable
-															? theme.palette.error.main
-															: box.live.reachable
-															? LIVE_GREEN
-															: "#94A3B8",
+													bgcolor: STATE_COLOR[getBoxState(box)],
 												}}
 											/>
 											<span style={{ fontFamily: "monospace" }}>{box.name}</span>

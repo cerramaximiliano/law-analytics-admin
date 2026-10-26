@@ -75,6 +75,8 @@ export interface InfraBox {
 	notes?: string[];
 	agent: BoxAgent;
 	live: InfraLive;
+	/** Estado según Tailscale, independiente del agente. `null` = sin dato. */
+	net?: { online: boolean; lastSeen: string | null } | null;
 	processes: InfraProcess[];
 	processSummary: { total: number; online: number; stopped: number; errored: number; unknown: number; foreign: number };
 	lastLogAt: string | null;
@@ -96,3 +98,15 @@ const InfrastructureService = {
 };
 
 export default InfrastructureService;
+
+export type BoxState = "up" | "degraded" | "down" | "unknown";
+
+/** Estado de un box: Tailscale manda; el agente de la malla refina ("degraded" = box vivo, agente mudo). */
+export const getBoxState = (box: InfraBox): BoxState => {
+	if (box.net) {
+		if (!box.net.online) return "down";
+		return box.agent === "malla" && !box.live.reachable ? "degraded" : "up";
+	}
+	if (box.agent === "malla") return box.live.reachable ? "up" : "down";
+	return "unknown";
+};
