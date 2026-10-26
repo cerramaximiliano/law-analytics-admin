@@ -311,14 +311,14 @@ export interface AudienceStepItem {
 	step: number;
 	name: string;
 	subject?: string;
-	activeQueued: number;     // contactos esperando recibir este email
-	deliveredUnique: number;  // contactos distintos que ya recibieron este email
+	activeQueued: number; // contactos esperando recibir este email
+	deliveredUnique: number; // contactos distintos que ya recibieron este email
 }
 
 export interface AudienceExclusionItem {
 	step: number;
 	status: "removed" | "skipped";
-	reason: string | null;          // removalReason o skippedReason
+	reason: string | null; // removalReason o skippedReason
 	contactStatus: "active" | "unsubscribed" | "bounced" | "complained";
 	count: number;
 }
@@ -342,6 +342,36 @@ export interface CampaignAudienceStats {
 		lastSequenceIndex: number;
 		generatedAt: string;
 	};
+}
+
+export interface AudienceFlowDay {
+	date: string; // YYYY-MM-DD (hora de Buenos Aires)
+	joined: number;
+	removedByReason: Record<string, number>;
+	completedByReason: Record<string, number>;
+	skipped: number;
+	activeAtClose: number | null;
+}
+
+export interface AudienceFlowSync {
+	at: string;
+	added: number;
+	removed: number;
+	activeAfter: number | null;
+}
+
+export interface CampaignAudienceFlow {
+	days: number;
+	daily: AudienceFlowDay[];
+	lastSync: AudienceFlowSync | null;
+	recentSyncs: AudienceFlowSync[];
+	segment: { segmentId: string; name: string | null; syncWithSegment: boolean; size: number; pending: number } | null;
+	altas: { total: number; recipients: number; byDay: Record<string, number> } | null;
+}
+
+export interface CampaignAudienceFlowResponse {
+	success: boolean;
+	data: CampaignAudienceFlow;
 }
 
 export interface CampaignAudienceStatsResponse {

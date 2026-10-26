@@ -44,8 +44,18 @@ import {
 	People,
 	LogoutCurve,
 } from "iconsax-react";
-import { CampaignService } from "store/reducers/campaign";
-import { Campaign, CampaignSendStatsSummary, EmailBreakdown, DailyBreakdown, CampaignAudienceStats } from "types/campaign";
+import { CampaignService, SchedulerFrequencyService } from "store/reducers/campaign";
+import CampaignAudienceFlowPanel from "./CampaignAudienceFlow";
+import { CampaignFunnel, CampaignHeaderInfo, CampaignKpis } from "./CampaignOverview";
+import {
+	Campaign,
+	CampaignSendStatsSummary,
+	EmailBreakdown,
+	DailyBreakdown,
+	CampaignAudienceStats,
+	CampaignAudienceFlow,
+	SchedulerFrequencyConfig,
+} from "types/campaign";
 import { ArrowDown2, ArrowUp2 } from "iconsax-react";
 
 interface CampaignSendStatsModalProps {
@@ -74,6 +84,12 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 	const [audience, setAudience] = useState<CampaignAudienceStats | null>(null);
 	const [audienceLoading, setAudienceLoading] = useState<boolean>(false);
 	const [audienceError, setAudienceError] = useState<string | null>(null);
+	const [flow, setFlow] = useState<CampaignAudienceFlow | null>(null);
+	const [flowLoading, setFlowLoading] = useState<boolean>(false);
+	const [flowError, setFlowError] = useState<string | null>(null);
+	const [flowDays, setFlowDays] = useState<number>(30);
+	const [altasLoading, setAltasLoading] = useState<boolean>(false);
+	const [frequency, setFrequency] = useState<SchedulerFrequencyConfig | null>(null);
 
 	const toggleDayExpansion = (dayId: string) => {
 		setExpandedDays((prev) => {
@@ -89,7 +105,7 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 
 	const handleCopyJson = () => {
 		if (stats) {
-			navigator.clipboard.writeText(JSON.stringify(stats, null, 2));
+			navigator.clipboard.writeText(JSON.stringify({ stats, audience, flow }, null, 2));
 			setCopied(true);
 			setTimeout(() => setCopied(false), 2000);
 		}
@@ -101,13 +117,55 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 		}
 	}, [open, campaign]);
 
-	// Fetch audiencia on demand cuando se abre la tab "Audiencia"
+	// Frecuencia (coordinador) para el encabezado
 	useEffect(() => {
-		if (open && activeTab === 1 && campaign?._id && !audience && !audienceLoading) {
+		if (open) {
+			SchedulerFrequencyService.getFrequency()
+				.then((state) => setFrequency(state.config))
+				.catch(() => setFrequency(null));
+		}
+	}, [open]);
+
+	// Cambio de campaña: limpiar lo cacheado de la anterior
+	useEffect(() => {
+		setAudience(null);
+		setFlow(null);
+		setActiveTab(0);
+	}, [campaign?._id]);
+
+	// Audiencia (Resumen y Audiencia y flujo) y flujo (Audiencia y flujo) bajo demanda
+	useEffect(() => {
+		if (open && (activeTab === 0 || activeTab === 2) && campaign?._id && !audience && !audienceLoading) {
 			fetchAudience(campaign._id);
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [open, activeTab, campaign]);
+	}, [open, activeTab, campaign, audience]);
+
+	useEffect(() => {
+		if (open && campaign?._id && (activeTab === 2 || activeTab === 0)) {
+			fetchFlow(campaign._id, flowDays, false);
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [open, activeTab === 2, campaign?._id, flowDays]);
+
+	const fetchFlow = async (campaignId: string, dias: number, altas: boolean) => {
+		try {
+			altas ? setAltasLoading(true) : setFlowLoading(true);
+			setFlowError(null);
+			const response = await CampaignService.getCampaignAudienceFlow(campaignId, dias, altas);
+			if (response.success) {
+				// Si ya había altas calculadas y esta carga no las pide, se conservan
+				setFlow((prev) => ({ ...response.data, altas: response.data.altas ?? (altas ? null : prev?.altas ?? null) }));
+			} else {
+				setFlowError("No se pudo obtener el flujo de audiencia");
+			}
+		} catch (err: any) {
+			setFlowError(err?.response?.data?.error || err?.message || "Error al cargar el flujo de audiencia");
+		} finally {
+			setFlowLoading(false);
+			setAltasLoading(false);
+		}
+	};
 
 	const fetchAudience = async (campaignId: string) => {
 		try {
@@ -310,7 +368,7 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 					<Grid item>
 						<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
 							<Chart size={24} variant="Bold" color={theme.palette.primary.main} />
-							<Typography variant="h5">Estadísticas de Envío</Typography>
+							<Typography variant="h5">Estadísticas de la campaña</Typography>
 						</Box>
 						{campaign && (
 							<Typography variant="body2" color="textSecondary" sx={{ mt: 0.5 }}>
@@ -327,15 +385,36 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 			</DialogTitle>
 
 			<DialogContent dividers sx={{ flex: 1, overflow: "auto", display: "flex", flexDirection: "column" }}>
+				{campaign && (
+					<>
+						<CampaignHeaderInfo campaign={campaign} frequency={frequency} steps={audience?.meta?.sequenceLength ?? null} />
+						<CampaignKpis campaign={campaign} summary={stats?.summary ?? null} flow={flow} />
+					</>
+				)}
+
 				<Box sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}>
 					<Tabs value={activeTab} onChange={(_, newValue) => setActiveTab(newValue)}>
-						<Tab icon={<Chart size={18} />} iconPosition="start" label="Estadísticas" />
-						<Tab icon={<People size={18} />} iconPosition="start" label="Audiencia" />
-						<Tab icon={<Code1 size={18} />} iconPosition="start" label="JSON Raw" />
+						<Tab icon={<Chart size={18} />} iconPosition="start" label="Resumen" />
+						<Tab icon={<Sms size={18} />} iconPosition="start" label="Envíos" />
+						<Tab icon={<People size={18} />} iconPosition="start" label="Audiencia y flujo" />
+						<Tab icon={<Code1 size={18} />} iconPosition="start" label="JSON" />
 					</Tabs>
 				</Box>
 
 				{activeTab === 0 && (
+					<Box>
+						<Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+							Embudo por paso
+						</Typography>
+						{loading || audienceLoading ? (
+							<Skeleton variant="rounded" height={160} />
+						) : (
+							<CampaignFunnel audience={audience} breakdown={stats?.emailBreakdown ?? []} />
+						)}
+					</Box>
+				)}
+
+				{activeTab === 1 && (
 					<>
 						{loading ? (
 							<Grid container spacing={3}>
@@ -669,16 +748,29 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 					</>
 				)}
 
-				{activeTab === 1 && (
-					<AudienceTab
-						loading={audienceLoading}
-						error={audienceError}
-						data={audience}
-						onRefresh={() => campaign?._id && fetchAudience(campaign._id)}
-					/>
+				{activeTab === 2 && (
+					<>
+						<CampaignAudienceFlowPanel
+							loading={flowLoading}
+							error={flowError}
+							data={flow}
+							days={flowDays}
+							onDaysChange={setFlowDays}
+							onRefresh={() => campaign?._id && fetchFlow(campaign._id, flowDays, false)}
+							onComputeAltas={() => campaign?._id && fetchFlow(campaign._id, flowDays, true)}
+							altasLoading={altasLoading}
+						/>
+						<Divider sx={{ my: 3 }} />
+						<AudienceTab
+							loading={audienceLoading}
+							error={audienceError}
+							data={audience}
+							onRefresh={() => campaign?._id && fetchAudience(campaign._id)}
+						/>
+					</>
 				)}
 
-				{activeTab === 2 && (
+				{activeTab === 3 && (
 					<Box sx={{ flex: 1, overflow: "auto", display: "flex", flexDirection: "column" }}>
 						{loading ? (
 							<Skeleton variant="rounded" height={400} />

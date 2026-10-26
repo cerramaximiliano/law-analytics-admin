@@ -6,6 +6,7 @@ import {
 	CampaignSendLogsResponse,
 	CampaignSendStatsResponse,
 	CampaignAudienceStatsResponse,
+	CampaignAudienceFlowResponse,
 	AvailablePromo,
 	CampaignDiscountUsage,
 	SchedulerFrequencyConfig,
@@ -398,6 +399,15 @@ export const CampaignService = {
 		} catch (error) {
 			throw error;
 		}
+	},
+
+	// Flujo de ingreso/salida de contactos por día (solo conteos). altas=true suma el cruce con usuarios (más pesado).
+	getCampaignAudienceFlow: async (campaignId: string, dias = 30, altas = false): Promise<CampaignAudienceFlowResponse> => {
+		const response = await mktAxios.get(`/api/campaigns/${campaignId}/audience-flow`, {
+			params: { dias, ...(altas ? { altas: 1 } : {}) },
+			timeout: altas ? 120000 : 30000,
+		});
+		return response.data;
 	},
 
 	// Get campaign AUDIENCE statistics (estado de contactos en la campaña)
