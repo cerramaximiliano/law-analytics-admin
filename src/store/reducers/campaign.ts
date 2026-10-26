@@ -7,6 +7,7 @@ import {
 	CampaignSendStatsResponse,
 	CampaignAudienceStatsResponse,
 	CampaignAudienceFlowResponse,
+	CampaignConversions,
 	AvailablePromo,
 	CampaignDiscountUsage,
 	SchedulerFrequencyConfig,
@@ -399,6 +400,12 @@ export const CampaignService = {
 		} catch (error) {
 			throw error;
 		}
+	},
+
+	// Conversiones (altas en la app atribuidas a la campaña, last-touch)
+	getCampaignConversions: async (campaignId: string): Promise<{ success: boolean; data: CampaignConversions }> => {
+		const response = await mktAxios.get(`/api/campaigns/${campaignId}/conversions`);
+		return response.data;
 	},
 
 	// Flujo de ingreso/salida de contactos por día (solo conteos). altas=true suma el cruce con usuarios (más pesado).

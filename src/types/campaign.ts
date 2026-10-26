@@ -423,3 +423,56 @@ export interface SchedulerFrequencyState {
 	// Respuesta cruda, por si el backend agrega campos que la UI todavía no muestra.
 	raw?: any;
 }
+
+// === Conversiones (altas en la app atribuidas a la campaña, last-touch) ===
+
+export interface CampaignConversionItem {
+	_id: string;
+	campaignId: string;
+	contactId?: string;
+	userId: string;
+	registeredAt: string;
+	firstSentAt?: string;
+	lastSentAt?: string;
+	daysToConvert?: number;
+	stepsReceived: number[];
+	lastStepBeforeSignup?: number;
+	clickedBefore: boolean;
+	attributedByUtm: boolean;
+	otherCampaigns: string[];
+	attributionRule: string;
+}
+
+export interface CampaignConversions {
+	summary: {
+		total: number;
+		byDay: Record<string, number>;
+		byStep: Record<string, number>;
+		withClick: number;
+		withoutClick: number;
+		withUtm: number;
+		withoutUtm: number;
+		medianDaysToConvert: number | null;
+	};
+	items: CampaignConversionItem[];
+}
+
+export interface ConversionUserJourney {
+	userId: string;
+	name: string | null;
+	email: string;
+	createdAt: string;
+	isVerified: boolean;
+	lastLogin: string | null;
+	onboarding: {
+		createdFirstFolder: boolean;
+		createdFirstFolderAt: string | null;
+		usedFirstFeature: boolean;
+		firstFeatureName: string | null;
+		onboardingComplete: boolean;
+	};
+	folders: { active: number; archived: number };
+	portals: { pjn: boolean; mev: boolean; scba: boolean };
+	subscriptionPlan: string;
+	firstPaidAt: string | null;
+}

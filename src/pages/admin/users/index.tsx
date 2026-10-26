@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
+import { useSearchParams } from "react-router-dom";
+import authAxios from "utils/authAxios";
 import { dispatch } from "store/index";
 
 // material-ui
@@ -395,6 +397,24 @@ const UsersList = () => {
 		setGenerateDataModalOpen(false);
 		setSelectedUser(null);
 	};
+
+	// Enlace directo a la ficha: /admin/users?verUsuario=<id> (lo usa la pestaña Conversiones de campañas)
+	const [searchParams, setSearchParams] = useSearchParams();
+	useEffect(() => {
+		const id = searchParams.get("verUsuario");
+		if (!id) return;
+		authAxios
+			.get(`/api/users/${id}`)
+			.then((res) => {
+				if (res.data?.user) {
+					setSelectedUser(res.data.user);
+					setViewDialogOpen(true);
+				}
+			})
+			.catch((err) => console.error("No se pudo abrir la ficha del usuario:", err?.message))
+			.finally(() => setSearchParams({}, { replace: true }));
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [searchParams]);
 
 	useEffect(() => {
 		// Primera página paginada; antes traía la colección completa.

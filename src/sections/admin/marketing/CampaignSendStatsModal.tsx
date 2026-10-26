@@ -46,6 +46,7 @@ import {
 } from "iconsax-react";
 import { CampaignService, SchedulerFrequencyService } from "store/reducers/campaign";
 import CampaignAudienceFlowPanel from "./CampaignAudienceFlow";
+import CampaignConversionsPanel from "./CampaignConversionsPanel";
 import { CampaignFunnel, CampaignHeaderInfo, CampaignKpis } from "./CampaignOverview";
 import {
 	Campaign,
@@ -397,6 +398,7 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 						<Tab icon={<Chart size={18} />} iconPosition="start" label="Resumen" />
 						<Tab icon={<Sms size={18} />} iconPosition="start" label="Envíos" />
 						<Tab icon={<People size={18} />} iconPosition="start" label="Audiencia y flujo" />
+						<Tab icon={<TickCircle size={18} />} iconPosition="start" label="Conversiones" />
 						<Tab icon={<Code1 size={18} />} iconPosition="start" label="JSON" />
 					</Tabs>
 				</Box>
@@ -770,7 +772,9 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 					</>
 				)}
 
-				{activeTab === 3 && (
+				{activeTab === 3 && campaign?._id && <CampaignConversionsPanel campaignId={campaign._id} />}
+
+				{activeTab === 4 && (
 					<Box sx={{ flex: 1, overflow: "auto", display: "flex", flexDirection: "column" }}>
 						{loading ? (
 							<Skeleton variant="rounded" height={400} />
