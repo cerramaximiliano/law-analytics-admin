@@ -362,6 +362,7 @@ export interface AudienceFlowSync {
 
 export interface CampaignAudienceFlow {
 	days: number;
+	activeNow: number;
 	daily: AudienceFlowDay[];
 	lastSync: AudienceFlowSync | null;
 	recentSyncs: AudienceFlowSync[];

@@ -334,7 +334,9 @@ const CampaignAudienceFlowPanel: React.FC<Props> = ({
 			</TableContainer>
 			<MuiTooltip title="Se muestran las últimas 20 sincronizaciones del período">
 				<Typography variant="caption" color="textSecondary" sx={{ mt: 0.5, display: "inline-block" }}>
-					Las salidas por &quot;dejó de cumplir el segmento&quot; suelen ser personas que se registraron en la app.
+					Las salidas por &quot;dejó de cumplir el segmento&quot; suelen ser personas que se registraron en la app. La sincronización corre
+					cada 15 minutos, pero cada segmento solo se recalcula cuando le toca (los de captación, cada hora). Los activos de hoy se cuentan
+					en vivo.
 				</Typography>
 			</MuiTooltip>
 		</Box>
