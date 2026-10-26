@@ -99,6 +99,8 @@ const InfrastructureService = {
 
 export default InfrastructureService;
 
+const LOG_FRESH_MS = 30 * 60 * 1000;
+
 export type BoxState = "up" | "degraded" | "down" | "unknown";
 
 /** Estado de un box: Tailscale manda; el agente de la malla refina ("degraded" = box vivo, agente mudo). */
@@ -108,5 +110,7 @@ export const getBoxState = (box: InfraBox): BoxState => {
 		return box.agent === "malla" && !box.live.reachable ? "degraded" : "up";
 	}
 	if (box.agent === "malla") return box.live.reachable ? "up" : "down";
+	// Sin Tailscale ni agente (worker-002): solo hay logs. Actividad reciente = vivo; el silencio no prueba que esté caído.
+	if (box.lastLogAt && Date.now() - new Date(box.lastLogAt).getTime() < LOG_FRESH_MS) return "up";
 	return "unknown";
 };
