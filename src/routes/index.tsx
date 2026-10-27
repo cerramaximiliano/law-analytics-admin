@@ -111,6 +111,7 @@ const EmailTemplates = Loadable(lazyWithRetry(() => import("pages/admin/marketin
 const EmailModules = Loadable(lazyWithRetry(() => import("pages/admin/marketing/modules")));
 const MarketingContacts = Loadable(lazyWithRetry(() => import("pages/admin/marketing/contacts")));
 const MarketingSuppression = Loadable(lazyWithRetry(() => import("pages/admin/marketing/suppression")));
+const CampaignsSummary = Loadable(lazyWithRetry(() => import("pages/admin/marketing/resumen")));
 const CampaignCoordination = Loadable(lazyWithRetry(() => import("pages/admin/marketing/coordinacion")));
 
 // Social pages
@@ -771,6 +772,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<MailingCampaigns />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "marketing/resumen",
+							element: (
+								<AdminRoleGuard>
+									<CampaignsSummary />
 								</AdminRoleGuard>
 							),
 						},

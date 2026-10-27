@@ -344,6 +344,39 @@ export interface CampaignAudienceStats {
 	};
 }
 
+export interface AudienceTotals {
+	everEnrolled: number;
+	active: number;
+	paused: number;
+	completedByReason: Record<string, number>;
+	removedByReason: Record<string, number>;
+	skippedByReason: Record<string, number>;
+}
+
+export interface CampaignSummaryRow {
+	_id: string;
+	name: string;
+	status: CampaignStatus;
+	startDate: string | null;
+	dailyLimit: number;
+	syncWithSegment: boolean;
+	everEnrolled: number;
+	active: number;
+	completed: number;
+	removed: number;
+	sent: number;
+	queued: number;
+	delivered: number;
+	uniqueOpens: number;
+	uniqueClicks: number;
+	bounced: number;
+	complained: number;
+	unsubscribed: number;
+	altas: number;
+}
+
+export type CampaignSummaryTotals = Omit<CampaignSummaryRow, "_id" | "name" | "status" | "startDate" | "dailyLimit" | "syncWithSegment">;
+
 export interface AudienceFlowDay {
 	date: string; // YYYY-MM-DD (hora de Buenos Aires)
 	joined: number;
@@ -363,6 +396,7 @@ export interface AudienceFlowSync {
 export interface CampaignAudienceFlow {
 	days: number;
 	activeNow: number;
+	totals?: AudienceTotals;
 	daily: AudienceFlowDay[];
 	lastSync: AudienceFlowSync | null;
 	recentSyncs: AudienceFlowSync[];

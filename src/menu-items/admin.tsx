@@ -1064,6 +1064,13 @@ const admin: NavItemType = {
 					breadcrumbs: true,
 				},
 				{
+					id: "resumen-campanas",
+					title: "Resumen de campañas",
+					type: "item",
+					url: "/admin/marketing/resumen",
+					breadcrumbs: true,
+				},
+				{
 					id: "coordinacion",
 					title: "Coordinación de campañas",
 					type: "item",

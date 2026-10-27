@@ -8,6 +8,8 @@ import {
 	CampaignAudienceStatsResponse,
 	CampaignAudienceFlowResponse,
 	CampaignConversions,
+	CampaignSummaryRow,
+	CampaignSummaryTotals,
 	AvailablePromo,
 	CampaignDiscountUsage,
 	SchedulerFrequencyConfig,
@@ -400,6 +402,14 @@ export const CampaignService = {
 		} catch (error) {
 			throw error;
 		}
+	},
+
+	// Resumen de varias campañas (acumulado, envíos y altas) en una sola consulta
+	getCampaignsSummary: async (
+		filters: { name?: string; status?: string } = {},
+	): Promise<{ success: boolean; data: { campaigns: CampaignSummaryRow[]; totals: CampaignSummaryTotals | null } }> => {
+		const response = await mktAxios.get("/api/campaigns/summary", { params: filters });
+		return response.data;
 	},
 
 	// Conversiones (altas en la app atribuidas a la campaña, last-touch)

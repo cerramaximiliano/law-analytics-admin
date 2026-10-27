@@ -47,6 +47,7 @@ import {
 import { CampaignService, SchedulerFrequencyService } from "store/reducers/campaign";
 import CampaignAudienceFlowPanel from "./CampaignAudienceFlow";
 import CampaignConversionsPanel from "./CampaignConversionsPanel";
+import CampaignAccumulated from "./CampaignAccumulated";
 import { CampaignFunnel, CampaignHeaderInfo, CampaignKpis } from "./CampaignOverview";
 import {
 	Campaign,
@@ -388,6 +389,7 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 			<DialogContent dividers sx={{ flex: 1, overflow: "auto", display: "flex", flexDirection: "column" }}>
 				{campaign && (
 					<>
+						{flow?.totals && <CampaignAccumulated totals={flow.totals} />}
 						<CampaignHeaderInfo campaign={campaign} frequency={frequency} steps={audience?.meta?.sequenceLength ?? null} />
 						<CampaignKpis campaign={campaign} summary={stats?.summary ?? null} flow={flow} />
 					</>

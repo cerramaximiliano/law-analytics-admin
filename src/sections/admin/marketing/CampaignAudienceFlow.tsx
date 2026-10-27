@@ -35,7 +35,7 @@ interface Props {
 }
 
 export const EXIT_LABELS: Record<string, string> = {
-	segment_sync: "Dejó de cumplir el segmento",
+	segment_sync: "Dejó el segmento o se hizo usuario",
 	manual: "Removido a mano",
 	bounce: "Rebote",
 	complaint: "Queja",
