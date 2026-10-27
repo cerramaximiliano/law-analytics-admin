@@ -95,6 +95,8 @@ export interface Campaign {
 	endDate?: Date | string;
 	isPermanent: boolean;
 	category?: string;
+	tipo?: CampaignTipo | null; // Tipología fija (ver /api/campaigns/types)
+	subtipo?: string | null;
 	tags: string[];
 	entryConditions: Record<string, any>;
 	exitConditions: Record<string, any>;
@@ -139,6 +141,8 @@ export interface CampaignInput {
 	endDate?: Date | string;
 	isPermanent?: boolean;
 	category?: string;
+	tipo?: CampaignTipo | null; // Tipología fija (ver /api/campaigns/types)
+	subtipo?: string | null;
 	tags?: string[];
 	entryConditions?: Record<string, any>;
 	exitConditions?: Record<string, any>;
@@ -177,6 +181,25 @@ export interface PricingBlocks {
 	plan: boolean;
 	any: boolean;
 	requiresDiscount: boolean;
+}
+
+export type CampaignTipo =
+	| "captacion"
+	| "onboarding"
+	| "conversion"
+	| "reactivacion"
+	| "producto"
+	| "promocion"
+	| "contenido"
+	| "servicio"
+	| "prueba";
+
+export interface CampaignTypeInfo {
+	key: CampaignTipo;
+	label: string;
+	color: string;
+	grace?: boolean;
+	exempt?: boolean;
 }
 
 export interface PricingStatus {
@@ -377,6 +400,8 @@ export interface CampaignSummaryRow {
 	_id: string;
 	name: string;
 	status: CampaignStatus;
+	tipo?: CampaignTipo | null;
+	subtipo?: string | null;
 	startDate: string | null;
 	dailyLimit: number;
 	syncWithSegment: boolean;
@@ -398,7 +423,7 @@ export interface CampaignSummaryRow {
 
 export type CampaignSummaryTotals = Omit<
 	CampaignSummaryRow,
-	"_id" | "name" | "status" | "startDate" | "dailyLimit" | "syncWithSegment" | "pricing"
+	"_id" | "name" | "status" | "tipo" | "subtipo" | "startDate" | "dailyLimit" | "syncWithSegment" | "pricing"
 >;
 
 export interface AudienceFlowDay {

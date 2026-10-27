@@ -1,8 +1,12 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import {
 	Alert,
 	Box,
 	Chip,
+	Collapse,
+	FormControlLabel,
+	Switch,
+	Button,
 	CircularProgress,
 	MenuItem,
 	Paper,
@@ -23,6 +27,7 @@ import {
 import MainCard from "components/MainCard";
 import MarketingQuickNav from "components/admin/marketing/MarketingQuickNav";
 import CampaignSendStatsModal from "sections/admin/marketing/CampaignSendStatsModal";
+import { CampaignTipoChip, TipoMultiSelect, tipoOrder } from "sections/admin/marketing/campaignTipos";
 import { CampaignService } from "store/reducers/campaign";
 import { Campaign, CampaignStatus, CampaignSummaryRow, CampaignSummaryTotals } from "types/campaign";
 
@@ -51,6 +56,22 @@ const STATUS_BG: Record<string, string> = {
 	completed: "#93c5fd",
 	archived: "#e2e8f0",
 };
+
+const SUM_KEYS = [
+	"everEnrolled",
+	"active",
+	"completed",
+	"removed",
+	"sent",
+	"queued",
+	"delivered",
+	"uniqueOpens",
+	"uniqueClicks",
+	"bounced",
+	"complained",
+	"unsubscribed",
+	"altas",
+] as const;
 
 type Metrics = CampaignSummaryTotals & { entrega: number; apertura: number; clic: number; rebote: number; alta: number };
 type Row = CampaignSummaryRow & Metrics;
@@ -97,8 +118,11 @@ const CampaignsSummary = () => {
 	const [error, setError] = useState<string | null>(null);
 	const [rows, setRows] = useState<CampaignSummaryRow[]>([]);
 	const [totals, setTotals] = useState<CampaignSummaryTotals | null>(null);
-	const [nameFilter, setNameFilter] = useState<string>("^Captación PJN|^Reenganche");
-	const [appliedFilter, setAppliedFilter] = useState<string>("^Captación PJN|^Reenganche");
+	const [tipos, setTipos] = useState<string[]>(["captacion"]);
+	const [groupByTipo, setGroupByTipo] = useState<boolean>(true);
+	const [advancedOpen, setAdvancedOpen] = useState<boolean>(false);
+	const [nameFilter, setNameFilter] = useState<string>("");
+	const [appliedFilter, setAppliedFilter] = useState<string>("");
 	const [status, setStatus] = useState<string>("");
 	const [sortKey, setSortKey] = useState<keyof Row>("everEnrolled");
 	const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
@@ -109,7 +133,11 @@ const CampaignsSummary = () => {
 		try {
 			setLoading(true);
 			setError(null);
-			const res = await CampaignService.getCampaignsSummary({ name: appliedFilter || undefined, status: status || undefined });
+			const res = await CampaignService.getCampaignsSummary({
+				name: appliedFilter || undefined,
+				status: status || undefined,
+				tipo: tipos.length ? tipos.join(",") : undefined,
+			});
 			setRows(res.data.campaigns);
 			setTotals(res.data.totals);
 		} catch (err: any) {
@@ -117,7 +145,7 @@ const CampaignsSummary = () => {
 		} finally {
 			setLoading(false);
 		}
-	}, [appliedFilter, status]);
+	}, [appliedFilter, status, tipos]);
 
 	useEffect(() => {
 		load();
@@ -134,6 +162,31 @@ const CampaignsSummary = () => {
 	}, [rows, sortKey, sortDir]);
 
 	const totalRow = totals ? withRates(totals) : null;
+
+	// Secciones: una por tipo (con subtotal) o una sola sin agrupar
+	const sections = useMemo(() => {
+		if (!groupByTipo)
+			return [
+				{
+					key: "all",
+					tipo: null as string | null,
+					rows: data,
+					subtotal: null as ReturnType<typeof withRates<CampaignSummaryTotals>> | null,
+				},
+			];
+		const map = new Map<string, Row[]>();
+		for (const r of data) {
+			const k = r.tipo || "sin_tipo";
+			map.set(k, [...(map.get(k) || []), r]);
+		}
+		const keys = [...map.keys()].sort((a, b) => tipoOrder(a === "sin_tipo" ? null : a) - tipoOrder(b === "sin_tipo" ? null : b));
+		return keys.map((k) => {
+			const list = map.get(k) as Row[];
+			const sum = {} as Record<string, number>;
+			for (const col of SUM_KEYS) sum[col] = list.reduce((acc, r) => acc + (r[col] as number), 0);
+			return { key: k, tipo: k === "sin_tipo" ? null : k, rows: list, subtotal: withRates(sum as unknown as CampaignSummaryTotals) };
+		});
+	}, [data, groupByTipo]);
 
 	const handleSort = (key: keyof Row) => {
 		if (key === sortKey) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -163,15 +216,7 @@ const CampaignsSummary = () => {
 		<MainCard title="Resumen de campañas">
 			<MarketingQuickNav />
 			<Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", mb: 2, alignItems: "center" }}>
-				<TextField
-					size="small"
-					label="Nombre (regex)"
-					value={nameFilter}
-					onChange={(e) => setNameFilter(e.target.value)}
-					onKeyDown={(e) => e.key === "Enter" && setAppliedFilter(nameFilter)}
-					onBlur={() => setAppliedFilter(nameFilter)}
-					sx={{ minWidth: 280 }}
-				/>
+				<TipoMultiSelect value={tipos} onChange={setTipos} />
 				<Select size="small" displayEmpty value={status} onChange={(e) => setStatus(e.target.value)} sx={{ minWidth: 160 }}>
 					<MenuItem value="">Todos los estados</MenuItem>
 					{(["active", "paused", "draft", "completed", "archived"] as CampaignStatus[]).map((s) => (
@@ -180,11 +225,33 @@ const CampaignsSummary = () => {
 						</MenuItem>
 					))}
 				</Select>
+				<FormControlLabel
+					control={<Switch size="small" checked={groupByTipo} onChange={(e) => setGroupByTipo(e.target.checked)} />}
+					label="Agrupar por tipo"
+				/>
+				<Button size="small" onClick={() => setAdvancedOpen((o) => !o)}>
+					Búsqueda avanzada
+				</Button>
 				{loading && <CircularProgress size={18} />}
 				<Typography variant="caption" color="textSecondary">
 					Solo conteos. Clic en una fila abre el detalle de la campaña.
 				</Typography>
 			</Box>
+
+			<Collapse in={advancedOpen} unmountOnExit>
+				<Box sx={{ mb: 2 }}>
+					<TextField
+						size="small"
+						label="Nombre (regex)"
+						value={nameFilter}
+						onChange={(e) => setNameFilter(e.target.value)}
+						onKeyDown={(e) => e.key === "Enter" && setAppliedFilter(nameFilter)}
+						onBlur={() => setAppliedFilter(nameFilter)}
+						helperText="Se combina con el tipo. Ej: ^Captación PJN · Previsional"
+						sx={{ minWidth: 320 }}
+					/>
+				</Box>
+			</Collapse>
 
 			{error && (
 				<Alert severity="error" sx={{ mb: 2 }}>
@@ -229,37 +296,70 @@ const CampaignsSummary = () => {
 							</TableRow>
 						</TableHead>
 						<TableBody>
-							{data.map((r) => (
-								<TableRow
-									key={r._id}
-									hover
-									onClick={() => openCampaign(r._id)}
-									sx={{ cursor: "pointer", opacity: opening === r._id ? 0.5 : 1 }}
-								>
-									<TableCell>{r.name}</TableCell>
-									<TableCell>
-										<Chip
-											size="small"
-											label={STATUS_LABEL[r.status] || r.status}
-											sx={{ bgcolor: STATUS_BG[r.status], color: DARK, fontWeight: 600 }}
-										/>
-									</TableCell>
-									<TableCell>{r.syncWithSegment ? "Sí" : "No"}</TableCell>
-									<TableCell>
-										{r.pricing && r.pricing.mode !== "none" ? (
-											<Tooltip title={r.pricing.label}>
-												<Chip size="small" variant="outlined" label={PRICING_SHORT[r.pricing.mode]} />
-											</Tooltip>
-										) : (
-											"—"
-										)}
-									</TableCell>
-									{COLUMNS.map((c) => (
-										<TableCell key={c.key} align="right">
-											{cell(r, c)}
-										</TableCell>
+							{sections.map((sec) => (
+								<Fragment key={sec.key}>
+									{groupByTipo && (
+										<TableRow sx={{ bgcolor: "action.hover" }}>
+											<TableCell colSpan={COLUMNS.length + 4}>
+												<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+													<CampaignTipoChip tipo={sec.tipo} />
+													<Typography variant="caption" color="textSecondary">
+														{sec.rows.length} {sec.rows.length === 1 ? "campaña" : "campañas"}
+													</Typography>
+												</Box>
+											</TableCell>
+										</TableRow>
+									)}
+									{sec.rows.map((r) => (
+										<TableRow
+											key={r._id}
+											hover
+											onClick={() => openCampaign(r._id)}
+											sx={{ cursor: "pointer", opacity: opening === r._id ? 0.5 : 1 }}
+										>
+											<TableCell>
+												{r.name}
+												{!groupByTipo && (
+													<Box sx={{ mt: 0.5 }}>
+														<CampaignTipoChip tipo={r.tipo} subtipo={r.subtipo} />
+													</Box>
+												)}
+											</TableCell>
+											<TableCell>
+												<Chip
+													size="small"
+													label={STATUS_LABEL[r.status] || r.status}
+													sx={{ bgcolor: STATUS_BG[r.status], color: DARK, fontWeight: 600 }}
+												/>
+											</TableCell>
+											<TableCell>{r.syncWithSegment ? "Sí" : "No"}</TableCell>
+											<TableCell>
+												{r.pricing && r.pricing.mode !== "none" ? (
+													<Tooltip title={r.pricing.label}>
+														<Chip size="small" variant="outlined" label={PRICING_SHORT[r.pricing.mode]} />
+													</Tooltip>
+												) : (
+													"—"
+												)}
+											</TableCell>
+											{COLUMNS.map((c) => (
+												<TableCell key={c.key} align="right">
+													{cell(r, c)}
+												</TableCell>
+											))}
+										</TableRow>
 									))}
-								</TableRow>
+									{groupByTipo && sec.subtotal && (
+										<TableRow sx={{ "& td": { fontWeight: 600, fontStyle: "italic" } }}>
+											<TableCell colSpan={4}>Subtotal</TableCell>
+											{COLUMNS.map((c) => (
+												<TableCell key={c.key} align="right">
+													{c.key === "dailyLimit" ? "" : cell(sec.subtotal as any, c)}
+												</TableCell>
+											))}
+										</TableRow>
+									)}
+								</Fragment>
 							))}
 							{totalRow && data.length > 0 && (
 								<TableRow
@@ -274,7 +374,7 @@ const CampaignsSummary = () => {
 										},
 									}}
 								>
-									<TableCell>TOTAL ({data.length})</TableCell>
+									<TableCell>TOTAL GENERAL ({data.length})</TableCell>
 									<TableCell />
 									<TableCell />
 									<TableCell />
@@ -289,7 +389,7 @@ const CampaignsSummary = () => {
 								<TableRow>
 									<TableCell colSpan={COLUMNS.length + 4} align="center">
 										<Typography variant="body2" color="textSecondary" sx={{ py: 3 }}>
-											No hay campañas con ese filtro.
+											No hay campañas con ese filtro. Si todavía no se clasificaron por tipo, probá "Sin clasificar".
 										</Typography>
 									</TableCell>
 								</TableRow>

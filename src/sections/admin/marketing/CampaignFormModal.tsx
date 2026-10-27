@@ -1,5 +1,6 @@
 import React from "react";
 import { CampaignPricingStatus } from "./PricingStatus";
+import { useCampaignTipos } from "./campaignTipos";
 import { useState, useEffect } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
@@ -40,7 +41,7 @@ import "dayjs/locale/es";
 import { InfoCircle } from "iconsax-react";
 
 // project imports
-import { Campaign, CampaignInput, CampaignType, AvailablePromo } from "types/campaign";
+import { Campaign, CampaignInput, CampaignType, AvailablePromo, CampaignTipo } from "types/campaign";
 import { CampaignService } from "store/reducers/campaign";
 import { SegmentService } from "store/reducers/segments";
 import { useSnackbar } from "notistack";
@@ -69,6 +70,8 @@ interface FormValues {
 	endDate: Dayjs | null;
 	isPermanent: boolean;
 	category: string;
+	tipo: string;
+	subtipo: string;
 	tags: string;
 	timezone: string;
 	throttleRate: number;
@@ -126,6 +129,8 @@ const validationSchema = Yup.object({
 		}),
 	isPermanent: Yup.boolean(),
 	category: Yup.string(),
+	tipo: Yup.string(),
+	subtipo: Yup.string(),
 	tags: Yup.string(),
 	timezone: Yup.string().required("La zona horaria es requerida"),
 	throttleRate: Yup.number().min(1, "Mínimo 1 email por batch").max(1000, "Máximo 1000 emails por batch"),
@@ -210,6 +215,7 @@ const daysOfWeek = [
 ];
 
 const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: CampaignFormModalProps) => {
+	const tiposDisponibles = useCampaignTipos();
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [showTypeHelp, setShowTypeHelp] = useState(false);
@@ -248,6 +254,8 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 		endDate: null,
 		isPermanent: false,
 		category: "",
+		tipo: "",
+		subtipo: "",
 		tags: "",
 		timezone: "America/Argentina/Buenos_Aires", // Default timezone
 		throttleRate: 100, // Default: 100 emails per batch
@@ -305,6 +313,8 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 						endDate: values.isPermanent ? undefined : formatDateForTimezone(values.endDate, values.timezone),
 						isPermanent: values.isPermanent,
 						category: values.category || undefined,
+						tipo: (values.tipo as CampaignTipo) || undefined,
+						subtipo: values.subtipo || undefined,
 						tags: tagsArray.length > 0 ? tagsArray : undefined,
 						// Desvincular segmento: segmentId → null y sync apagado, para que el
 						// segment-sync no vuelva a enrolar contactos de esta campaña.
@@ -365,6 +375,8 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 						endDate: values.isPermanent ? undefined : formatDateForTimezone(values.endDate, values.timezone),
 						isPermanent: values.isPermanent,
 						category: values.category || undefined,
+						tipo: (values.tipo as CampaignTipo) || undefined,
+						subtipo: values.subtipo || undefined,
 						tags: tagsArray.length > 0 ? tagsArray : undefined,
 						promoDiscountId: values.promoDiscountId || null,
 						frequencyPolicy: {
@@ -468,6 +480,8 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 				endDate: parseUtcToTimezone(campaign.endDate, campaignTimezone),
 				isPermanent: campaign.isPermanent || false,
 				category: campaign.category || "",
+				tipo: campaign.tipo || "",
+				subtipo: campaign.subtipo || "",
 				tags: tagsString,
 				timezone: campaignTimezone,
 				throttleRate: campaign.settings?.throttleRate || 100,
@@ -740,17 +754,57 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 							</FormControl>
 						</Grid>
 
-						{/* Campaign category */}
+						{/* Tipo de campaña (lista fija) y subtipo libre */}
+						<Grid item xs={12} md={6}>
+							<FormControl fullWidth>
+								<InputLabel id="tipo-label">Tipo de campaña</InputLabel>
+								<Select
+									labelId="tipo-label"
+									id="tipo"
+									name="tipo"
+									label="Tipo de campaña"
+									value={formik.values.tipo}
+									onChange={formik.handleChange}
+									onBlur={formik.handleBlur}
+								>
+									<MenuItem value="">
+										<em>Sin clasificar</em>
+									</MenuItem>
+									{tiposDisponibles.map((t) => (
+										<MenuItem key={t.key} value={t.key}>
+											{t.label}
+										</MenuItem>
+									))}
+								</Select>
+								<FormHelperText>
+									Define la gracia de cuentas nuevas y si la campaña cuenta para el tope del coordinador. Para segmentar por tema usá el
+									subtipo.
+								</FormHelperText>
+							</FormControl>
+						</Grid>
+						<Grid item xs={12} md={6}>
+							<FormControl fullWidth>
+								<TextField
+									id="subtipo"
+									name="subtipo"
+									label="Subtipo (opcional)"
+									value={formik.values.subtipo}
+									onChange={formik.handleChange}
+									onBlur={formik.handleBlur}
+									placeholder="Ej: pjn_fuero, reenganche, saij"
+								/>
+							</FormControl>
+						</Grid>
 						<Grid item xs={12} md={6}>
 							<FormControl fullWidth>
 								<TextField
 									id="category"
 									name="category"
-									label="Categoría"
+									label="Categoría (legado)"
 									value={formik.values.category}
 									onChange={formik.handleChange}
 									onBlur={formik.handleBlur}
-									placeholder="Ej: Noticias, Eventos, Promociones"
+									placeholder="Texto libre; se mantiene como respaldo"
 								/>
 							</FormControl>
 						</Grid>

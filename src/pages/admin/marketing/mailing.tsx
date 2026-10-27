@@ -48,6 +48,7 @@ import MainCard from "components/MainCard";
 import { BRAND_BLUE, LIVE_GREEN, LIVE_PULSE_KEYFRAMES } from "themes/dashboardTokens";
 import { Add, Edit2, SearchNormal1, Trash, MessageText1, People, Refresh, Chart, Copy, Data2, Magicpen } from "iconsax-react";
 import CampaignFormModal from "sections/admin/marketing/CampaignFormModal";
+import { CampaignTipoChip, TipoMultiSelect } from "sections/admin/marketing/campaignTipos";
 import GenerateAICampaignModal from "components/admin/marketing/GenerateAICampaignModal";
 import DeleteCampaignDialog from "sections/admin/marketing/DeleteCampaignDialog";
 import CampaignEmailList from "sections/admin/marketing/CampaignEmailList";
@@ -148,6 +149,8 @@ const MailingCampaigns = () => {
 	const [searchTerm, setSearchTerm] = useState<string>("");
 	const [filterType, setFilterType] = useState<string>("");
 	const [filterStatus, setFilterStatus] = useState<string>("");
+	const [filterTipos, setFilterTipos] = useState<string[]>([]);
+	const [groupByTipo, setGroupByTipo] = useState<boolean>(false);
 	const [sortBy, setSortBy] = useState<string>("createdAt");
 	const [sortDir, setSortDir] = useState<string>("desc");
 
@@ -287,7 +290,7 @@ const MailingCampaigns = () => {
 		} else {
 			hasInitialLoad.current = true;
 		}
-	}, [page, rowsPerPage, filterType, filterStatus, sortBy, sortDir]);
+	}, [page, rowsPerPage, filterType, filterStatus, filterTipos, groupByTipo, sortBy, sortDir]);
 
 	// Refresh server status when processing queued requests
 	useRequestQueueRefresh(() => {
@@ -305,8 +308,10 @@ const MailingCampaigns = () => {
 			if (searchTerm) filters.search = searchTerm;
 			if (filterType) filters.type = filterType;
 			if (filterStatus) filters.status = filterStatus;
+			if (filterTipos.length) filters.tipo = filterTipos.join(",");
 
-			const response = await CampaignService.getCampaigns(page + 1, rowsPerPage, filters, sortBy, sortDir);
+			// Agrupado por tipo: el orden del servidor es por tipo para que cada grupo quede contiguo entre páginas
+			const response = await CampaignService.getCampaigns(page + 1, rowsPerPage, filters, groupByTipo ? "tipo" : sortBy, sortDir);
 			setCampaigns(response.data || []);
 			// Use pagination.total if available, otherwise fallback to legacy total
 			const totalRecords = response.pagination?.total ?? response.total ?? 0;
@@ -739,10 +744,29 @@ const MailingCampaigns = () => {
 								>
 									{sortDir === "asc" ? "Ascendente" : "Descendente"}
 								</Button>
+								<TipoMultiSelect
+									value={filterTipos}
+									onChange={(v) => {
+										setFilterTipos(v);
+										setPage(0);
+									}}
+									minWidth={200}
+								/>
+								<Button
+									variant={groupByTipo ? "contained" : "outlined"}
+									size="small"
+									onClick={() => {
+										setGroupByTipo((g) => !g);
+										setPage(0);
+									}}
+									sx={{ height: 40 }}
+								>
+									Agrupar por tipo
+								</Button>
 								<TextField
 									select
 									size="small"
-									label="Tipo"
+									label="Modalidad"
 									value={filterType}
 									onChange={handleTypeFilterChange}
 									sx={{ minWidth: { xs: 0, sm: 120 }, flex: { xs: "1 1 45%", sm: "0 0 auto" } }}
@@ -779,9 +803,9 @@ const MailingCampaigns = () => {
 						<TableHead>
 							<TableRow>
 								<TableCell>Nombre</TableCell>
-								<TableCell sx={COL_SM}>Tipo</TableCell>
+								<TableCell sx={COL_SM}>Modalidad</TableCell>
 								<TableCell>Estado</TableCell>
-								<TableCell sx={COL_LG}>Categoría</TableCell>
+								<TableCell sx={COL_LG}>Tipo de campaña</TableCell>
 								<TableCell sx={COL_MD}>
 									<Tooltip title="Prioridad del coordinador de campañas (0–100). Se edita en Coordinación o al editar la campaña.">
 										<span>Prioridad</span>
@@ -818,7 +842,8 @@ const MailingCampaigns = () => {
 									</TableCell>
 								</TableRow>
 							) : (
-								campaigns.map((campaign) => {
+								campaigns.map((campaign, index) => {
+									const showGroupHeader = groupByTipo && (index === 0 || (campaigns[index - 1].tipo || null) !== (campaign.tipo || null));
 									const statusInfo = getStatusColor(campaign.status);
 									const typeLabel = getTypeLabel(campaign.type);
 									const openRate =
@@ -832,138 +857,157 @@ const MailingCampaigns = () => {
 									const unsubscribeRate = unsubscribes > 0 && reached > 0 ? ((unsubscribes / reached) * 100).toFixed(1) : null;
 
 									return (
-										<TableRow hover key={campaign._id} tabIndex={-1}>
-											<TableCell>
-												<Typography variant="subtitle2">{campaign.name}</Typography>
-												{campaign.description && (
-													<Typography variant="caption" color="textSecondary">
-														{campaign.description.length > 50 ? `${campaign.description.substring(0, 50)}...` : campaign.description}
-													</Typography>
-												)}
-											</TableCell>
-											<TableCell sx={COL_SM}>{typeLabel}</TableCell>
-											<TableCell>
-												<Chip label={statusInfo.label} color={statusInfo.color as any} size="small" />
-											</TableCell>
-											<TableCell sx={COL_LG}>{campaign.category || "-"}</TableCell>
-											<TableCell sx={COL_MD}>
-												<PriorityChip campaign={campaign} />
-											</TableCell>
-											<TableCell align="right" sx={COL_SM}>
-												{campaign.metrics?.totalContacts || 0}
-											</TableCell>
-											<TableCell align="right" sx={COL_MD}>
-												{campaign.metrics?.emailCount || 0}
-											</TableCell>
-											<TableCell align="right" sx={COL_LG}>
-												{campaign.settings?.dailyLimit && campaign.settings.dailyLimit > 0 ? (
-													<Tooltip title="Límite de emails por día">
-														<Typography variant="body2">{campaign.settings.dailyLimit.toLocaleString()}</Typography>
-													</Tooltip>
-												) : (
-													<Typography variant="body2" color="textSecondary">
-														Sin límite
-													</Typography>
-												)}
-											</TableCell>
-											<TableCell align="right" sx={COL_MD}>{`${openRate}%`}</TableCell>
-											<TableCell align="right" sx={COL_MD}>
-												{unsubscribes > 0 ? (
-													<Tooltip
-														title={unsubscribeRate ? `${unsubscribeRate}% de los contactos alcanzados` : "Bajas atribuidas a esta campaña"}
-													>
-														<Typography variant="body2" color={unsubscribeRate && Number(unsubscribeRate) >= 3 ? "error" : "textPrimary"}>
-															{unsubscribes}
-															{unsubscribeRate ? ` (${unsubscribeRate}%)` : ""}
+										<React.Fragment key={campaign._id}>
+											{showGroupHeader && (
+												<TableRow sx={{ bgcolor: "action.hover" }}>
+													<TableCell colSpan={12}>
+														<CampaignTipoChip tipo={campaign.tipo} />
+													</TableCell>
+												</TableRow>
+											)}
+											<TableRow hover tabIndex={-1}>
+												<TableCell>
+													<Typography variant="subtitle2">{campaign.name}</Typography>
+													{campaign.description && (
+														<Typography variant="caption" color="textSecondary">
+															{campaign.description.length > 50 ? `${campaign.description.substring(0, 50)}...` : campaign.description}
 														</Typography>
-													</Tooltip>
-												) : (
-													<Typography variant="body2" color="textSecondary">
-														0
-													</Typography>
-												)}
-											</TableCell>
-											<TableCell align="right" sx={COL_LG}>
-												{(() => {
-													const tz = campaign.settings?.timezone || "UTC";
-													const fmt = (d: string | Date) =>
-														dayjs
-															.utc(d as any)
-															.tz(tz)
-															.format("DD/MM/YYYY HH:mm");
-													if (!campaign.startDate && !campaign.endDate) return "-";
-													return (
-														<Tooltip title={`Zona horaria: ${tz}`} arrow>
-															<Box>
-																{campaign.startDate && (
-																	<Typography variant="caption" display="block">
-																		<strong>Inicio:</strong> {fmt(campaign.startDate)}
-																	</Typography>
-																)}
-																{campaign.endDate ? (
-																	<Typography variant="caption" display="block" color="textSecondary">
-																		<strong>Fin:</strong> {fmt(campaign.endDate)}
-																	</Typography>
-																) : campaign.isPermanent ? (
-																	<Typography variant="caption" display="block" color="textSecondary">
-																		Permanente
-																	</Typography>
-																) : null}
-															</Box>
+													)}
+												</TableCell>
+												<TableCell sx={COL_SM}>{typeLabel}</TableCell>
+												<TableCell>
+													<Chip label={statusInfo.label} color={statusInfo.color as any} size="small" />
+												</TableCell>
+												<TableCell sx={COL_LG}>
+													{campaign.tipo ? (
+														<CampaignTipoChip tipo={campaign.tipo} subtipo={campaign.subtipo} />
+													) : (
+														<Typography variant="caption" color="textSecondary">
+															{campaign.category || "Sin clasificar"}
+														</Typography>
+													)}
+												</TableCell>
+												<TableCell sx={COL_MD}>
+													<PriorityChip campaign={campaign} />
+												</TableCell>
+												<TableCell align="right" sx={COL_SM}>
+													{campaign.metrics?.totalContacts || 0}
+												</TableCell>
+												<TableCell align="right" sx={COL_MD}>
+													{campaign.metrics?.emailCount || 0}
+												</TableCell>
+												<TableCell align="right" sx={COL_LG}>
+													{campaign.settings?.dailyLimit && campaign.settings.dailyLimit > 0 ? (
+														<Tooltip title="Límite de emails por día">
+															<Typography variant="body2">{campaign.settings.dailyLimit.toLocaleString()}</Typography>
 														</Tooltip>
-													);
-												})()}
-											</TableCell>
-											<TableCell align="center">
-												<Stack direction="row" spacing={0.5} justifyContent="center">
-													<Tooltip title="Ver detalles">
-														<IconButton
-															aria-label="detalles"
-															size="small"
-															color="primary"
-															onClick={(e) => {
-																e.stopPropagation();
-																handleOpenCampaignDetail(campaign);
-															}}
+													) : (
+														<Typography variant="body2" color="textSecondary">
+															Sin límite
+														</Typography>
+													)}
+												</TableCell>
+												<TableCell align="right" sx={COL_MD}>{`${openRate}%`}</TableCell>
+												<TableCell align="right" sx={COL_MD}>
+													{unsubscribes > 0 ? (
+														<Tooltip
+															title={
+																unsubscribeRate ? `${unsubscribeRate}% de los contactos alcanzados` : "Bajas atribuidas a esta campaña"
+															}
 														>
-															<SearchNormal1 size={18} />
-														</IconButton>
-													</Tooltip>
-													<Tooltip title="Editar campaña">
-														<IconButton
-															aria-label="editar"
-															size="small"
-															color="primary"
-															disabled={!isEditable}
-															onClick={(e) => {
-																e.stopPropagation();
-																handleOpenEditModal(campaign);
-															}}
-														>
-															<Edit2 size={18} />
-														</IconButton>
-													</Tooltip>
-													<Tooltip title="Eliminar campaña">
-														<IconButton
-															aria-label="eliminar"
-															size="small"
-															color="error"
-															onClick={(e) => {
-																e.stopPropagation();
-																handleOpenDeleteDialog(campaign);
-															}}
-														>
-															<Trash size={18} />
-														</IconButton>
-													</Tooltip>
-													<Tooltip title="Más acciones">
-														<IconButton aria-label="más acciones" size="small" onClick={(e) => handleOpenActionsMenu(e, campaign)}>
-															<More size={18} />
-														</IconButton>
-													</Tooltip>
-												</Stack>
-											</TableCell>
-										</TableRow>
+															<Typography variant="body2" color={unsubscribeRate && Number(unsubscribeRate) >= 3 ? "error" : "textPrimary"}>
+																{unsubscribes}
+																{unsubscribeRate ? ` (${unsubscribeRate}%)` : ""}
+															</Typography>
+														</Tooltip>
+													) : (
+														<Typography variant="body2" color="textSecondary">
+															0
+														</Typography>
+													)}
+												</TableCell>
+												<TableCell align="right" sx={COL_LG}>
+													{(() => {
+														const tz = campaign.settings?.timezone || "UTC";
+														const fmt = (d: string | Date) =>
+															dayjs
+																.utc(d as any)
+																.tz(tz)
+																.format("DD/MM/YYYY HH:mm");
+														if (!campaign.startDate && !campaign.endDate) return "-";
+														return (
+															<Tooltip title={`Zona horaria: ${tz}`} arrow>
+																<Box>
+																	{campaign.startDate && (
+																		<Typography variant="caption" display="block">
+																			<strong>Inicio:</strong> {fmt(campaign.startDate)}
+																		</Typography>
+																	)}
+																	{campaign.endDate ? (
+																		<Typography variant="caption" display="block" color="textSecondary">
+																			<strong>Fin:</strong> {fmt(campaign.endDate)}
+																		</Typography>
+																	) : campaign.isPermanent ? (
+																		<Typography variant="caption" display="block" color="textSecondary">
+																			Permanente
+																		</Typography>
+																	) : null}
+																</Box>
+															</Tooltip>
+														);
+													})()}
+												</TableCell>
+												<TableCell align="center">
+													<Stack direction="row" spacing={0.5} justifyContent="center">
+														<Tooltip title="Ver detalles">
+															<IconButton
+																aria-label="detalles"
+																size="small"
+																color="primary"
+																onClick={(e) => {
+																	e.stopPropagation();
+																	handleOpenCampaignDetail(campaign);
+																}}
+															>
+																<SearchNormal1 size={18} />
+															</IconButton>
+														</Tooltip>
+														<Tooltip title="Editar campaña">
+															<IconButton
+																aria-label="editar"
+																size="small"
+																color="primary"
+																disabled={!isEditable}
+																onClick={(e) => {
+																	e.stopPropagation();
+																	handleOpenEditModal(campaign);
+																}}
+															>
+																<Edit2 size={18} />
+															</IconButton>
+														</Tooltip>
+														<Tooltip title="Eliminar campaña">
+															<IconButton
+																aria-label="eliminar"
+																size="small"
+																color="error"
+																onClick={(e) => {
+																	e.stopPropagation();
+																	handleOpenDeleteDialog(campaign);
+																}}
+															>
+																<Trash size={18} />
+															</IconButton>
+														</Tooltip>
+														<Tooltip title="Más acciones">
+															<IconButton aria-label="más acciones" size="small" onClick={(e) => handleOpenActionsMenu(e, campaign)}>
+																<More size={18} />
+															</IconButton>
+														</Tooltip>
+													</Stack>
+												</TableCell>
+											</TableRow>
+										</React.Fragment>
 									);
 								})
 							)}

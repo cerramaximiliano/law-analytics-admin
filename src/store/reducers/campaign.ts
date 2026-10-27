@@ -9,6 +9,7 @@ import {
 	CampaignAudienceFlowResponse,
 	CampaignConversions,
 	CampaignSummaryRow,
+	CampaignTypeInfo,
 	CampaignSummaryTotals,
 	AvailablePromo,
 	CampaignDiscountUsage,
@@ -404,10 +405,23 @@ export const CampaignService = {
 		}
 	},
 
+	// Tipología fija de campañas (clave, etiqueta, color)
+	getCampaignTypes: async (): Promise<CampaignTypeInfo[]> => {
+		const response = await mktAxios.get("/api/campaigns/types");
+		return response.data.data;
+	},
+
 	// Resumen de varias campañas (acumulado, envíos y altas) en una sola consulta
 	getCampaignsSummary: async (
-		filters: { name?: string; status?: string } = {},
-	): Promise<{ success: boolean; data: { campaigns: CampaignSummaryRow[]; totals: CampaignSummaryTotals | null } }> => {
+		filters: { name?: string; status?: string; tipo?: string } = {},
+	): Promise<{
+		success: boolean;
+		data: {
+			campaigns: CampaignSummaryRow[];
+			totals: CampaignSummaryTotals | null;
+			totalsByTipo?: Record<string, CampaignSummaryTotals & { campaigns: number }>;
+		};
+	}> => {
 		const response = await mktAxios.get("/api/campaigns/summary", { params: filters });
 		return response.data;
 	},
