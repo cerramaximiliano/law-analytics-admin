@@ -1064,6 +1064,13 @@ const admin: NavItemType = {
 					breadcrumbs: true,
 				},
 				{
+					id: "recorrido-contacto",
+					title: "Recorrido del contacto",
+					type: "item",
+					url: "/admin/marketing/recorrido",
+					breadcrumbs: true,
+				},
+				{
 					id: "resumen-campanas",
 					title: "Resumen de campañas",
 					type: "item",

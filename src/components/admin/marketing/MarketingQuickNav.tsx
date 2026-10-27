@@ -19,6 +19,11 @@ const MarketingQuickNav: React.FC = () => {
 			icon: <Sms size={18} />,
 		},
 		{
+			path: "/admin/marketing/recorrido",
+			label: "Recorrido",
+			icon: <Hierarchy size={18} />,
+		},
+		{
 			path: "/admin/marketing/resumen",
 			label: "Resumen",
 			icon: <Chart size={18} />,
