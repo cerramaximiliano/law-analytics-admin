@@ -1,4 +1,5 @@
 import React from "react";
+import { CampaignPricingStatus } from "./PricingStatus";
 import { useState, useEffect } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
@@ -786,10 +787,12 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 									))}
 								</Select>
 								<FormHelperText>
-									Define qué código completa {"{{descuento.*}}"} y {"{{tablaPrecios}}"} en los emails. Obligatoria para activar campañas
-									cuyos templates usan contenido de descuento.
+									Fija qué descuento usan {"{{descuento.*}}"}, {"{{tablaPrecios}}"} y {"{{ofertaActual}}"}. Opcional: sin descuento
+									asociado, esos bloques usan el descuento vigente de mayor prioridad o, si no hay, los precios de lista. Solo es
+									obligatoria si los emails usan {"{{descuento.*}}"} (código, valor o vigencia).
 								</FormHelperText>
 							</FormControl>
+							{campaign?._id && !formik.values.promoDiscountId && <CampaignPricingStatus campaignId={campaign._id} sx={{ mt: 1 }} />}
 							{(() => {
 								const selected = promos.find((p) => p._id === formik.values.promoDiscountId);
 								if (!selected || selected.vigente) return null;

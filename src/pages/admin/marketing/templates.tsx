@@ -1,5 +1,6 @@
 import React from "react";
 import { useState, useEffect, useCallback, useRef } from "react";
+import { DynamicPricingChip, TemplatePricingStatus } from "sections/admin/marketing/PricingStatus";
 import mktAxios from "utils/mktAxios";
 import { useRequestQueueRefresh } from "hooks/useRequestQueueRefresh";
 
@@ -2019,6 +2020,7 @@ const EmailTemplates = () => {
 													<TableCell>
 														<Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap">
 															<Typography variant="subtitle2">{template.name}</Typography>
+															<DynamicPricingChip texts={[template.subject, template.htmlBody, template.textBody]} />
 															{template.protected && (
 																<Tooltip
 																	title={`Template de sistema. No puede perder: ${(template.requiredPlaceholders || []).join(", ") || "—"}`}
@@ -2306,6 +2308,7 @@ const EmailTemplates = () => {
 							</Box>
 						</DialogTitle>
 						<Divider />
+						<TemplatePricingStatus templateId={selectedTemplate._id} sx={{ mx: 3, mt: 1.5 }} />
 						<Box sx={{ borderBottom: 1, borderColor: "divider", px: 3 }}>
 							<Tabs
 								variant="scrollable"
@@ -2702,6 +2705,7 @@ const EmailTemplates = () => {
 							</Typography>
 						</DialogTitle>
 						<Divider />
+						<TemplatePricingStatus templateId={editTemplate._id} sx={{ mx: 3, mt: 1.5 }} />
 						<DialogContent sx={{ p: 3, flex: 1, overflow: "hidden" }}>
 							<Grid container spacing={{ xs: 1.5, sm: 2, md: 3 }} sx={{ height: "100%" }}>
 								{/* Basic information */}

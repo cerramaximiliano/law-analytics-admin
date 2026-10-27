@@ -168,7 +168,27 @@ export interface AvailablePromo {
 
 // Estado de uso de contenido de descuento de una campaña
 // (GET /api/campaigns/:id/discount-usage)
+export type PricingMode = "none" | "adjunto" | "auto_descuento" | "auto_lista";
+
+export interface PricingBlocks {
+	tablaPrecios: boolean;
+	ofertaActual: boolean;
+	descuento: boolean;
+	plan: boolean;
+	any: boolean;
+	requiresDiscount: boolean;
+}
+
+export interface PricingStatus {
+	mode: PricingMode;
+	label: string;
+	requiresPromo: boolean;
+}
+
 export interface CampaignDiscountUsage {
+	usesPricingBlocks?: boolean;
+	blocks?: PricingBlocks;
+	pricing?: PricingStatus;
 	usesDiscountContent: boolean;
 	promoDiscountId: string | null;
 	promo: { _id: string; code: string | null; valid: boolean; reason: string | null } | null;
@@ -373,9 +393,13 @@ export interface CampaignSummaryRow {
 	complained: number;
 	unsubscribed: number;
 	altas: number;
+	pricing?: { mode: PricingMode; label: string };
 }
 
-export type CampaignSummaryTotals = Omit<CampaignSummaryRow, "_id" | "name" | "status" | "startDate" | "dailyLimit" | "syncWithSegment">;
+export type CampaignSummaryTotals = Omit<
+	CampaignSummaryRow,
+	"_id" | "name" | "status" | "startDate" | "dailyLimit" | "syncWithSegment" | "pricing"
+>;
 
 export interface AudienceFlowDay {
 	date: string; // YYYY-MM-DD (hora de Buenos Aires)

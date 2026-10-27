@@ -38,6 +38,11 @@ const STATUS_LABEL: Record<string, string> = {
 	completed: "Completada",
 	archived: "Archivada",
 };
+const PRICING_SHORT: Record<string, string> = {
+	adjunto: "Descuento asociado",
+	auto_descuento: "Auto con descuento",
+	auto_lista: "Auto: precios de lista",
+};
 const DARK = "#1f1f1f"; // chips ocre/amarillos con letra oscura
 const STATUS_BG: Record<string, string> = {
 	active: "#86efac",
@@ -205,6 +210,7 @@ const CampaignsSummary = () => {
 								</TableCell>
 								<TableCell>Estado</TableCell>
 								<TableCell>Sync</TableCell>
+								<TableCell>Precios</TableCell>
 								{COLUMNS.map((c) => (
 									<TableCell key={c.key} align="right" sx={{ whiteSpace: "nowrap" }}>
 										<Tooltip title={c.hint || ""} disableHoverListener={!c.hint}>
@@ -239,6 +245,15 @@ const CampaignsSummary = () => {
 										/>
 									</TableCell>
 									<TableCell>{r.syncWithSegment ? "Sí" : "No"}</TableCell>
+									<TableCell>
+										{r.pricing && r.pricing.mode !== "none" ? (
+											<Tooltip title={r.pricing.label}>
+												<Chip size="small" variant="outlined" label={PRICING_SHORT[r.pricing.mode]} />
+											</Tooltip>
+										) : (
+											"—"
+										)}
+									</TableCell>
 									{COLUMNS.map((c) => (
 										<TableCell key={c.key} align="right">
 											{cell(r, c)}
@@ -262,6 +277,7 @@ const CampaignsSummary = () => {
 									<TableCell>TOTAL ({data.length})</TableCell>
 									<TableCell />
 									<TableCell />
+									<TableCell />
 									{COLUMNS.map((c) => (
 										<TableCell key={c.key} align="right">
 											{c.key === "dailyLimit" ? "" : cell(totalRow, c)}
@@ -271,7 +287,7 @@ const CampaignsSummary = () => {
 							)}
 							{!loading && data.length === 0 && (
 								<TableRow>
-									<TableCell colSpan={COLUMNS.length + 3} align="center">
+									<TableCell colSpan={COLUMNS.length + 4} align="center">
 										<Typography variant="body2" color="textSecondary" sx={{ py: 3 }}>
 											No hay campañas con ese filtro.
 										</Typography>
