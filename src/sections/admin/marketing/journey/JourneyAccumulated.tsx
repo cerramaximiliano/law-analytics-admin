@@ -19,11 +19,12 @@ const Chips: React.FC<{ data: Record<string, number> }> = ({ data }) => (
 );
 
 // Acumulado histórico de la categoría (todas sus campañas, también las desactivadas) y activos por paso.
-const JourneyAccumulated: React.FC<{ title: string; totals: JourneyCategoryTotals | null; convertedLabel: string }> = ({
-	title,
-	totals,
-	convertedLabel,
-}) => {
+const JourneyAccumulated: React.FC<{
+	title: string;
+	totals: JourneyCategoryTotals | null;
+	convertedLabel: string;
+	deletedConversions?: number;
+}> = ({ title, totals, convertedLabel, deletedConversions }) => {
 	if (!totals) return null;
 	const steps = Object.keys(totals.activeByStep)
 		.map(Number)
