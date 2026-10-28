@@ -27,6 +27,7 @@ import { SegmentSyncLogService } from "store/reducers/segmentSyncLog";
 import { Campaign as ImportedCampaign } from "types/campaign";
 import { SegmentSyncLog } from "types/segment-sync-log";
 import SyncHistoryList from "./SyncHistoryList";
+import { CampaignQuotaStatus } from "./CampaignOverview";
 
 interface CampaignDetailModalProps {
 	open: boolean;
@@ -569,6 +570,17 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({ open, onClose
 													<Typography variant="body1">{campaign.metrics.unsubscribes}</Typography>
 												</Grid>
 											</Grid>
+										</Grid>
+									)}
+
+									{/* Cupos y pasos: ingresos frenados, atraso por paso y rampa */}
+									{campaign.metrics && (campaign.metrics.enrollmentPaused || campaign.metrics.backlog || campaign.metrics.rampa) && (
+										<Grid item xs={12}>
+											<Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+												Cupos y pasos
+											</Typography>
+											<Divider sx={{ mb: 2 }} />
+											<CampaignQuotaStatus campaign={campaign} />
 										</Grid>
 									)}
 

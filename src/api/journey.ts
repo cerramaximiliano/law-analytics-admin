@@ -2,6 +2,20 @@ import mktAxios from "utils/mktAxios";
 
 // Recorrido del contacto (la-marketing-service: /api/journey/*)
 
+// Ingresos frenados por el freno de ingresos (metrics.enrollmentPaused de la campaña); null o ausente = no frenada.
+export interface JourneyEnrollmentPaused {
+	since: string;
+	reason: "atraso" | "tope_diario_nuevos";
+	detalle: {
+		paso?: number; // ya viene 1-based
+		dias?: number;
+		vencidos?: number;
+		maxAtrasoDias?: number;
+		nuevosHoy?: number;
+		maxNuevosPorDia?: number;
+	};
+}
+
 export interface JourneyCampaign {
 	_id: string;
 	name: string;
@@ -10,9 +24,10 @@ export interface JourneyCampaign {
 	subtipo: string | null;
 	syncWithSegment: boolean;
 	acceptsNew: boolean;
+	enrollmentPaused?: JourneyEnrollmentPaused | null;
 	dailyLimit: number;
 	steps: number;
-	segment: { _id: string; name: string; size: number | null; calculatedAt: string | null } | null;
+	segment: { _id: string; name: string; size: number | null; liveSize?: number | null; calculatedAt: string | null } | null;
 	conditions: { operator: string; filters: Array<{ field: string; text: string }> } | null;
 	stepFilters: string[];
 	active: number;
@@ -77,6 +92,7 @@ export interface JourneyCampaignStats {
 	status: string;
 	tipo: string;
 	subtipo: string | null;
+	enrollmentPaused?: JourneyEnrollmentPaused | null;
 	createdAt: string | null;
 	completedAt: string | null;
 	archivedAt: string | null;
@@ -130,7 +146,21 @@ export interface JourneyV2 {
 	>;
 }
 
+export interface JourneyCheck {
+	key: string;
+	title: string;
+	count: number;
+	status: "ok" | "alert" | "error" | "info";
+	sample: string[];
+	sampleKind: "contactId" | "campaignId" | null;
+	action: string;
+	note?: string;
+	details?: Array<Record<string, unknown>>;
+}
+
 export interface JourneyMapData {
+	checks?: JourneyCheck[];
+	checksAlerts?: number;
 	v2?: JourneyV2 | null;
 	v2Error?: string | null;
 	generatedAt: string;
@@ -144,6 +174,18 @@ export interface JourneyMapData {
 		buckets: JourneyBucket[];
 		fuga: { reasons: JourneyReason[]; sampleSize: number; conHistorial: number; nuncaEntraron: number } | null;
 		nonActive: Record<string, number>;
+		interesados?: {
+			marked: number;
+			byPeriod: Record<string, number>;
+			fromVariant: Array<{ campaignId: string | null; name: string; n: number }>;
+			campaignIds: string[];
+		};
+		control?: {
+			control: { n: number; altas: number; desde: string | null };
+			expuestos: { n: number; altas: number; desde: string | null };
+			rateControl: number;
+			rateExpuestos: number;
+		};
 	};
 	stages: {
 		counts: Record<string, { total: number; sub: Record<string, number> }>;
@@ -155,7 +197,7 @@ export interface JourneyMapData {
 		};
 		inactivo: JourneyStageData;
 		cliente: { total: number };
-		activo_free: { total: number };
+		activo_free: JourneyStageData & { total: number };
 	};
 	lane: { contenido: JourneyCampaign[]; servicio: JourneyCampaign[] };
 	exclusivity: Record<string, { count: number; sample: string[] }>;

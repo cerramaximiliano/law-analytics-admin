@@ -9,6 +9,7 @@ import GeneralRulesCard, { CoordinatorStatusChip } from "sections/admin/marketin
 import PrioritiesTable from "sections/admin/marketing/coordination/PrioritiesTable";
 import FlowsChart from "sections/admin/marketing/coordination/FlowsChart";
 import DailyDeferredCard from "sections/admin/marketing/coordination/DailyDeferredCard";
+import QuotaRampCard from "sections/admin/marketing/coordination/QuotaRampCard";
 import { CampaignService, SchedulerFrequencyService } from "store/reducers/campaign";
 import { Campaign, SchedulerFrequencyState } from "types/campaign";
 import { LIVE_GREEN } from "themes/dashboardTokens";
@@ -117,6 +118,15 @@ const CampaignCoordination = () => {
 				</Grid>
 				<Grid item xs={12} lg={5}>
 					<DailyDeferredCard frequency={frequency} campaigns={campaigns} />
+				</Grid>
+				<Grid item xs={12}>
+					<QuotaRampCard
+						state={frequency}
+						loading={frequencyLoading}
+						loadError={frequencyError}
+						onSaved={(config) => setFrequency((prev) => (prev ? { ...prev, config } : prev))}
+						onRetry={loadFrequency}
+					/>
 				</Grid>
 				<Grid item xs={12}>
 					{campaignsLoading ? (

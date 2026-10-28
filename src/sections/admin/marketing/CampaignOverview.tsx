@@ -1,9 +1,11 @@
 import React from "react";
 import {
+	Alert,
 	Box,
 	Chip,
 	Grid,
 	Paper,
+	Stack,
 	Table,
 	TableBody,
 	TableCell,
@@ -22,8 +24,13 @@ import {
 	SchedulerFrequencyConfig,
 } from "types/campaign";
 import { formatPercent } from "utils/format";
+import { RAMPA_ACCION_LABEL } from "./coordination/labels";
+import { describeEnrollmentPaused } from "utils/campaignCoordination";
 
 const fmt = (n: number) => n.toLocaleString("es-AR");
+const fmtDateTime = (d?: string | null) => (d ? new Date(d).toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" }) : "—");
+const DAY_MS = 24 * 60 * 60 * 1000;
+const fmtDias = (dias: number) => `${dias.toLocaleString("es-AR", { maximumFractionDigits: 1 })} ${dias === 1 ? "día" : "días"}`;
 const DAY_NAMES = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
 const STATUS_LABEL: Record<string, string> = {
 	draft: "Borrador",
@@ -219,5 +226,130 @@ export const CampaignFunnel: React.FC<{ audience: CampaignAudienceStats | null; 
 				</TableBody>
 			</Table>
 		</TableContainer>
+	);
+};
+
+// Cupos y pasos: ingresos frenados, atraso por paso y rampa de cupos (metrics.enrollmentPaused /
+// metrics.backlog / metrics.rampa, los escribe la-marketing-service). Sin datos, no dibuja nada.
+export const CampaignQuotaStatus: React.FC<{ campaign: Campaign; now?: Date }> = ({ campaign, now = new Date() }) => {
+	const theme = useTheme();
+	const paused = campaign.metrics?.enrollmentPaused ?? null;
+	const backlog = campaign.metrics?.backlog ?? null;
+	const rampa = campaign.metrics?.rampa ?? null;
+	const historial = rampa?.historial ?? [];
+
+	const backlogRows = backlog
+		? Object.entries(backlog.pasos || {})
+				.map(([idx, r]) => {
+					const vencidos = r?.vencidos ?? 0;
+					const masAntiguo = r?.masAntiguo ?? null;
+					const espera = masAntiguo ? Math.max(0, (now.getTime() - new Date(masAntiguo).getTime()) / DAY_MS) : null;
+					return { paso: Number(idx) + 1, vencidos, masAntiguo, espera };
+				})
+				.sort((a, b) => a.paso - b.paso)
+		: [];
+	const hasBacklog = backlogRows.length > 0;
+	const hasRampa = !!rampa && (!!rampa.seguimientoDesde || !!rampa.lastChangeAt || historial.length > 0);
+
+	if (!paused && !hasBacklog && !hasRampa) return null;
+
+	return (
+		<Stack spacing={2} sx={{ mb: 2 }}>
+			{paused && (
+				<Alert severity="warning">
+					{`Ingresos frenados desde ${fmtDateTime(paused.since)}: ${describeEnrollmentPaused(paused)}.`}
+					{typeof paused.candidatos === "number" && paused.candidatos > 0 && ` ${fmt(paused.candidatos)} contactos esperan para entrar.`}
+				</Alert>
+			)}
+
+			{hasBacklog && (
+				<Box>
+					<Typography variant="subtitle2" gutterBottom>
+						Atraso por paso
+						<Typography component="span" variant="caption" color="textSecondary" sx={{ ml: 1 }}>
+							medido {fmtDateTime(backlog?.at)}
+						</Typography>
+					</Typography>
+					<TableContainer component={Paper} variant="outlined">
+						<Table size="small">
+							<TableHead>
+								<TableRow>
+									<TableCell>Paso</TableCell>
+									<TableCell align="right">Vencidos</TableCell>
+									<TableCell>Más antiguo</TableCell>
+									<TableCell align="right">Días de espera</TableCell>
+								</TableRow>
+							</TableHead>
+							<TableBody>
+								{backlogRows.map((r) => (
+									<TableRow key={r.paso} hover>
+										<TableCell>{r.paso}</TableCell>
+										<TableCell align="right">{fmt(r.vencidos)}</TableCell>
+										<TableCell>{fmtDateTime(r.masAntiguo)}</TableCell>
+										<TableCell align="right" sx={{ color: r.espera != null && r.espera >= 1 ? theme.palette.warning.dark : undefined }}>
+											{r.espera != null ? fmtDias(r.espera) : "—"}
+										</TableCell>
+									</TableRow>
+								))}
+							</TableBody>
+						</Table>
+					</TableContainer>
+				</Box>
+			)}
+
+			{hasRampa && rampa && (
+				<Box>
+					<Typography variant="subtitle2" gutterBottom>
+						Rampa
+					</Typography>
+					<Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 1 }}>
+						<Chip
+							size="small"
+							variant="outlined"
+							label={`Tope actual: ${campaign.settings?.dailyLimit ? fmt(campaign.settings.dailyLimit) : "sin tope"}`}
+						/>
+						<Chip
+							size="small"
+							variant="outlined"
+							label={
+								rampa.lastChangeAt
+									? `Último cambio: ${rampa.lastAction ? RAMPA_ACCION_LABEL[rampa.lastAction].toLowerCase() : "—"} ${fmtDateTime(
+											rampa.lastChangeAt,
+									  )}`
+									: `Sin cambios todavía; sigue la campaña desde ${fmtDateTime(rampa.seguimientoDesde)}`
+							}
+						/>
+					</Box>
+					{historial.length > 0 && (
+						<TableContainer component={Paper} variant="outlined">
+							<Table size="small">
+								<TableHead>
+									<TableRow>
+										<TableCell>Fecha</TableCell>
+										<TableCell>Tope</TableCell>
+										<TableCell>Acción</TableCell>
+										<TableCell>Motivo</TableCell>
+									</TableRow>
+								</TableHead>
+								<TableBody>
+									{[...historial].reverse().map((h, i) => (
+										<TableRow key={`${h.at}-${i}`} hover>
+											<TableCell>{fmtDateTime(h.at)}</TableCell>
+											<TableCell>
+												{fmt(h.de)} → {fmt(h.a)}
+											</TableCell>
+											<TableCell sx={{ color: h.accion === "baja" ? theme.palette.error.main : theme.palette.success.main }}>
+												{RAMPA_ACCION_LABEL[h.accion] ?? h.accion}
+											</TableCell>
+											<TableCell>{h.motivo}</TableCell>
+										</TableRow>
+									))}
+								</TableBody>
+							</Table>
+						</TableContainer>
+					)}
+				</Box>
+			)}
+		</Stack>
 	);
 };

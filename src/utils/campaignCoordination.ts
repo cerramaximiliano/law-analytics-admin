@@ -5,7 +5,11 @@
 import {
 	Campaign,
 	CampaignDeferredCount,
+	CampaignEnrollmentPaused,
+	EnrollmentGateConfig,
 	FrequencyPolicy,
+	QuotaPolicyConfig,
+	RampaConfig,
 	SchedulerFrequencyConfig,
 	SchedulerFrequencyDay,
 	SchedulerFrequencyState,
@@ -19,6 +23,29 @@ export const DEFAULT_FREQUENCY_POLICY: FrequencyPolicy = {
 	perishable: false,
 };
 
+// Bloques del plan de cupos (28/10/2026): decisiones del dueño, mismos defaults que el backend.
+export const DEFAULT_QUOTA_POLICY: QuotaPolicyConfig = {
+	mode: "secuencia_primero",
+	reservaNuevosPct: 0,
+	ordenVencidos: "mas_atrasado_primero",
+};
+
+export const DEFAULT_ENROLLMENT_GATE: EnrollmentGateConfig = {
+	enabled: true,
+	maxAtrasoDias: 2,
+	maxNuevosPorDia: 0,
+};
+
+export const DEFAULT_RAMPA: RampaConfig = {
+	enabled: true,
+	modo: "automatico",
+	pasoPct: 25,
+	diasEntrePasos: 3,
+	topePorCampana: 1500,
+	minCasosParaBajar: 3,
+	umbrales: { subirReboteMax: 2, subirQuejasMax: 0.08, bajarReboteMin: 3, bajarQuejasMin: 0.1 },
+};
+
 // Defaults del backend (services/scheduler/schedulerConfig.js); se usan solo si el endpoint no responde.
 export const DEFAULT_FREQUENCY_CONFIG: SchedulerFrequencyConfig = {
 	enabled: true,
@@ -28,6 +55,37 @@ export const DEFAULT_FREQUENCY_CONFIG: SchedulerFrequencyConfig = {
 	maxDeferralDays: 14,
 	reserveHours: 24,
 	exemptCategories: ["newsletter", "notification"],
+	quotaPolicy: DEFAULT_QUOTA_POLICY,
+	enrollmentGate: DEFAULT_ENROLLMENT_GATE,
+	rampa: DEFAULT_RAMPA,
+};
+
+const fmtNum = (n: number) => n.toLocaleString("es-AR");
+const fmtDias = (dias: number) => `${dias.toLocaleString("es-AR", { maximumFractionDigits: 1 })} ${dias === 1 ? "día" : "días"}`;
+
+// Texto del detalle de metrics.enrollmentPaused (el `paso` ya viene 1-based desde el backend).
+export const describeEnrollmentPaused = (paused: Pick<CampaignEnrollmentPaused, "reason" | "detalle">): string => {
+	const d = paused.detalle ?? {};
+	if (paused.reason === "tope_diario_nuevos") {
+		return `hoy ya entraron ${fmtNum(d.nuevosHoy ?? 0)} nuevos (máximo ${fmtNum(d.maxNuevosPorDia ?? 0)} por día)`;
+	}
+	return `paso ${d.paso ?? "?"} con ${fmtNum(d.vencidos ?? 0)} vencidos esperando ${fmtDias(d.dias ?? 0)} (máximo ${fmtDias(
+		d.maxAtrasoDias ?? 0,
+	)})`;
+};
+
+const isObj = (v: any): v is Record<string, any> => !!v && typeof v === "object" && !Array.isArray(v);
+
+// Mezcla campo a campo un bloque del backend con sus defaults (ignora null/undefined).
+const mergeBlock = <T extends Record<string, any>>(defaults: T, src: any): T => {
+	if (!isObj(src)) return defaults;
+	const out: Record<string, any> = { ...defaults };
+	Object.keys(defaults).forEach((k) => {
+		const v = src[k];
+		if (v === undefined || v === null) return;
+		out[k] = isObj(defaults[k]) ? mergeBlock(defaults[k], v) : v;
+	});
+	return out as T;
 };
 
 export const getPolicy = (campaign: Pick<Campaign, "frequencyPolicy">): FrequencyPolicy => ({
@@ -205,6 +263,9 @@ const pickConfig = (cfgSrc: any): Partial<SchedulerFrequencyConfig> =>
 			maxDeferralDays: cfgSrc?.maxDeferralDays,
 			reserveHours: cfgSrc?.reserveHours,
 			exemptCategories: Array.isArray(cfgSrc?.exemptCategories) ? cfgSrc.exemptCategories : undefined,
+			quotaPolicy: isObj(cfgSrc?.quotaPolicy) ? mergeBlock(DEFAULT_QUOTA_POLICY, cfgSrc.quotaPolicy) : undefined,
+			enrollmentGate: isObj(cfgSrc?.enrollmentGate) ? mergeBlock(DEFAULT_ENROLLMENT_GATE, cfgSrc.enrollmentGate) : undefined,
+			rampa: isObj(cfgSrc?.rampa) ? mergeBlock(DEFAULT_RAMPA, cfgSrc.rampa) : undefined,
 			timezone: cfgSrc?.timezone,
 			updatedAt: cfgSrc?.updatedAt,
 			updatedBy: cfgSrc?.updatedBy,

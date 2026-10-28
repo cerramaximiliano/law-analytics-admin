@@ -19,6 +19,7 @@ import { JourneyBucket, JourneyCampaign, JourneyLeakItem, JourneyMapData, Journe
 import { JourneyNodeId } from "./JourneyMap";
 import JourneyAccumulated from "./JourneyAccumulated";
 import { clickableProps } from "utils/a11y";
+import EnrollmentPausedChip from "./EnrollmentPausedChip";
 
 const fmt = (n: number | undefined | null) => (n === undefined || n === null ? "—" : n.toLocaleString("es-AR"));
 const STATUS_LABEL: Record<string, string> = { active: "Activa", paused: "Pausada", draft: "Borrador" };
@@ -52,10 +53,15 @@ const CampaignCard: React.FC<{ c: JourneyCampaign; highlighted: boolean; onOpen?
 			{c.status === "active" && !c.acceptsNew && (
 				<Chip size="small" label="Ya no inscribe nuevos" sx={{ bgcolor: "#fde047", color: DARK, fontWeight: 600 }} />
 			)}
+			<EnrollmentPausedChip paused={c.enrollmentPaused} />
 		</Box>
 		<Typography variant="caption" color="textSecondary" display="block" sx={{ mt: 0.5 }}>
 			{c.steps} pasos · {fmt(c.active)} inscriptos activos · segmento{" "}
-			{c.segment ? `${c.segment.name} (${fmt(c.segment.size)})` : "sin segmento"}
+			{c.segment
+				? `${c.segment.name} (${
+						c.status === "draft" && c.segment.liveSize != null ? `${fmt(c.segment.liveSize)} hoy` : fmt(c.segment.size)
+				  })`
+				: "sin segmento"}
 			{c.dailyLimit ? ` · tope ${fmt(c.dailyLimit)}/día` : ""}
 		</Typography>
 		{c.conditions && c.conditions.filters.length > 0 && (
@@ -186,6 +192,7 @@ const NODE_TITLES: Record<string, string> = {
 	cliente: "Cliente",
 	inactivo: "Inactivo · Reconquista",
 	activo_free: "Activo free",
+	interesados: "Interesados",
 	contenido: "Carril paralelo: contenido y servicio",
 };
 
@@ -257,7 +264,25 @@ const JourneyNodePanel: React.FC<Props> = ({ data, node, highlightCampaigns, onL
 	} else if (node === "cliente") {
 		note = `${fmt(stages.cliente.total)} usuarios con plan pago. No reciben campañas de recorrido.`;
 	} else if (node === "activo_free") {
-		note = `${fmt(stages.activo_free.total)} usuarios free con más de 30 días de alta y sin conversión: sin campaña por diseño.`;
+		const s = stages.activo_free;
+		campaigns = s.campaigns || [];
+		if (campaigns.length) {
+			scope = "activo_free";
+			buckets = [
+				{ key: "en_campania", label: "En campaña", kind: "ok", description: "", count: s.en_campania ?? 0 },
+				{ key: "sin_campania", label: "Sin campaña", kind: "fuga", description: "", count: s.sin_campania ?? 0 },
+			];
+			reasons = s.reasons || null;
+			note = `${fmt(
+				s.total,
+			)} usuarios free sin conversión. Los que no cumplen la condición de la campaña cuentan como "sin campaña" y se explica por qué.`;
+		} else {
+			note = `${fmt(s.total)} usuarios free con más de 30 días de alta y sin conversión: sin campaña por diseño.`;
+		}
+	} else if (node === "interesados") {
+		campaigns = data.captacion.campaigns.interesados || [];
+		note =
+			"Hicieron clic en una captación activa hace más de 72 h y no se registraron: salen de su variante y entran a esta campaña. Mientras no esté activa, esperan en el bucket «Interesados» de captación.";
 	}
 
 	const nodeTitle =
@@ -275,7 +300,7 @@ const JourneyNodePanel: React.FC<Props> = ({ data, node, highlightCampaigns, onL
 					{note}
 				</Alert>
 			)}
-			{data.v2 && node !== "registro" && node !== "cliente" && node !== "activo_free" && (
+			{data.v2 && node !== "registro" && node !== "cliente" && (
 				<>
 					<JourneyAccumulated
 						title={nodeTitle}
@@ -288,6 +313,64 @@ const JourneyNodePanel: React.FC<Props> = ({ data, node, highlightCampaigns, onL
 					)}
 				</>
 			)}
+			{node === "interesados" && data.captacion.interesados && (
+				<Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+					<Typography variant="subtitle2" gutterBottom>
+						Marcados como interesados
+					</Typography>
+					<Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 1 }}>
+						{(["7", "30", "90", "all"] as const).map((p) => (
+							<Chip
+								key={p}
+								size="small"
+								variant="outlined"
+								label={`${p === "all" ? "Todos" : `${p} días`}: ${fmt(data.captacion.interesados?.byPeriod?.[p])}`}
+							/>
+						))}
+					</Box>
+					<Typography variant="caption" fontWeight={700}>
+						De qué variante venían (última inscripción removida)
+					</Typography>
+					<ul style={{ margin: "2px 0 0 18px", padding: 0 }}>
+						{data.captacion.interesados.fromVariant.map((v) => (
+							<li key={v.campaignId || "sin"}>
+								<Typography variant="caption">
+									{v.name.replace("Captación PJN · ", "")} — <strong>{fmt(v.n)}</strong>
+								</Typography>
+							</li>
+						))}
+					</ul>
+				</Paper>
+			)}
+			{node === "captacion" && data.captacion.control && data.captacion.control.control.n > 0 && (
+				<Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+					<Typography variant="subtitle2" gutterBottom>
+						Grupo de control vs expuestos
+					</Typography>
+					<Typography variant="caption" color="textSecondary" display="block" sx={{ mb: 1 }}>
+						Entre contactos elegibles (válidos, no oficiales, no peritos/partes/empresas/organismos). Alta = se registró después de la
+						asignación. Con pocas altas la diferencia no es significativa.
+					</Typography>
+					<Box sx={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
+						{(
+							[
+								["Control (sin captación)", data.captacion.control.control, data.captacion.control.rateControl],
+								["Expuestos", data.captacion.control.expuestos, data.captacion.control.rateExpuestos],
+							] as const
+						).map(([label, g, rate]) => (
+							<Box key={label} sx={{ minWidth: 200 }}>
+								<Typography variant="caption" color="textSecondary">
+									{label}
+								</Typography>
+								<Typography variant="h5">{fmt(g.n)}</Typography>
+								<Typography variant="caption">
+									{fmt(g.altas)} altas · {rate.toFixed(3)} %
+								</Typography>
+							</Box>
+						))}
+					</Box>
+				</Paper>
+			)}
 			{buckets.length > 0 && (
 				<Box sx={{ mb: 2 }}>
 					<Typography variant="subtitle2" gutterBottom>
@@ -295,7 +378,7 @@ const JourneyNodePanel: React.FC<Props> = ({ data, node, highlightCampaigns, onL
 					</Typography>
 					<Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
 						{buckets.map((b) => (
-							<Tooltip key={b.key} title={b.description || ""} disableHoverListener={!b.description}>
+							<Tooltip key={b.key} title={b.description ? `${KIND_LABEL[b.kind]}: ${b.description}` : KIND_LABEL[b.kind]}>
 								<Chip
 									label={`${b.label}: ${fmt(b.count)}`}
 									onClick={() => setBucket(bucket === b.key ? null : b.key)}
@@ -305,7 +388,6 @@ const JourneyNodePanel: React.FC<Props> = ({ data, node, highlightCampaigns, onL
 										fontWeight: 600,
 										outline: bucket === b.key ? "2px solid #1f1f1f" : undefined,
 									}}
-									title={KIND_LABEL[b.kind]}
 								/>
 							</Tooltip>
 						))}
