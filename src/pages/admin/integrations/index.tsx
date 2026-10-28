@@ -526,7 +526,12 @@ const IntegrationsPage: React.FC = () => {
 				<Stack direction="row" spacing={0.5}>
 					<Tooltip title="Ver IntegrationsConfig (RAW JSON)">
 						<span>
-							<IconButton onClick={() => setRawOpen(true)} size="small" disabled={!integrations.data}>
+							<IconButton
+								aria-label="Ver IntegrationsConfig (JSON)"
+								onClick={() => setRawOpen(true)}
+								size="small"
+								disabled={!integrations.data}
+							>
 								<Code1 size={18} />
 							</IconButton>
 						</span>

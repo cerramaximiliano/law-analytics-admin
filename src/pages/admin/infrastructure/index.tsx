@@ -309,7 +309,7 @@ const InfrastructurePage = () => {
 						)}
 						<Tooltip title="Volver a consultar a cada box">
 							<span>
-								<IconButton size="small" onClick={() => fetchData(true)} disabled={loading}>
+								<IconButton aria-label="Volver a consultar a cada box" size="small" onClick={() => fetchData(true)} disabled={loading}>
 									{loading ? <CircularProgress size={16} /> : <Refresh size={18} />}
 								</IconButton>
 							</span>

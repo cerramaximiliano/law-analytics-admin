@@ -255,7 +255,13 @@ export default function CredencialesTab() {
 												}
 											>
 												<span>
-													<IconButton size="small" color="info" onClick={() => handleValidate(cred)} disabled={validatingIds.has(cred._id)}>
+													<IconButton
+														aria-label="Validar credencial"
+														size="small"
+														color="info"
+														onClick={() => handleValidate(cred)}
+														disabled={validatingIds.has(cred._id)}
+													>
 														{validatingIds.has(cred._id) ? <CircularProgress size={14} /> : <FlashCircle size={16} />}
 													</IconButton>
 												</span>

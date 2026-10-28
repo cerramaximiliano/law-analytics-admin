@@ -1321,7 +1321,7 @@ const ExtraccionTab = () => {
 						</ToggleButtonGroup>
 						<Tooltip title="Actualizar">
 							<span>
-								<IconButton onClick={cargar} disabled={cargando}>
+								<IconButton aria-label="Actualizar" onClick={cargar} disabled={cargando}>
 									<Refresh size={18} />
 								</IconButton>
 							</span>

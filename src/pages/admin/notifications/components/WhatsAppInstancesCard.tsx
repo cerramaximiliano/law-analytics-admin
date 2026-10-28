@@ -155,7 +155,7 @@ const WhatsAppInstancesCard = () => {
 				</Button>
 				<Tooltip title="Refrescar">
 					<span>
-						<IconButton size="small" onClick={load} disabled={loading}>
+						<IconButton aria-label="Refrescar" size="small" onClick={load} disabled={loading}>
 							<Refresh size={16} />
 						</IconButton>
 					</span>

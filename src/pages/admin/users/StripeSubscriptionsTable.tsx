@@ -407,7 +407,13 @@ const StripeSubscriptionsTable = () => {
 										</Tooltip>
 										<Tooltip title={canDelete(customer) ? "Eliminar cliente de Stripe" : "No se puede eliminar: tiene suscripción activa"}>
 											<span>
-												<IconButton color="error" onClick={() => handleDeleteClick(customer)} disabled={!canDelete(customer)} size="small">
+												<IconButton
+													aria-label="Eliminar cliente de Stripe"
+													color="error"
+													onClick={() => handleDeleteClick(customer)}
+													disabled={!canDelete(customer)}
+													size="small"
+												>
 													<Trash size={18} />
 												</IconButton>
 											</span>

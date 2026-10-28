@@ -51,6 +51,28 @@ const QUILL_MODULES = {
 	toolbar: [["bold", "italic", "underline"], [{ list: "ordered" }, { list: "bullet" }], ["link"], ["clean"]],
 };
 
+// Quill arma la barra con <button> de solo ícono y sin nombre: se lo damos al montar.
+const QUILL_BUTTON_LABELS: Record<string, string> = {
+	"ql-bold": "Negrita",
+	"ql-italic": "Cursiva",
+	"ql-underline": "Subrayado",
+	"ql-list:ordered": "Lista numerada",
+	"ql-list:bullet": "Lista con viñetas",
+	"ql-link": "Insertar link",
+	"ql-clean": "Quitar formato",
+};
+
+const labelQuillEditor = (container: HTMLDivElement | null) => {
+	if (!container) return;
+	container.querySelectorAll<HTMLButtonElement>(".ql-toolbar button").forEach((button) => {
+		const format = [...button.classList].find((c) => c.startsWith("ql-"));
+		const value = button.getAttribute("value");
+		const label = QUILL_BUTTON_LABELS[value ? `${format}:${value}` : format ?? ""];
+		if (label) button.setAttribute("aria-label", label);
+	});
+	container.querySelector(".ql-editor")?.setAttribute("aria-label", "Contenido");
+};
+
 const EMAIL_RE = /^[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}$/;
 const DEFAULT_SIGNATURE = "Saludos cordiales,\nMaximiliano — Equipo Law||Analytics";
 
@@ -389,7 +411,7 @@ const EmailComposer = () => {
 
 								<TextField size="small" fullWidth label="Asunto" value={subject} onChange={(e) => setSubject(e.target.value)} />
 
-								<Box>
+								<Box ref={labelQuillEditor}>
 									<Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: "block" }}>
 										Contenido
 									</Typography>

@@ -859,6 +859,7 @@ const FoldersPage = () => {
 																<Tooltip title={`Recalcular stats de folders del usuario ${folder.user.email || folder.user._id}`}>
 																	<span>
 																		<IconButton
+																			aria-label="Recalcular stats de folders del usuario"
 																			size="small"
 																			color="info"
 																			onClick={() => handleSyncFolderStats(folder.user!._id)}

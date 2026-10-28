@@ -1305,7 +1305,13 @@ const SocialStudio = () => {
 												<InputAdornment position="end" sx={{ alignSelf: "flex-start", mt: 0.5 }}>
 													<Tooltip title="Copiar caption">
 														<span>
-															<IconButton size="small" edge="end" disabled={!caption.trim()} onClick={() => copiarCaption(caption)}>
+															<IconButton
+																aria-label="Copiar caption"
+																size="small"
+																edge="end"
+																disabled={!caption.trim()}
+																onClick={() => copiarCaption(caption)}
+															>
 																<Copy size={16} />
 															</IconButton>
 														</span>
@@ -1890,6 +1896,7 @@ const SocialStudio = () => {
 													>
 														<span>
 															<IconButton
+																aria-label={p.estado === "publicado" ? "Volver a borrador" : "Marcar como publicado"}
 																size="small"
 																color={p.estado === "publicado" ? "success" : "default"}
 																disabled={p.estado === "programado"}
@@ -1901,7 +1908,12 @@ const SocialStudio = () => {
 													</Tooltip>
 													<Tooltip title={p.caption ? "Copiar caption al portapapeles" : "Este post no tiene caption"}>
 														<span>
-															<IconButton size="small" disabled={!p.caption} onClick={() => copiarCaption(p.caption)}>
+															<IconButton
+																aria-label="Copiar caption"
+																size="small"
+																disabled={!p.caption}
+																onClick={() => copiarCaption(p.caption)}
+															>
 																<ClipboardText size={16} />
 															</IconButton>
 														</span>

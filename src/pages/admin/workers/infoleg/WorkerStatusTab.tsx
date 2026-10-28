@@ -294,6 +294,7 @@ const WorkerStatusTab = () => {
 											<Tooltip title={`Reiniciar ${w.name}`}>
 												<span>
 													<IconButton
+														aria-label={`Reiniciar ${w.name}`}
 														size="small"
 														onClick={() => handleRestart(w.name)}
 														disabled={restarting === w.name || w.status === "unavailable"}

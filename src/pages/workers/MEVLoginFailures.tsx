@@ -309,6 +309,7 @@ const MEVCredentials = () => {
 													<Tooltip title="Ver screenshot">
 														<span>
 															<IconButton
+																aria-label="Ver screenshot"
 																size="small"
 																color="primary"
 																disabled={!f.screenshotBase64}

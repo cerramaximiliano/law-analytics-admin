@@ -825,7 +825,13 @@ const TasasInteres = () => {
 															<Stack direction="row" spacing={0.5} justifyContent="center">
 																<Tooltip title="Guardar (Enter)">
 																	<span>
-																		<IconButton size="small" color="success" onClick={() => handleSaveEdit(item)} disabled={isSaving}>
+																		<IconButton
+																			aria-label="Guardar"
+																			size="small"
+																			color="success"
+																			onClick={() => handleSaveEdit(item)}
+																			disabled={isSaving}
+																		>
 																			{isSaving ? <CircularProgress size={16} /> : <TickCircle size={18} />}
 																		</IconButton>
 																	</span>

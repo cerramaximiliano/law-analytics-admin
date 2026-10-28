@@ -133,7 +133,13 @@ const FilaJurisdiccion = ({ fila, sincronizando, onSync }: FilaProps) => {
 					{estado?.clave ? (
 						<Tooltip title={`Sincronizar ${fila.unidad} ${fila.ambito} contra la fuente oficial`}>
 							<span>
-								<IconButton size="small" color="primary" disabled={sincronizando !== null} onClick={() => onSync(estado.clave)}>
+								<IconButton
+									aria-label={`Sincronizar ${fila.unidad} ${fila.ambito}`}
+									size="small"
+									color="primary"
+									disabled={sincronizando !== null}
+									onClick={() => onSync(estado.clave)}
+								>
 									{sincronizando === estado.clave ? <CircularProgress size={16} /> : <CloudChange size={16} />}
 								</IconButton>
 							</span>
@@ -285,7 +291,7 @@ const ValoresArancelarios = () => {
 					</Button>
 					<Tooltip title="Recargar">
 						<span>
-							<IconButton onClick={cargar} disabled={cargando || sincronizando !== null}>
+							<IconButton aria-label="Recargar" onClick={cargar} disabled={cargando || sincronizando !== null}>
 								<Refresh size={18} />
 							</IconButton>
 						</span>

@@ -1057,6 +1057,7 @@ const UsersList = () => {
 														<Tooltip title="Recalcular stats de folders">
 															<span>
 																<IconButton
+																	aria-label="Recalcular stats de folders"
 																	color="info"
 																	onClick={() => handleSyncFolderStats(user._id || user.id || "")}
 																	disabled={syncingUserId === (user._id || user.id)}

@@ -245,7 +245,7 @@ const McpUsage: React.FC = () => {
 					</ToggleButtonGroup>
 					<Tooltip title="Actualizar">
 						<span>
-							<IconButton onClick={fetchData} disabled={loading} size="small">
+							<IconButton aria-label="Actualizar" onClick={fetchData} disabled={loading} size="small">
 								<Refresh size={18} />
 							</IconButton>
 						</span>

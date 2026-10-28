@@ -691,7 +691,7 @@ export default function PendientesTab({ onTotal }: { onTotal?: (n: number) => vo
 				<Chip size="small" variant="outlined" label={`${r.eventos} eventos · ${r.avisos} avisos · ${r.respuestas} respuestas`} />
 				<Tooltip title="Actualizar (la respuesta se guarda 60 s)">
 					<span>
-						<IconButton size="small" onClick={() => cargar(true)} disabled={cargando}>
+						<IconButton aria-label="Actualizar" size="small" onClick={() => cargar(true)} disabled={cargando}>
 							<Refresh size={16} />
 						</IconButton>
 					</span>

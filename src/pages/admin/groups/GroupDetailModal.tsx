@@ -234,6 +234,7 @@ function MembersTab({ groupId, onMemberRemoved }: MembersTabProps) {
 										<Tooltip title="Remover miembro">
 											<span>
 												<IconButton
+													aria-label="Remover miembro"
 													size="small"
 													color="error"
 													disabled={removing === userId}
@@ -384,6 +385,7 @@ function InvitationsTab({ groupId }: InvitationsTabProps) {
 											<Tooltip title="Revocar invitación">
 												<span>
 													<IconButton
+														aria-label="Revocar invitación"
 														size="small"
 														color="error"
 														disabled={cancelling === inv._id}

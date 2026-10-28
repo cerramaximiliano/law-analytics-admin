@@ -264,7 +264,7 @@ const PolicyRow = ({ campaign, exemptCategories, deferred, deferredLabel, resolv
 			<TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
 				<Tooltip title="Descartar cambios">
 					<span>
-						<IconButton size="small" disabled={!dirty || saving} onClick={() => setDraft(original)}>
+						<IconButton aria-label="Descartar cambios" size="small" disabled={!dirty || saving} onClick={() => setDraft(original)}>
 							<RotateLeft size={16} />
 						</IconButton>
 					</span>

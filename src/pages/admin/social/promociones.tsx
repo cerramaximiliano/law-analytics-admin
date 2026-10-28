@@ -319,7 +319,13 @@ const PromocionesMeta = () => {
 													{p.estado === "activa" ? (
 														<Tooltip title="Pausar">
 															<span>
-																<IconButton size="small" color="warning" disabled={ocupado} onClick={() => cambiarEstado(it, false)}>
+																<IconButton
+																	aria-label="Pausar"
+																	size="small"
+																	color="warning"
+																	disabled={ocupado}
+																	onClick={() => cambiarEstado(it, false)}
+																>
 																	{ocupado ? <CircularProgress size={14} /> : <PauseCircle size={18} />}
 																</IconButton>
 															</span>
@@ -327,7 +333,13 @@ const PromocionesMeta = () => {
 													) : p.estado === "pausada" ? (
 														<Tooltip title="Activar (empieza el gasto)">
 															<span>
-																<IconButton size="small" color="success" disabled={ocupado} onClick={() => setConfirmar(it)}>
+																<IconButton
+																	aria-label="Activar"
+																	size="small"
+																	color="success"
+																	disabled={ocupado}
+																	onClick={() => setConfirmar(it)}
+																>
 																	{ocupado ? <CircularProgress size={14} /> : <PlayCircle size={18} />}
 																</IconButton>
 															</span>

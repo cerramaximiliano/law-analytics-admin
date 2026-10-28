@@ -477,7 +477,7 @@ export default function DatabasesMonitoring() {
 						)}
 						<Tooltip title="Volver a consultar a cada base">
 							<span>
-								<IconButton size="small" onClick={() => load(true)} disabled={loading}>
+								<IconButton aria-label="Volver a consultar a cada base" size="small" onClick={() => load(true)} disabled={loading}>
 									{loading ? <CircularProgress size={16} /> : <Refresh size={18} />}
 								</IconButton>
 							</span>
