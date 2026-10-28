@@ -36,6 +36,55 @@ export interface RecurringSchedule {
 	lastExecutedAt?: Date | string;
 }
 
+// === Cupos y pasos (plan de cupos 28/10/2026, la-marketing-service) ===
+
+// Política de cupo del tick: cómo se reparte el tope diario entre los pasos vencidos y los nuevos.
+export type QuotaMode = "secuencia_primero" | "reserva" | "proporcional";
+export type OrdenVencidos = "mas_atrasado_primero" | "paso_mas_alto_primero";
+
+export interface QuotaPolicyConfig {
+	mode: QuotaMode;
+	reservaNuevosPct: number; // 0–100, solo cuenta en modo reserva
+	ordenVencidos: OrdenVencidos;
+}
+
+// Freno de ingresos: la sincronización no inscribe nuevos mientras un paso tenga vencidos esperando de más.
+export interface EnrollmentGateConfig {
+	enabled: boolean;
+	maxAtrasoDias: number; // 0–90
+	maxNuevosPorDia: number; // ≥ 0, 0 = sin tope
+}
+
+export interface RampaUmbrales {
+	subirReboteMax: number; // % de rebote por debajo del cual puede subir
+	subirQuejasMax: number; // % de quejas por debajo del cual puede subir
+	bajarReboteMin: number; // % de rebote desde el cual baja
+	bajarQuejasMin: number; // % de quejas desde el cual baja
+}
+
+export interface RampaConfig {
+	enabled: boolean;
+	modo: "sugerir" | "automatico";
+	pasoPct: number; // 1–100
+	diasEntrePasos: number; // 1–30 (días hábiles)
+	topePorCampana: number; // 1–50000
+	minCasosParaBajar: number; // 1–1000
+	umbrales: RampaUmbrales;
+}
+
+// Por campaña: 'heredar' usa la configuración global; null en un campo también hereda ese campo.
+export interface CampaignQuotaPolicy {
+	mode: "heredar" | QuotaMode;
+	reservaNuevosPct: number | null;
+	ordenVencidos: OrdenVencidos | null;
+}
+
+export interface CampaignEnrollmentGate {
+	mode: "heredar" | "activo" | "inactivo";
+	maxAtrasoDias: number | null;
+	maxNuevosPorDia: number | null;
+}
+
 export interface CampaignSettings {
 	throttleRate: number;
 	dailyLimit?: number; // Límite de emails por día (0 = sin límite)
@@ -47,9 +96,60 @@ export interface CampaignSettings {
 	retryConfig: RetryConfig;
 	sendingRestrictions?: SendingRestrictions;
 	recurringSchedule?: RecurringSchedule; // For recurring campaigns with fixed dates
+	quotaPolicy?: Partial<CampaignQuotaPolicy>;
+	enrollmentGate?: Partial<CampaignEnrollmentGate>;
+}
+
+// Atraso por paso medido por el scheduler cada 5 minutos. Las claves de `pasos` son el
+// sequenceIndex (0-based); en la UI se muestra como paso + 1.
+export interface CampaignBacklogStep {
+	vencidos: number;
+	masAntiguo: string | null; // fecha de vencimiento del más atrasado
+}
+
+export interface CampaignBacklog {
+	at: string;
+	pasos: Record<string, CampaignBacklogStep>;
+}
+
+export type EnrollmentPausedReason = "atraso" | "tope_diario_nuevos";
+
+export interface CampaignEnrollmentPaused {
+	since: string;
+	reason: EnrollmentPausedReason;
+	detalle: {
+		paso?: number; // ya viene 1-based
+		dias?: number;
+		vencidos?: number;
+		maxAtrasoDias?: number;
+		nuevosHoy?: number;
+		maxNuevosPorDia?: number;
+	};
+	candidatos?: number;
+	updatedAt?: string;
+}
+
+export type RampaAccion = "sube" | "baja";
+
+export interface CampaignRampaHistoryItem {
+	at: string;
+	de: number;
+	a: number;
+	accion: RampaAccion;
+	motivo: string;
+}
+
+export interface CampaignRampaMetrics {
+	seguimientoDesde?: string | null;
+	lastChangeAt?: string | null;
+	lastAction?: RampaAccion | null;
+	historial?: CampaignRampaHistoryItem[];
 }
 
 export interface CampaignMetrics {
+	backlog?: CampaignBacklog | null;
+	enrollmentPaused?: CampaignEnrollmentPaused | null;
+	rampa?: CampaignRampaMetrics | null;
 	totalContacts: number;
 	activeContacts: number;
 	completedContacts: number;
@@ -473,9 +573,19 @@ export interface SchedulerFrequencyConfig {
 	maxDeferralDays: number;
 	reserveHours: number;
 	exemptCategories: string[];
+	quotaPolicy: QuotaPolicyConfig;
+	enrollmentGate: EnrollmentGateConfig;
+	rampa: RampaConfig;
 	timezone?: string;
 	updatedAt?: string;
 	updatedBy?: string;
+}
+
+// PUT /api/scheduler/frequency: cada bloque se mezcla campo a campo en el backend.
+export interface SchedulerFrequencyPatch extends Partial<Omit<SchedulerFrequencyConfig, "quotaPolicy" | "enrollmentGate" | "rampa">> {
+	quotaPolicy?: Partial<QuotaPolicyConfig>;
+	enrollmentGate?: Partial<EnrollmentGateConfig>;
+	rampa?: Partial<Omit<RampaConfig, "umbrales">> & { umbrales?: Partial<RampaUmbrales> };
 }
 
 // Conteo normalizado de diferidos de una campaña. `byReason` usa los motivos del

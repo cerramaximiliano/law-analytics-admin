@@ -21,6 +21,7 @@ import { CloseCircle } from "iconsax-react";
 import { JourneyCampaignStats, JourneyMetrics, JourneyPeriod } from "api/journey";
 import { reasonLabel } from "../campaignReasons";
 import { biggestDropStep, dateShort, fmt, pct, per1000, periodConv, periodTotal, PERIOD_LABEL, ZERO } from "./journeyFormat";
+import EnrollmentPausedChip from "./EnrollmentPausedChip";
 
 const DARK = "#1f1f1f"; // chips ocre/amarillos con letra oscura
 const STATUS_LABEL: Record<string, string> = {
@@ -143,6 +144,7 @@ const JourneyCampaignDetail: React.FC<Props> = ({ campaign: c, period, onClose }
 						/>
 						<Chip size="small" variant="outlined" label={`${c.tipo}${c.subtipo ? ` · ${c.subtipo}` : ""}`} />
 						<Chip size="small" variant="outlined" label={`Período: ${PERIOD_LABEL[period]}`} />
+						<EnrollmentPausedChip paused={c.enrollmentPaused} />
 					</Box>
 					<IconButton onClick={onClose} size="small">
 						<CloseCircle variant="Bold" />

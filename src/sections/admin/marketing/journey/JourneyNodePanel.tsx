@@ -18,6 +18,7 @@ import {
 import { JourneyBucket, JourneyCampaign, JourneyLeakItem, JourneyMapData, JourneyReason, JourneyService } from "api/journey";
 import { JourneyNodeId } from "./JourneyMap";
 import JourneyAccumulated from "./JourneyAccumulated";
+import EnrollmentPausedChip from "./EnrollmentPausedChip";
 
 const fmt = (n: number | undefined | null) => (n === undefined || n === null ? "—" : n.toLocaleString("es-AR"));
 const STATUS_LABEL: Record<string, string> = { active: "Activa", paused: "Pausada", draft: "Borrador" };
@@ -51,6 +52,7 @@ const CampaignCard: React.FC<{ c: JourneyCampaign; highlighted: boolean; onOpen?
 			{c.status === "active" && !c.acceptsNew && (
 				<Chip size="small" label="Ya no inscribe nuevos" sx={{ bgcolor: "#fde047", color: DARK, fontWeight: 600 }} />
 			)}
+			<EnrollmentPausedChip paused={c.enrollmentPaused} />
 		</Box>
 		<Typography variant="caption" color="textSecondary" display="block" sx={{ mt: 0.5 }}>
 			{c.steps} pasos · {fmt(c.active)} inscriptos activos · segmento{" "}

@@ -2,6 +2,20 @@ import mktAxios from "utils/mktAxios";
 
 // Recorrido del contacto (la-marketing-service: /api/journey/*)
 
+// Ingresos frenados por el freno de ingresos (metrics.enrollmentPaused de la campaña); null o ausente = no frenada.
+export interface JourneyEnrollmentPaused {
+	since: string;
+	reason: "atraso" | "tope_diario_nuevos";
+	detalle: {
+		paso?: number; // ya viene 1-based
+		dias?: number;
+		vencidos?: number;
+		maxAtrasoDias?: number;
+		nuevosHoy?: number;
+		maxNuevosPorDia?: number;
+	};
+}
+
 export interface JourneyCampaign {
 	_id: string;
 	name: string;
@@ -10,6 +24,7 @@ export interface JourneyCampaign {
 	subtipo: string | null;
 	syncWithSegment: boolean;
 	acceptsNew: boolean;
+	enrollmentPaused?: JourneyEnrollmentPaused | null;
 	dailyLimit: number;
 	steps: number;
 	segment: { _id: string; name: string; size: number | null; liveSize?: number | null; calculatedAt: string | null } | null;
@@ -77,6 +92,7 @@ export interface JourneyCampaignStats {
 	status: string;
 	tipo: string;
 	subtipo: string | null;
+	enrollmentPaused?: JourneyEnrollmentPaused | null;
 	createdAt: string | null;
 	completedAt: string | null;
 	archivedAt: string | null;

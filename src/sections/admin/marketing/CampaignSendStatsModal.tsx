@@ -49,7 +49,7 @@ import CampaignAudienceFlowPanel from "./CampaignAudienceFlow";
 import CampaignConversionsPanel from "./CampaignConversionsPanel";
 import CampaignAccumulated from "./CampaignAccumulated";
 import { CampaignPricingStatus } from "./PricingStatus";
-import { CampaignFunnel, CampaignHeaderInfo, CampaignKpis } from "./CampaignOverview";
+import { CampaignFunnel, CampaignHeaderInfo, CampaignKpis, CampaignQuotaStatus } from "./CampaignOverview";
 import {
 	Campaign,
 	CampaignSendStatsSummary,
@@ -261,32 +261,6 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 		});
 	};
 
-	const getStatusLabel = (status: string) => {
-		const labels: Record<string, string> = {
-			queued: "En cola",
-			sent: "Enviado",
-			delivered: "Entregado",
-			bounced: "Rebotado",
-			complained: "Queja",
-			failed: "Fallido",
-			unsubscribed: "Desuscrito",
-		};
-		return labels[status] || status;
-	};
-
-	const getStatusColor = (status: string) => {
-		const colors: Record<string, "default" | "primary" | "success" | "warning" | "error" | "info"> = {
-			queued: "default",
-			sent: "primary",
-			delivered: "success",
-			bounced: "error",
-			complained: "warning",
-			failed: "error",
-			unsubscribed: "warning",
-		};
-		return colors[status] || "default";
-	};
-
 	// Stat Card component
 	const StatCard = ({
 		title,
@@ -394,6 +368,7 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 						<CampaignPricingStatus campaignId={campaign._id as string} sx={{ mb: 1.5 }} />
 						<CampaignHeaderInfo campaign={campaign} frequency={frequency} steps={audience?.meta?.sequenceLength ?? null} />
 						<CampaignKpis campaign={campaign} summary={stats?.summary ?? null} flow={flow} />
+						<CampaignQuotaStatus campaign={campaign} />
 					</>
 				)}
 

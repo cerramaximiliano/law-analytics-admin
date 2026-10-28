@@ -14,6 +14,7 @@ import {
 	AvailablePromo,
 	CampaignDiscountUsage,
 	SchedulerFrequencyConfig,
+	SchedulerFrequencyPatch,
 	SchedulerFrequencyState,
 } from "types/campaign";
 import { normalizeFrequencyConfig, normalizeFrequencyResponse } from "utils/campaignCoordination";
@@ -629,8 +630,8 @@ export const SchedulerFrequencyService = {
 		return normalizeFrequencyResponse(response.data);
 	},
 
-	// Acepta campos parciales; responde solo { config }.
-	updateFrequency: async (config: Partial<SchedulerFrequencyConfig>): Promise<SchedulerFrequencyConfig> => {
+	// Acepta campos parciales (los bloques quotaPolicy/enrollmentGate/rampa se mezclan campo a campo); responde solo { config }.
+	updateFrequency: async (config: SchedulerFrequencyPatch): Promise<SchedulerFrequencyConfig> => {
 		const response = await mktAxios.put("/api/scheduler/frequency", config);
 		return normalizeFrequencyConfig(response.data);
 	},

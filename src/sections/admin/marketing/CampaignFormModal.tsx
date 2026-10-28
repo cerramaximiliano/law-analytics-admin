@@ -41,11 +41,24 @@ import "dayjs/locale/es";
 import { InfoCircle } from "iconsax-react";
 
 // project imports
-import { Campaign, CampaignInput, CampaignType, AvailablePromo, CampaignTipo } from "types/campaign";
-import { CampaignService } from "store/reducers/campaign";
+import {
+	Campaign,
+	CampaignInput,
+	CampaignType,
+	AvailablePromo,
+	CampaignTipo,
+	CampaignEnrollmentGate,
+	CampaignQuotaPolicy,
+	CampaignSettings,
+	OrdenVencidos,
+	QuotaMode,
+	SchedulerFrequencyConfig,
+} from "types/campaign";
+import { CampaignService, SchedulerFrequencyService } from "store/reducers/campaign";
 import { SegmentService } from "store/reducers/segments";
 import { useSnackbar } from "notistack";
 import { DEFAULT_FREQUENCY_POLICY, getPolicy } from "utils/campaignCoordination";
+import { ORDEN_VENCIDOS_LABEL, QUOTA_MODE_HELP, QUOTA_MODE_LABEL } from "./coordination/labels";
 
 // Extend dayjs with timezone support
 dayjs.extend(utc);
@@ -98,7 +111,90 @@ interface FormValues {
 	exempt: boolean;
 	pausesLowerPriority: boolean;
 	perishable: boolean;
+	// Cupo y prioridad de pasos (settings.quotaPolicy / settings.enrollmentGate). "" = hereda ese campo.
+	quotaMode: CampaignQuotaPolicy["mode"];
+	quotaReservaPct: number | "";
+	quotaOrdenVencidos: OrdenVencidos | "";
+	gateMode: CampaignEnrollmentGate["mode"];
+	gateMaxAtrasoDias: number | "";
+	gateMaxNuevosPorDia: number | "";
 }
+
+type CupoValues = Pick<
+	FormValues,
+	"quotaMode" | "quotaReservaPct" | "quotaOrdenVencidos" | "gateMode" | "gateMaxAtrasoDias" | "gateMaxNuevosPorDia"
+>;
+
+const CUPO_HEREDAR: CupoValues = {
+	quotaMode: "heredar",
+	quotaReservaPct: "",
+	quotaOrdenVencidos: "",
+	gateMode: "heredar",
+	gateMaxAtrasoDias: "",
+	gateMaxNuevosPorDia: "",
+};
+
+// Valores del formulario a partir de lo guardado en la campaña.
+const cupoValuesFromCampaign = (campaign: Campaign | null | undefined): CupoValues => {
+	const qp = campaign?.settings?.quotaPolicy;
+	const eg = campaign?.settings?.enrollmentGate;
+	return {
+		quotaMode: qp?.mode || "heredar",
+		quotaReservaPct: typeof qp?.reservaNuevosPct === "number" ? qp.reservaNuevosPct : "",
+		quotaOrdenVencidos: qp?.ordenVencidos || "",
+		gateMode: eg?.mode || "heredar",
+		gateMaxAtrasoDias: typeof eg?.maxAtrasoDias === "number" ? eg.maxAtrasoDias : "",
+		gateMaxNuevosPorDia: typeof eg?.maxNuevosPorDia === "number" ? eg.maxNuevosPorDia : "",
+	};
+};
+
+const numOrNull = (v: number | "") => (v === "" ? null : Number(v));
+
+// Payloads exactos para settings.quotaPolicy / settings.enrollmentGate (heredar limpia los campos).
+const toQuotaPayload = (v: CupoValues): CampaignQuotaPolicy =>
+	v.quotaMode === "heredar"
+		? { mode: "heredar", reservaNuevosPct: null, ordenVencidos: null }
+		: {
+				mode: v.quotaMode,
+				reservaNuevosPct: v.quotaMode === "reserva" ? numOrNull(v.quotaReservaPct) : null,
+				ordenVencidos: v.quotaOrdenVencidos || null,
+		  };
+
+const toGatePayload = (v: CupoValues): CampaignEnrollmentGate =>
+	v.gateMode === "heredar"
+		? { mode: "heredar", maxAtrasoDias: null, maxNuevosPorDia: null }
+		: { mode: v.gateMode, maxAtrasoDias: numOrNull(v.gateMaxAtrasoDias), maxNuevosPorDia: numOrNull(v.gateMaxNuevosPorDia) };
+
+const sameJson = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+
+const omitCupoKeys = (settings: CampaignSettings): CampaignSettings => {
+	const rest: CampaignSettings = { ...settings };
+	delete rest.quotaPolicy;
+	delete rest.enrollmentGate;
+	return rest;
+};
+
+// Solo las claves de cupo que el usuario editó (el PUT guarda cada clave de settings por separado).
+const cupoSettingsPatch = (values: CupoValues, original: CupoValues | null): Partial<CampaignSettings> => {
+	const patch: Partial<CampaignSettings> = {};
+	const quota = toQuotaPayload(values);
+	const gate = toGatePayload(values);
+	if (original ? !sameJson(quota, toQuotaPayload(original)) : quota.mode !== "heredar") patch.quotaPolicy = quota;
+	if (original ? !sameJson(gate, toGatePayload(original)) : gate.mode !== "heredar") patch.enrollmentGate = gate;
+	return patch;
+};
+
+const QUOTA_MODES: QuotaMode[] = ["secuencia_primero", "reserva", "proporcional"];
+const ORDENES: OrdenVencidos[] = ["mas_atrasado_primero", "paso_mas_alto_primero"];
+
+// Campo numérico opcional del formulario ("" = hereda el valor global).
+const optionalInt = (min: number, max: number) =>
+	Yup.number()
+		.transform((value, originalValue) => (originalValue === "" || originalValue === null ? null : value))
+		.nullable()
+		.integer("Tiene que ser un número entero")
+		.min(min, `Mínimo ${min}`)
+		.max(max, `Máximo ${max}`);
 
 // validation schema
 const validationSchema = Yup.object({
@@ -140,6 +236,9 @@ const validationSchema = Yup.object({
 		.min(0, "Mínimo 0")
 		.max(100, "Máximo 100")
 		.required("La prioridad es requerida"),
+	quotaReservaPct: optionalInt(0, 100),
+	gateMaxAtrasoDias: optionalInt(0, 90),
+	gateMaxNuevosPorDia: optionalInt(0, 1000000),
 	allowedDays: Yup.array().of(Yup.number()).min(1, "Debe seleccionar al menos un día"),
 	timeWindowStart: Yup.string().matches(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, "Formato inválido (HH:MM)"),
 	timeWindowEnd: Yup.string()
@@ -221,8 +320,17 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 	const [showTypeHelp, setShowTypeHelp] = useState(false);
 	const [promos, setPromos] = useState<AvailablePromo[]>([]);
 	const [segmentName, setSegmentName] = useState<string | null>(null);
+	// Configuración global de cupos, solo para mostrar qué hereda la campaña (si falla, no se muestra).
+	const [globalConfig, setGlobalConfig] = useState<SchedulerFrequencyConfig | null>(null);
 	const isEditMode = mode === "edit";
 	const { enqueueSnackbar } = useSnackbar();
+
+	useEffect(() => {
+		if (!open) return;
+		SchedulerFrequencyService.getFrequency()
+			.then((state) => setGlobalConfig(state.config))
+			.catch(() => setGlobalConfig(null));
+	}, [open]);
 
 	// Cargar promos disponibles al abrir (para el selector de promo adjunta)
 	useEffect(() => {
@@ -280,6 +388,8 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 		exempt: DEFAULT_FREQUENCY_POLICY.exempt,
 		pausesLowerPriority: DEFAULT_FREQUENCY_POLICY.pausesLowerPriority,
 		perishable: DEFAULT_FREQUENCY_POLICY.perishable,
+		// Cupo y prioridad de pasos: hereda la configuración global
+		...CUPO_HEREDAR,
 	};
 
 	// Formik setup
@@ -336,7 +446,9 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 							perishable: values.perishable,
 						},
 						settings: {
-							...campaign.settings,
+							// quotaPolicy y enrollmentGate van aparte: solo si el usuario los editó.
+							...omitCupoKeys(campaign.settings),
+							...cupoSettingsPatch(values, cupoValuesFromCampaign(campaign)),
 							timezone: values.timezone,
 							throttleRate: values.throttleRate,
 							dailyLimit: values.dailyLimit,
@@ -386,6 +498,7 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 							perishable: values.perishable,
 						},
 						settings: {
+							...cupoSettingsPatch(values, null),
 							timezone: values.timezone,
 							throttleRate: values.throttleRate,
 							dailyLimit: values.dailyLimit,
@@ -511,6 +624,8 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 						perishable: policy.perishable,
 					};
 				})(),
+				// Cupo y prioridad de pasos
+				...cupoValuesFromCampaign(campaign),
 			});
 		} else {
 			// Reset to defaults for create mode
@@ -1097,6 +1212,191 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 								/>
 							</Stack>
 						</Grid>
+
+						<Grid item xs={12}>
+							<Divider />
+						</Grid>
+
+						{/* Cupo y prioridad de pasos (settings.quotaPolicy / settings.enrollmentGate) */}
+						<Grid item xs={12}>
+							<Typography variant="h5" gutterBottom>
+								Cupo y prioridad de pasos
+							</Typography>
+							<Typography variant="body2" color="textSecondary" sx={{ mb: 1 }}>
+								Cómo reparte esta campaña su tope diario entre los pasos vencidos y los nuevos, y cuándo deja de inscribir contactos. Las
+								reglas globales están en Marketing, Coordinación de campañas, tarjeta Cupos y pasos.
+							</Typography>
+							<FormControlLabel
+								control={
+									<Switch
+										checked={formik.values.quotaMode === "heredar" && formik.values.gateMode === "heredar"}
+										onChange={(e) => {
+											if (e.target.checked) {
+												Object.entries(CUPO_HEREDAR).forEach(([k, v]) => formik.setFieldValue(k, v));
+											} else {
+												formik.setFieldValue("quotaMode", globalConfig?.quotaPolicy.mode ?? "secuencia_primero");
+												formik.setFieldValue("gateMode", globalConfig && !globalConfig.enrollmentGate.enabled ? "inactivo" : "activo");
+											}
+										}}
+									/>
+								}
+								label={
+									<Box>
+										<Typography variant="subtitle2">Heredar la configuración global</Typography>
+										<Typography variant="caption" color="textSecondary">
+											{globalConfig
+												? `Global: ${QUOTA_MODE_LABEL[globalConfig.quotaPolicy.mode].toLowerCase()}` +
+												  (globalConfig.quotaPolicy.mode === "reserva"
+														? ` (${globalConfig.quotaPolicy.reservaNuevosPct} % para nuevos)`
+														: "") +
+												  `, ${ORDEN_VENCIDOS_LABEL[globalConfig.quotaPolicy.ordenVencidos].toLowerCase()}; freno ${
+														globalConfig.enrollmentGate.enabled
+															? `activo a los ${globalConfig.enrollmentGate.maxAtrasoDias} días`
+															: "inactivo"
+												  }${
+														globalConfig.enrollmentGate.maxNuevosPorDia > 0
+															? `, ${globalConfig.enrollmentGate.maxNuevosPorDia} nuevos por día`
+															: ""
+												  }.`
+												: "Usa la política de cupo y el freno de ingresos globales."}
+										</Typography>
+									</Box>
+								}
+							/>
+						</Grid>
+
+						{!(formik.values.quotaMode === "heredar" && formik.values.gateMode === "heredar") && (
+							<>
+								<Grid item xs={12} md={6}>
+									<FormControl fullWidth>
+										<InputLabel id="quota-mode-label">Política de cupo</InputLabel>
+										<Select
+											labelId="quota-mode-label"
+											name="quotaMode"
+											label="Política de cupo"
+											value={formik.values.quotaMode}
+											onChange={formik.handleChange}
+										>
+											<MenuItem value="heredar">Heredar la global</MenuItem>
+											{QUOTA_MODES.map((m) => (
+												<MenuItem key={m} value={m}>
+													{QUOTA_MODE_LABEL[m]}
+												</MenuItem>
+											))}
+										</Select>
+										<FormHelperText>
+											{formik.values.quotaMode === "heredar" ? "Usa la política de cupo global." : QUOTA_MODE_HELP[formik.values.quotaMode]}
+										</FormHelperText>
+									</FormControl>
+								</Grid>
+
+								{formik.values.quotaMode !== "heredar" && (
+									<>
+										<Grid item xs={12} md={6}>
+											<FormControl fullWidth>
+												<InputLabel id="quota-orden-label">Orden de vencidos</InputLabel>
+												<Select
+													labelId="quota-orden-label"
+													name="quotaOrdenVencidos"
+													label="Orden de vencidos"
+													value={formik.values.quotaOrdenVencidos}
+													onChange={formik.handleChange}
+												>
+													<MenuItem value="">Heredar el global</MenuItem>
+													{ORDENES.map((o) => (
+														<MenuItem key={o} value={o}>
+															{ORDEN_VENCIDOS_LABEL[o]}
+														</MenuItem>
+													))}
+												</Select>
+											</FormControl>
+										</Grid>
+										{formik.values.quotaMode === "reserva" && (
+											<Grid item xs={12} md={6}>
+												<TextField
+													fullWidth
+													id="quotaReservaPct"
+													name="quotaReservaPct"
+													label="Reserva para nuevos (%)"
+													type="number"
+													value={formik.values.quotaReservaPct}
+													onChange={formik.handleChange}
+													onBlur={formik.handleBlur}
+													error={formik.touched.quotaReservaPct && Boolean(formik.errors.quotaReservaPct)}
+													helperText={
+														(formik.touched.quotaReservaPct && formik.errors.quotaReservaPct) ||
+														"0 a 100. Vacío hereda el porcentaje global."
+													}
+													inputProps={{ min: 0, max: 100 }}
+												/>
+											</Grid>
+										)}
+									</>
+								)}
+
+								<Grid item xs={12} md={6}>
+									<FormControl fullWidth>
+										<InputLabel id="gate-mode-label">Freno de ingresos</InputLabel>
+										<Select
+											labelId="gate-mode-label"
+											name="gateMode"
+											label="Freno de ingresos"
+											value={formik.values.gateMode}
+											onChange={formik.handleChange}
+										>
+											<MenuItem value="heredar">Heredar el global</MenuItem>
+											<MenuItem value="activo">Activo</MenuItem>
+											<MenuItem value="inactivo">Inactivo</MenuItem>
+										</Select>
+										<FormHelperText>
+											{formik.values.gateMode === "inactivo"
+												? "Inscribe nuevos aunque la secuencia esté atrasada."
+												: "No inscribe nuevos mientras un paso tenga vencidos esperando de más."}
+										</FormHelperText>
+									</FormControl>
+								</Grid>
+
+								{formik.values.gateMode === "activo" && (
+									<>
+										<Grid item xs={12} md={6}>
+											<TextField
+												fullWidth
+												id="gateMaxAtrasoDias"
+												name="gateMaxAtrasoDias"
+												label="Días de atraso"
+												type="number"
+												value={formik.values.gateMaxAtrasoDias}
+												onChange={formik.handleChange}
+												onBlur={formik.handleBlur}
+												error={formik.touched.gateMaxAtrasoDias && Boolean(formik.errors.gateMaxAtrasoDias)}
+												helperText={
+													(formik.touched.gateMaxAtrasoDias && formik.errors.gateMaxAtrasoDias) || "0 a 90. Vacío hereda el valor global."
+												}
+												inputProps={{ min: 0, max: 90 }}
+											/>
+										</Grid>
+										<Grid item xs={12} md={6}>
+											<TextField
+												fullWidth
+												id="gateMaxNuevosPorDia"
+												name="gateMaxNuevosPorDia"
+												label="Nuevos por día"
+												type="number"
+												value={formik.values.gateMaxNuevosPorDia}
+												onChange={formik.handleChange}
+												onBlur={formik.handleBlur}
+												error={formik.touched.gateMaxNuevosPorDia && Boolean(formik.errors.gateMaxNuevosPorDia)}
+												helperText={
+													(formik.touched.gateMaxNuevosPorDia && formik.errors.gateMaxNuevosPorDia) ||
+													"0 = sin tope. Vacío hereda el valor global."
+												}
+												inputProps={{ min: 0 }}
+											/>
+										</Grid>
+									</>
+								)}
+							</>
+						)}
 
 						<Grid item xs={12}>
 							<Divider />

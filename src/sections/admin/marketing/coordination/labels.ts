@@ -1,4 +1,37 @@
-import { CampaignStatus, CampaignType } from "types/campaign";
+import { CampaignStatus, CampaignType, EnrollmentPausedReason, OrdenVencidos, QuotaMode, RampaAccion } from "types/campaign";
+
+// Cupos y pasos (plan de cupos 28/10/2026)
+export const QUOTA_MODE_LABEL: Record<QuotaMode, string> = {
+	secuencia_primero: "Secuencia primero",
+	reserva: "Reserva para nuevos",
+	proporcional: "Proporcional",
+};
+
+export const QUOTA_MODE_HELP: Record<QuotaMode, string> = {
+	secuencia_primero: "Primero los que ya están en la secuencia, del más atrasado al más nuevo; lo que sobra va a nuevos.",
+	reserva: "Igual, pero guarda un porcentaje del cupo para nuevos.",
+	proporcional: "Reparte el cupo por tamaño de cada paso (comportamiento anterior).",
+};
+
+export const ORDEN_VENCIDOS_LABEL: Record<OrdenVencidos, string> = {
+	mas_atrasado_primero: "Más atrasado primero",
+	paso_mas_alto_primero: "Paso más alto primero",
+};
+
+export const RAMPA_MODO_LABEL: Record<"sugerir" | "automatico", string> = {
+	automatico: "Automática",
+	sugerir: "Solo sugiere",
+};
+
+export const RAMPA_ACCION_LABEL: Record<RampaAccion, string> = {
+	sube: "Subió",
+	baja: "Bajó",
+};
+
+export const ENROLLMENT_PAUSED_REASON_LABEL: Record<EnrollmentPausedReason, string> = {
+	atraso: "atraso en la secuencia",
+	tope_diario_nuevos: "tope diario de nuevos",
+};
 
 export const CAMPAIGN_TYPE_LABEL: Record<CampaignType, string> = {
 	onetime: "Única",
