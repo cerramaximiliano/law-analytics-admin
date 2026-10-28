@@ -323,7 +323,7 @@ const SegmentsPanel = () => {
 							InputProps={{
 								endAdornment: (
 									<InputAdornment position="end">
-										<IconButton onClick={handleApplySearch} edge="end">
+										<IconButton aria-label="Buscar" onClick={handleApplySearch} edge="end">
 											<SearchNormal1 size={18} />
 										</IconButton>
 									</InputAdornment>
@@ -408,7 +408,7 @@ const SegmentsPanel = () => {
 											<Typography variant="body2">
 												{segment.description
 													? segment.description.length > 50
-														? `${segment.description.substring(0, 50)}...`
+														? `${segment.description.substring(0, 50)}…`
 														: segment.description
 													: "-"}
 											</Typography>
@@ -439,7 +439,7 @@ const SegmentsPanel = () => {
 											</Typography>
 										</TableCell>
 										<TableCell>
-											<Typography variant="body2">{segment.createdAt ? new Date(segment.createdAt).toLocaleDateString() : "-"}</Typography>
+											<Typography variant="body2">{segment.createdAt ? new Date(segment.createdAt).toLocaleDateString("es-AR") : "-"}</Typography>
 										</TableCell>
 										<TableCell>
 											<Typography variant="body2">

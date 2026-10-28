@@ -99,6 +99,7 @@ import AdminAiUsageService, {
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/es";
+import { formatBytes as formatBytesUtil, formatDate as formatDateUtil } from "utils/format";
 
 dayjs.extend(relativeTime);
 dayjs.locale("es");
@@ -171,7 +172,7 @@ const getUserDisplay = (userId: ResourceUser | string): string => {
 
 const formatDate = (date: string | undefined): string => {
 	if (!date) return "-";
-	return dayjs(date).format("DD/MM/YYYY HH:mm");
+	return formatDateUtil(date, "dateTime");
 };
 
 const formatCurrency = (amount: number | undefined): string => {
@@ -180,11 +181,7 @@ const formatCurrency = (amount: number | undefined): string => {
 };
 
 const formatBytes = (bytes: number): string => {
-	if (bytes === 0) return "0 B";
-	const k = 1024;
-	const sizes = ["B", "KB", "MB", "GB"];
-	const i = Math.floor(Math.log(bytes) / Math.log(k));
-	return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+	return formatBytesUtil(bytes, 2);
 };
 
 // Etiquetas de la fila/gate que ve el usuario (espejo de ROW_LABEL/GATE_LABEL de UserViewGuide).
@@ -562,7 +559,7 @@ const StatCard: React.FC<StatCardProps> = ({ label, value, icon, loading }) => {
 								fontVariantNumeric: "tabular-nums",
 							}}
 						>
-							{value.toLocaleString()}
+							{value.toLocaleString("es-AR")}
 						</Typography>
 					)}
 				</Box>
@@ -1345,7 +1342,7 @@ const UserResources: React.FC = () => {
 			<Box sx={{ p: { xs: 1.5, sm: 2 }, display: "flex", gap: 2 }}>
 				<TextField
 					size="small"
-					placeholder="Buscar..."
+					placeholder="Buscar…"
 					value={searchInput}
 					onChange={(e) => setSearchInput(e.target.value)}
 					onKeyPress={handleKeyPress}
@@ -1359,7 +1356,7 @@ const UserResources: React.FC = () => {
 						),
 						endAdornment: searchInput && (
 							<InputAdornment position="end">
-								<IconButton size="small" onClick={handleClearSearch}>
+								<IconButton aria-label="Limpiar búsqueda" size="small" onClick={handleClearSearch}>
 									<CloseCircle size={16} />
 								</IconButton>
 							</InputAdornment>
@@ -1414,7 +1411,7 @@ const UserResources: React.FC = () => {
 												<Skeleton variant="text" width={40} height={28} />
 											) : (
 												<Typography variant="h5" fontWeight={600} sx={{ fontVariantNumeric: "tabular-nums" }}>
-													{activityStats?.summary.successfulLogins.toLocaleString() || 0}
+													{activityStats?.summary.successfulLogins.toLocaleString("es-AR") || 0}
 												</Typography>
 											)}
 										</Box>
@@ -1443,7 +1440,7 @@ const UserResources: React.FC = () => {
 												<Skeleton variant="text" width={40} height={28} />
 											) : (
 												<Typography variant="h5" fontWeight={600} sx={{ fontVariantNumeric: "tabular-nums" }}>
-													{activityStats?.summary.uniqueUsers.toLocaleString() || 0}
+													{activityStats?.summary.uniqueUsers.toLocaleString("es-AR") || 0}
 												</Typography>
 											)}
 										</Box>
@@ -1472,7 +1469,7 @@ const UserResources: React.FC = () => {
 												<Skeleton variant="text" width={40} height={28} />
 											) : (
 												<Typography variant="h5" fontWeight={600} sx={{ fontVariantNumeric: "tabular-nums" }}>
-													{activityStats?.byLoginMethod?.google?.toLocaleString() || 0}
+													{activityStats?.byLoginMethod?.google?.toLocaleString("es-AR") || 0}
 												</Typography>
 											)}
 										</Box>
@@ -1501,7 +1498,7 @@ const UserResources: React.FC = () => {
 												<Skeleton variant="text" width={40} height={28} />
 											) : (
 												<Typography variant="h5" fontWeight={600} sx={{ fontVariantNumeric: "tabular-nums" }}>
-													{activityStats?.byLoginMethod?.password?.toLocaleString() || 0}
+													{activityStats?.byLoginMethod?.password?.toLocaleString("es-AR") || 0}
 												</Typography>
 											)}
 										</Box>
@@ -1603,7 +1600,7 @@ const UserResources: React.FC = () => {
 													<Box>
 														<Typography variant="body2">{dayjs(user.lastLogin).fromNow()}</Typography>
 														<Typography variant="caption" color="textSecondary">
-															{dayjs(user.lastLogin).format("DD/MM/YY HH:mm")}
+															{formatDateUtil(user.lastLogin, "dateTimeShort")}
 														</Typography>
 													</Box>
 												) : (
@@ -1659,7 +1656,7 @@ const UserResources: React.FC = () => {
 												variant="h6"
 												sx={{ fontWeight: 700, color: s.color, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
 											>
-												{s.value.toLocaleString()}
+												{s.value.toLocaleString("es-AR")}
 											</Typography>
 										</Paper>
 									</Grid>
@@ -1997,7 +1994,7 @@ const UserResources: React.FC = () => {
 													</Box>
 												</TableCell>
 												<TableCell>
-													<Typography variant="caption">{row.lastSentAt ? dayjs(row.lastSentAt).format("DD/MM/YY HH:mm") : "-"}</Typography>
+													<Typography variant="caption">{row.lastSentAt ? formatDateUtil(row.lastSentAt, "dateTimeShort") : "-"}</Typography>
 												</TableCell>
 												<TableCell align="right">
 													<Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>
@@ -2005,7 +2002,7 @@ const UserResources: React.FC = () => {
 													</Typography>
 													{row.lastMovementViewAt && (
 														<Typography variant="caption" color="textSecondary" display="block">
-															últ. {dayjs(row.lastMovementViewAt).format("DD/MM/YY")}
+															últ. {formatDateUtil(row.lastMovementViewAt, "dateShort")}
 														</Typography>
 													)}
 												</TableCell>
@@ -2016,7 +2013,7 @@ const UserResources: React.FC = () => {
 													</Typography>
 													{row.lastEmailVisitAt && (
 														<Typography variant="caption" color="textSecondary" display="block">
-															últ. {dayjs(row.lastEmailVisitAt).format("DD/MM/YY")}
+															últ. {formatDateUtil(row.lastEmailVisitAt, "dateShort")}
 														</Typography>
 													)}
 												</TableCell>
@@ -2263,7 +2260,7 @@ const UserResources: React.FC = () => {
 														<Box>
 															<Typography variant="body2">{dayjs(row.lastUsedAt).fromNow()}</Typography>
 															<Typography variant="caption" color="textSecondary">
-																{dayjs(row.lastUsedAt).format("DD/MM/YY HH:mm")}
+																{formatDateUtil(row.lastUsedAt, "dateTimeShort")}
 															</Typography>
 														</Box>
 													) : (
@@ -2477,7 +2474,7 @@ const UserResources: React.FC = () => {
 								startIcon={<Trash size={14} />}
 								disabled={aiResetting}
 							>
-								{aiResetting ? "Reseteando..." : "Resetear"}
+								{aiResetting ? "Reseteando…" : "Resetear"}
 							</Button>
 						</DialogActions>
 					</Dialog>
@@ -2826,7 +2823,7 @@ const UserResources: React.FC = () => {
 														<Box>
 															<Typography variant="body2">{dayjs(sessionMetrics[user._id].lastLogin).fromNow()}</Typography>
 															<Typography variant="caption" color="textSecondary">
-																{dayjs(sessionMetrics[user._id].lastLogin).format("DD/MM/YY HH:mm")}
+																{formatDateUtil(sessionMetrics[user._id].lastLogin, "dateTimeShort")}
 															</Typography>
 														</Box>
 													) : (
@@ -2861,7 +2858,7 @@ const UserResources: React.FC = () => {
 																		<b>{user.emailViewer?.loginContinues || 0}</b> vez(ces) que volvió a la app desde el visor
 																	</div>
 																	{user.emailViewer?.lastActivity && (
-																		<div>Última actividad: {dayjs(user.emailViewer.lastActivity).format("DD/MM/YY HH:mm")}</div>
+																		<div>Última actividad: {formatDateUtil(user.emailViewer.lastActivity, "dateTimeShort")}</div>
 																	)}
 																</Box>
 															}
@@ -2954,7 +2951,7 @@ const UserResources: React.FC = () => {
 												</TableCell>
 												<TableCell>
 													{user.emailFunnel?.lastOpen ? (
-														<Tooltip arrow title={dayjs(user.emailFunnel.lastOpen).format("DD/MM/YYYY HH:mm")}>
+														<Tooltip arrow title={formatDateUtil(user.emailFunnel.lastOpen, "dateTime")}>
 															<Typography variant="body2" sx={{ cursor: "help", whiteSpace: "nowrap" }}>
 																{dayjs(user.emailFunnel.lastOpen).fromNow()}
 															</Typography>
@@ -2991,7 +2988,7 @@ const UserResources: React.FC = () => {
 																)}
 																{eng.ultimoClickAt && (
 																	<Typography variant="caption" display="block">
-																		Último ingreso: {dayjs(eng.ultimoClickAt).format("DD/MM/YY HH:mm")}
+																		Último ingreso: {formatDateUtil(eng.ultimoClickAt, "dateTimeShort")}
 																	</Typography>
 																)}
 																{eng.clicksBot > 0 && (
@@ -3145,7 +3142,7 @@ const UserResources: React.FC = () => {
 						disabled={retryLoading}
 						startIcon={retryLoading ? <CircularProgress size={16} color="inherit" /> : <Refresh size={16} />}
 					>
-						{retryLoading ? "Procesando..." : "Confirmar retry"}
+						{retryLoading ? "Procesando…" : "Confirmar retry"}
 					</Button>
 				</DialogActions>
 			</Dialog>

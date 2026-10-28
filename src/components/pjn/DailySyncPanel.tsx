@@ -21,9 +21,9 @@ import {
 	useTheme,
 } from "@mui/material";
 import { Refresh } from "iconsax-react";
-import dayjs from "dayjs";
 import pjnCredentialsService, { DailySyncControlData, DailySyncRow, DailySyncState } from "api/pjnCredentials";
 import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER } from "themes/dashboardTokens";
+import { formatDate } from "utils/format";
 
 /**
  * Control diario de "Mis Causas" (update-sync) por credencial: cuánto tenía el
@@ -174,7 +174,7 @@ export default function DailySyncPanel({ days = 14, compact = false }: { days?: 
 		t === "ok" ? LIVE_GREEN : t === "warn" ? STALE_AMBER : t === "bad" ? theme.palette.error.main : theme.palette.text.secondary;
 
 	const fmtDelta = (d: number | null) => (d === null ? "—" : d > 0 ? `+${d}` : `${d}`);
-	const fmtTime = (d: string | null | undefined) => (d ? dayjs(d).format("DD/MM HH:mm") : "—");
+	const fmtTime = (d: string | null | undefined) => (d ? formatDate(d, "dayMonthTime") : "—");
 
 	const t = data?.totals;
 	const problems = t

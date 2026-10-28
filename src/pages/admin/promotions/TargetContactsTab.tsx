@@ -241,6 +241,7 @@ const TargetContactsTab = ({ discountId, discountCode, onUpdate, onCountChange }
 							<TextField
 								{...params}
 								label="Buscar contactos"
+								inputProps={{ ...params.inputProps, spellCheck: false }}
 								placeholder="email, nombre o apellido"
 								onChange={(e) => setSearchQuery(e.target.value)}
 								InputProps={{

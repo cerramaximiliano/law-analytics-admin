@@ -42,6 +42,7 @@ import AlertManagement from "./AlertManagement";
 import { dispatch } from "store";
 import { openSnackbar } from "store/reducers/snackbar";
 import notificationAxios from "utils/notificationAxios";
+import { useTabIndexParam } from "hooks/useTabParam";
 
 interface TabPanelProps {
 	children?: React.ReactNode;
@@ -72,9 +73,12 @@ function a11yProps(index: number) {
 	};
 }
 
+// Sub-tab en `?sub=`: el padre (centro de notificaciones) ya usa `?tab=`.
+const MONITORING_TAB_SLUGS = ["proximas", "historial", "resumen", "fallidas", "alertas", "ejecucion-manual"] as const;
+
 const MonitoringPanel = () => {
 	const theme = useTheme();
-	const [activeTab, setActiveTab] = useState(0);
+	const [activeTab, setActiveTab] = useTabIndexParam("sub", MONITORING_TAB_SLUGS);
 	const [refreshKey, setRefreshKey] = useState(0);
 	const [cronDialog, setCronDialog] = useState<{ open: boolean; type: string | null }>({ open: false, type: null });
 	const [loading, setLoading] = useState(false);
@@ -162,7 +166,7 @@ const MonitoringPanel = () => {
 	useEffect(() => {
 		// Load initial data
 		const loadInitialData = async () => {
-			console.log("🚀 Loading notification monitoring data...");
+			console.log("🚀 Loading notification monitoring data…");
 			console.log("  - RefreshKey:", refreshKey);
 
 			try {

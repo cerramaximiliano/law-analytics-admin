@@ -21,6 +21,7 @@ import MainCard from "components/MainCard";
 import { Campaign, CampaignDeferredCount, SchedulerFrequencyDay, SchedulerFrequencyState } from "types/campaign";
 import { BRAND_BLUE, PREMIUM_GOLD, PRO_TEAL, STALE_AMBER } from "themes/dashboardTokens";
 import { reasonLabel, sumCounts } from "utils/campaignCoordination";
+import { clickableProps } from "utils/a11y";
 
 interface DailyDeferredCardProps {
 	frequency: SchedulerFrequencyState | null;
@@ -150,7 +151,7 @@ const DailyDeferredCard: React.FC<DailyDeferredCardProps> = ({ frequency, campai
 							return (
 								<Box key={r.day} sx={{ borderBottom: "1px solid", borderColor: "divider" }}>
 									<Box
-										onClick={() => r.total > 0 && setOpenDay(isOpen ? null : r.day)}
+										{...(r.total > 0 ? clickableProps(() => setOpenDay(isOpen ? null : r.day)) : {})}
 										sx={{
 											display: "flex",
 											alignItems: "center",

@@ -40,7 +40,7 @@ import {
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import dayjs, { Dayjs } from "dayjs";
+import { Dayjs } from "dayjs";
 import "dayjs/locale/es";
 import {
 	Refresh,
@@ -67,6 +67,7 @@ import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import CopyButton from "components/CopyButton";
 import SupportContactsService, { SupportContact, SupportContactFilters, UpdateSupportContactData } from "api/supportContacts";
+import { formatDateTime } from "utils/format";
 
 // Status configuration
 const STATUS_CONFIG: Record<string, { color: "warning" | "info" | "success" | "default"; label: string; icon: React.ReactNode }> = {
@@ -367,7 +368,7 @@ const SupportContactsPage = () => {
 
 	// Format date
 	const formatDate = (dateString: string) => {
-		return dayjs(dateString).format("DD/MM/YYYY HH:mm");
+		return formatDateTime(dateString);
 	};
 
 	return (
@@ -579,7 +580,8 @@ const SupportContactsPage = () => {
 								<TextField
 									fullWidth
 									size="small"
-									placeholder="Buscar por nombre, email o asunto..."
+									placeholder="Buscar por nombre, email o asunto…"
+									inputProps={{ "aria-label": "Buscar por nombre, email o asunto", spellCheck: false }}
 									value={searchTerm}
 									onChange={(e) => {
 										setSearchTerm(e.target.value);
@@ -1015,7 +1017,7 @@ const SupportContactsPage = () => {
 							Cancelar
 						</Button>
 						<Button variant="contained" onClick={handleUpdate} disabled={updating}>
-							{updating ? "Guardando..." : "Guardar"}
+							{updating ? "Guardando…" : "Guardar"}
 						</Button>
 					</DialogActions>
 				</Dialog>
@@ -1044,7 +1046,7 @@ const SupportContactsPage = () => {
 							Cancelar
 						</Button>
 						<Button variant="contained" color="error" onClick={handleConfirmDelete} disabled={deleting}>
-							{deleting ? "Eliminando..." : "Eliminar"}
+							{deleting ? "Eliminando…" : "Eliminar"}
 						</Button>
 					</DialogActions>
 				</Dialog>
@@ -1065,7 +1067,7 @@ const SupportContactsPage = () => {
 							Cancelar
 						</Button>
 						<Button variant="contained" color="error" onClick={handleBulkDelete} disabled={bulkDeleting}>
-							{bulkDeleting ? "Eliminando..." : `Eliminar ${selectedIds.length} contactos`}
+							{bulkDeleting ? "Eliminando…" : `Eliminar ${selectedIds.length} contactos`}
 						</Button>
 					</DialogActions>
 				</Dialog>
@@ -1092,7 +1094,7 @@ const SupportContactsPage = () => {
 							Cancelar
 						</Button>
 						<Button variant="contained" onClick={handleBulkStatusUpdate} disabled={bulkUpdating || !bulkStatus}>
-							{bulkUpdating ? "Actualizando..." : "Actualizar"}
+							{bulkUpdating ? "Actualizando…" : "Actualizar"}
 						</Button>
 					</DialogActions>
 				</Dialog>
@@ -1190,7 +1192,8 @@ const SupportContactsPage = () => {
 										fullWidth
 										multiline
 										rows={5}
-										placeholder="Escribe tu respuesta aqui..."
+										placeholder="Escribe tu respuesta aqui…"
+										inputProps={{ "aria-label": "Respuesta" }}
 										value={replyMessage}
 										onChange={(e) => setReplyMessage(e.target.value)}
 										variant="outlined"
@@ -1217,7 +1220,7 @@ const SupportContactsPage = () => {
 							onClick={handleReply}
 							disabled={replying || !replyMessage.trim()}
 						>
-							{replying ? "Enviando..." : "Enviar Respuesta"}
+							{replying ? "Enviando…" : "Enviar Respuesta"}
 						</Button>
 					</DialogActions>
 				</Dialog>

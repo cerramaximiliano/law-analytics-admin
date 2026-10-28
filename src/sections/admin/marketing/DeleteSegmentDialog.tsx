@@ -40,7 +40,7 @@ const DeleteSegmentDialog: React.FC<DeleteSegmentDialogProps> = ({ open, segment
 						<Typography variant="h5">Eliminar Segmento</Typography>
 					</Grid>
 					<Grid item>
-						<IconButton onClick={onClose} size="small" disabled={loading}>
+						<IconButton aria-label="Cerrar" onClick={onClose} size="small" disabled={loading}>
 							<CloseCircle variant="Bold" />
 						</IconButton>
 					</Grid>
@@ -64,7 +64,7 @@ const DeleteSegmentDialog: React.FC<DeleteSegmentDialogProps> = ({ open, segment
 					disabled={loading}
 					startIcon={loading && <CircularProgress size={20} color="inherit" />}
 				>
-					{loading ? "Eliminando..." : "Eliminar"}
+					{loading ? "Eliminando…" : "Eliminar"}
 				</Button>
 			</DialogActions>
 		</Dialog>

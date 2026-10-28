@@ -39,6 +39,7 @@ import {
 } from "utils/campaignCoordination";
 import { COL_MD, COL_SM } from "utils/responsiveColumns";
 import { CAMPAIGN_STATUS_CHIP, CAMPAIGN_TYPE_LABEL, WARNING_CHIP_SX } from "./labels";
+import { clickableProps } from "utils/a11y";
 
 interface PrioritiesTableProps {
 	campaigns: Campaign[];
@@ -263,7 +264,7 @@ const PolicyRow = ({ campaign, exemptCategories, deferred, deferredLabel, resolv
 			<TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
 				<Tooltip title="Descartar cambios">
 					<span>
-						<IconButton size="small" disabled={!dirty || saving} onClick={() => setDraft(original)}>
+						<IconButton aria-label="Descartar cambios" size="small" disabled={!dirty || saving} onClick={() => setDraft(original)}>
 							<RotateLeft size={16} />
 						</IconButton>
 					</span>
@@ -352,7 +353,7 @@ const SaijGroupRows = ({ editions, exemptCategories, deferredCounts, deferredLab
 
 	return (
 		<>
-			<TableRow hover onClick={toggle} sx={{ cursor: "pointer", bgcolor: alpha(BRAND_BLUE, theme.palette.mode === "dark" ? 0.06 : 0.03) }}>
+			<TableRow hover {...clickableProps(toggle, { asRow: true })} sx={{ cursor: "pointer", bgcolor: alpha(BRAND_BLUE, theme.palette.mode === "dark" ? 0.06 : 0.03) }}>
 				<TableCell sx={{ maxWidth: 320 }}>
 					<Stack direction="row" spacing={0.5} alignItems="center">
 						<IconButton size="small" aria-label={open ? "Contraer ediciones" : "Ver ediciones"}>
@@ -539,6 +540,7 @@ const PrioritiesTable: React.FC<PrioritiesTableProps> = ({ campaigns, frequency,
 			secondary={
 				<Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" useFlexGap>
 					<TextField
+						inputProps={{ "aria-label": "Buscar campaña" }}
 						size="small"
 						placeholder="Buscar campaña"
 						value={search}

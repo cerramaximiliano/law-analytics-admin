@@ -30,6 +30,9 @@ import { Link } from "react-router-dom";
 import logsService, { HealthReport } from "api/logs";
 import { buildDebugPromptFromReport } from "utils/buildDebugPrompt";
 import { BRAND_BLUE, LIVE_GREEN } from "themes/dashboardTokens";
+import { clickableProps } from "utils/a11y";
+import ConfirmDialog from "components/admin/ConfirmDialog";
+import { formatPercent } from "utils/format";
 
 const SCORE_CONFIG: Record<string, { color: "success" | "warning" | "error" | "default"; label: string; icon: any }> = {
 	green: { color: "success", label: "OK", icon: TickCircle },
@@ -102,7 +105,7 @@ function ReportDetailDialog({ report, open, onClose }: { report: HealthReport | 
 									Logs 24h
 								</Typography>
 								<Typography variant="h5" fontWeight={700}>
-									{report.metrics.logCount24h.toLocaleString()}
+									{report.metrics.logCount24h.toLocaleString("es-AR")}
 								</Typography>
 								<Typography
 									variant="caption"
@@ -111,7 +114,7 @@ function ReportDetailDialog({ report, open, onClose }: { report: HealthReport | 
 									}
 								>
 									{volumeChange.direction === "flat" ? "≈" : volumeChange.direction === "up" ? "↑" : "↓"} {Math.abs(volumeChange.value)}% vs{" "}
-									{report.metrics.logCount7dAvg.toLocaleString()}/día
+									{report.metrics.logCount7dAvg.toLocaleString("es-AR")}/día
 								</Typography>
 							</Grid>
 							<Grid item xs={6} md={3}>
@@ -119,11 +122,11 @@ function ReportDetailDialog({ report, open, onClose }: { report: HealthReport | 
 									Errores 24h
 								</Typography>
 								<Typography variant="h5" fontWeight={700} color={report.metrics.errorCount24h > 0 ? "error.main" : "text.primary"}>
-									{report.metrics.errorCount24h.toLocaleString()}
+									{report.metrics.errorCount24h.toLocaleString("es-AR")}
 								</Typography>
 								<Typography variant="caption" color={errorChange.direction === "up" ? "error.main" : "text.secondary"}>
 									{errorChange.direction === "flat" ? "≈" : errorChange.direction === "up" ? "↑" : "↓"} {Math.abs(errorChange.value)}% vs{" "}
-									{report.metrics.errorCount7dAvg.toLocaleString()}/día
+									{report.metrics.errorCount7dAvg.toLocaleString("es-AR")}/día
 								</Typography>
 							</Grid>
 							<Grid item xs={6} md={3}>
@@ -131,10 +134,10 @@ function ReportDetailDialog({ report, open, onClose }: { report: HealthReport | 
 									Error rate 24h
 								</Typography>
 								<Typography variant="h5" fontWeight={700}>
-									{(report.metrics.errorRate24h * 100).toFixed(2)}%
+									{formatPercent(report.metrics.errorRate24h * 100, 2)}
 								</Typography>
 								<Typography variant="caption" color="text.secondary">
-									baseline: {(report.metrics.errorRate7dAvg * 100).toFixed(2)}%
+									baseline: {formatPercent(report.metrics.errorRate7dAvg * 100, 2)}
 								</Typography>
 							</Grid>
 							<Grid item xs={6} md={3}>
@@ -262,6 +265,7 @@ const ServiceHealthDashboard = () => {
 	const [total, setTotal] = useState<number>(0);
 	const [loading, setLoading] = useState(false);
 	const [generating, setGenerating] = useState(false);
+	const [confirmGenerateAll, setConfirmGenerateAll] = useState(false);
 	const [scoreFilter, setScoreFilter] = useState("");
 	const [selectedDate, setSelectedDate] = useState("");
 	const [selectedReport, setSelectedReport] = useState<HealthReport | null>(null);
@@ -288,7 +292,7 @@ const ServiceHealthDashboard = () => {
 	}, [fetchReports]);
 
 	const handleGenerateAll = async () => {
-		if (!window.confirm("¿Regenerar reports para todos los servicios activos? Toma ~5-10 min en background.")) return;
+		setConfirmGenerateAll(false);
 		setGenerating(true);
 		try {
 			await logsService.generateHealthReport({ all: true });
@@ -349,7 +353,7 @@ const ServiceHealthDashboard = () => {
 								variant="outlined"
 								color="secondary"
 								startIcon={generating ? <CircularProgress size={14} color="inherit" /> : <Magicpen size={16} />}
-								onClick={handleGenerateAll}
+								onClick={() => setConfirmGenerateAll(true)}
 								disabled={generating}
 								sx={{ textTransform: "none" }}
 							>
@@ -504,10 +508,10 @@ const ServiceHealthDashboard = () => {
 										height: "100%",
 										borderLeft: 4,
 										borderLeftColor: cfg.color === "default" ? "divider" : `${cfg.color}.main`,
-										transition: "all 0.15s",
+										transition: "box-shadow 0.15s",
 										"&:hover": { boxShadow: 2 },
 									}}
-									onClick={() => setSelectedReport(report)}
+									{...clickableProps(() => setSelectedReport(report))}
 								>
 									<CardContent sx={{ p: 1.5, "&:last-child": { pb: 1.5 } }}>
 										<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
@@ -570,6 +574,16 @@ const ServiceHealthDashboard = () => {
 			)}
 
 			<ReportDetailDialog report={selectedReport} open={!!selectedReport} onClose={() => setSelectedReport(null)} />
+			<ConfirmDialog
+				open={confirmGenerateAll}
+				title="¿Regenerar los reports de todos los servicios activos?"
+				description="Toma ~5-10 min en background."
+				confirmLabel="Regenerar"
+				confirmColor="primary"
+				loading={generating}
+				onConfirm={handleGenerateAll}
+				onClose={() => setConfirmGenerateAll(false)}
+			/>
 		</MainCard>
 	);
 };

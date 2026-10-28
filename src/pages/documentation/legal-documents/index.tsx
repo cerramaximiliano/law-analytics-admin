@@ -443,7 +443,7 @@ const LegalDocumentsPage = () => {
 						<Stack alignItems="center" justifyContent="center" sx={{ py: 8 }}>
 							<CircularProgress size={48} />
 							<Typography variant="body1" color="text.secondary" sx={{ mt: 2 }}>
-								Cargando documento...
+								Cargando documento…
 							</Typography>
 						</Stack>
 					</DialogContent>
@@ -462,7 +462,7 @@ const LegalDocumentsPage = () => {
 										</Stack>
 									</Box>
 								</Stack>
-								<IconButton onClick={handleCloseViewDialog} color="error">
+								<IconButton aria-label="Cerrar" onClick={handleCloseViewDialog} color="error">
 									<CloseCircle size={24} />
 								</IconButton>
 							</Stack>

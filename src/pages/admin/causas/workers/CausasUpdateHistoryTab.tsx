@@ -27,6 +27,7 @@ import {
 import { Refresh, TickCircle, CloseCircle } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { CausasUpdateService, CausasUpdateRun, CausaDetail } from "api/causasUpdate";
+import { clickableProps } from "utils/a11y";
 
 const statusColors: Record<string, string> = {
 	completed: "success",
@@ -172,7 +173,7 @@ const CausasUpdateHistoryTab: React.FC = () => {
 								</TableRow>
 							) : (
 								runs.map((run) => (
-									<TableRow key={run._id} hover sx={{ cursor: "pointer" }} onClick={() => handleViewDetail(run._id)}>
+									<TableRow key={run._id} hover sx={{ cursor: "pointer" }} {...clickableProps(() => handleViewDetail(run._id), { asRow: true })}>
 										<TableCell>
 											<Typography variant="caption">
 												{new Date(run.startedAt).toLocaleString("es-AR", {

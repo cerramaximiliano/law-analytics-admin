@@ -40,8 +40,9 @@ import MainCard from "components/MainCard";
 import CopyButton from "components/CopyButton";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 import ScraperService, { PostalTracking, PostalTrackingStats, PostalTrackingFilters } from "api/scraperService";
-import dayjs from "dayjs";
 import { COL_SM, COL_MD, COL_LG } from "utils/responsiveColumns";
+import { clickableProps } from "utils/a11y";
+import { formatDate as formatDateIntl } from "utils/format";
 
 const PROCESSING_STATUS_CONFIG: Record<string, { color: "default" | "warning" | "info" | "success" | "error"; label: string }> = {
 	pending: { color: "warning", label: "Pendiente" },
@@ -93,7 +94,7 @@ const getClosureInfo = (
 
 const formatDate = (dateString?: string) => {
 	if (!dateString) return "-";
-	return dayjs(dateString).format("DD/MM/YYYY HH:mm");
+	return formatDateIntl(dateString, "dateTime");
 };
 
 const PostalTrackingPage = () => {
@@ -493,7 +494,7 @@ const PostalTrackingPage = () => {
 											fontSize: { xs: "1.1rem", sm: "1.5rem" },
 										}}
 									>
-										{stat.value.toLocaleString()}
+										{stat.value.toLocaleString("es-AR")}
 									</Typography>
 								)}
 								<Typography variant="caption" color="text.secondary" noWrap sx={{ display: "block", mt: 0.25 }}>
@@ -562,6 +563,7 @@ const PostalTrackingPage = () => {
 								fullWidth
 								size="small"
 								placeholder="Buscar por número, estado…"
+								inputProps={{ "aria-label": "Buscar por número, estado" }}
 								value={searchTerm}
 								onChange={(e) => {
 									setSearchTerm(e.target.value);
@@ -708,7 +710,7 @@ const PostalTrackingPage = () => {
 										key={tracking._id}
 										hover
 										selected={selectedIds.has(tracking._id)}
-										onClick={() => handleOpenDetail(tracking)}
+										{...clickableProps(() => handleOpenDetail(tracking), { asRow: true })}
 										sx={{ cursor: "pointer" }}
 									>
 										<TableCell padding="checkbox" onClick={(e) => e.stopPropagation()}>
@@ -1479,7 +1481,7 @@ const PostalTrackingPage = () => {
 						Cancelar
 					</Button>
 					<Button variant="contained" onClick={handleCreate} disabled={creating || !newCodeId.trim() || newNumberId.length !== 9}>
-						{creating ? "Creando..." : "Crear"}
+						{creating ? "Creando…" : "Crear"}
 					</Button>
 				</DialogActions>
 			</Dialog>
@@ -1510,7 +1512,7 @@ const PostalTrackingPage = () => {
 						Cancelar
 					</Button>
 					<Button variant="contained" color="error" onClick={handleConfirmDelete} disabled={deleting}>
-						{deleting ? "Eliminando..." : "Eliminar"}
+						{deleting ? "Eliminando…" : "Eliminar"}
 					</Button>
 				</DialogActions>
 			</Dialog>
@@ -1532,7 +1534,7 @@ const PostalTrackingPage = () => {
 						Cancelar
 					</Button>
 					<Button variant="contained" color="error" onClick={handleBulkDelete} disabled={bulkDeleting}>
-						{bulkDeleting ? "Eliminando..." : `Eliminar ${selectedIds.size}`}
+						{bulkDeleting ? "Eliminando…" : `Eliminar ${selectedIds.size}`}
 					</Button>
 				</DialogActions>
 			</Dialog>

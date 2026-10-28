@@ -46,6 +46,7 @@ import { DatePicker } from "@mui/x-date-pickers";
 import { useSelector } from "store";
 import { RootState } from "store";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
+import { formatDateTime } from "utils/format";
 
 const tableHeadSx = (theme: any) => ({
 	"& .MuiTableCell-head": {
@@ -309,7 +310,7 @@ const NotificationHistory = () => {
 			if (isNaN(dateObj.getTime())) {
 				return "Fecha no disponible";
 			}
-			return dayjs(dateObj).format("DD/MM/YYYY HH:mm");
+			return formatDateTime(dateObj);
 		} catch (error) {
 			return "Fecha no disponible";
 		}
@@ -637,6 +638,9 @@ const NotificationHistory = () => {
 							<TextField
 								label="Email"
 								placeholder="Buscar por email"
+								type="email"
+								autoComplete="off"
+								inputProps={{ spellCheck: false }}
 								value={filterEmail}
 								onChange={(e) => setFilterEmail(e.target.value)}
 								size="small"

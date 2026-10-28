@@ -193,9 +193,10 @@ const MEVCredentials = () => {
 												Pegá el path/URL de recuperación que llegó al email de MEV:
 											</Typography>
 											<TextField
+												inputProps={{ "aria-label": "URL de recuperación" }}
 												size="small"
 												fullWidth
-												placeholder="https://mev.scba.gov.ar/..."
+												placeholder="https://mev.scba.gov.ar/…"
 												value={urlInput}
 												onChange={(e) => setUrlInput(e.target.value)}
 											/>
@@ -308,6 +309,7 @@ const MEVCredentials = () => {
 													<Tooltip title="Ver screenshot">
 														<span>
 															<IconButton
+																aria-label="Ver screenshot"
 																size="small"
 																color="primary"
 																disabled={!f.screenshotBase64}

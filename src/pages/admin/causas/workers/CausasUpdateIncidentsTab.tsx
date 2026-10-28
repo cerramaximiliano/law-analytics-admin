@@ -28,6 +28,7 @@ import {
 import { Refresh, Gallery, ExportSquare, TickCircle } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { CausasUpdateService, ScrapeIncident, ScrapeIncidentType, IncidentStats } from "api/causasUpdate";
+import { clickableProps } from "utils/a11y";
 
 const typeLabels: Record<ScrapeIncidentType, string> = {
 	search_error: "Error de búsqueda",
@@ -217,7 +218,7 @@ const CausasUpdateIncidentsTab: React.FC = () => {
 								</TableRow>
 							) : (
 								incidents.map((inc) => (
-									<TableRow key={inc._id} hover sx={{ cursor: "pointer" }} onClick={() => handleViewDetail(inc._id)}>
+									<TableRow key={inc._id} hover sx={{ cursor: "pointer" }} {...clickableProps(() => handleViewDetail(inc._id), { asRow: true })}>
 										<TableCell>
 											<Typography variant="caption">{fmtDate(inc.lastSeenAt)}</Typography>
 										</TableCell>

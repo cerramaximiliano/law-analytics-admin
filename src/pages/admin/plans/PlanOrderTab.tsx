@@ -157,7 +157,7 @@ const PlanOrderTab = ({ plans, onRefresh }: PlanOrderTabProps) => {
 												"&:active": { transform: "scale(0.98)" },
 											}}
 										>
-											{isSaving ? "Guardando..." : "Guardar"}
+											{isSaving ? "Guardando…" : "Guardar"}
 										</Button>
 									</Box>
 
@@ -190,7 +190,11 @@ const PlanOrderTab = ({ plans, onRefresh }: PlanOrderTabProps) => {
 															value={localOrders[plan.planId]?.resources[resource.name] ?? resource.order ?? 99}
 															onChange={(e) => handleResourceOrderChange(plan.planId, resource.name, Number(e.target.value))}
 															size="small"
-															inputProps={{ min: 0, style: { width: 40, textAlign: "center", padding: "4px 6px" } }}
+															inputProps={{
+																min: 0,
+																style: { width: 40, textAlign: "center", padding: "4px 6px" },
+																"aria-label": `Orden de ${resource.displayName || resource.name}`,
+															}}
 															sx={{ "& .MuiOutlinedInput-root": { width: 58 } }}
 														/>
 														<Box flex={1} minWidth={0}>
@@ -240,7 +244,11 @@ const PlanOrderTab = ({ plans, onRefresh }: PlanOrderTabProps) => {
 															value={localOrders[plan.planId]?.features[feature.name] ?? feature.order ?? 99}
 															onChange={(e) => handleFeatureOrderChange(plan.planId, feature.name, Number(e.target.value))}
 															size="small"
-															inputProps={{ min: 0, style: { width: 40, textAlign: "center", padding: "4px 6px" } }}
+															inputProps={{
+																min: 0,
+																style: { width: 40, textAlign: "center", padding: "4px 6px" },
+																"aria-label": `Orden de ${feature.displayName || feature.name}`,
+															}}
 															sx={{ "& .MuiOutlinedInput-root": { width: 58 } }}
 														/>
 														<Box flex={1} minWidth={0}>

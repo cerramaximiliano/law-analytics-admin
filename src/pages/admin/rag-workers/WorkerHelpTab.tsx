@@ -1721,7 +1721,7 @@ const HelpEditorAiSection: React.FC = () => {
 						color={colors.frontend}
 						items={[
 							"Usuario selecciona texto → clic Formalizar",
-							"caseContext: { folderFuero, representedParty... }",
+							"caseContext: { folderFuero, representedParty… }",
 							"POST /rag/editor/chat",
 							"systemPromptOverride + caseContext + messages",
 						]}
@@ -1883,8 +1883,8 @@ const HelpEditorAiSection: React.FC = () => {
 							["representedParty", '"actor" | "demandado"', "Determina si usar actor/actora o demandado/demandada"],
 							["representationType", '"patrocinio" | "apoderado"', "patrocinio → primera persona; apoderado → tercera persona"],
 							["folderFuero", "string", "Activa vocabulario específico + corpus de estilo semántico"],
-							["folderJuris", "string", "Añade 'Jurisdicción: CABA/PBA...' al contexto"],
-							["folderName", "string", "Añade 'Expediente: Carátula...' al contexto"],
+							["folderJuris", "string", "Añade 'Jurisdicción: CABA/PBA…' al contexto"],
+							["folderName", "string", "Añade 'Expediente: Carátula…' al contexto"],
 							["actorName", "string", "Nombre real del actor en el contexto"],
 							["demandadoName", "string", "Nombre real del demandado en el contexto"],
 						].map(([campo, tipo, efecto]) => (

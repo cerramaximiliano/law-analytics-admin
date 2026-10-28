@@ -22,6 +22,7 @@ import { Link as RouterLink } from "react-router-dom";
 import { Refresh, Book1, Link21 } from "iconsax-react";
 import pjnCredentialsService, { FolderRowStatsData } from "api/pjnCredentials";
 import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER, headerBorder } from "themes/dashboardTokens";
+import { clickableProps } from "utils/a11y";
 import { JURISDICTIONS } from "./userViewGuideData";
 
 /**
@@ -185,7 +186,7 @@ export default function FolderRowStatsWidget({ onSelectJurisdiction, selectedJur
 							return (
 								<Box
 									key={j.jurisdiction}
-									onClick={onClick}
+									{...(onClick ? clickableProps(onClick) : {})}
 									sx={{
 										display: "grid",
 										gridTemplateColumns: "120px 1fr 90px",
@@ -273,7 +274,7 @@ export default function FolderRowStatsWidget({ onSelectJurisdiction, selectedJur
 									<TableRow
 										key={j.jurisdiction}
 										hover
-										onClick={goTo(j.jurisdiction)}
+										{...(goTo(j.jurisdiction) ? clickableProps(goTo(j.jurisdiction) as () => void, { asRow: true }) : {})}
 										selected={selectedJurisdiction === j.jurisdiction}
 										sx={{ cursor: goTo(j.jurisdiction) ? "pointer" : "default" }}
 									>

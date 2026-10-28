@@ -89,14 +89,16 @@ import {
 import { Link as RouterLink } from "react-router-dom";
 import { useTabParam } from "hooks/useTabParam";
 import CleanupConfigService, { CleanupConfig, CleanupStatusResponse, ExecutionHistoryItem } from "api/cleanupConfig";
+import { clickableProps } from "utils/a11y";
+import { formatNumber, formatPercent } from "utils/format";
 
 // ======================== HELPER FUNCTIONS ========================
 
 const formatDuration = (ms: number): string => {
 	if (ms < 1000) return `${ms}ms`;
-	if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
-	if (ms < 3600000) return `${(ms / 60000).toFixed(1)}min`;
-	return `${(ms / 3600000).toFixed(1)}h`;
+	if (ms < 60000) return `${formatNumber(ms / 1000, 1)}s`;
+	if (ms < 3600000) return `${formatNumber(ms / 60000, 1)}min`;
+	return `${formatNumber(ms / 3600000, 1)}h`;
 };
 
 const formatDate = (dateStr: string): string => {
@@ -365,7 +367,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ onRefresh }) => {
 										Total de logs
 									</Typography>
 									<Typography variant="h3" sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}>
-										{counts?.total?.toLocaleString() || 0}
+										{counts?.total?.toLocaleString("es-AR") || 0}
 									</Typography>
 								</Stack>
 							</CardContent>
@@ -392,7 +394,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ onRefresh }) => {
 												{getWorkerTypeLabel(type)}
 											</Typography>
 											<Typography variant="h4" sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}>
-												{count?.toLocaleString() || 0}
+												{count?.toLocaleString("es-AR") || 0}
 											</Typography>
 										</Stack>
 									</CardContent>
@@ -453,7 +455,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ onRefresh }) => {
 											<Typography variant="subtitle2" color="text.secondary">
 												Tasa de Éxito
 											</Typography>
-											<Typography variant="h4">{stats.summary.successRate.toFixed(1)}%</Typography>
+											<Typography variant="h4">{formatPercent(stats.summary.successRate)}</Typography>
 										</Stack>
 									</CardContent>
 								</Card>
@@ -554,7 +556,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ onRefresh }) => {
 											<Typography variant="subtitle2" color="text.secondary">
 												Docs con Logs
 											</Typography>
-											<Typography variant="h4">{logsStats.statistics.documentsWithLogs.toLocaleString()}</Typography>
+											<Typography variant="h4">{logsStats.statistics.documentsWithLogs.toLocaleString("es-AR")}</Typography>
 										</Stack>
 									</CardContent>
 								</Card>
@@ -566,7 +568,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ onRefresh }) => {
 											<Typography variant="subtitle2" color="text.secondary">
 												Docs sin Logs
 											</Typography>
-											<Typography variant="h4">{logsStats.statistics.documentsWithoutLogs.toLocaleString()}</Typography>
+											<Typography variant="h4">{logsStats.statistics.documentsWithoutLogs.toLocaleString("es-AR")}</Typography>
 										</Stack>
 									</CardContent>
 								</Card>
@@ -578,7 +580,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ onRefresh }) => {
 											<Typography variant="subtitle2" color="text.secondary">
 												Total Entradas
 											</Typography>
-											<Typography variant="h4">{logsStats.statistics.totalLogEntries.toLocaleString()}</Typography>
+											<Typography variant="h4">{logsStats.statistics.totalLogEntries.toLocaleString("es-AR")}</Typography>
 										</Stack>
 									</CardContent>
 								</Card>
@@ -611,8 +613,8 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ onRefresh }) => {
 										{logsStats.statistics.byWorkerType.map((wt) => (
 											<TableRow key={wt._id}>
 												<TableCell>{getWorkerTypeLabel(wt._id)}</TableCell>
-												<TableCell align="right">{wt.count.toLocaleString()}</TableCell>
-												<TableCell align="right">{wt.totalLogEntries.toLocaleString()}</TableCell>
+												<TableCell align="right">{wt.count.toLocaleString("es-AR")}</TableCell>
+												<TableCell align="right">{wt.totalLogEntries.toLocaleString("es-AR")}</TableCell>
 											</TableRow>
 										))}
 									</TableBody>
@@ -785,8 +787,8 @@ const WorkersTab: React.FC = () => {
 															outerRadius={90}
 															label={(d: any) => {
 																const total = statusPieData.reduce((s, x) => s + x.count, 0);
-																const pct = total > 0 ? ((d.count / total) * 100).toFixed(1) : 0;
-																return `${d.name}: ${d.count} (${pct}%)`;
+																const pct = formatPercent(total > 0 ? (d.count / total) * 100 : 0);
+																return `${d.name}: ${d.count} (${pct})`;
 															}}
 														>
 															{statusPieData.map((entry) => (
@@ -939,7 +941,7 @@ const WorkersTab: React.FC = () => {
 												</TableCell>
 												<TableCell align="right">{worker.stats.totalOperations}</TableCell>
 												<TableCell align="right">{worker.stats.successCount}</TableCell>
-												<TableCell align="right">{worker.stats.successRate.toFixed(1)}%</TableCell>
+												<TableCell align="right">{formatPercent(worker.stats.successRate)}</TableCell>
 												<TableCell align="right">{formatDuration(worker.stats.avgDuration)}</TableCell>
 												<TableCell align="right">{worker.stats.totalMovimientos}</TableCell>
 											</TableRow>
@@ -1742,7 +1744,7 @@ const LogsTab: React.FC = () => {
 								</TableHead>
 								<TableBody>
 									{data?.data.map((log) => (
-										<TableRow key={log._id} hover sx={{ cursor: "pointer" }} onClick={() => handleLogClick(log)}>
+										<TableRow key={log._id} hover sx={{ cursor: "pointer" }} {...clickableProps(() => handleLogClick(log), { asRow: true })}>
 											<TableCell>
 												<Typography variant="body2" fontSize="0.8rem">
 													{log.startTime ? formatDate(log.startTime) : "-"}
@@ -1904,7 +1906,7 @@ const ErrorsTab: React.FC = () => {
 														justifyContent="space-between"
 														alignItems="flex-start"
 														sx={{ cursor: "pointer" }}
-														onClick={() => setExpandedPattern(expandedPattern === pattern ? null : pattern)}
+														{...clickableProps(() => setExpandedPattern(expandedPattern === pattern ? null : pattern))}
 													>
 														<Box flex={1}>
 															<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
@@ -1928,7 +1930,7 @@ const ErrorsTab: React.FC = () => {
 																</Typography>
 															</Stack>
 														</Box>
-														<IconButton size="small">
+														<IconButton aria-label={expandedPattern === pattern ? "Contraer patrón" : "Expandir patrón"} size="small">
 															<ArrowRight2
 																size={20}
 																style={{
@@ -2182,7 +2184,7 @@ const SearchTab: React.FC = () => {
 									handleParamChange("q", e.target.value);
 								}}
 								onKeyPress={handleKeyPress}
-								placeholder="ej: captcha, error, timeout..."
+								placeholder="ej: captcha, error, timeout…"
 							/>
 						</Grid>
 						<Grid item xs={6} md={2}>
@@ -2302,7 +2304,7 @@ const SearchTab: React.FC = () => {
 								</TableHead>
 								<TableBody>
 									{data.results.map((log) => (
-										<TableRow key={log._id} hover sx={{ cursor: "pointer" }} onClick={() => handleLogClick(log)}>
+										<TableRow key={log._id} hover sx={{ cursor: "pointer" }} {...clickableProps(() => handleLogClick(log), { asRow: true })}>
 											<TableCell>
 												<Typography variant="body2" fontSize="0.8rem">
 													{log.startTime ? formatDate(log.startTime) : "-"}
@@ -2653,7 +2655,7 @@ const CleanupConfigTab: React.FC = () => {
 										<Typography variant="caption" color="text.secondary">
 											Logs limpiados (última vez)
 										</Typography>
-										<Typography variant="body1">{config?.lastExecution?.stats?.totalCleared?.toLocaleString() || 0}</Typography>
+										<Typography variant="body1">{config?.lastExecution?.stats?.totalCleared?.toLocaleString("es-AR") || 0}</Typography>
 									</Box>
 								</Grid>
 							</Grid>
@@ -2919,7 +2921,7 @@ const CleanupConfigTab: React.FC = () => {
 												<Typography variant="caption" color="text.secondary">
 													Max docs por ejecución
 												</Typography>
-												<Typography variant="body1">{config?.limits?.maxDocsPerRun?.toLocaleString() || "-"}</Typography>
+												<Typography variant="body1">{config?.limits?.maxDocsPerRun?.toLocaleString("es-AR") || "-"}</Typography>
 											</Box>
 										</Grid>
 										<Grid item xs={6}>
@@ -2935,7 +2937,7 @@ const CleanupConfigTab: React.FC = () => {
 												<Typography variant="caption" color="text.secondary">
 													Umbral de advertencia
 												</Typography>
-												<Typography variant="body1">{config?.limits?.warningThreshold?.toLocaleString() || "-"}</Typography>
+												<Typography variant="body1">{config?.limits?.warningThreshold?.toLocaleString("es-AR") || "-"}</Typography>
 											</Box>
 										</Grid>
 									</Grid>
@@ -3013,8 +3015,8 @@ const CleanupConfigTab: React.FC = () => {
 															}}
 														/>
 													</TableCell>
-													<TableCell align="right">{item.duration ? `${(item.duration / 1000).toFixed(1)}s` : "-"}</TableCell>
-													<TableCell align="right">{item.totalCleared?.toLocaleString() || 0}</TableCell>
+													<TableCell align="right">{item.duration ? `${formatNumber(item.duration / 1000, 1)}s` : "-"}</TableCell>
+													<TableCell align="right">{item.totalCleared?.toLocaleString("es-AR") || 0}</TableCell>
 													<TableCell>
 														{item.error ? (
 															<Typography

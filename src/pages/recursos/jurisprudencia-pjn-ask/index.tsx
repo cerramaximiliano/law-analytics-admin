@@ -37,6 +37,8 @@ import SemanticWorkerService, {
 import SearchUsageService, { SearchUsageResponse } from "api/searchUsage";
 import SearchLogPanel from "./SearchLogPanel";
 import { Fuero, SentenciaTipo } from "api/sentenciasCapturadas";
+import { clickableProps } from "utils/a11y";
+import { formatNumber } from "utils/format";
 
 // ── Helpers (mismos códigos de color/labels que la vista de búsqueda semántica) ─
 
@@ -108,14 +110,14 @@ function ChunkCard({ chunk, matched }: { chunk: { index: number; sectionType: st
 				alignItems="center"
 				spacing={1}
 				sx={{ px: 1.5, py: 0.75, cursor: "pointer" }}
-				onClick={() => setOpen((p) => !p)}
+				{...clickableProps(() => setOpen((p) => !p))} aria-expanded={open}
 			>
 				<Chip label={label} size="small" sx={{ bgcolor: alpha(color, 0.12), color, fontWeight: 600, fontSize: 11 }} />
 				<Typography variant="caption" color="text.secondary" noWrap sx={{ flex: 1 }}>
 					{chunk.text.slice(0, 100)}…
 				</Typography>
 				{chunk.score !== undefined && (
-					<Chip label={chunk.score.toFixed(3)} size="small" color={scoreColor(chunk.score)} variant="outlined" sx={{ fontSize: 11 }} />
+					<Chip label={formatNumber(chunk.score, 3)} size="small" color={scoreColor(chunk.score)} variant="outlined" sx={{ fontSize: 11 }} />
 				)}
 				{open ? <ArrowUp2 size={14} /> : <ArrowDown2 size={14} />}
 			</Stack>
@@ -188,7 +190,7 @@ function ResultCard({ result, index }: { result: SentenciaResult; index: number 
 							{sentencia.category === "novelty" && <Chip label="Novelty" size="small" color="secondary" sx={{ fontSize: 11 }} />}
 						</Stack>
 					</Box>
-					<Chip label={`Score ${score.toFixed(3)}`} size="small" color={scoreColor(score)} />
+					<Chip label={`Score ${formatNumber(score, 3)}`} size="small" color={scoreColor(score)} />
 				</Stack>
 
 				{/* Metadata */}
@@ -738,7 +740,7 @@ export default function JurisprudenciaPjnAskPage() {
 							</Grid>
 							<Grid item xs={12} sm={4}>
 								<Typography variant="caption" color="text.secondary">
-									Score mínimo: <strong>{options.minScore?.toFixed(2)}</strong>
+									Score mínimo: <strong>{formatNumber(options.minScore, 2)}</strong>
 								</Typography>
 								<Slider
 									value={options.minScore ?? 0.55}

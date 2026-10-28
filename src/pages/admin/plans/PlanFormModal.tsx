@@ -165,7 +165,7 @@ const PlanFormModal = ({ open, onClose, onSave, plan }: PlanFormModalProps) => {
 					<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
 						{plan ? "Editar plan" : "Crear nuevo plan"}
 					</Typography>
-					<IconButton onClick={onClose} size="small" sx={{ mr: -0.5 }}>
+					<IconButton aria-label="Cerrar" onClick={onClose} size="small" sx={{ mr: -0.5 }}>
 						<CloseCircle size={20} />
 					</IconButton>
 				</Box>
@@ -327,7 +327,7 @@ const PlanFormModal = ({ open, onClose, onSave, plan }: PlanFormModalProps) => {
 									style={{ width: 70 }}
 									inputProps={{ min: 0 }}
 								/>
-								<IconButton onClick={() => removeResourceLimit(index)} size="small">
+								<IconButton aria-label="Eliminar límite de recurso" onClick={() => removeResourceLimit(index)} size="small">
 									<Trash size={20} />
 								</IconButton>
 							</Box>
@@ -412,7 +412,7 @@ const PlanFormModal = ({ open, onClose, onSave, plan }: PlanFormModalProps) => {
 									{managed ? (
 										<Chip size="small" variant="outlined" label="Se gestiona en Integraciones" />
 									) : (
-										<IconButton onClick={() => removeFeature(index)} size="small">
+										<IconButton aria-label="Eliminar característica" onClick={() => removeFeature(index)} size="small">
 											<Trash size={20} />
 										</IconButton>
 									)}
@@ -473,7 +473,7 @@ const PlanFormModal = ({ open, onClose, onSave, plan }: PlanFormModalProps) => {
 						"&:active": { transform: "scale(0.98)" },
 					}}
 				>
-					{loading ? "Guardando..." : plan ? "Actualizar" : "Crear"}
+					{loading ? "Guardando…" : plan ? "Actualizar" : "Crear"}
 				</Button>
 			</DialogActions>
 		</Dialog>

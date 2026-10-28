@@ -17,7 +17,7 @@ import {
 import { CloseCircle } from "iconsax-react";
 import { IconButton } from "@mui/material";
 import { StripeCustomer } from "types/stripe-subscription";
-import dayjs from "utils/dayjs-config";
+import { formatDateTime } from "utils/format";
 
 interface StripeCustomerDetailModalProps {
 	open: boolean;
@@ -124,7 +124,7 @@ const StripeCustomerDetailModal: React.FC<StripeCustomerDetailModalProps> = ({ o
 							sx={{ borderRadius: 0.75, fontWeight: 500 }}
 						/>
 					</Stack>
-					<IconButton onClick={onClose} size="small" sx={{ mr: -0.5 }}>
+					<IconButton aria-label="Cerrar" onClick={onClose} size="small" sx={{ mr: -0.5 }}>
 						<CloseCircle size={20} />
 					</IconButton>
 				</Stack>
@@ -170,7 +170,7 @@ const StripeCustomerDetailModal: React.FC<StripeCustomerDetailModalProps> = ({ o
 									<Typography variant="caption" color="text.secondary">
 										Cliente desde
 									</Typography>
-									<Typography variant="body1">{dayjs(customer.created).format("DD/MM/YYYY HH:mm")}</Typography>
+									<Typography variant="body1">{formatDateTime(customer.created)}</Typography>
 								</Stack>
 							</Grid>
 							<Grid item xs={12} md={6}>
@@ -276,7 +276,7 @@ const StripeCustomerDetailModal: React.FC<StripeCustomerDetailModalProps> = ({ o
 										<Typography variant="caption" color="text.secondary">
 											Creado en app
 										</Typography>
-										<Typography variant="body1">{dayjs(customer.metadata.created_at).format("DD/MM/YYYY HH:mm")}</Typography>
+										<Typography variant="body1">{formatDateTime(customer.metadata.created_at)}</Typography>
 									</Stack>
 								</Grid>
 							)}
@@ -296,7 +296,7 @@ const StripeCustomerDetailModal: React.FC<StripeCustomerDetailModalProps> = ({ o
 										<Typography variant="caption" color="text.secondary">
 											Fecha de consolidación
 										</Typography>
-										<Typography variant="body1">{dayjs(customer.metadata.consolidation_date).format("DD/MM/YYYY HH:mm")}</Typography>
+										<Typography variant="body1">{formatDateTime(customer.metadata.consolidation_date)}</Typography>
 									</Stack>
 								</Grid>
 							)}
@@ -386,7 +386,7 @@ const StripeCustomerDetailModal: React.FC<StripeCustomerDetailModalProps> = ({ o
 										<Typography variant="caption" color="text.secondary">
 											Inicio del período actual
 										</Typography>
-										<Typography variant="body1">{dayjs(customer.subscription.current_period_start).format("DD/MM/YYYY HH:mm")}</Typography>
+										<Typography variant="body1">{formatDateTime(customer.subscription.current_period_start)}</Typography>
 									</Stack>
 								</Grid>
 								<Grid item xs={12} md={6}>
@@ -394,7 +394,7 @@ const StripeCustomerDetailModal: React.FC<StripeCustomerDetailModalProps> = ({ o
 										<Typography variant="caption" color="text.secondary">
 											Fin del período actual
 										</Typography>
-										<Typography variant="body1">{dayjs(customer.subscription.current_period_end).format("DD/MM/YYYY HH:mm")}</Typography>
+										<Typography variant="body1">{formatDateTime(customer.subscription.current_period_end)}</Typography>
 									</Stack>
 								</Grid>
 								<Grid item xs={12} md={6}>

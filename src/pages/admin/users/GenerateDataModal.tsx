@@ -237,7 +237,7 @@ const GenerateDataModal: React.FC<GenerateDataModalProps> = ({ user, open, onClo
 					<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
 						Generar datos · {user.name}
 					</Typography>
-					<IconButton onClick={onClose} size="small" sx={{ mr: -0.5 }}>
+					<IconButton aria-label="Cerrar" onClick={onClose} size="small" sx={{ mr: -0.5 }}>
 						<CloseCircle size={20} />
 					</IconButton>
 				</Stack>
@@ -366,13 +366,13 @@ const GenerateDataModal: React.FC<GenerateDataModalProps> = ({ user, open, onClo
 										</Grid>
 										<Grid item xs={12}>
 											<FormControl fullWidth>
-												<InputLabel id="folder-select-label">{loadingFolders ? "Cargando causas..." : "Seleccionar causa"}</InputLabel>
+												<InputLabel id="folder-select-label">{loadingFolders ? "Cargando causas…" : "Seleccionar causa"}</InputLabel>
 												<Select
 													labelId="folder-select-label"
 													id="folderId"
 													name="folderId"
 													value={values.folderId}
-													label={loadingFolders ? "Cargando causas..." : "Seleccionar causa"}
+													label={loadingFolders ? "Cargando causas…" : "Seleccionar causa"}
 													onChange={handleChange}
 													onBlur={handleBlur}
 													error={Boolean(touched.folderId && errors.folderId)}
@@ -383,7 +383,7 @@ const GenerateDataModal: React.FC<GenerateDataModalProps> = ({ user, open, onClo
 													</MenuItem>
 													{loadingFolders ? (
 														<MenuItem disabled>
-															<em>Cargando causas...</em>
+															<em>Cargando causas…</em>
 														</MenuItem>
 													) : userFolders.length === 0 ? (
 														<MenuItem disabled>

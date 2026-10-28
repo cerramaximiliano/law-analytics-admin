@@ -6,6 +6,9 @@ import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER } from "themes/dashboardTokens";
 import DiagramCard from "./DiagramCard";
 import FlowsHubLink from "../../flujos/FlowsHubLink";
 import { mainSpecs, escenarios } from "./flowData";
+import { useTabIndexParam } from "hooks/useTabParam";
+
+const TAB_SLUGS = [...mainSpecs.map((spec) => spec.id), "escenarios"];
 
 // Leyenda de colores compartida por todos los diagramas
 const LEGEND_ITEMS: { label: string; color: string; dashed?: boolean }[] = [
@@ -136,7 +139,7 @@ const PendingWork = () => {
 };
 
 const FlujosCausas = () => {
-	const [tab, setTab] = useState(0);
+	const [tab, setTab] = useTabIndexParam("tab", TAB_SLUGS);
 	const isEscenarios = tab === mainSpecs.length;
 
 	return (

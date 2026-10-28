@@ -30,6 +30,7 @@ import { Refresh, SearchNormal1, ArrowDown2, ArrowUp2, DocumentText } from "icon
 import { useSnackbar } from "notistack";
 import RagWorkersService, { StyleCorpusStats, StyleCorpusByFuero, StyleCorpusExample, StyleCorpusSearchResult } from "api/ragWorkers";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
+import { formatPercent } from "utils/format";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -39,7 +40,7 @@ const formatNumber = (n: number): string => {
 	return n.toString();
 };
 
-const pct = (part: number, total: number): string => (total > 0 ? `${((part / total) * 100).toFixed(1)}%` : "—");
+const pct = (part: number, total: number): string => (total > 0 ? formatPercent((part / total) * 100) : "—");
 
 const FUERO_LABELS: Record<string, string> = {
 	CIV: "Civil",
@@ -425,7 +426,7 @@ const StyleCorpusTab = () => {
 							</TextField>
 							<TextField
 								label="Texto a buscar"
-								placeholder="Ej: quiero demandar a mi empleador por despido injustificado..."
+								placeholder="Ej: quiero demandar a mi empleador por despido injustificado…"
 								value={previewQuery}
 								onChange={(e) => setPreviewQuery(e.target.value)}
 								size="small"
@@ -503,7 +504,7 @@ const StyleCorpusTab = () => {
 						{/* Query */}
 						<TextField
 							label="Texto de búsqueda"
-							placeholder="Ej: liquidación de haberes con intereses moratorios, impugnación de liquidación..."
+							placeholder="Ej: liquidación de haberes con intereses moratorios, impugnación de liquidación…"
 							value={searchQuery}
 							onChange={(e) => setSearchQuery(e.target.value)}
 							multiline

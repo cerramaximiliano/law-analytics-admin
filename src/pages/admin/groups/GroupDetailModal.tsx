@@ -234,6 +234,7 @@ function MembersTab({ groupId, onMemberRemoved }: MembersTabProps) {
 										<Tooltip title="Remover miembro">
 											<span>
 												<IconButton
+													aria-label="Remover miembro"
 													size="small"
 													color="error"
 													disabled={removing === userId}
@@ -384,6 +385,7 @@ function InvitationsTab({ groupId }: InvitationsTabProps) {
 											<Tooltip title="Revocar invitación">
 												<span>
 													<IconButton
+														aria-label="Revocar invitación"
 														size="small"
 														color="error"
 														disabled={cancelling === inv._id}
@@ -700,7 +702,7 @@ export default function GroupDetailModal({ open, onClose, groupId, onStatusChang
 							</Stack>
 						)}
 					</Stack>
-					<IconButton onClick={onClose} size="small">
+					<IconButton onClick={onClose} size="small" aria-label="Cerrar">
 						<CloseCircle size={20} />
 					</IconButton>
 				</Stack>

@@ -35,6 +35,7 @@ import { useSnackbar } from "notistack";
 import { Refresh, ArrowUp, ArrowDown, SearchNormal1, CloseCircle, Code } from "iconsax-react";
 import { PendingCausasService, PendingCausa, FuenteCausa, FueroPJN } from "api/pendingCausas";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
+import { clickableProps } from "utils/a11y";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -243,7 +244,7 @@ const CausasPendientes = () => {
 
 	const SortableHeader = ({ field, label }: { field: string; label: string }) => (
 		<TableCell
-			onClick={() => handleSort(field)}
+			{...clickableProps(() => handleSort(field), { asRow: true })}
 			sx={{
 				cursor: "pointer",
 				userSelect: "none",

@@ -15,6 +15,7 @@ import {
 } from "@mui/material";
 import ImageActions from "components/ImageActions";
 import { fetchImageBlob } from "utils/imageActions";
+import { clickableProps } from "utils/a11y";
 import pjnCredentialsService, { BandejaErrorEntry, BandejaHttpResult, BandejaState } from "api/pjnCredentials";
 
 interface Props {
@@ -124,7 +125,9 @@ const BandejaEvidenciaDialog = ({ open, credentialId, title, onClose }: Props) =
 											component="img"
 											src={sc.screenshotUrl}
 											alt={`captura ${sc.label || ""}`}
-											onClick={() => setLightbox({ url: sc.screenshotUrl as string, label: `bandeja-${sc.label || "captura"}` })}
+											{...clickableProps(() => setLightbox({ url: sc.screenshotUrl as string, label: `bandeja-${sc.label || "captura"}` }), {
+												label: `Ampliar captura ${sc.label || ""}`.trim(),
+											})}
 											sx={{
 												display: "block",
 												width: "100%",

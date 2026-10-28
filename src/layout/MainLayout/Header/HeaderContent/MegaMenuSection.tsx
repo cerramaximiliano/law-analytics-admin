@@ -63,7 +63,7 @@ const MegaMenuSection = () => {
 			<IconButton
 				color="secondary"
 				variant="light"
-				aria-label="open profile"
+				aria-label="Abrir menú de accesos"
 				ref={anchorRef}
 				aria-controls={open ? "profile-grow" : undefined}
 				aria-haspopup="true"

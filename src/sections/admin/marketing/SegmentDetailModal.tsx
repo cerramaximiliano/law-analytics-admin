@@ -211,7 +211,7 @@ const SegmentDetailModal = ({ open, onClose, segment }: SegmentDetailModalProps)
 						<Eye size={24} />
 						<Typography variant="h5">Detalle del Segmento</Typography>
 					</Stack>
-					<IconButton onClick={onClose} size="small">
+					<IconButton aria-label="Cerrar" onClick={onClose} size="small">
 						<CloseCircle size={20} />
 					</IconButton>
 				</Stack>

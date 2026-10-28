@@ -49,6 +49,7 @@ import { Campaign } from "types/campaign";
 import { CampaignEmail, EmailStatus } from "types/campaign-email";
 import { CampaignEmailService } from "store/reducers/campaign";
 import CampaignEmailModal from "./CampaignEmailModal";
+import { formatPercent } from "utils/format";
 
 interface CampaignEmailListProps {
 	campaign: Campaign;
@@ -455,7 +456,7 @@ const CampaignEmailList = ({ campaign, open, onClose }: CampaignEmailListProps) 
 									<Typography variant="body2" color="text.secondary">
 										<strong>¿Cómo funcionan los retrasos de emails en las campañas?</strong>
 									</Typography>
-									<IconButton size="small" onClick={() => setHelpExpanded(!helpExpanded)} sx={{ ml: 1 }}>
+									<IconButton aria-label={helpExpanded ? "Ocultar ayuda" : "Mostrar ayuda"} size="small" onClick={() => setHelpExpanded(!helpExpanded)} sx={{ ml: 1 }}>
 										{helpExpanded ? <ArrowUp2 size={16} /> : <ArrowDown2 size={16} />}
 									</IconButton>
 								</Stack>
@@ -594,8 +595,8 @@ const CampaignEmailList = ({ campaign, open, onClose }: CampaignEmailListProps) 
 													const statusInfo = getStatusColor(email.status || "draft");
 													const openRate =
 														email.metrics?.opens && email.metrics?.sent
-															? ((email.metrics.opens / email.metrics.sent) * 100).toFixed(1)
-															: "0";
+															? formatPercent((email.metrics.opens / email.metrics.sent) * 100)
+															: formatPercent(0);
 
 													return (
 														<>
@@ -627,7 +628,7 @@ const CampaignEmailList = ({ campaign, open, onClose }: CampaignEmailListProps) 
 																	<Chip label={statusInfo.label} color={statusInfo.color as any} size="small" />
 																	{email.isFinal && <Chip label="Final" color="secondary" size="small" sx={{ ml: 1 }} />}
 																</TableCell>
-																<TableCell>{`${openRate}%`}</TableCell>
+																<TableCell>{openRate}</TableCell>
 																<TableCell align="center">
 																	<Stack direction="row" spacing={1} justifyContent="center">
 																		<IconButton
@@ -882,10 +883,10 @@ const CampaignEmailList = ({ campaign, open, onClose }: CampaignEmailListProps) 
 																							<Divider sx={{ my: 1 }} />
 																							<Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
 																								<Typography variant="caption" color="textSecondary">
-																									Creado: {email.createdAt ? new Date(email.createdAt).toLocaleString("es-ES") : "N/A"}
+																									Creado: {email.createdAt ? new Date(email.createdAt).toLocaleString("es-AR") : "N/A"}
 																								</Typography>
 																								<Typography variant="caption" color="textSecondary">
-																									Actualizado: {email.updatedAt ? new Date(email.updatedAt).toLocaleString("es-ES") : "N/A"}
+																									Actualizado: {email.updatedAt ? new Date(email.updatedAt).toLocaleString("es-AR") : "N/A"}
 																								</Typography>
 																							</Box>
 																						</Grid>
@@ -932,15 +933,15 @@ const CampaignEmailList = ({ campaign, open, onClose }: CampaignEmailListProps) 
 										<Paper sx={{ p: 2, bgcolor: theme.palette.grey[100] }}>
 											<Typography variant="subtitle2">Tasa de apertura promedio</Typography>
 											<Typography variant="h4">
-												{emails.some((e) => e.metrics?.opens && e.metrics?.sent)
-													? (
-															emails.reduce((acc, email) => {
+												{formatPercent(
+													emails.some((e) => e.metrics?.opens && e.metrics?.sent)
+														? emails.reduce((acc, email) => {
 																const rate =
 																	email.metrics?.opens && email.metrics?.sent ? (email.metrics.opens / email.metrics.sent) * 100 : 0;
 																return acc + rate;
-															}, 0) / emails.length
-													  ).toFixed(1) + "%"
-													: "0%"}
+														  }, 0) / emails.length
+														: 0,
+												)}
 											</Typography>
 										</Paper>
 									</Grid>
@@ -1153,6 +1154,7 @@ const CampaignEmailList = ({ campaign, open, onClose }: CampaignEmailListProps) 
 									<TabPanel value={viewTab} index={1}>
 										<Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2, mr: 2, mt: 2 }}>
 											<IconButton
+												aria-label="Copiar código HTML"
 												onClick={() => {
 													navigator.clipboard.writeText(previewTemplate?.htmlBody || "");
 													enqueueSnackbar("Código HTML copiado al portapapeles", {

@@ -34,6 +34,7 @@ import HcRelevamientoService, {
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 import { ComponenteChip, EstadoChip, MotivoChip, headSx } from "./comun";
 import CasoDrawer from "./CasoDrawer";
+import { clickableProps } from "utils/a11y";
 
 interface Props {
 	/** Filtros fijos de la solapa (p. ej. revisión requerida). */
@@ -214,7 +215,7 @@ export default function CasosTable({ base, modoRevision }: Props) {
 									<TableRow
 										key={d._id}
 										hover
-										onClick={() => setSeleccion(d._id)}
+										{...clickableProps(() => setSeleccion(d._id), { asRow: true })}
 										sx={{ cursor: "pointer", "&:hover": { bgcolor: alpha(BRAND_BLUE, isDark ? 0.06 : 0.03) } }}
 									>
 										<TableCell sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>{d.fadMes || "—"}</TableCell>

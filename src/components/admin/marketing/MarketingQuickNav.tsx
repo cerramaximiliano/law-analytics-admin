@@ -1,10 +1,9 @@
 import React from "react";
 import { Box, Button, ButtonGroup } from "@mui/material";
-import { useNavigate, useLocation } from "react-router-dom";
+import { Link as RouterLink, useLocation } from "react-router-dom";
 import { People, Sms, DocumentText1, Component, Hierarchy, Chart } from "iconsax-react";
 
 const MarketingQuickNav: React.FC = () => {
-	const navigate = useNavigate();
 	const location = useLocation();
 
 	const routes = [
@@ -51,7 +50,8 @@ const MarketingQuickNav: React.FC = () => {
 				{routes.map((route) => (
 					<Button
 						key={route.path}
-						onClick={() => navigate(route.path)}
+						component={RouterLink}
+						to={route.path}
 						disabled={location.pathname === route.path}
 						startIcon={route.icon}
 						sx={{

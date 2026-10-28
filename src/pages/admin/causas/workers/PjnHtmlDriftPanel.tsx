@@ -37,6 +37,7 @@ import { Refresh2, Warning2, TickCircle, Activity, Code1, InfoCircle, CloseCircl
 import { useSnackbar } from "notistack";
 import { LineChart, Line, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { HtmlDriftService, HtmlDriftIncident, HtmlDriftListSummary, FingerprintStats } from "api/htmlDrift";
+import { formatNumber } from "utils/format";
 
 const REFRESH_INTERVAL_MS = 30_000;
 
@@ -275,7 +276,7 @@ const PjnHtmlDriftPanel: React.FC = () => {
 								Avg spans (HTML)
 							</Typography>
 							<Typography variant="h4" sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}>
-								{avgSpans ? avgSpans.toFixed(0) : "—"}
+								{avgSpans ? formatNumber(avgSpans, 0) : "—"}
 							</Typography>
 							<Typography variant="caption" color="text.secondary">
 								{stats?.total ?? 0} fingerprints
@@ -487,7 +488,7 @@ const PjnHtmlDriftPanel: React.FC = () => {
 											tick={{ fontSize: 11 }}
 											domain={[(dataMin: number) => Math.floor(dataMin * 0.95), (dataMax: number) => Math.ceil(dataMax * 1.05)]}
 										/>
-										<RechartsTooltip formatter={(value: number) => value.toFixed(1)} labelStyle={{ fontSize: 12 }} />
+										<RechartsTooltip formatter={(value: number) => formatNumber(value, 1)} labelStyle={{ fontSize: 12 }} />
 										<Line type="monotone" dataKey="avgTotalSpans" stroke={theme.palette.primary.main} strokeWidth={2} dot={{ r: 3 }} />
 									</LineChart>
 								</ResponsiveContainer>
@@ -546,7 +547,7 @@ const PjnHtmlDriftPanel: React.FC = () => {
 										{f._id || "(sin fuero)"}
 									</Typography>
 									<Typography variant="body2">
-										{f.count} muestras · avg {f.avgTotalSpans.toFixed(0)} spans
+										{f.count} muestras · avg {formatNumber(f.avgTotalSpans, 0)} spans
 									</Typography>
 								</Box>
 							))}

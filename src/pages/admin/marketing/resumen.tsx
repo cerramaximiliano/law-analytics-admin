@@ -30,6 +30,8 @@ import CampaignSendStatsModal from "sections/admin/marketing/CampaignSendStatsMo
 import { CampaignTipoChip, TipoMultiSelect, tipoOrder } from "sections/admin/marketing/campaignTipos";
 import { CampaignService } from "store/reducers/campaign";
 import { Campaign, CampaignStatus, CampaignSummaryRow, CampaignSummaryTotals } from "types/campaign";
+import { clickableProps } from "utils/a11y";
+import { formatPercent } from "utils/format";
 
 // ==============================|| ADMIN - MARKETING - RESUMEN DE CAMPAÑAS ||============================== //
 // Una fila por campaña con acumulado, envíos y altas (solo conteos). Backend: GET /api/campaigns/summary.
@@ -209,7 +211,7 @@ const CampaignsSummary = () => {
 
 	const cell = (r: Row | (CampaignSummaryTotals & ReturnType<typeof withRates>), c: Column) => {
 		const v = (r as any)[c.key] as number;
-		return c.rate ? `${v.toFixed(1)}%` : c.key === "dailyLimit" ? (v ? fmt(v) : "—") : fmt(v);
+		return c.rate ? formatPercent(v, 1) : c.key === "dailyLimit" ? (v ? fmt(v) : "—") : fmt(v);
 	};
 
 	return (
@@ -314,7 +316,7 @@ const CampaignsSummary = () => {
 										<TableRow
 											key={r._id}
 											hover
-											onClick={() => openCampaign(r._id)}
+											{...clickableProps(() => openCampaign(r._id), { asRow: true })}
 											sx={{ cursor: "pointer", opacity: opening === r._id ? 0.5 : 1 }}
 										>
 											<TableCell>

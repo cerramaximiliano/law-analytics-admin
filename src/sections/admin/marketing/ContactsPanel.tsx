@@ -354,7 +354,7 @@ const ContactsPanel = () => {
 							InputProps={{
 								endAdornment: (
 									<InputAdornment position="end">
-										<IconButton onClick={handleApplySearch} edge="end">
+										<IconButton aria-label="Buscar" onClick={handleApplySearch} edge="end">
 											<SearchNormal1 size={18} />
 										</IconButton>
 									</InputAdornment>
@@ -610,7 +610,7 @@ const ContactsPanel = () => {
 													{(contact._id || "").slice(0, 8)}…
 												</Typography>
 												<Tooltip title={copiedContactId === contact._id ? "¡Copiado!" : contact._id || ""}>
-													<IconButton size="small" onClick={() => handleCopyId(contact._id || "")} sx={{ p: 0.25 }}>
+													<IconButton aria-label="Copiar ID" size="small" onClick={() => handleCopyId(contact._id || "")} sx={{ p: 0.25 }}>
 														{copiedContactId === contact._id ? <CopySuccess size={13} color="green" /> : <Copy size={13} />}
 													</IconButton>
 												</Tooltip>

@@ -74,6 +74,8 @@ import { useTabIndexParam, useTabParam } from "hooks/useTabParam";
 import { useSearchParams } from "react-router-dom";
 import CrossViewLinks from "components/admin/CrossViewLink";
 import { ConciliacionSaijContent } from "pages/admin/saij/conciliacion";
+import { clickableProps } from "utils/a11y";
+import { formatPercent } from "utils/format";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -475,10 +477,10 @@ export default function SaijWorkerPage() {
 						{configs.map((cfg) => (
 							<Box
 								key={cfg.worker_id}
-								onClick={() => {
+								{...clickableProps(() => {
 									selectWorker(cfg);
 									handleSideTabChange("scraping");
-								}}
+								})}
 								sx={{
 									p: 1.5,
 									borderRadius: 1,
@@ -535,7 +537,7 @@ export default function SaijWorkerPage() {
 							Workers de enriquecimiento
 						</Typography>
 						<Box
-							onClick={() => handleSideTabChange("enrich")}
+							{...clickableProps(() => handleSideTabChange("enrich"))}
 							sx={{
 								p: 1.5,
 								borderRadius: 1,
@@ -980,7 +982,7 @@ export default function SaijWorkerPage() {
 															Expediente parseado
 														</Typography>
 														<Typography variant="caption" color="text.secondary">
-															{((pipelineStats.withExpediente / pipelineStats.total) * 100).toFixed(1)}%
+															{formatPercent((pipelineStats.withExpediente / pipelineStats.total) * 100, 1)}
 														</Typography>
 													</Stack>
 													<LinearProgress
@@ -1070,7 +1072,7 @@ export default function SaijWorkerPage() {
 																	Embeddings completados
 																</Typography>
 																<Typography variant="caption" color="text.secondary">
-																	{completed} / {pipelineStats.sentenciasCapturadas.total} ({pct.toFixed(1)}%)
+																	{completed} / {pipelineStats.sentenciasCapturadas.total} ({formatPercent(pct, 1)})
 																</Typography>
 															</Stack>
 															<LinearProgress variant="determinate" value={pct} color="success" sx={{ height: 6, borderRadius: 1 }} />

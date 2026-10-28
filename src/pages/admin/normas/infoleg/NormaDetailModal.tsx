@@ -18,10 +18,10 @@ import {
 	useTheme,
 } from "@mui/material";
 import { CloseCircle, ExportSquare } from "iconsax-react";
-import dayjs from "dayjs";
 import InfolegService from "api/infolegService";
 import type { InfolegNorma } from "types/infoleg";
 import { BRAND_BLUE } from "themes/dashboardTokens";
+import { formatDate, formatDateTime } from "utils/format";
 
 const TIPO_LABELS: Record<string, string> = {
 	ley: "Ley",
@@ -124,7 +124,7 @@ const NormaDetailModal = ({ infolegId, open, onClose }: NormaDetailModalProps) =
 								</IconButton>
 							</Tooltip>
 						)}
-						<IconButton size="small" onClick={onClose}>
+						<IconButton size="small" onClick={onClose} aria-label="Cerrar">
 							<CloseCircle size={20} />
 						</IconButton>
 					</Stack>
@@ -183,17 +183,17 @@ const NormaDetailModal = ({ infolegId, open, onClose }: NormaDetailModalProps) =
 									<MetaRow label="Organismo" value={norma.organismo} />
 									<MetaRow
 										label="Fecha publicación"
-										value={norma.fechaPublicacion ? dayjs(norma.fechaPublicacion).format("DD/MM/YYYY") : undefined}
+										value={norma.fechaPublicacion ? formatDate(norma.fechaPublicacion) : undefined}
 									/>
 									<MetaRow
 										label="Boletín Oficial"
 										value={
 											norma.boletin?.numero
-												? `N° ${norma.boletin.numero}${norma.boletin.fecha ? ` — ${dayjs(norma.boletin.fecha).format("DD/MM/YYYY")}` : ""}`
+												? `N° ${norma.boletin.numero}${norma.boletin.fecha ? ` — ${formatDate(norma.boletin.fecha)}` : ""}`
 												: undefined
 										}
 									/>
-									<MetaRow label="Scrapeado" value={norma.scrapedAt ? dayjs(norma.scrapedAt).format("DD/MM/YYYY HH:mm") : undefined} />
+									<MetaRow label="Scrapeado" value={norma.scrapedAt ? formatDateTime(norma.scrapedAt) : undefined} />
 									<MetaRow label="Fuente texto orig." value={norma.textoFuente?.original || undefined} />
 									<MetaRow label="Fuente texto act." value={norma.textoFuente?.actualizado || undefined} />
 									<MetaRow label="URL Portal nuevo" value={norma.urlSlug || undefined} />

@@ -251,7 +251,7 @@ const BatchCreateWorkersModal: React.FC<BatchCreateWorkersModalProps> = ({ open,
 						label="Delay Incremental (segundos)"
 						value={delayIncrement}
 						onChange={(e) => setDelayIncrement(Number(e.target.value))}
-						helperText="Cada worker tendrá N*incremento segundos de delay (0, 30, 60...)"
+						helperText="Cada worker tendrá N*incremento segundos de delay (0, 30, 60…)"
 						inputProps={{ min: 0 }}
 					/>
 
@@ -283,6 +283,7 @@ const BatchCreateWorkersModal: React.FC<BatchCreateWorkersModalProps> = ({ open,
 												<TableCell>{index + 1}</TableCell>
 												<TableCell>
 													<TextField
+														inputProps={{ "aria-label": `Inicio del rango ${index + 1}` }}
 														type="number"
 														size="small"
 														value={range.start}
@@ -292,6 +293,7 @@ const BatchCreateWorkersModal: React.FC<BatchCreateWorkersModalProps> = ({ open,
 												</TableCell>
 												<TableCell>
 													<TextField
+														inputProps={{ "aria-label": `Fin del rango ${index + 1}` }}
 														type="number"
 														size="small"
 														value={range.end}
@@ -299,7 +301,7 @@ const BatchCreateWorkersModal: React.FC<BatchCreateWorkersModalProps> = ({ open,
 														sx={{ width: 120 }}
 													/>
 												</TableCell>
-												<TableCell sx={{ fontVariantNumeric: "tabular-nums" }}>{(range.end - range.start).toLocaleString()}</TableCell>
+												<TableCell sx={{ fontVariantNumeric: "tabular-nums" }}>{(range.end - range.start).toLocaleString("es-AR")}</TableCell>
 												<TableCell sx={{ fontVariantNumeric: "tabular-nums" }}>{index * delayIncrement}s</TableCell>
 											</TableRow>
 										))}
@@ -327,7 +329,7 @@ const BatchCreateWorkersModal: React.FC<BatchCreateWorkersModalProps> = ({ open,
 					Cancelar
 				</Button>
 				<Button variant="contained" onClick={handleSubmit} disabled={loading} startIcon={loading && <CircularProgress size={16} />}>
-					{loading ? "Creando..." : `Crear ${ranges.length} Workers`}
+					{loading ? "Creando…" : `Crear ${ranges.length} Workers`}
 				</Button>
 			</DialogActions>
 		</Dialog>

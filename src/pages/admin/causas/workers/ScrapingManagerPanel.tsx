@@ -543,7 +543,7 @@ const ScrapingManagerPanel: React.FC = () => {
 											</TableCell>
 											<TableCell>
 												<Typography variant="body2" fontSize="0.75rem">
-													{worker.range_start?.toLocaleString()}-{worker.range_end?.toLocaleString()}
+													{worker.range_start?.toLocaleString("es-AR")}-{worker.range_end?.toLocaleString("es-AR")}
 												</Typography>
 												<Typography variant="caption" color="text.secondary">
 													Año: {worker.year}
@@ -553,7 +553,7 @@ const ScrapingManagerPanel: React.FC = () => {
 												<Stack spacing={0.25}>
 													<LinearProgress variant="determinate" value={progress} sx={{ height: 4, borderRadius: 1 }} />
 													<Typography variant="caption" color="text.secondary">
-														{progress}% — #{worker.number?.toLocaleString() || "?"}
+														{progress}% — #{worker.number?.toLocaleString("es-AR") || "?"}
 													</Typography>
 												</Stack>
 											</TableCell>

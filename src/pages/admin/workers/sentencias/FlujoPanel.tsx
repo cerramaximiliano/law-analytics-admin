@@ -217,7 +217,7 @@ export default function FlujoPanel() {
 			<Alert
 				severity="error"
 				action={
-					<IconButton size="small" onClick={cargar}>
+					<IconButton aria-label="Actualizar" size="small" onClick={cargar}>
 						<Refresh size={15} />
 					</IconButton>
 				}

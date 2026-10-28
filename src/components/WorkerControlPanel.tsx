@@ -64,7 +64,7 @@ export default function WorkerControlPanel({ processes }: WorkerControlPanelProp
 									height: 9,
 									borderRadius: "50%",
 									flexShrink: 0,
-									transition: "all 0.3s ease",
+									transition: "background-color 0.3s ease, box-shadow 0.3s ease",
 									bgcolor: isLoading
 										? theme.palette.action.disabled
 										: isOn

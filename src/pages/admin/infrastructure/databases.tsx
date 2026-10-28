@@ -41,6 +41,8 @@ import { useTabParam } from "hooks/useTabParam";
 import DatabasesService, { DatabaseEntry } from "api/databases";
 import { MonitoringService, HistoryPoint } from "api/monitoring";
 import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER, headerBorder, navHoverBg } from "themes/dashboardTokens";
+import { clickableProps } from "utils/a11y";
+import { formatNumber } from "utils/format";
 
 function fmtBytes(b: number | null | undefined): string {
 	if (b == null) return "—";
@@ -51,7 +53,7 @@ function fmtBytes(b: number | null | undefined): string {
 		n /= 1024;
 		i++;
 	}
-	return `${n.toFixed(n >= 100 || i === 0 ? 0 : 1)} ${u[i]}`;
+	return `${formatNumber(n, n >= 100 || i === 0 ? 0 : 1)} ${u[i]}`;
 }
 
 function fmtNum(n: number | null | undefined): string {
@@ -114,7 +116,7 @@ const DbCard = ({ db, onOpen }: { db: DatabaseEntry; onOpen: () => void }) => {
 	return (
 		<Paper
 			variant="outlined"
-			onClick={onOpen}
+			{...clickableProps(onOpen)}
 			sx={{
 				p: 2,
 				height: "100%",
@@ -475,7 +477,7 @@ export default function DatabasesMonitoring() {
 						)}
 						<Tooltip title="Volver a consultar a cada base">
 							<span>
-								<IconButton size="small" onClick={() => load(true)} disabled={loading}>
+								<IconButton aria-label="Volver a consultar a cada base" size="small" onClick={() => load(true)} disabled={loading}>
 									{loading ? <CircularProgress size={16} /> : <Refresh size={18} />}
 								</IconButton>
 							</span>

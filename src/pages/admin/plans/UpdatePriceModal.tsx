@@ -221,7 +221,7 @@ const UpdatePriceModal = ({ open, onClose, plan, onSuccess }: UpdatePriceModalPr
 							Actualizar precio · {plan.displayName}
 						</Typography>
 					</Box>
-					<IconButton onClick={onClose} size="small" sx={{ mr: -0.5 }}>
+					<IconButton aria-label="Cerrar" onClick={onClose} size="small" sx={{ mr: -0.5 }}>
 						<CloseCircle size={20} />
 					</IconButton>
 				</Box>
@@ -264,7 +264,7 @@ const UpdatePriceModal = ({ open, onClose, plan, onSuccess }: UpdatePriceModalPr
 					<Grid item xs={12}>
 						<Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
 							<Typography variant="h6">Precios en Stripe ({environment})</Typography>
-							<IconButton size="small" onClick={fetchStripePrices} disabled={loadingPrices}>
+							<IconButton aria-label="Actualizar precios de Stripe" size="small" onClick={fetchStripePrices} disabled={loadingPrices}>
 								<Refresh size={18} />
 							</IconButton>
 						</Box>
@@ -297,7 +297,7 @@ const UpdatePriceModal = ({ open, onClose, plan, onSuccess }: UpdatePriceModalPr
 													<TableCell>
 														<Box display="flex" alignItems="center" gap={1}>
 															<Typography variant="caption" fontFamily="monospace">
-																{stripePrice.id.substring(0, 20)}...
+																{stripePrice.id.substring(0, 20)}…
 															</Typography>
 															{isDefault && <Chip label="Predeterminado" size="small" color="primary" />}
 														</Box>

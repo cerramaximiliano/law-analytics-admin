@@ -421,6 +421,7 @@ export default function DifusionTab() {
 											>
 												<span>
 													<IconButton
+														aria-label="Generar carrusel"
 														size="small"
 														onClick={() => sc?._id && generarCarrusel(sc._id, r.titulo || "")}
 														disabled={!pub || !!r.socialPost?.generado || generando === sc?._id}
@@ -433,6 +434,7 @@ export default function DifusionTab() {
 											<Tooltip title={r.socialPost?.generado ? "Post generado — click para desmarcar" : "Marcar que se generó un post"}>
 												<span>
 													<IconButton
+														aria-label={r.socialPost?.generado ? "Desmarcar post generado" : "Marcar post generado"}
 														size="small"
 														onClick={() => toggleSocialPost(r)}
 														disabled={marcando === r._id}

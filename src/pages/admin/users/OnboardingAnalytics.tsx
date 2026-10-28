@@ -49,6 +49,7 @@ import {
 } from "types/onboarding";
 import { useSnackbar } from "notistack";
 import { useTabIndexParam } from "hooks/useTabParam";
+import { formatPercent } from "utils/format";
 
 // Slugs del tab en la URL; el orden fija el índice de cada <Tab>.
 const TAB_SLUGS = ["resumen", "eventos", "estancados", "reset"] as const;
@@ -687,7 +688,7 @@ const OnboardingAnalytics: React.FC = () => {
 														<TableCell align="right">{row.createdFolder}</TableCell>
 														<TableCell align="right">
 															<Chip
-																label={`${row.count > 0 ? ((row.createdFolder / row.count) * 100).toFixed(1) : 0}%`}
+																label={formatPercent(row.count > 0 ? (row.createdFolder / row.count) * 100 : 0, 1)}
 																size="small"
 																color={
 																	row.count > 0 && (row.createdFolder / row.count) * 100 > 50
@@ -875,9 +876,9 @@ const OnboardingAnalytics: React.FC = () => {
 											</TableCell>
 											<TableCell>{event.sessionsCount}</TableCell>
 											<TableCell>
-												<Typography variant="body2">{new Date(event.createdAt).toLocaleDateString()}</Typography>
+												<Typography variant="body2">{new Date(event.createdAt).toLocaleDateString("es-AR")}</Typography>
 												<Typography variant="caption" color="text.secondary">
-													{new Date(event.createdAt).toLocaleTimeString()}
+													{new Date(event.createdAt).toLocaleTimeString("es-AR")}
 												</Typography>
 											</TableCell>
 											<TableCell>
@@ -973,14 +974,14 @@ const OnboardingAnalytics: React.FC = () => {
 											</TableCell>
 											<TableCell>
 												{user.lastSessionAt ? (
-													new Date(user.lastSessionAt).toLocaleDateString()
+													new Date(user.lastSessionAt).toLocaleDateString("es-AR")
 												) : (
 													<Typography variant="body2" color="text.secondary">
 														N/A
 													</Typography>
 												)}
 											</TableCell>
-											<TableCell>{new Date(user.createdAt).toLocaleDateString()}</TableCell>
+											<TableCell>{new Date(user.createdAt).toLocaleDateString("es-AR")}</TableCell>
 											<TableCell align="center">
 												<Chip
 													label={`${user.daysSinceRegistration} dias`}
@@ -1008,7 +1009,7 @@ const OnboardingAnalytics: React.FC = () => {
 															}
 															sx={{ textTransform: "none", fontSize: "0.75rem", py: 0.25 }}
 														>
-															{resettingUserId === user._id ? "..." : "Reset"}
+															{resettingUserId === user._id ? "…" : "Reset"}
 														</Button>
 													</span>
 												</Tooltip>
@@ -1044,7 +1045,8 @@ const OnboardingAnalytics: React.FC = () => {
 						<TextField
 							fullWidth
 							size="small"
-							placeholder="Buscar por email o nombre (mín. 2 caracteres)..."
+							placeholder="Buscar por email o nombre (mín. 2 caracteres)…"
+							inputProps={{ "aria-label": "Buscar por email o nombre", spellCheck: false }}
 							value={searchQuery}
 							onChange={(e) => setSearchQuery(e.target.value)}
 							InputProps={{
@@ -1105,7 +1107,7 @@ const OnboardingAnalytics: React.FC = () => {
 											<TableCell>{renderOnboardingStateChip(u)}</TableCell>
 											<TableCell>
 												<Typography variant="caption" color="text.secondary">
-													{new Date(u.createdAt).toLocaleDateString()}
+													{new Date(u.createdAt).toLocaleDateString("es-AR")}
 												</Typography>
 											</TableCell>
 											<TableCell align="right">
@@ -1118,7 +1120,7 @@ const OnboardingAnalytics: React.FC = () => {
 													onClick={() => openResetDialog(u)}
 													sx={{ textTransform: "none", fontSize: "0.78rem" }}
 												>
-													{resettingUserId === u._id ? "Reseteando..." : "Reset"}
+													{resettingUserId === u._id ? "Reseteando…" : "Reset"}
 												</Button>
 											</TableCell>
 										</TableRow>
@@ -1229,7 +1231,7 @@ const OnboardingAnalytics: React.FC = () => {
 							"&:active": { transform: "scale(0.98)" },
 						}}
 					>
-						{resettingUserId ? "Reseteando..." : "Resetear"}
+						{resettingUserId ? "Reseteando…" : "Resetear"}
 					</Button>
 				</DialogActions>
 			</ResponsiveDialog>

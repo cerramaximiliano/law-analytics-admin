@@ -28,6 +28,7 @@ import MainCard from "components/MainCard";
 import { fetchTrabajoConfig, updateTrabajoConfig, triggerWorkerRun } from "store/reducers/seclo";
 import { useDispatch } from "store";
 import { BRAND_BLUE } from "themes/dashboardTokens";
+import { formatPercent } from "utils/format";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -795,8 +796,8 @@ export default function WorkersSecloPage() {
 					{config.managerHealth?.lastCheckAt && (
 						<Alert severity="info" icon={false} sx={{ mb: 2 }}>
 							<Typography variant="body2">
-								Health del manager · CPU: <strong>{(config.managerHealth.cpuPercent ?? 0).toFixed(1)}%</strong> · Memoria:{" "}
-								<strong>{(config.managerHealth.memoryPercent ?? 0).toFixed(1)}%</strong> · Última lectura:{" "}
+								Health del manager · CPU: <strong>{formatPercent(config.managerHealth.cpuPercent ?? 0, 1)}</strong> · Memoria:{" "}
+								<strong>{formatPercent(config.managerHealth.memoryPercent ?? 0, 1)}</strong> · Última lectura:{" "}
 								{fmtDate(config.managerHealth.lastCheckAt)}
 							</Typography>
 						</Alert>

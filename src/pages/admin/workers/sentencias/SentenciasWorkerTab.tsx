@@ -72,6 +72,8 @@ import CronSelector from "components/admin/CronSelector";
 import PublicacionesSection from "./PublicacionesSection";
 import FlujoPanel from "./FlujoPanel";
 import { useTabIndexParam } from "hooks/useTabParam";
+import { clickableProps } from "utils/a11y";
+import { formatNumber, formatPercent } from "utils/format";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -268,7 +270,7 @@ function SentenciaRow({ doc, onDetail, onRetry, onRetryOcr }: SentenciaRowProps)
 				{doc.ocrResult?.charCount && (
 					<Typography variant="caption" color="text.disabled" display="block">
 						OCR: {fmtNum(doc.ocrResult.charCount)} chars · {doc.ocrResult.pageCount} pág · {doc.ocrResult.method}
-						{doc.ocrResult.processingTimeMs ? ` · ${(doc.ocrResult.processingTimeMs / 1000).toFixed(1)}s` : ""}
+						{doc.ocrResult.processingTimeMs ? ` · ${formatNumber(doc.ocrResult.processingTimeMs / 1000, 1)} s` : ""}
 					</Typography>
 				)}
 				{doc.processingError && (
@@ -334,7 +336,7 @@ function DetailDialog({ doc, open, onClose }: { doc: SentenciaCapturada | null; 
 						/>
 					)}
 				</Box>
-				<IconButton onClick={onClose} size="small">
+				<IconButton aria-label="Cerrar" onClick={onClose} size="small">
 					<CloseCircle size={20} />
 				</IconButton>
 			</DialogTitle>
@@ -424,7 +426,7 @@ function DetailDialog({ doc, open, onClose }: { doc: SentenciaCapturada | null; 
 										<Typography variant="subtitle2">Texto extraído por OCR</Typography>
 										<Chip label={`${fmtNum(data.ocrResult.charCount)} chars`} size="small" color="info" />
 										{data.ocrResult.processingTimeMs && (
-											<Chip label={`${(data.ocrResult.processingTimeMs / 1000).toFixed(1)}s`} size="small" variant="outlined" />
+											<Chip label={`${formatNumber(data.ocrResult.processingTimeMs / 1000, 1)} s`} size="small" variant="outlined" />
 										)}
 									</Stack>
 									<Box
@@ -954,7 +956,7 @@ function OcrSection({
 											const c = OCR_STATUS_COLOR[st];
 											return c !== "default" ? theme.palette[c]?.main : undefined;
 										})()}
-										sub={entry?.avgMs ? `~${(entry.avgMs / 1000).toFixed(0)}s prom.` : undefined}
+										sub={entry?.avgMs ? `~${formatNumber(entry.avgMs / 1000, 0)} s prom.` : undefined}
 									/>
 								</Grid>
 							);
@@ -1455,7 +1457,7 @@ function NoveltySection({ stats, loading, onRefresh }: { stats: SentenciasStats 
 								{/* Guardar */}
 								<Box>
 									<Button variant="contained" size="small" onClick={handleSave} disabled={saving || !isDirty}>
-										{saving ? "Guardando..." : "Guardar configuración"}
+										{saving ? "Guardando…" : "Guardar configuración"}
 									</Button>
 								</Box>
 							</Stack>
@@ -1589,7 +1591,7 @@ function EmbeddingsConfigCard() {
 					Descartar
 				</Button>
 				<Button variant="contained" size="small" onClick={handleSave} disabled={!dirty || saving || loading} sx={{ textTransform: "none" }}>
-					{saving ? "Guardando..." : "Guardar"}
+					{saving ? "Guardando…" : "Guardar"}
 				</Button>
 			</Stack>
 		</Paper>
@@ -1637,7 +1639,7 @@ function PineconeUsageCard() {
 					</Typography>
 				</Box>
 				<Button size="small" onClick={loadPineconeStats} disabled={pineconeStatsLoading} sx={{ textTransform: "none" }}>
-					{pineconeStatsLoading ? "Cargando..." : "Refrescar"}
+					{pineconeStatsLoading ? "Cargando…" : "Refrescar"}
 				</Button>
 			</Stack>
 
@@ -1720,7 +1722,7 @@ function PineconeUsageCard() {
 									Fullness
 								</Typography>
 								<Typography variant="body2" fontWeight={600}>
-									{(pineconeStats.indexStats.indexFullness * 100).toFixed(2)}%
+									{formatPercent(pineconeStats.indexStats.indexFullness * 100, 2)}
 								</Typography>
 							</Box>
 						)}
@@ -1803,7 +1805,7 @@ function EmbeddingsSection({
 											const c = EMBEDDING_STATUS_COLOR[st];
 											return c !== "default" ? theme.palette[c]?.main : undefined;
 										})()}
-										sub={st === "completed" && entry?.avgChunks ? `~${entry.avgChunks.toFixed(1)} chunks prom.` : undefined}
+										sub={st === "completed" && entry?.avgChunks ? `~${formatNumber(entry.avgChunks, 1)} chunks prom.` : undefined}
 									/>
 								</Grid>
 							);
@@ -1816,7 +1818,7 @@ function EmbeddingsSection({
 							<Stack direction="row" justifyContent="space-between" mb={0.5}>
 								<Typography variant="body2" color="text.secondary">
 									{completed} de {total} indexados en Pinecone
-									{avgChunks ? ` · ~${avgChunks.toFixed(1)} chunks/doc` : ""}
+									{avgChunks ? ` · ~${formatNumber(avgChunks, 1)} chunks/doc` : ""}
 								</Typography>
 								<Typography variant="body2" fontWeight={700} color={theme.palette.success.main}>
 									{pct}%
@@ -2092,7 +2094,7 @@ function ListaSection() {
 											</Typography>
 											<Typography variant="caption" sx={{ display: "block", mb: 0.5 }}>
 												<strong>Novelty</strong> en esta Lista = <code>category: &apos;novelty&apos;</code> (todas las sentencias detectadas
-												como novedad, en cualquier estado del pipeline: pendientes, OCR, error, procesadas...).
+												como novedad, en cualquier estado del pipeline: pendientes, OCR, error, procesadas…).
 											</Typography>
 											<Typography variant="caption" sx={{ display: "block" }}>
 												<strong>Publicaciones</strong> es un subconjunto:{" "}
@@ -2118,7 +2120,7 @@ function ListaSection() {
 						<TextField
 							fullWidth
 							size="small"
-							placeholder="Buscar por carátula o número..."
+							placeholder="Buscar por carátula o número…"
 							value={searchInput}
 							onChange={(e) => setSearchInput(e.target.value)}
 							onKeyDown={(e) => e.key === "Enter" && handleSearch()}
@@ -2129,7 +2131,7 @@ function ListaSection() {
 									</InputAdornment>
 								),
 								endAdornment: search && (
-									<IconButton
+									<IconButton aria-label="Limpiar búsqueda"
 										size="small"
 										onClick={() => {
 											setSearch("");
@@ -2285,7 +2287,7 @@ function SentenciaCard({ doc, onDetail }: SentenciaCardProps) {
 				display: "flex",
 				flexDirection: "column",
 			}}
-			onClick={() => onDetail(doc)}
+			{...clickableProps(() => onDetail(doc))}
 		>
 			{/* Header: expediente + tipo + categoría */}
 			<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap mb={1}>
@@ -2457,7 +2459,7 @@ function SentenciaCard({ doc, onDetail }: SentenciaCardProps) {
 
 // ── AI Summary Config Panel ───────────────────────────────────────────────────
 
-const DEFAULT_PROMPT_PLACEHOLDER = `Eres un asistente jurídico especializado en derecho argentino. Tu tarea es analizar fallos judiciales y producir un resumen estructurado...
+const DEFAULT_PROMPT_PLACEHOLDER = `Eres un asistente jurídico especializado en derecho argentino. Tu tarea es analizar fallos judiciales y producir un resumen estructurado…
 
 (Dejá vacío para usar el prompt por defecto del sistema)`;
 
@@ -2508,7 +2510,7 @@ function AiSummaryConfigPanel({ config, saving, onSave }: AiSummaryConfigPanelPr
 					/>
 					<Chip label={config.aiSummary?.model || "gpt-4o-mini"} size="small" variant="outlined" sx={{ height: 18, fontSize: "0.65rem" }} />
 				</Stack>
-				<IconButton size="small">
+				<IconButton aria-label={open ? "Contraer configuración de resumen IA" : "Expandir configuración de resumen IA"} aria-expanded={open} size="small">
 					{open ? <ArrowDown2 size={16} /> : <ArrowDown2 size={16} style={{ transform: "rotate(-90deg)" }} />}
 				</IconButton>
 			</Stack>
@@ -3270,7 +3272,7 @@ export default function SentenciasWorkerTab() {
 									direction="row"
 									alignItems="center"
 									spacing={0.75}
-									onClick={() => setSubflagsAbiertos((v) => !v)}
+									{...clickableProps(() => setSubflagsAbiertos((v) => !v))} aria-expanded={subflagsAbiertos}
 									sx={{ cursor: "pointer", pl: 0.5, mb: 0.5, color: "text.secondary" }}
 								>
 									{subflagsAbiertos ? <ArrowUp2 size={13} /> : <ArrowDown2 size={13} />}

@@ -131,7 +131,7 @@ const DeleteContactDialog: React.FC<DeleteContactDialogProps> = ({ open, onClose
 					disabled={loading || !contactId}
 					startIcon={loading && <CircularProgress size={20} color="inherit" />}
 				>
-					{loading ? "Procesando..." : permanentDelete ? "Eliminar Permanentemente" : "Cancelar Suscripción"}
+					{loading ? "Procesando…" : permanentDelete ? "Eliminar Permanentemente" : "Cancelar Suscripción"}
 				</Button>
 			</DialogActions>
 		</Dialog>

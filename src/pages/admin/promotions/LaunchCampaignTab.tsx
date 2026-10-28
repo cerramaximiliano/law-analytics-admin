@@ -613,7 +613,7 @@ const LaunchCampaignTab = ({ discount, onCampaignLaunched }: Props) => {
 													{...params}
 													label="Buscar template"
 													size="small"
-													placeholder="Escribí para filtrar..."
+													placeholder="Escribí para filtrar…"
 													InputProps={{
 														...params.InputProps,
 														endAdornment: (
@@ -858,6 +858,7 @@ const LaunchCampaignTab = ({ discount, onCampaignLaunched }: Props) => {
 														}}
 														onClick={(e) => e.stopPropagation()}
 														placeholder="Nombre del paso"
+														inputProps={{ "aria-label": "Nombre del paso" }}
 														variant="standard"
 														sx={{ "& .MuiInput-root": { fontSize: "0.875rem", fontWeight: 600 } }}
 													/>
@@ -885,10 +886,10 @@ const LaunchCampaignTab = ({ discount, onCampaignLaunched }: Props) => {
 															value={step.anchorMode}
 															onChange={(_, val) => val && updateStep(step.id, "anchorMode", val)}
 														>
-															<ToggleButton value="relative" sx={{ px: 0.75, py: 0.25, fontSize: "0.7rem" }}>
+															<ToggleButton value="relative" aria-label="Modo relativo" sx={{ px: 0.75, py: 0.25, fontSize: "0.7rem" }}>
 																<Timer1 size={13} />
 															</ToggleButton>
-															<ToggleButton value="days_before_expiry" sx={{ px: 0.75, py: 0.25, fontSize: "0.7rem" }}>
+															<ToggleButton value="days_before_expiry" aria-label="Modo anclado al vencimiento" sx={{ px: 0.75, py: 0.25, fontSize: "0.7rem" }}>
 																<Calendar size={13} />
 															</ToggleButton>
 														</ToggleButtonGroup>
@@ -909,6 +910,7 @@ const LaunchCampaignTab = ({ discount, onCampaignLaunched }: Props) => {
 																size="small"
 																value={step.timeDelayUnit}
 																onChange={(e) => updateStep(step.id, "timeDelayUnit", e.target.value)}
+																inputProps={{ "aria-label": "Unidad de espera" }}
 																sx={{ minWidth: 82, fontSize: "0.8rem" }}
 															>
 																<MenuItem value="hours">horas</MenuItem>
@@ -973,7 +975,7 @@ const LaunchCampaignTab = ({ discount, onCampaignLaunched }: Props) => {
 														);
 													})()}
 
-												<IconButton
+												<IconButton aria-label="Eliminar paso"
 													size="small"
 													color="error"
 													onClick={(e) => {
@@ -983,7 +985,17 @@ const LaunchCampaignTab = ({ discount, onCampaignLaunched }: Props) => {
 												>
 													<Trash size={16} />
 												</IconButton>
-												{step.expanded ? <ArrowUp2 size={16} /> : <ArrowDown2 size={16} />}
+												<IconButton
+													size="small"
+													aria-label={step.expanded ? "Contraer paso" : "Expandir paso"}
+													aria-expanded={step.expanded}
+													onClick={(e) => {
+														e.stopPropagation();
+														toggleStep(step.id);
+													}}
+												>
+													{step.expanded ? <ArrowUp2 size={16} /> : <ArrowDown2 size={16} />}
+												</IconButton>
 											</Stack>
 
 											{/* Body del paso (colapsable) */}
@@ -1351,7 +1363,7 @@ const LaunchCampaignTab = ({ discount, onCampaignLaunched }: Props) => {
 											disabled={activateLoading}
 											startIcon={activateLoading ? <CircularProgress size={14} color="inherit" /> : <Send2 size={14} />}
 										>
-											{activateLoading ? "Activando..." : "Activar ahora"}
+											{activateLoading ? "Activando…" : "Activar ahora"}
 										</Button>
 									</Box>
 								)}
@@ -1388,7 +1400,7 @@ const LaunchCampaignTab = ({ discount, onCampaignLaunched }: Props) => {
 								"&:active": { transform: "scale(0.98)" },
 							}}
 						>
-							{loading ? "Procesando..." : launchImmediately ? "Crear y lanzar campaña" : "Crear campaña en borrador"}
+							{loading ? "Procesando…" : launchImmediately ? "Crear y lanzar campaña" : "Crear campaña en borrador"}
 						</Button>
 					</Stack>
 				</>

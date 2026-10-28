@@ -31,6 +31,7 @@ import { useSnackbar } from "notistack";
 import InfolegService from "api/infolegService";
 import type { InfolegWorkerStatus } from "types/infoleg";
 import { BRAND_BLUE, LIVE_GREEN, LIVE_PULSE_KEYFRAMES, headerBorder } from "themes/dashboardTokens";
+import { formatBytes } from "utils/format";
 
 const STATUS_CONFIG: Record<string, { color: "success" | "error" | "warning" | "default"; label: string }> = {
 	online: { color: "success", label: "Online" },
@@ -47,8 +48,7 @@ const WORKER_DESCRIPTIONS: Record<string, string> = {
 
 const formatMemory = (bytes: number) => {
 	if (!bytes) return "—";
-	if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
-	return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+	return formatBytes(bytes, bytes < 1024 * 1024 ? 0 : 1);
 };
 
 const formatUptime = (ms?: number) => {
@@ -186,7 +186,7 @@ const WorkerStatusTab = () => {
 					>
 						Sembrar IDs
 					</Button>
-					<IconButton
+					<IconButton aria-label="Actualizar workers"
 						size="small"
 						onClick={fetchWorkers}
 						disabled={loading}
@@ -294,6 +294,7 @@ const WorkerStatusTab = () => {
 											<Tooltip title={`Reiniciar ${w.name}`}>
 												<span>
 													<IconButton
+														aria-label={`Reiniciar ${w.name}`}
 														size="small"
 														onClick={() => handleRestart(w.name)}
 														disabled={restarting === w.name || w.status === "unavailable"}

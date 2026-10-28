@@ -50,6 +50,7 @@ import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import { WorkersService, EmailVerificationConfig } from "api/workers";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
+import { formatPercent } from "utils/format";
 
 const EmailVerificationWorker = () => {
 	const theme = useTheme();
@@ -466,7 +467,7 @@ const EmailVerificationWorker = () => {
 								</Stack>
 								<Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1 }}>
 									<Chip label={config.enabled ? "Activo" : "Inactivo"} color={config.enabled ? "success" : "default"} size="small" />
-									{config.processing?.isRunning && <Chip label="Procesando..." color="warning" size="small" icon={<Timer1 size={14} />} />}
+									{config.processing?.isRunning && <Chip label="Procesando…" color="warning" size="small" icon={<Timer1 size={14} />} />}
 								</Stack>
 							</CardContent>
 						</Card>
@@ -483,7 +484,7 @@ const EmailVerificationWorker = () => {
 									</Tooltip>
 								</Stack>
 								<Typography variant="h3" color="primary.main" sx={{ mt: 1 }}>
-									{config.neverBounceCredits?.toLocaleString() || "N/A"}
+									{config.neverBounceCredits?.toLocaleString("es-AR") || "N/A"}
 								</Typography>
 							</CardContent>
 						</Card>
@@ -554,7 +555,7 @@ const EmailVerificationWorker = () => {
 								<Paper variant="outlined" sx={{ p: 2, textAlign: "center" }}>
 									<TickSquare size={24} color={theme.palette.success.dark} />
 									<Typography variant="h4" color="success.main">
-										{config.stats?.valid?.toLocaleString() || 0}
+										{config.stats?.valid?.toLocaleString("es-AR") || 0}
 									</Typography>
 									<Typography variant="caption" color="text.secondary">
 										Válidos
@@ -565,7 +566,7 @@ const EmailVerificationWorker = () => {
 								<Paper variant="outlined" sx={{ p: 2, textAlign: "center" }}>
 									<CloseSquare size={24} color={theme.palette.error.main} />
 									<Typography variant="h4" color="error.main">
-										{config.stats?.invalid?.toLocaleString() || 0}
+										{config.stats?.invalid?.toLocaleString("es-AR") || 0}
 									</Typography>
 									<Typography variant="caption" color="text.secondary">
 										Inválidos
@@ -576,7 +577,7 @@ const EmailVerificationWorker = () => {
 								<Paper variant="outlined" sx={{ p: 2, textAlign: "center" }}>
 									<Danger size={24} color={theme.palette.warning.main} />
 									<Typography variant="h4" color="warning.main">
-										{config.stats?.disposable?.toLocaleString() || 0}
+										{config.stats?.disposable?.toLocaleString("es-AR") || 0}
 									</Typography>
 									<Typography variant="caption" color="text.secondary">
 										Desechables
@@ -587,7 +588,7 @@ const EmailVerificationWorker = () => {
 								<Paper variant="outlined" sx={{ p: 2, textAlign: "center" }}>
 									<Sms size={24} color={theme.palette.info.main} />
 									<Typography variant="h4" color="info.main">
-										{config.stats?.catchall?.toLocaleString() || 0}
+										{config.stats?.catchall?.toLocaleString("es-AR") || 0}
 									</Typography>
 									<Typography variant="caption" color="text.secondary">
 										Catchall
@@ -598,7 +599,7 @@ const EmailVerificationWorker = () => {
 								<Paper variant="outlined" sx={{ p: 2, textAlign: "center" }}>
 									<InfoCircle size={24} color={theme.palette.text.secondary} />
 									<Typography variant="h4" color="text.secondary">
-										{config.stats?.unknown?.toLocaleString() || 0}
+										{config.stats?.unknown?.toLocaleString("es-AR") || 0}
 									</Typography>
 									<Typography variant="caption" color="text.secondary">
 										Desconocidos
@@ -611,7 +612,7 @@ const EmailVerificationWorker = () => {
 										Tasa de Éxito
 									</Typography>
 									<Typography variant="h4" color={successRate >= 80 ? "success.main" : successRate >= 50 ? "warning.main" : "error.main"}>
-										{successRate.toFixed(1)}%
+										{formatPercent(successRate, 1)}
 									</Typography>
 								</Paper>
 							</Grid>
@@ -781,7 +782,7 @@ const EmailVerificationWorker = () => {
 									</Typography>
 								</Stack>
 								<Typography variant="h5" color="success.main" sx={{ mt: 1 }}>
-									{config.totalVerified?.toLocaleString() || 0}
+									{config.totalVerified?.toLocaleString("es-AR") || 0}
 								</Typography>
 							</CardContent>
 						</Card>
@@ -796,7 +797,7 @@ const EmailVerificationWorker = () => {
 									</Typography>
 								</Stack>
 								<Typography variant="h5" color="error.main" sx={{ mt: 1 }}>
-									{config.totalFailed?.toLocaleString() || 0}
+									{config.totalFailed?.toLocaleString("es-AR") || 0}
 								</Typography>
 							</CardContent>
 						</Card>

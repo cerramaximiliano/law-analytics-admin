@@ -565,6 +565,7 @@ const BoxPanel = ({ box, children, highlightRepo, onClearHighlight }: Props) => 
 							value={filtro}
 							onChange={(e) => setFiltro(e.target.value)}
 							placeholder="Filtrar procesos…"
+							inputProps={{ "aria-label": "Filtrar procesos" }}
 							sx={{ width: { xs: "100%", sm: 240 } }}
 							InputProps={{
 								startAdornment: (

@@ -31,6 +31,7 @@ import { Refresh, TickCircle, Warning2, Lock1, Setting2 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { PrivacyCheckerService, PrivacyCheckerConfig, PrivacyCheckerLive, PrivacyCheckerFolder } from "api/privacyChecker";
 import { useTabParam } from "hooks/useTabParam";
+import ConfirmDialog from "components/admin/ConfirmDialog";
 
 const FUEROS: Array<{ key: "CIV" | "CSS" | "CNT" | "COM"; label: string }> = [
 	{ key: "CIV", label: "Civil" },
@@ -50,6 +51,7 @@ const PrivacyCheckerWorker = () => {
 	const [live, setLive] = useState<PrivacyCheckerLive | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [saving, setSaving] = useState(false);
+	const [confirmReset, setConfirmReset] = useState(false);
 
 	// Edit state
 	const [editEnabled, setEditEnabled] = useState(true);
@@ -136,7 +138,6 @@ const PrivacyCheckerWorker = () => {
 	};
 
 	const handleReset = async () => {
-		if (!window.confirm("¿Resetear la configuración a defaults?")) return;
 		try {
 			setSaving(true);
 			await PrivacyCheckerService.resetConfig();
@@ -146,6 +147,7 @@ const PrivacyCheckerWorker = () => {
 			enqueueSnackbar(`Error reseteando: ${err?.response?.data?.error || err.message}`, { variant: "error" });
 		} finally {
 			setSaving(false);
+			setConfirmReset(false);
 		}
 	};
 
@@ -312,7 +314,7 @@ const PrivacyCheckerWorker = () => {
 								<Button variant="contained" onClick={handleSave} disabled={saving} startIcon={<TickCircle size={16} />}>
 									Guardar
 								</Button>
-								<Button variant="outlined" color="warning" onClick={handleReset} disabled={saving}>
+								<Button variant="outlined" color="warning" onClick={() => setConfirmReset(true)} disabled={saving}>
 									Defaults
 								</Button>
 							</Stack>
@@ -424,6 +426,16 @@ const PrivacyCheckerWorker = () => {
 					)}
 				</CardContent>
 			</Card>
+			<ConfirmDialog
+				open={confirmReset}
+				title="¿Resetear la configuración del Privacy Checker a defaults?"
+				description="La configuración actual se reemplaza por los valores por defecto."
+				confirmLabel="Resetear"
+				confirmColor="warning"
+				loading={saving}
+				onConfirm={handleReset}
+				onClose={() => setConfirmReset(false)}
+			/>
 		</Stack>
 	);
 };

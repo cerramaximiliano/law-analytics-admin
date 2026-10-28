@@ -6,6 +6,7 @@ export default function Drawer() {
 			styleOverrides: {
 				paper: {
 					backgroundImage: "none",
+					overscrollBehavior: "contain",
 				},
 			},
 		},

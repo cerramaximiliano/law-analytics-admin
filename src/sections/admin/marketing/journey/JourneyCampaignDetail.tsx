@@ -146,7 +146,7 @@ const JourneyCampaignDetail: React.FC<Props> = ({ campaign: c, period, onClose }
 						<Chip size="small" variant="outlined" label={`Período: ${PERIOD_LABEL[period]}`} />
 						<EnrollmentPausedChip paused={c.enrollmentPaused} />
 					</Box>
-					<IconButton onClick={onClose} size="small">
+					<IconButton aria-label="Cerrar" onClick={onClose} size="small">
 						<CloseCircle variant="Bold" />
 					</IconButton>
 				</Box>

@@ -464,7 +464,7 @@ const EmailLogsPage = () => {
 									</Box>
 									<Box>
 										<Typography variant="h5" fontWeight={600} sx={{ fontVariantNumeric: "tabular-nums" }}>
-											{stat.value.toLocaleString()}
+											{stat.value.toLocaleString("es-AR")}
 										</Typography>
 										<Typography variant="caption" color="textSecondary" sx={{ letterSpacing: 0.3 }}>
 											{stat.label}
@@ -526,6 +526,8 @@ const EmailLogsPage = () => {
 									fullWidth
 									size="small"
 									label="Buscar por email"
+									autoComplete="off"
+									inputProps={{ spellCheck: false }}
 									value={searchEmail}
 									onChange={(e) => setSearchEmail(e.target.value)}
 									InputProps={{
@@ -536,7 +538,7 @@ const EmailLogsPage = () => {
 										),
 										endAdornment: searchEmail && (
 											<InputAdornment position="end">
-												<IconButton size="small" onClick={() => setSearchEmail("")}>
+												<IconButton aria-label="Limpiar búsqueda por email" size="small" onClick={() => setSearchEmail("")}>
 													<CloseCircle size={16} />
 												</IconButton>
 											</InputAdornment>
@@ -554,7 +556,7 @@ const EmailLogsPage = () => {
 									InputProps={{
 										endAdornment: searchSesId && (
 											<InputAdornment position="end">
-												<IconButton size="small" onClick={() => setSearchSesId("")}>
+												<IconButton aria-label="Limpiar búsqueda por SES ID" size="small" onClick={() => setSearchSesId("")}>
 													<CloseCircle size={16} />
 												</IconButton>
 											</InputAdornment>
@@ -857,7 +859,7 @@ const EmailLogsPage = () => {
 											>
 												{selectedLog.sesMessageId}
 											</Typography>
-											<IconButton size="small" onClick={() => handleCopyToClipboard(selectedLog.sesMessageId!)}>
+											<IconButton aria-label="Copiar SES Message ID" size="small" onClick={() => handleCopyToClipboard(selectedLog.sesMessageId!)}>
 												<Copy size={16} />
 											</IconButton>
 										</Stack>
@@ -952,7 +954,7 @@ const EmailLogsPage = () => {
 							disabled={deleting}
 							startIcon={deleting ? <CircularProgress size={16} color="inherit" /> : <Trash size={16} />}
 						>
-							{deleting ? "Eliminando..." : "Eliminar"}
+							{deleting ? "Eliminando…" : "Eliminar"}
 						</Button>
 					</DialogActions>
 				</Dialog>

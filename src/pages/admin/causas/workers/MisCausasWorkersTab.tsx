@@ -671,7 +671,12 @@ const MisCausasWorkersTab: React.FC<Props> = ({ config, onConfigUpdate }) => {
 									{/* Header del worker */}
 									<Stack direction="row" justifyContent="space-between" alignItems="center">
 										<Stack direction="row" spacing={2} alignItems="center" sx={{ flex: 1 }}>
-											<IconButton size="small" onClick={() => setExpandedWorker(isExpanded ? workerName : null)}>
+											<IconButton
+												size="small"
+												aria-label={isExpanded ? "Contraer worker" : "Expandir worker"}
+												aria-expanded={isExpanded}
+												onClick={() => setExpandedWorker(isExpanded ? workerName : null)}
+											>
 												{isExpanded ? <ArrowUp2 size={18} /> : <ArrowDown2 size={18} />}
 											</IconButton>
 											<Box sx={{ flex: 1 }}>
@@ -1168,7 +1173,7 @@ const MisCausasWorkersTab: React.FC<Props> = ({ config, onConfigUpdate }) => {
 													disabled={isSaving}
 													startIcon={<TickCircle size={16} />}
 												>
-													{isSaving ? "Guardando..." : "Guardar Worker"}
+													{isSaving ? "Guardando…" : "Guardar Worker"}
 												</Button>
 											</Box>
 										)}

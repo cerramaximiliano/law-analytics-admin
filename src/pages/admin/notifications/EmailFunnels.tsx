@@ -37,7 +37,8 @@ import MainCard from "components/MainCard";
 import CopyButton from "components/CopyButton";
 import EmailFunnelsService, { EmailFunnelSource, FunnelTopUser } from "api/emailFunnels";
 import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER, PRO_TEAL } from "themes/dashboardTokens";
-import dayjs from "utils/dayjs-config";
+import { formatDate, formatPercent } from "utils/format";
+import { clickableProps } from "utils/a11y";
 
 const SOURCE_COLOR: Record<string, string> = {
 	movimientos: BRAND_BLUE,
@@ -46,7 +47,7 @@ const SOURCE_COLOR: Record<string, string> = {
 	postal: STALE_AMBER,
 };
 
-const pct = (n: number, base: number): string | null => (base > 0 ? `${Math.round((n / base) * 100)}%` : null);
+const pct = (n: number, base: number): string | null => (base > 0 ? formatPercent((n / base) * 100, 0) : null);
 
 /** Una etapa del embudo. `valor === null` = no instrumentada, no cero. */
 const Etapa = ({
@@ -85,10 +86,10 @@ const Etapa = ({
 			</Typography>
 			<Stack direction="row" spacing={0.75} alignItems="baseline">
 				<Typography variant="h5" sx={{ fontWeight: 700, color, fontVariantNumeric: "tabular-nums" }}>
-					{valor.toLocaleString()}
+					{valor.toLocaleString("es-AR")}
 				</Typography>
 				{p && (
-					<Tooltip title={`sobre ${base.toLocaleString()} ${baseLabel}`}>
+					<Tooltip title={`sobre ${base.toLocaleString("es-AR")} ${baseLabel}`}>
 						<Typography variant="caption" color="text.secondary">
 							{p}
 						</Typography>
@@ -104,7 +105,8 @@ const SourceCard = ({ f, activa, onClick }: { f: EmailFunnelSource; activa: bool
 	const color = SOURCE_COLOR[f.key] || BRAND_BLUE;
 	return (
 		<Box
-			onClick={onClick}
+			{...clickableProps(onClick)}
+			aria-pressed={activa}
 			sx={{
 				p: 2,
 				height: "100%",
@@ -125,7 +127,7 @@ const SourceCard = ({ f, activa, onClick }: { f: EmailFunnelSource; activa: bool
 			<Stack direction="row" spacing={2}>
 				<Box>
 					<Typography variant="h4" sx={{ fontWeight: 700, color, fontVariantNumeric: "tabular-nums" }}>
-						{f.correos.toLocaleString()}
+						{f.correos.toLocaleString("es-AR")}
 					</Typography>
 					<Typography variant="caption" color="text.secondary">
 						correos · {f.usuarios} usuarios
@@ -192,7 +194,7 @@ const EmailFunnels: React.FC = () => {
 			...Object.keys(f.series.conversiones),
 		]);
 		return [...dias].sort().map((d) => ({
-			dia: dayjs(d).format("DD/MM"),
+			dia: formatDate(d, "dayMonth"),
 			correos: f.series.correos[d] || 0,
 			aperturas: f.series.aperturas[d] || 0,
 			clicks: f.series.clicks[d] || 0,
@@ -287,7 +289,7 @@ const EmailFunnels: React.FC = () => {
 										<Stack direction="row" spacing={1} alignItems="center">
 											{f.ultimo && (
 												<Typography variant="caption" color="text.secondary">
-													último envío {dayjs(f.ultimo).format("DD/MM/YY HH:mm")}
+													último envío {formatDate(f.ultimo, "dateTimeShort")}
 												</Typography>
 											)}
 											{f.detalle && (
@@ -325,8 +327,9 @@ const EmailFunnels: React.FC = () => {
 												{!f.tracking.apertura && "Esta fuente no tiene píxel de apertura. "}
 												{!f.tracking.conversion && "No mide si el usuario terminó entrando a la app. "}
 												{f.desdeClicks &&
-													`Los clicks se registran desde el ${dayjs(f.desdeClicks).format(
-														"DD/MM/YY",
+													`Los clicks se registran desde el ${formatDate(
+														f.desdeClicks,
+														"dateShort",
 													)}: antes hay envíos sin datos de click. `}
 												Las etapas sin instrumentar se muestran como “s/d” para no confundirlas con un cero real.
 											</Typography>

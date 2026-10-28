@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import { Box, Chip, Paper, Table, TableBody, TableCell, TableHead, TableRow, TableSortLabel, Tooltip, Typography } from "@mui/material";
 import { JourneyPeriod, JourneyV2 } from "api/journey";
 import { fmt, pct, per1000, periodAltas, periodConv, periodTotal, PERIOD_LABEL } from "./journeyFormat";
+import { clickableProps } from "utils/a11y";
 
 const DARK = "#1f1f1f";
 
@@ -87,7 +88,7 @@ const JourneyStrategy: React.FC<Props> = ({ v2, period, onOpen }) => {
 						</TableHead>
 						<TableBody>
 							{rows.map((r) => (
-								<TableRow key={r.id} hover onClick={() => onOpen(r.id)} sx={{ cursor: "pointer" }}>
+								<TableRow key={r.id} hover {...clickableProps(() => onOpen(r.id), { asRow: true })} sx={{ cursor: "pointer" }}>
 									<TableCell>{r.c.name.replace("Captación PJN · ", "")}</TableCell>
 									<TableCell align="right">{fmt(r.t.sent)}</TableCell>
 									<TableCell align="right">{pct(r.t.opens, r.t.delivered)}</TableCell>

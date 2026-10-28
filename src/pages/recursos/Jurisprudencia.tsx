@@ -55,6 +55,7 @@ import {
 	Link,
 } from "iconsax-react";
 import legalAxios from "utils/legalAxios";
+import { useTabIndexParam } from "hooks/useTabParam";
 
 // Tipos
 interface Tribunal {
@@ -150,12 +151,13 @@ function a11yProps(index: number) {
 	};
 }
 
+const TAB_SLUGS = ["fallos", "documentos", "configuracion", "vinculos"] as const;
+
 const Jurisprudencia = () => {
 	const { enqueueSnackbar } = useSnackbar();
 
-	// Tab state
-	// ?tab=vinculos abre directo la cola de revisión de vínculos con causas PJN
-	const [tabValue, setTabValue] = useState(() => (new URLSearchParams(window.location.search).get("tab") === "vinculos" ? 3 : 0));
+	// Tab state en la URL: ?tab=vinculos abre directo la cola de revisión de vínculos con causas PJN
+	const [tabValue, setTabValue] = useTabIndexParam("tab", TAB_SLUGS);
 
 	const handleTabChange = (_event: SyntheticEvent, newValue: number) => {
 		setTabValue(newValue);
@@ -448,13 +450,13 @@ const Jurisprudencia = () => {
 									<TextField
 										fullWidth
 										label="Buscar"
-										placeholder="Título, código, contenido..."
+										placeholder="Título, código, contenido…"
 										value={searchText}
 										onChange={(e) => setSearchText(e.target.value)}
 										onKeyPress={(e) => e.key === "Enter" && handleSearch()}
 										InputProps={{
 											endAdornment: (
-												<IconButton size="small" onClick={() => setSearchText("")}>
+												<IconButton aria-label="Limpiar búsqueda" size="small" onClick={() => setSearchText("")}>
 													<CloseCircle size={16} />
 												</IconButton>
 											),
@@ -591,7 +593,7 @@ const Jurisprudencia = () => {
 													<TableCell>
 														<Box display="flex" alignItems="center" gap={1}>
 															Código Cita
-															<IconButton size="small" onClick={() => handleSort("codigoCita")}>
+															<IconButton aria-label="Ordenar por código de cita" size="small" onClick={() => handleSort("codigoCita")}>
 																{sortBy === "codigoCita" && sortOrder === "asc" ? <ArrowUp size={16} /> : <ArrowDown size={16} />}
 															</IconButton>
 														</Box>
@@ -600,7 +602,7 @@ const Jurisprudencia = () => {
 													<TableCell>
 														<Box display="flex" alignItems="center" gap={1}>
 															Fecha Publicación
-															<IconButton size="small" onClick={() => handleSort("fechaPublicacion")}>
+															<IconButton aria-label="Ordenar por fecha de publicación" size="small" onClick={() => handleSort("fechaPublicacion")}>
 																{sortBy === "fechaPublicacion" && sortOrder === "asc" ? <ArrowUp size={16} /> : <ArrowDown size={16} />}
 															</IconButton>
 														</Box>

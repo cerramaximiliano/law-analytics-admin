@@ -101,6 +101,9 @@ const CloneContactDialog: React.FC<CloneContactDialogProps> = ({ open, onClose, 
 					fullWidth
 					autoFocus
 					label="Nuevo email (corregido)"
+					type="email"
+					autoComplete="off"
+					inputProps={{ spellCheck: false }}
 					value={newEmail}
 					onChange={(e) => setNewEmail(e.target.value)}
 					disabled={loading}
@@ -138,7 +141,7 @@ const CloneContactDialog: React.FC<CloneContactDialogProps> = ({ open, onClose, 
 					disabled={loading || !contactId || !newEmail.trim()}
 					startIcon={loading && <CircularProgress size={20} color="inherit" />}
 				>
-					{loading ? "Clonando..." : "Clonar contacto"}
+					{loading ? "Clonando…" : "Clonar contacto"}
 				</Button>
 			</DialogActions>
 		</Dialog>

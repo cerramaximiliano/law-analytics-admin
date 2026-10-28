@@ -1,6 +1,6 @@
 import React from "react";
 import { Box, ButtonBase, LinearProgress, Paper, Skeleton, Typography, useTheme, alpha } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import { Link as RouterLink } from "react-router-dom";
 import { ArrowDown2, ArrowRight2 } from "iconsax-react";
 import { BRAND_BLUE, headerBorder, LIVE_GREEN, STALE_AMBER } from "themes/dashboardTokens";
 
@@ -28,7 +28,6 @@ interface CoverageSummaryProps {
 const CoverageSummary: React.FC<CoverageSummaryProps> = ({ rows, loading, detailOpen, onToggleDetail }) => {
 	const theme = useTheme();
 	const isDark = theme.palette.mode === "dark";
-	const navigate = useNavigate();
 
 	const colorFor = (percent: number) => (percent > 90 ? LIVE_GREEN : percent > 70 ? STALE_AMBER : theme.palette.error.main);
 
@@ -49,7 +48,8 @@ const CoverageSummary: React.FC<CoverageSummaryProps> = ({ rows, loading, detail
 				return (
 					<ButtonBase
 						key={row.label}
-						onClick={() => navigate(row.to)}
+						component={RouterLink}
+						to={row.to}
 						sx={{
 							width: "100%",
 							minHeight: 48,

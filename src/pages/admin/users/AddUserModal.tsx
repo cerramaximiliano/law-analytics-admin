@@ -131,7 +131,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ open, onClose }) => {
 					<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
 						Agregar nuevo usuario
 					</Typography>
-					<IconButton onClick={onClose} size="small" sx={{ mr: -0.5 }}>
+					<IconButton aria-label="Cerrar" onClick={onClose} size="small" sx={{ mr: -0.5 }}>
 						<CloseCircle size={20} />
 					</IconButton>
 				</Stack>
@@ -160,6 +160,9 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ open, onClose }) => {
 										id="email"
 										name="email"
 										label="Email"
+										type="email"
+										autoComplete="off"
+										inputProps={{ spellCheck: false }}
 										value={values.email}
 										onChange={handleChange}
 										onBlur={handleBlur}

@@ -40,6 +40,8 @@ import {
 import { Add, ArrowDown2, ArrowRight2, Copy, Refresh, TickCircle, CloseCircle, Eye, Trash } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
+import { clickableProps } from "utils/a11y";
+import ConfirmDialog from "components/admin/ConfirmDialog";
 import EnhancedTablePagination from "components/EnhancedTablePagination";
 import ResolucionesClasificacionService, {
 	Anotacion,
@@ -773,6 +775,7 @@ const ClasificacionResoluciones = () => {
 	const [filtros, setFiltros] = useState<FiltrosCola>({ estado: "pendiente", orden: "confianza" });
 	const [q, setQ] = useState("");
 	const [sel, setSel] = useState<ItemResolucion | null>(null);
+	const [itemAQuitar, setItemAQuitar] = useState<ItemResolucion | null>(null);
 	const [cargandoSel, setCargandoSel] = useState(false);
 	const [dialogo, setDialogo] = useState(false);
 	const mobile = useMediaQuery(theme.breakpoints.down("md"));
@@ -874,6 +877,7 @@ const ClasificacionResoluciones = () => {
 						</Button>
 					)}
 					<IconButton
+						aria-label="Actualizar"
 						size="small"
 						onClick={() => {
 							void cargar();
@@ -1106,7 +1110,7 @@ const ClasificacionResoluciones = () => {
 									items.map((it) => (
 										<Box
 											key={it._id}
-											onClick={() => abrir(it._id)}
+											{...clickableProps(() => abrir(it._id))}
 											sx={{
 												p: 1.25,
 												borderRadius: 1,
@@ -1175,7 +1179,7 @@ const ClasificacionResoluciones = () => {
 														hover
 														selected={sel?._id === it._id}
 														sx={{ cursor: "pointer" }}
-														onClick={() => abrir(it._id)}
+														{...clickableProps(() => abrir(it._id), { asRow: true })}
 													>
 														<TableCell>
 															<Chip size="small" label={it.fuero} variant="outlined" />
@@ -1225,12 +1229,9 @@ const ClasificacionResoluciones = () => {
 															<Tooltip title="Quitar de la cola">
 																<IconButton
 																	size="small"
-																	onClick={async (e) => {
+																	onClick={(e) => {
 																		e.stopPropagation();
-																		if (!window.confirm("¿Quitar esta resolución de la cola?")) return;
-																		await ResolucionesClasificacionService.quitar(it._id);
-																		if (sel?._id === it._id) setSel(null);
-																		void cargar();
+																		setItemAQuitar(it);
 																	}}
 																>
 																	<Trash size={14} />
@@ -1278,6 +1279,21 @@ const ClasificacionResoluciones = () => {
 					void cargar();
 					void cargarStats();
 				}}
+			/>
+			<ConfirmDialog
+				open={itemAQuitar !== null}
+				title="¿Quitar esta resolución de la cola?"
+				description={itemAQuitar?.titulo}
+				confirmLabel="Quitar"
+				onConfirm={async () => {
+					const it = itemAQuitar;
+					if (!it) return;
+					setItemAQuitar(null);
+					await ResolucionesClasificacionService.quitar(it._id);
+					if (sel?._id === it._id) setSel(null);
+					void cargar();
+				}}
+				onClose={() => setItemAQuitar(null)}
 			/>
 		</MainCard>
 	);

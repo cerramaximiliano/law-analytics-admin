@@ -301,6 +301,7 @@ const GeneralRulesCard: React.FC<GeneralRulesCardProps> = ({ state, loading, loa
 									/>
 								))}
 								<TextField
+									inputProps={{ "aria-label": "Agregar categoría" }}
 									size="small"
 									placeholder="Agregar categoría"
 									value={newCategory}

@@ -28,6 +28,7 @@ import { CloseCircle, TickCircle, Warning2 } from "iconsax-react";
 import workersAxios from "utils/workersAxios";
 import CaptchaLabelingMode from "./CaptchaLabelingMode";
 import CaptchaDatasetService, { CaptchaDatasetEntry, CaptchaDatasetStats } from "api/captchaDataset";
+import { clickableProps } from "utils/a11y";
 
 const PAGE_SIZE = 10;
 
@@ -68,7 +69,7 @@ const ImageCard = ({ entry, onClick }: ImageCardProps) => {
 	}, [entry.file]);
 
 	return (
-		<Card variant="outlined" sx={{ cursor: "pointer", "&:hover": { boxShadow: 3 } }} onClick={onClick}>
+		<Card variant="outlined" sx={{ cursor: "pointer", "&:hover": { boxShadow: 3 } }} {...clickableProps(onClick)}>
 			<Box sx={{ position: "relative", bgcolor: "grey.100", minHeight: 100 }}>
 				{blobUrl ? (
 					<CardMedia component="img" image={blobUrl} alt={entry.label} sx={{ objectFit: "contain", maxHeight: 120 }} />
@@ -355,7 +356,7 @@ const CaptchaDatasetTab = () => {
 			{/* Modal con imagen ampliada */}
 			<Dialog open={!!selected} onClose={handleClose} maxWidth="md" fullWidth>
 				<DialogContent sx={{ position: "relative", p: 3 }}>
-					<IconButton onClick={handleClose} sx={{ position: "absolute", right: 8, top: 8 }}>
+					<IconButton onClick={handleClose} aria-label="Cerrar" sx={{ position: "absolute", right: 8, top: 8 }}>
 						<CloseCircle size={24} />
 					</IconButton>
 					{selected && (
@@ -442,7 +443,7 @@ const CaptchaDatasetTab = () => {
 												value={labelInput}
 												onChange={(e) => setLabelInput(e.target.value.replace(/\D/g, "").slice(0, 4))}
 												placeholder="0000"
-												inputProps={{ maxLength: 4, style: { fontFamily: "monospace", fontSize: 18, letterSpacing: 4 } }}
+												inputProps={{ "aria-label": "Etiqueta del captcha", maxLength: 4, style: { fontFamily: "monospace", fontSize: 18, letterSpacing: 4 } }}
 												sx={{ width: 130 }}
 												autoFocus
 											/>
@@ -465,7 +466,7 @@ const CaptchaDatasetTab = () => {
 													}
 												}}
 											>
-												{saving ? "Guardando..." : "Guardar"}
+												{saving ? "Guardando…" : "Guardar"}
 											</Button>
 										</Stack>
 										{labelMsg && (

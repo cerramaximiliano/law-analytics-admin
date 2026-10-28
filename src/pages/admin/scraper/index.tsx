@@ -43,9 +43,11 @@ import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import PostalWorkersFlow from "../flujos/PostalWorkersFlow";
 import ScraperService, { ScraperConfig, ScraperJob, ScraperRun, ScraperJobStats, ScraperRunStats } from "api/scraperService";
-import dayjs from "dayjs";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 import CrossViewLinks from "components/admin/CrossViewLink";
+import { clickableProps } from "utils/a11y";
+import ConfirmDialog from "components/admin/ConfirmDialog";
+import { formatDate as formatDateIntl } from "utils/format";
 
 interface TabPanelProps {
 	children?: React.ReactNode;
@@ -76,7 +78,7 @@ const RUN_STATUS_CONFIG: Record<string, { color: "default" | "warning" | "info" 
 
 const formatDate = (dateString?: string) => {
 	if (!dateString) return "-";
-	return dayjs(dateString).format("DD/MM/YYYY HH:mm:ss");
+	return formatDateIntl(dateString, "dateTimeSeconds");
 };
 
 const formatDuration = (ms?: number) => {
@@ -605,7 +607,7 @@ const ConfigTab = () => {
 					Resetear a valores por defecto
 				</Button>
 				<Button variant="contained" onClick={handleSave} disabled={saving}>
-					{saving ? "Guardando..." : "Guardar cambios"}
+					{saving ? "Guardando…" : "Guardar cambios"}
 				</Button>
 			</Stack>
 
@@ -622,7 +624,7 @@ const ConfigTab = () => {
 						Cancelar
 					</Button>
 					<Button variant="contained" color="error" onClick={handleReset} disabled={resetting}>
-						{resetting ? "Reseteando..." : "Resetear"}
+						{resetting ? "Reseteando…" : "Resetear"}
 					</Button>
 				</DialogActions>
 			</Dialog>
@@ -646,6 +648,7 @@ const JobsTab = () => {
 	const [clearDialogOpen, setClearDialogOpen] = useState(false);
 	const [clearing, setClearing] = useState(false);
 	const [deletingId, setDeletingId] = useState<string | null>(null);
+	const [jobToDelete, setJobToDelete] = useState<ScraperJob | null>(null);
 
 	const fetchJobs = useCallback(async () => {
 		try {
@@ -710,6 +713,7 @@ const JobsTab = () => {
 			enqueueSnackbar(error?.message || "Error al eliminar job", { variant: "error" });
 		} finally {
 			setDeletingId(null);
+			setJobToDelete(null);
 		}
 	};
 
@@ -862,7 +866,7 @@ const JobsTab = () => {
 									</TableCell>
 									<TableCell align="center">
 										<Tooltip title="Eliminar job">
-											<IconButton size="small" color="error" disabled={deletingId === job._id} onClick={() => handleDelete(job._id)}>
+											<IconButton size="small" color="error" disabled={deletingId === job._id} onClick={() => setJobToDelete(job)}>
 												<Trash size={16} />
 											</IconButton>
 										</Tooltip>
@@ -898,10 +902,20 @@ const JobsTab = () => {
 						Cancelar
 					</Button>
 					<Button variant="contained" color="error" onClick={handleClear} disabled={clearing}>
-						{clearing ? "Limpiando..." : "Limpiar"}
+						{clearing ? "Limpiando…" : "Limpiar"}
 					</Button>
 				</DialogActions>
 			</Dialog>
+
+			<ConfirmDialog
+				open={jobToDelete !== null}
+				title={`¿Eliminar el job ${jobToDelete?.jobType ?? ""}${jobToDelete?.entityId ? ` de ${jobToDelete.entityId}` : ""}?`}
+				confirmLabel="Eliminar"
+				confirmColor="error"
+				loading={deletingId !== null}
+				onConfirm={() => jobToDelete && handleDelete(jobToDelete._id)}
+				onClose={() => setJobToDelete(null)}
+			/>
 		</Stack>
 	);
 };
@@ -1085,7 +1099,7 @@ const RunsTab = () => {
 							</TableRow>
 						) : (
 							runs.map((run) => (
-								<TableRow key={run._id} hover sx={{ cursor: "pointer" }} onClick={() => handleViewDetail(run)}>
+								<TableRow key={run._id} hover sx={{ cursor: "pointer" }} {...clickableProps(() => handleViewDetail(run), { asRow: true })}>
 									<TableCell>
 										<Typography variant="body2" fontWeight={500} sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>
 											{run.workerId}
@@ -1243,7 +1257,7 @@ const RunsTab = () => {
 						Cancelar
 					</Button>
 					<Button variant="contained" color="error" onClick={handleClearRuns} disabled={clearing}>
-						{clearing ? "Limpiando..." : "Limpiar"}
+						{clearing ? "Limpiando…" : "Limpiar"}
 					</Button>
 				</DialogActions>
 			</Dialog>

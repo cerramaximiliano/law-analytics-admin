@@ -607,7 +607,7 @@ const AlertManagement = () => {
 											}
 											startIcon={loading ? <CircularProgress size={20} /> : <Notification />}
 										>
-											{loading ? "Enviando..." : "Enviar alertas"}
+											{loading ? "Enviando…" : "Enviar alertas"}
 										</Button>
 									</Grid>
 								</Grid>
@@ -887,7 +887,7 @@ const AlertManagement = () => {
 											startIcon={loading ? <CircularProgress size={20} /> : <People />}
 											color={bulkForm.testMode ? "warning" : "primary"}
 										>
-											{loading ? "Procesando..." : bulkForm.testMode ? "Simular envío" : "Enviar alertas masivas"}
+											{loading ? "Procesando…" : bulkForm.testMode ? "Simular envío" : "Enviar alertas masivas"}
 										</Button>
 									</Grid>
 								</Grid>
@@ -965,7 +965,7 @@ const AlertManagement = () => {
 											startIcon={loading ? <CircularProgress size={20} /> : <CloseCircle />}
 											color={cleanupForm.dryRun ? "info" : "error"}
 										>
-											{loading ? "Procesando..." : cleanupForm.dryRun ? "Simular limpieza" : "Ejecutar limpieza"}
+											{loading ? "Procesando…" : cleanupForm.dryRun ? "Simular limpieza" : "Ejecutar limpieza"}
 										</Button>
 									</Grid>
 								</Grid>
@@ -1068,7 +1068,8 @@ const AlertManagement = () => {
 					<Box sx={{ mb: 2 }}>
 						<TextField
 							fullWidth
-							placeholder="Buscar por nombre, email o rol..."
+							placeholder="Buscar por nombre, email o rol…"
+							inputProps={{ "aria-label": "Buscar por nombre, email o rol" }}
 							value={searchTerm}
 							onChange={(e) => setSearchTerm(e.target.value)}
 							InputProps={{
@@ -1127,7 +1128,7 @@ const AlertManagement = () => {
 													selected={isSelected}
 												>
 													<TableCell padding="checkbox">
-														<Checkbox checked={isSelected} />
+														<Checkbox checked={isSelected} inputProps={{ "aria-label": `Seleccionar ${user.name || user.email || "usuario"}` }} />
 													</TableCell>
 													<TableCell>{user.name || "Sin nombre"}</TableCell>
 													<TableCell>{user.email || "Sin email"}</TableCell>

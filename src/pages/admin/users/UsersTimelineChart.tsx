@@ -9,6 +9,7 @@ import "dayjs/locale/es";
 import { XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend, Area, AreaChart } from "recharts";
 import adminAxios from "utils/adminAxios";
 import { BRAND_BLUE } from "themes/dashboardTokens";
+import { formatDate, formatNumber } from "utils/format";
 
 // Colors are now derived from the theme inside the component
 
@@ -95,7 +96,7 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon, color, loading 
 						<Skeleton variant="text" width={60} height={28} />
 					) : (
 						<Typography variant="h5" fontWeight={600} sx={{ color, fontVariantNumeric: "tabular-nums" }}>
-							{typeof value === "number" ? value.toLocaleString() : value}
+							{typeof value === "number" ? value.toLocaleString("es-AR") : value}
 						</Typography>
 					)}
 				</Box>
@@ -176,8 +177,7 @@ const UsersTimelineChart: React.FC = () => {
 			return dateStr.replace("-W", " S");
 		}
 		// Day format: show day/month
-		const date = dayjs(dateStr);
-		return date.format("DD/MM");
+		return formatDate(dateStr, "dayMonth");
 	};
 
 	// Get granularity label
@@ -275,7 +275,7 @@ const UsersTimelineChart: React.FC = () => {
 					<Grid item xs={12} sm={6} md={3}>
 						<StatCard
 							title={`Promedio por ${getGranularityLabel()}`}
-							value={summary?.avgPerPeriod?.toFixed(1) || "0"}
+							value={summary?.avgPerPeriod != null ? formatNumber(summary.avgPerPeriod, 1) : "0"}
 							icon={<Chart1 size={20} />}
 							color={COLORS.neutral.main}
 							loading={loading}
@@ -355,7 +355,7 @@ const UsersTimelineChart: React.FC = () => {
 											borderRadius: 8,
 											fontVariantNumeric: "tabular-nums",
 										}}
-										formatter={(value: number, name: string) => [value.toLocaleString(), name === "cumulative" ? "Acumulado" : "Nuevos"]}
+										formatter={(value: number, name: string) => [value.toLocaleString("es-AR"), name === "cumulative" ? "Acumulado" : "Nuevos"]}
 										labelFormatter={(label) => `Fecha: ${formatXAxisDate(label)}`}
 									/>
 									<Legend formatter={(value) => (value === "cumulative" ? "Acumulado" : "Nuevos registros")} />

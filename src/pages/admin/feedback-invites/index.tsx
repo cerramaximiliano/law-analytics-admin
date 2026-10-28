@@ -283,7 +283,8 @@ const FeedbackInvitesPage = () => {
 							<TextField
 								fullWidth
 								size="small"
-								placeholder="Buscar por destinatario o mensaje..."
+								placeholder="Buscar por destinatario o mensaje…"
+								inputProps={{ "aria-label": "Buscar por destinatario o mensaje" }}
 								value={searchTerm}
 								onChange={(e) => {
 									setSearchTerm(e.target.value);
@@ -496,6 +497,9 @@ const FeedbackInvitesPage = () => {
 						<TextField
 							fullWidth
 							label="Email del destinatario (opcional)"
+							type="email"
+							autoComplete="email"
+							inputProps={{ spellCheck: false }}
 							value={form.recipientEmail || ""}
 							onChange={(e) => setForm({ ...form, recipientEmail: e.target.value })}
 						/>
@@ -506,7 +510,7 @@ const FeedbackInvitesPage = () => {
 							label="Mensaje personalizado (opcional)"
 							value={form.message || ""}
 							onChange={(e) => setForm({ ...form, message: e.target.value })}
-							helperText="Aparece en la landing del invite. Ej: 'Hola Juan, nos encantaría tu opinión sobre...'"
+							helperText="Aparece en la landing del invite. Ej: 'Hola Juan, nos encantaría tu opinión sobre…'"
 						/>
 						<TextField
 							fullWidth
@@ -523,7 +527,7 @@ const FeedbackInvitesPage = () => {
 						Cancelar
 					</Button>
 					<Button variant="contained" onClick={handleCreate} disabled={busy || !form.recipientName?.trim()}>
-						{busy ? "Generando..." : "Generar"}
+						{busy ? "Generando…" : "Generar"}
 					</Button>
 				</DialogActions>
 			</Dialog>
@@ -543,7 +547,7 @@ const FeedbackInvitesPage = () => {
 								readOnly: true,
 								endAdornment: (
 									<InputAdornment position="end">
-										<IconButton onClick={() => copyToClipboard(newlyCreatedUrl)}>
+										<IconButton aria-label="Copiar URL" onClick={() => copyToClipboard(newlyCreatedUrl)}>
 											<Copy size={18} />
 										</IconButton>
 									</InputAdornment>
@@ -596,7 +600,7 @@ const FeedbackInvitesPage = () => {
 												readOnly: true,
 												endAdornment: (
 													<InputAdornment position="end">
-														<IconButton size="small" onClick={() => copyToClipboard(selected.url)}>
+														<IconButton size="small" aria-label="Copiar URL" onClick={() => copyToClipboard(selected.url)}>
 															<Copy size={16} />
 														</IconButton>
 													</InputAdornment>

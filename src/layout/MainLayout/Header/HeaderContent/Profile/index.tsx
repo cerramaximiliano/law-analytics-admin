@@ -110,7 +110,7 @@ const ProfilePage = () => {
 						outlineOffset: 2,
 					},
 				}}
-				aria-label="open profile"
+				aria-label="Abrir menú de perfil"
 				ref={anchorRef}
 				aria-controls={open ? "profile-grow" : undefined}
 				aria-haspopup="true"
@@ -203,7 +203,7 @@ const ProfilePage = () => {
 									</CardContent>
 
 									<Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-										<Tabs variant="fullWidth" value={value} onChange={handleChange} aria-label="profile tabs">
+										<Tabs variant="fullWidth" value={value} onChange={handleChange} aria-label="Secciones del perfil">
 											<Tab
 												sx={{
 													display: "flex",

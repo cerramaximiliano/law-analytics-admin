@@ -248,7 +248,7 @@ function EditDialog({
 			<DialogTitle>
 				<Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" useFlexGap>
 					<Typography variant="h6">Editar fallo</Typography>
-					<IconButton size="small" onClick={onClose}>
+					<IconButton aria-label="Cerrar" size="small" onClick={onClose}>
 						<CloseCircle size={18} />
 					</IconButton>
 				</Stack>
@@ -372,7 +372,7 @@ function FalloDetail({
 							{sumarioCount > 0 && <Chip label={`${sumarioCount} sumario${sumarioCount > 1 ? "s" : ""}`} size="small" variant="outlined" />}
 						</Stack>
 					</Box>
-					<IconButton size="small" onClick={onClose}>
+					<IconButton aria-label="Cerrar" size="small" onClick={onClose}>
 						<CloseCircle size={18} />
 					</IconButton>
 				</Stack>
@@ -582,7 +582,7 @@ function SumarioDetail({ sumario, onClose }: { sumario: SaijSentencia; onClose: 
 							<Chip label={STATUS_LABEL[sumario.status] || sumario.status} size="small" color={STATUS_COLOR[sumario.status] || "default"} />
 						</Stack>
 					</Box>
-					<IconButton size="small" onClick={onClose}>
+					<IconButton aria-label="Cerrar" size="small" onClick={onClose}>
 						<CloseCircle size={18} />
 					</IconButton>
 				</Stack>
@@ -996,7 +996,7 @@ export default function JurisprudenciaSaijPage() {
 
 					<TextField
 						size="small"
-						placeholder="Buscar..."
+						placeholder="Buscar…"
 						value={searchInput}
 						onChange={(e) => setSearchInput(e.target.value)}
 						onKeyDown={(e) => e.key === "Enter" && handleSearch()}
@@ -1009,7 +1009,7 @@ export default function JurisprudenciaSaijPage() {
 							),
 							endAdornment: searchInput && (
 								<InputAdornment position="end">
-									<IconButton
+									<IconButton aria-label="Limpiar búsqueda"
 										size="small"
 										onClick={() => {
 											setSearchInput("");
@@ -1121,7 +1121,7 @@ export default function JurisprudenciaSaijPage() {
 										<TableRow key={row._id} hover sx={{ "& td": { borderBottom: isExpanded ? 0 : undefined } }}>
 											<TableCell>
 												{sumCount > 0 && (
-													<IconButton size="small" onClick={() => setExpandedRow(isExpanded ? null : row._id)}>
+													<IconButton aria-label={isExpanded ? "Contraer fila" : "Expandir fila"} size="small" onClick={() => setExpandedRow(isExpanded ? null : row._id)}>
 														{isExpanded ? <ArrowUp2 size={14} /> : <ArrowDown2 size={14} />}
 													</IconButton>
 												)}

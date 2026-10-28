@@ -213,7 +213,7 @@ const CarpetasNoVerificadasEje = () => {
 										variant="h4"
 										sx={{ color: "warning.main", fontWeight: 600, fontVariantNumeric: "tabular-nums", letterSpacing: -0.3 }}
 									>
-										{totalCount.toLocaleString()}
+										{totalCount.toLocaleString("es-AR")}
 									</Typography>
 								</Stack>
 							</CardContent>
@@ -263,7 +263,7 @@ const CarpetasNoVerificadasEje = () => {
 								value={searchCaratula}
 								onChange={(e) => setSearchCaratula(e.target.value)}
 								size="small"
-								placeholder="Buscar en carátula..."
+								placeholder="Buscar en carátula…"
 							/>
 						</Grid>
 						<Grid item xs={12} md={6} lg={2}>

@@ -1,6 +1,7 @@
 import { Chip, Tooltip, alpha } from "@mui/material";
 import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER, headerBorder } from "themes/dashboardTokens";
 import { ESTADO_LABEL, EstadoCaso, MOTIVO_LABEL, MotivoRevision, ComponenteEval } from "api/hcRelevamiento";
+import { formatPercent } from "utils/format";
 
 export const ROJO = "#E5484D";
 export const GRIS = "#8B8D98";
@@ -66,7 +67,7 @@ export function MotivoChip({ motivo, isDark }: { motivo: MotivoRevision; isDark:
 export function ComponenteChip({ nombre, c, isDark }: { nombre: string; c?: ComponenteEval; isDark: boolean }) {
 	if (!c) return null;
 	const color = COLOR_ESTADO[c.estado] || GRIS;
-	const dif = c.e === null || c.e === undefined ? "" : ` ${(c.e * 100).toFixed(c.estado === "ok" ? 3 : 2)} %`;
+	const dif = c.e === null || c.e === undefined ? "" : ` ${formatPercent(c.e * 100, c.estado === "ok" ? 3 : 2)}`;
 	return (
 		<Tooltip title={[c.estado, c.regla ? `${c.regla}=${String(c.valor)}` : "", c.nota || ""].filter(Boolean).join(" · ")}>
 			<Chip

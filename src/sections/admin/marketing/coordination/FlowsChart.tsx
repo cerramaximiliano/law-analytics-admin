@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Alert, Box, Chip, CircularProgress, FormControlLabel, Stack, Switch, Tooltip, Typography, useTheme } from "@mui/material";
 import { alpha } from "@mui/material/styles";
-import dayjs from "dayjs";
 
 import MainCard from "components/MainCard";
 import { Campaign, SchedulerFrequencyConfig } from "types/campaign";
@@ -20,6 +19,7 @@ import {
 	isSaijEdition,
 } from "utils/campaignCoordination";
 import { CAMPAIGN_TYPE_LABEL, DAY_NAMES_SHORT, formatAllowedDays } from "./labels";
+import { formatDateTime } from "utils/format";
 
 interface FlowsChartProps {
 	campaigns: Campaign[];
@@ -118,7 +118,7 @@ const StepTooltip = ({ step, campaign, index }: { step: FlowStep; campaign: Camp
 			</Typography>
 			<Typography variant="caption" sx={{ display: "block" }}>
 				{step.fixedDate
-					? `Fecha fija: ${dayjs(step.fixedDate).format("DD/MM/YYYY HH:mm")}`
+					? `Fecha fija: ${formatDateTime(step.fixedDate)}`
 					: `Cuándo: ${formatDayOffset(step.day)} (${formatDelay(e.conditions?.timeDelay)} después del ${
 							index === 0 ? "ingreso" : "paso anterior"
 					  })`}
@@ -583,7 +583,7 @@ const FlowsChart: React.FC<FlowsChartProps> = ({ campaigns, config }) => {
 						{offSequence.rest.map((c) => {
 							const exempt = isCampaignExempt(c, exemptCategories);
 							const when =
-								c.type === "recurring" ? recurringLabel(c) : c.startDate ? dayjs(c.startDate).format("DD/MM/YYYY HH:mm") : "sin fecha";
+								c.type === "recurring" ? recurringLabel(c) : c.startDate ? formatDateTime(c.startDate) : "sin fecha";
 							return (
 								<Chip
 									key={c._id}

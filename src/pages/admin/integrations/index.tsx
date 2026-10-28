@@ -42,6 +42,7 @@ import ScbaManagerService, { ScbaManagerConfig } from "api/scbaManager";
 import judicialNotificationConfigService from "api/judicialNotificationConfig";
 
 import ServiceAvailabilityCard from "./ServiceAvailabilityCard";
+import ConfirmDialog from "components/admin/ConfirmDialog";
 
 // Jurisdicciones del strip "Integrado con" de la landing pública. La metadata
 // visual (logo/color) vive en el front; acá solo el estado por jurisdicción.
@@ -268,8 +269,9 @@ const IntegrationsPage: React.FC = () => {
 			return false;
 		}
 	};
+	const [catalogKeyToDelete, setCatalogKeyToDelete] = useState<string | null>(null);
 	const handleCatalogDelete = async (key: string) => {
-		if (!window.confirm(`¿Eliminar la jurisdicción "${key}" del catálogo? Desaparece de la landing y de los textos de marketing.`)) return;
+		setCatalogKeyToDelete(null);
 		setIntegrations((s) => ({ ...s, saving: true }));
 		try {
 			const res = await IntegrationsConfigService.deleteLandingCatalogEntry(key);
@@ -524,7 +526,12 @@ const IntegrationsPage: React.FC = () => {
 				<Stack direction="row" spacing={0.5}>
 					<Tooltip title="Ver IntegrationsConfig (RAW JSON)">
 						<span>
-							<IconButton onClick={() => setRawOpen(true)} size="small" disabled={!integrations.data}>
+							<IconButton
+								aria-label="Ver IntegrationsConfig (JSON)"
+								onClick={() => setRawOpen(true)}
+								size="small"
+								disabled={!integrations.data}
+							>
 								<Code1 size={18} />
 							</IconButton>
 						</span>
@@ -768,6 +775,7 @@ const IntegrationsPage: React.FC = () => {
 											<TextField
 												select
 												size="small"
+												inputProps={{ "aria-label": "Estado en la landing" }}
 												value={entry.status}
 												onChange={(e) => handleLandingUpdate(entry.key, { status: e.target.value as LandingIntegrationStatus })}
 												disabled={integrations.saving}
@@ -831,7 +839,7 @@ const IntegrationsPage: React.FC = () => {
 													<IconButton
 														size="small"
 														color="error"
-														onClick={() => handleCatalogDelete(entry.key)}
+														onClick={() => setCatalogKeyToDelete(entry.key)}
 														disabled={integrations.saving}
 													>
 														<Trash size={16} />
@@ -1171,6 +1179,15 @@ const IntegrationsPage: React.FC = () => {
 					</Button>
 				</DialogActions>
 			</Dialog>
+			<ConfirmDialog
+				open={!!catalogKeyToDelete}
+				title={`¿Eliminar la jurisdicción "${catalogKeyToDelete}" del catálogo?`}
+				description="Desaparece de la landing y de los textos de marketing."
+				confirmLabel="Eliminar"
+				loading={integrations.saving}
+				onConfirm={() => catalogKeyToDelete && handleCatalogDelete(catalogKeyToDelete)}
+				onClose={() => setCatalogKeyToDelete(null)}
+			/>
 		</MainCard>
 	);
 };

@@ -60,6 +60,8 @@ import {
 	SchedulerFrequencyConfig,
 } from "types/campaign";
 import { ArrowDown2, ArrowUp2 } from "iconsax-react";
+import { clickableProps } from "utils/a11y";
+import { formatPercent } from "utils/format";
 
 interface CampaignSendStatsModalProps {
 	open: boolean;
@@ -254,7 +256,7 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 
 	const formatDate = (dateString: string) => {
 		const date = new Date(dateString);
-		return date.toLocaleDateString("es-ES", {
+		return date.toLocaleDateString("es-AR", {
 			day: "2-digit",
 			month: "short",
 			timeZone: "UTC",
@@ -307,7 +309,7 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 			<Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.5 }}>
 				<Typography variant="body2">{label}</Typography>
 				<Typography variant="body2" fontWeight="bold">
-					{value.toFixed(1)}%
+					{formatPercent(value)}
 				</Typography>
 			</Box>
 			<LinearProgress
@@ -354,7 +356,7 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 						)}
 					</Grid>
 					<Grid item>
-						<IconButton onClick={onClose} size="small">
+						<IconButton aria-label="Cerrar" onClick={onClose} size="small">
 							<CloseCircle variant="Bold" />
 						</IconButton>
 					</Grid>
@@ -554,7 +556,7 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 																</Typography>
 																{email.subject && (
 																	<Typography variant="caption" color="textSecondary">
-																		{email.subject.length > 40 ? `${email.subject.substring(0, 40)}...` : email.subject}
+																		{email.subject.length > 40 ? `${email.subject.substring(0, 40)}…` : email.subject}
 																	</Typography>
 																)}
 															</TableCell>
@@ -609,7 +611,7 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 														<React.Fragment key={day._id}>
 															<TableRow
 																hover
-																onClick={() => day.stepBreakdown && day.stepBreakdown.length > 0 && toggleDayExpansion(day._id)}
+																{...(day.stepBreakdown && day.stepBreakdown.length > 0 ? clickableProps(() => toggleDayExpansion(day._id), { asRow: true }) : {})}
 																sx={{
 																	cursor: day.stepBreakdown && day.stepBreakdown.length > 0 ? "pointer" : "default",
 																	"&:hover":
@@ -620,7 +622,7 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 															>
 																<TableCell>
 																	{day.stepBreakdown && day.stepBreakdown.length > 0 && (
-																		<IconButton size="small" sx={{ p: 0.5 }}>
+																		<IconButton aria-label={expandedDays.has(day._id) ? "Contraer día" : "Expandir día"} size="small" sx={{ p: 0.5 }}>
 																			{expandedDays.has(day._id) ? <ArrowUp2 size={16} /> : <ArrowDown2 size={16} />}
 																		</IconButton>
 																	)}
@@ -692,7 +694,7 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 																								</TableCell>
 																								<TableCell align="right" sx={{ py: 0.5 }}>
 																									<Typography variant="caption" color="textSecondary">
-																										{((stepItem.sent / day.sent) * 100).toFixed(1)}%
+																										{formatPercent((stepItem.sent / day.sent) * 100)}
 																									</Typography>
 																								</TableCell>
 																							</TableRow>
@@ -826,7 +828,7 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 								size="small"
 								value={refreshInterval}
 								onChange={(e) => setRefreshInterval(Math.max(1, parseInt(e.target.value) || 1))}
-								inputProps={{ min: 1, max: 60, style: { width: 50, textAlign: "center" } }}
+								inputProps={{ "aria-label": "Intervalo de actualización en minutos", min: 1, max: 60, style: { width: 50, textAlign: "center" } }}
 								sx={{ width: 70 }}
 							/>
 							<Typography variant="body2">minuto(s)</Typography>

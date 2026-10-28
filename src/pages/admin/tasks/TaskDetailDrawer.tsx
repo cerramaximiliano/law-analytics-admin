@@ -25,6 +25,7 @@ import AdminTasksService from "api/adminTasks";
 import { AdminTask, AiSession, TaskPriority, TaskStatus, CATEGORY_LABELS, PRIORITY_LABELS, STATUS_LABELS } from "types/admin-task";
 import { AI_AGENT_LABELS, isSafeSessionId, resumeCommand } from "utils/aiSessions";
 import { githubUrl } from "utils/ecosystemRepos";
+import { formatDate } from "utils/format";
 
 interface TaskDetailDrawerProps {
 	open: boolean;
@@ -195,7 +196,7 @@ const TaskDetailDrawer: React.FC<TaskDetailDrawerProps> = ({
 									size="small"
 									variant="outlined"
 									color={t.isOverdue ? "error" : "default"}
-									label={`Vence ${dayjs(t.dueDate).format("DD/MM/YY")} · ${dayjs(t.dueDate).fromNow()}`}
+									label={`Vence ${formatDate(t.dueDate, "dateShort")} · ${dayjs(t.dueDate).fromNow()}`}
 								/>
 							)}
 						</Stack>
@@ -428,7 +429,7 @@ const TaskDetailDrawer: React.FC<TaskDetailDrawerProps> = ({
 									{t.comments.map((c) => (
 										<Box key={c._id}>
 											<Typography variant="caption" color="text.secondary">
-												{c.createdBy} · {dayjs(c.createdAt).format("DD/MM/YY HH:mm")}
+												{c.createdBy} · {formatDate(c.createdAt, "dateTimeShort")}
 											</Typography>
 											<Typography variant="body2" sx={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
 												{c.content}
@@ -442,6 +443,7 @@ const TaskDetailDrawer: React.FC<TaskDetailDrawerProps> = ({
 											multiline
 											maxRows={5}
 											placeholder="Agregar un comentario…"
+											inputProps={{ "aria-label": "Agregar un comentario" }}
 											value={commentText}
 											onChange={(e) => setCommentText(e.target.value)}
 											onKeyDown={(e) => {
@@ -476,9 +478,9 @@ const TaskDetailDrawer: React.FC<TaskDetailDrawerProps> = ({
 										["Módulo", t.module],
 										["Asignado a", t.assignedTo],
 										["Creada por", t.createdBy],
-										["Creada", dayjs(t.createdAt).format("DD/MM/YY HH:mm")],
-										["Actualizada", dayjs(t.updatedAt).format("DD/MM/YY HH:mm")],
-										["Completada", t.completedAt ? dayjs(t.completedAt).format("DD/MM/YY HH:mm") : undefined],
+										["Creada", formatDate(t.createdAt, "dateTimeShort")],
+										["Actualizada", formatDate(t.updatedAt, "dateTimeShort")],
+										["Completada", t.completedAt ? formatDate(t.completedAt, "dateTimeShort") : undefined],
 									]
 										.filter(([, value]) => value)
 										.map(([label, value]) => (

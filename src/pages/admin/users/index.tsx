@@ -653,7 +653,7 @@ const UsersList = () => {
 		}
 
 		const tooltipContent = authProviderUpdatedAt
-			? `Último uso: ${new Date(authProviderUpdatedAt).toLocaleString()}`
+			? `Último uso: ${new Date(authProviderUpdatedAt).toLocaleString("es-AR")}`
 			: "Usuario registrado antes de implementar este campo";
 
 		return (
@@ -757,7 +757,8 @@ const UsersList = () => {
 						{/* Búsqueda por texto */}
 						<TextField
 							size="small"
-							placeholder="Buscar por nombre, email o ID..."
+							placeholder="Buscar por nombre, email o ID…"
+							inputProps={{ "aria-label": "Buscar por nombre, email o ID", spellCheck: false }}
 							value={searchText}
 							onChange={handleSearchChange}
 							onKeyPress={handleSearchKeyPress}
@@ -770,7 +771,7 @@ const UsersList = () => {
 								),
 								endAdornment: searchText && (
 									<InputAdornment position="end">
-										<IconButton size="small" onClick={() => setSearchText("")}>
+										<IconButton aria-label="Limpiar búsqueda" size="small" onClick={() => setSearchText("")}>
 											<CloseCircle size={16} />
 										</IconButton>
 									</InputAdornment>
@@ -986,7 +987,7 @@ const UsersList = () => {
 															>
 																{(user._id || user.id || "").slice(0, 8)}…
 															</Typography>
-															<IconButton size="small" onClick={() => handleCopyId(user._id || user.id || "")} sx={{ p: 0.25 }}>
+															<IconButton aria-label="Copiar ID" size="small" onClick={() => handleCopyId(user._id || user.id || "")} sx={{ p: 0.25 }}>
 																{copiedId === (user._id || user.id) ? <CopySuccess size={14} color="green" /> : <Copy size={14} />}
 															</IconButton>
 														</Stack>
@@ -1034,8 +1035,8 @@ const UsersList = () => {
 												</TableCell>
 												<TableCell>{renderAuthProviderChip(user.authProvider, user.authProviderUpdatedAt)}</TableCell>
 												<TableCell>{renderCalendarChip(user)}</TableCell>
-												<TableCell>{user.lastLogin ? new Date(user.lastLogin).toLocaleString() : "Nunca"}</TableCell>
-												<TableCell>{user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "-"}</TableCell>
+												<TableCell>{user.lastLogin ? new Date(user.lastLogin).toLocaleString("es-AR") : "Nunca"}</TableCell>
+												<TableCell>{user.createdAt ? new Date(user.createdAt).toLocaleDateString("es-AR") : "-"}</TableCell>
 												<TableCell align="center">
 													<Stack direction="row" justifyContent="center" alignItems="center">
 														<Tooltip title="Ver detalles">
@@ -1056,6 +1057,7 @@ const UsersList = () => {
 														<Tooltip title="Recalcular stats de folders">
 															<span>
 																<IconButton
+																	aria-label="Recalcular stats de folders"
 																	color="info"
 																	onClick={() => handleSyncFolderStats(user._id || user.id || "")}
 																	disabled={syncingUserId === (user._id || user.id)}

@@ -32,7 +32,7 @@ import {
 	Checkbox,
 } from "@mui/material";
 import { RefreshSquare, Eye, Trash, FilterSearch, NotificationBing, ArrowDown2, ArrowUp2, InfoCircle, Clock } from "iconsax-react";
-import dayjs from "utils/dayjs-config";
+import { formatDateTime } from "utils/format";
 import CopyButton from "components/CopyButton";
 import { alpha } from "@mui/material/styles";
 import judicialMovementsService, {
@@ -308,7 +308,7 @@ const JudicialMovementsList = () => {
 
 	const formatDate = (date: string) => {
 		if (!date) return "-";
-		return dayjs(date).format("DD/MM/YYYY HH:mm");
+		return formatDateTime(date);
 	};
 
 	return (
@@ -583,7 +583,12 @@ const JudicialMovementsList = () => {
 						>
 							<TableRow>
 								<TableCell padding="checkbox">
-									<Checkbox indeterminate={isSomeSelected} checked={isAllSelected} onChange={handleSelectAll} />
+									<Checkbox
+										indeterminate={isSomeSelected}
+										checked={isAllSelected}
+										onChange={handleSelectAll}
+										inputProps={{ "aria-label": "Seleccionar todos" }}
+									/>
 								</TableCell>
 								<TableCell />
 								<TableCell>Usuario</TableCell>
@@ -600,10 +605,19 @@ const JudicialMovementsList = () => {
 								<React.Fragment key={movement._id}>
 									<TableRow hover selected={selectedIds.includes(movement._id)}>
 										<TableCell padding="checkbox">
-											<Checkbox checked={selectedIds.includes(movement._id)} onChange={() => handleSelectOne(movement._id)} />
+											<Checkbox
+												checked={selectedIds.includes(movement._id)}
+												onChange={() => handleSelectOne(movement._id)}
+												inputProps={{ "aria-label": "Seleccionar movimiento" }}
+											/>
 										</TableCell>
 										<TableCell>
-											<IconButton size="small" onClick={() => setExpandedRow(expandedRow === movement._id ? null : movement._id)}>
+											<IconButton
+												size="small"
+												onClick={() => setExpandedRow(expandedRow === movement._id ? null : movement._id)}
+												aria-label={expandedRow === movement._id ? "Contraer detalle" : "Expandir detalle"}
+												aria-expanded={expandedRow === movement._id}
+											>
 												{expandedRow === movement._id ? <ArrowUp2 /> : <ArrowDown2 />}
 											</IconButton>
 										</TableCell>

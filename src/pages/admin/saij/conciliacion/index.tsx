@@ -331,6 +331,7 @@ export const ConciliacionSaijContent = () => {
 				<TextField
 					size="small"
 					placeholder="Nº de expediente o carátula"
+					inputProps={{ "aria-label": "Nº de expediente o carátula" }}
 					value={q}
 					onChange={(e) => setQ(e.target.value)}
 					onKeyDown={(e) => { if (e.key === "Enter") { setPage(0); cargar(); } }}

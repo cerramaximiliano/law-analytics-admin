@@ -42,7 +42,7 @@ const Customization = () => {
 					color="secondary"
 					variant="light"
 					onClick={handleToggle}
-					aria-label="settings toggler"
+					aria-label="Ver novedades"
 					size="large"
 					sx={{ color: "secondary.main", bgcolor: open ? iconBackColorOpen : iconBackColor, p: 1 }}
 				>
@@ -63,7 +63,7 @@ const Customization = () => {
 							<Box sx={{ p: 2.5 }}>
 								<Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1.5}>
 									<Typography variant="h5">What’s new announcement?</Typography>
-									<IconButton color="secondary" sx={{ p: 0 }} onClick={handleToggle}>
+									<IconButton color="secondary" sx={{ p: 0 }} onClick={handleToggle} aria-label="Cerrar novedades">
 										<Add size={28} style={{ transform: "rotate(45deg)" }} />
 									</IconButton>
 								</Stack>

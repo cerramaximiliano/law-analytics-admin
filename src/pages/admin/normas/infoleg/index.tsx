@@ -26,13 +26,13 @@ import {
 	useTheme,
 } from "@mui/material";
 import { Eye, Refresh, SearchNormal1 } from "iconsax-react";
-import dayjs from "dayjs";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import InfolegService from "api/infolegService";
 import NormaDetailModal from "./NormaDetailModal";
 import { BRAND_BLUE } from "themes/dashboardTokens";
 import type { InfolegNorma, InfolegNormaFilters, InfolegStatus, InfolegTipo, InfolegVigencia } from "types/infoleg";
+import { formatDate } from "utils/format";
 
 // ── Constants ─────────────────────────────────────────────────
 
@@ -158,7 +158,7 @@ const InfolegNormasPage = () => {
 		<MainCard
 			title="Normas InfoLeg"
 			secondary={
-				<IconButton size="small" onClick={fetchNormas} disabled={loading}>
+				<IconButton size="small" onClick={fetchNormas} disabled={loading} aria-label="Actualizar normas">
 					<Refresh size={18} />
 				</IconButton>
 			}
@@ -171,6 +171,7 @@ const InfolegNormasPage = () => {
 							fullWidth
 							size="small"
 							placeholder="Buscar por ID, número o título…"
+							inputProps={{ "aria-label": "Buscar por ID, número o título" }}
 							value={search}
 							onChange={(e) => applyFilter(() => setSearch(e.target.value))}
 							InputProps={{
@@ -341,7 +342,7 @@ const InfolegNormasPage = () => {
 											</TableCell>
 											<TableCell>
 												<Typography variant="caption" color="text.secondary">
-													{n.scrapedAt ? dayjs(n.scrapedAt).format("DD/MM/YY") : "—"}
+													{n.scrapedAt ? formatDate(n.scrapedAt, "dateShort") : "—"}
 												</Typography>
 											</TableCell>
 											<TableCell align="center">

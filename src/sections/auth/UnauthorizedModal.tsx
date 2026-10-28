@@ -312,6 +312,8 @@ export const UnauthorizedModal: FC<UnauthorizedModalProps> = ({ open, onClose, o
 											onBlur={handleBlur}
 											onChange={handleChange}
 											placeholder="Ingresa tu email"
+											autoComplete="email"
+											inputProps={{ spellCheck: false }}
 											fullWidth
 											error={Boolean(touched.email && errors.email)}
 											disabled={isSubmitting}
@@ -335,7 +337,7 @@ export const UnauthorizedModal: FC<UnauthorizedModalProps> = ({ open, onClose, o
 											disabled={isSubmitting}
 											endAdornment={
 												<InputAdornment position="end">
-													<IconButton onClick={() => setShowPassword(!showPassword)} edge="end" color="secondary" disabled={isSubmitting}>
+													<IconButton aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"} onClick={() => setShowPassword(!showPassword)} edge="end" color="secondary" disabled={isSubmitting}>
 														{showPassword ? <Eye /> : <EyeSlash />}
 													</IconButton>
 												</InputAdornment>
@@ -352,7 +354,7 @@ export const UnauthorizedModal: FC<UnauthorizedModalProps> = ({ open, onClose, o
 											{isSubmitting ? (
 												<Stack direction="row" spacing={1} alignItems="center">
 													<CircularProgress size={20} color="inherit" />
-													<Typography>Iniciando sesión...</Typography>
+													<Typography>Iniciando sesión…</Typography>
 												</Stack>
 											) : (
 												"Iniciar Sesión"
@@ -370,7 +372,7 @@ export const UnauthorizedModal: FC<UnauthorizedModalProps> = ({ open, onClose, o
 											<CustomGoogleButton
 												onClick={() => googleLogin()}
 												disabled={isSubmitting}
-												text={isSubmitting ? "Iniciando sesión..." : "Iniciar sesión con Google"}
+												text={isSubmitting ? "Iniciando sesión…" : "Iniciar sesión con Google"}
 												fullWidth
 												showLoader={isSubmitting}
 											/>

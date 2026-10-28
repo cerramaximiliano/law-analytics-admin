@@ -66,6 +66,7 @@ import type {
 import CreateSolicitudModal from "./CreateSolicitudModal";
 import SecloContactDialog from "./SecloContactDialog";
 import { TIMEZONE_OPTIONS, detectBrowserTimezone, wallClockToUtc, utcToWallClock } from "utils/seclo-scheduling";
+import { clickableProps } from "utils/a11y";
 
 type ScheduledFilter = "all" | "only-scheduled" | "only-immediate";
 type SortField = "createdAt" | "scheduledAt";
@@ -426,7 +427,8 @@ function FolderPickerDialog({
 				<TextField
 					fullWidth
 					size="small"
-					placeholder="Buscar carpeta..."
+					placeholder="Buscar carpeta…"
+					inputProps={{ "aria-label": "Buscar carpeta" }}
 					value={search}
 					onChange={(e) => setSearch(e.target.value)}
 					onKeyDown={(e) => e.key === "Enter" && doSearch(search)}
@@ -453,7 +455,7 @@ function FolderPickerDialog({
 								cursor: "pointer",
 								"&:hover": { bgcolor: "action.hover" },
 							}}
-							onClick={() => onSelect(f)}
+							{...clickableProps(() => onSelect(f))}
 						>
 							<Typography variant="body2" fontWeight={600}>
 								{f.folderName}
@@ -1145,7 +1147,7 @@ function ScheduleEditor({ sol }: { sol: SecloSolicitud }) {
 				<Grid item xs={12}>
 					<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 						<Button size="small" variant="contained" disabled={!isDirty || saving} onClick={handleSave}>
-							{saving ? "Guardando..." : "Guardar programación"}
+							{saving ? "Guardando…" : "Guardar programación"}
 						</Button>
 						{sol.scheduledAt && (
 							<Button
@@ -1651,7 +1653,8 @@ export default function SolicitudesTab() {
 			<Box display="flex" gap={1.5} mb={2} flexWrap="wrap" alignItems="center">
 				<TextField
 					size="small"
-					placeholder="Buscar usuario..."
+					placeholder="Buscar usuario…"
+					inputProps={{ "aria-label": "Buscar usuario" }}
 					value={search}
 					onChange={(e) => setSearch(e.target.value)}
 					onKeyDown={(e) => e.key === "Enter" && handleSearch()}
@@ -1813,7 +1816,7 @@ export default function SolicitudesTab() {
 						{loading ? (
 							<TableRow>
 								<TableCell colSpan={9} align="center">
-									Cargando...
+									Cargando…
 								</TableCell>
 							</TableRow>
 						) : solicitudes.length === 0 ? (

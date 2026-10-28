@@ -66,6 +66,8 @@ import {
 	reevaluarVinculo,
 	rechazarVinculo,
 } from "api/eldialVinculos";
+import { clickableProps } from "utils/a11y";
+import { formatNumber } from "utils/format";
 
 /**
  * Pestaña "Vínculos PJN" de /recursos/jurisprudencia.
@@ -184,7 +186,7 @@ const TarjetaCausa = ({ c, elegida, accion }: TarjetaCausaProps) => {
 					</Typography>
 					{!c.sinDatos && (
 						<Tooltip title="Similitud de carátula (0 a 1)">
-							<Chip size="small" color={colorScore(c.score)} label={`score ${c.score.toFixed(2)}`} />
+							<Chip size="small" color={colorScore(c.score)} label={`score ${formatNumber(c.score, 2)}`} />
 						</Tooltip>
 					)}
 					{c.inicialesOk && (
@@ -430,10 +432,10 @@ const VinculosPjnTab = () => {
 					<Grid item xs={6} sm={4} md key={t.label}>
 						<Paper
 							variant="outlined"
-							onClick={() => {
+							{...clickableProps(() => {
 								setEstado(t.filtro);
 								setPage(0);
-							}}
+							})}
 							sx={{
 								p: 1.5,
 								cursor: "pointer",
@@ -512,6 +514,7 @@ const VinculosPjnTab = () => {
 					</Select>
 				</FormControl>
 				<TextField
+					inputProps={{ "aria-label": "Buscar por cita, carátula o número de expediente" }}
 					size="small"
 					placeholder="Cita, carátula o 12345/2020"
 					value={q}
@@ -592,7 +595,7 @@ const VinculosPjnTab = () => {
 								const ver = VEREDICTOS[x.veredicto];
 								const est = ESTADOS[x.estado];
 								return (
-									<TableRow key={x._id} hover sx={{ cursor: "pointer" }} onClick={() => abrirDetalle(x._id)}>
+									<TableRow key={x._id} hover sx={{ cursor: "pointer" }} {...clickableProps(() => abrirDetalle(x._id), { asRow: true })}>
 										<TableCell sx={{ fontFamily: "monospace" }}>{x.codigoCita}</TableCell>
 										<TableCell sx={{ whiteSpace: "nowrap" }}>
 											{expediente(x)}
@@ -615,7 +618,7 @@ const VinculosPjnTab = () => {
 															<Chip size="small" color="info" variant="outlined" label="s/d" />
 														</Tooltip>
 													) : (
-														<Chip size="small" color={colorScore(c.score)} label={c.score.toFixed(2)} />
+														<Chip size="small" color={colorScore(c.score)} label={formatNumber(c.score, 2)} />
 													)}
 													<Typography variant="body2" noWrap title={c.caratula || c.caratulaRaw}>
 														{c.caratula || <em>{c.caratulaRaw || "(sin carátula)"}</em>}

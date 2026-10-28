@@ -29,6 +29,7 @@ import TokenConfigService, { TokenConfigResponse, UpdateTokenConfigParams, Histo
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/es";
+import { formatDateTime, formatNumber } from "utils/format";
 
 dayjs.extend(relativeTime);
 dayjs.locale("es");
@@ -54,10 +55,10 @@ const formatDuration = (duration: string): string => {
 // Helper para formatear milisegundos
 const formatMs = (ms: number): string => {
 	if (ms < 1000) return `${ms}ms`;
-	if (ms < 60000) return `${(ms / 1000).toFixed(0)}s`;
-	if (ms < 3600000) return `${(ms / 60000).toFixed(0)}min`;
-	if (ms < 86400000) return `${(ms / 3600000).toFixed(1)}h`;
-	return `${(ms / 86400000).toFixed(1)}d`;
+	if (ms < 60000) return `${formatNumber(ms / 1000, 0)}s`;
+	if (ms < 3600000) return `${formatNumber(ms / 60000, 0)}min`;
+	if (ms < 86400000) return `${formatNumber(ms / 3600000, 1)}h`;
+	return `${formatNumber(ms / 86400000, 1)}d`;
 };
 
 const TokenConfigPage = () => {
@@ -506,7 +507,7 @@ const TokenConfigPage = () => {
 											disabled={saving}
 											startIcon={saving ? <CircularProgress size={16} color="inherit" /> : <Save2 size={16} />}
 										>
-											{saving ? "Guardando..." : "Guardar cambios"}
+											{saving ? "Guardando…" : "Guardar cambios"}
 										</Button>
 									</Stack>
 								</Grid>
@@ -540,7 +541,7 @@ const TokenConfigPage = () => {
 											.map((entry, index) => (
 												<TableRow key={index}>
 													<TableCell>
-														<Typography variant="caption">{dayjs(entry.changedAt).format("DD/MM/YYYY HH:mm")}</Typography>
+														<Typography variant="caption">{formatDateTime(entry.changedAt)}</Typography>
 														<br />
 														<Typography variant="caption" color="text.secondary">
 															{dayjs(entry.changedAt).fromNow()}

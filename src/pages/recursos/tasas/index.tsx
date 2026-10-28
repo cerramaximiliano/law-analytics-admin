@@ -40,6 +40,8 @@ import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import { Refresh, SearchNormal1, Edit, CloseCircle, TickCircle, Chart, ArrowDown2, ArrowUp2, Code, Link1, InfoCircle } from "iconsax-react";
 import { getTasasListado, consultarTasas, actualizarValorTasa, rellenarGaps, TasaConfig, TasaResultItem } from "utils/tasasService";
+import { useTabIndexParam } from "hooks/useTabParam";
+import { formatNumber } from "utils/format";
 
 // ─── Tab panel ────────────────────────────────────────────────────────────────
 
@@ -164,7 +166,7 @@ const FechasFaltantesRow = ({ tasa, colSpan, onRellenar, loading }: FechasFaltan
 				<TableCell colSpan={colSpan} sx={{ py: 0.5, borderBottom: open ? "none" : undefined }}>
 					<Stack direction="row" alignItems="center" justifyContent="space-between">
 						<Stack direction="row" alignItems="center" spacing={1}>
-							<IconButton size="small" sx={{ color: theme.palette.warning.main }}>
+							<IconButton aria-label={open ? "Ocultar fechas faltantes" : "Mostrar fechas faltantes"} aria-expanded={open} size="small" sx={{ color: theme.palette.warning.main }}>
 								{open ? <ArrowUp2 size={14} /> : <ArrowDown2 size={14} />}
 							</IconButton>
 							<Typography variant="caption" color="warning.main" fontWeight={600}>
@@ -185,7 +187,7 @@ const FechasFaltantesRow = ({ tasa, colSpan, onRellenar, loading }: FechasFaltan
 									startIcon={loading ? <CircularProgress size={12} /> : undefined}
 									sx={{ fontSize: "0.7rem", py: 0.25, minWidth: 90 }}
 								>
-									{loading ? "Iniciando..." : "Rellenar"}
+									{loading ? "Iniciando…" : "Rellenar"}
 								</Button>
 							</span>
 						</Tooltip>
@@ -342,11 +344,13 @@ const FuenteChip = ({ fuente }: { fuente: string | null | undefined }) => {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
+const TAB_SLUGS = ["estado-actual", "consulta-por-fecha", "documentacion"] as const;
+
 const TasasInteres = () => {
 	const { enqueueSnackbar } = useSnackbar();
 
 	// Tabs
-	const [tabValue, setTabValue] = useState(0);
+	const [tabValue, setTabValue] = useTabIndexParam("tab", TAB_SLUGS);
 
 	// Section A — estado actual
 	const [listado, setListado] = useState<TasaConfig[]>([]);
@@ -556,7 +560,7 @@ const TasasInteres = () => {
 										onClick={handleRellenarTodos}
 										startIcon={loadingRellenar ? <CircularProgress size={14} /> : undefined}
 									>
-										{loadingRellenar ? "Iniciando..." : "Rellenar Gaps"}
+										{loadingRellenar ? "Iniciando…" : "Rellenar Gaps"}
 									</Button>
 								</span>
 							</Tooltip>
@@ -799,7 +803,7 @@ const TasasInteres = () => {
 																value={editValue}
 																onChange={(e) => setEditValue(e.target.value)}
 																type="number"
-																inputProps={{ step: "any" }}
+																inputProps={{ "aria-label": `Valor del ${formatDate(item.fecha)}`, step: "any" }}
 																sx={{ width: 160 }}
 																autoFocus
 																onKeyDown={(e) => {
@@ -809,7 +813,7 @@ const TasasInteres = () => {
 															/>
 														) : (
 															<Typography variant="body2" fontFamily="monospace">
-																{item.valor != null ? item.valor.toFixed(6) : "—"}
+																{formatNumber(item.valor, 6)}
 															</Typography>
 														)}
 													</TableCell>
@@ -821,7 +825,13 @@ const TasasInteres = () => {
 															<Stack direction="row" spacing={0.5} justifyContent="center">
 																<Tooltip title="Guardar (Enter)">
 																	<span>
-																		<IconButton size="small" color="success" onClick={() => handleSaveEdit(item)} disabled={isSaving}>
+																		<IconButton
+																			aria-label="Guardar"
+																			size="small"
+																			color="success"
+																			onClick={() => handleSaveEdit(item)}
+																			disabled={isSaving}
+																		>
 																			{isSaving ? <CircularProgress size={16} /> : <TickCircle size={18} />}
 																		</IconButton>
 																	</span>
@@ -1258,7 +1268,7 @@ const TasasInteres = () => {
 						<Typography variant="h6" sx={{ fontFamily: "monospace", fontSize: "0.95rem" }}>
 							{jsonDialog.title}
 						</Typography>
-						<IconButton size="small" onClick={closeJsonDialog}>
+						<IconButton aria-label="Cerrar" size="small" onClick={closeJsonDialog}>
 							<CloseCircle size={18} />
 						</IconButton>
 					</Stack>

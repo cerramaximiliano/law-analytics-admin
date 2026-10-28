@@ -78,6 +78,7 @@ const EnhancedTablePagination = ({
 					<Tooltip title="Ir a página">
 						<span>
 							<IconButton
+								aria-label="Ir a página"
 								size="small"
 								onClick={handleGoToPage}
 								disabled={!goToPage || isNaN(parseInt(goToPage, 10)) || parseInt(goToPage, 10) < 1 || parseInt(goToPage, 10) > totalPages}

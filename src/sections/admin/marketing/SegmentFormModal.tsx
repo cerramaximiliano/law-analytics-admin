@@ -930,7 +930,7 @@ const SegmentFormModal: React.FC<SegmentFormModalProps> = ({ open, onClose, onSa
 						<Typography variant="h5">{isEditMode ? "Editar Segmento" : "Crear Nuevo Segmento"}</Typography>
 					</Grid>
 					<Grid item>
-						<IconButton onClick={onClose} size="small">
+						<IconButton aria-label="Cerrar" onClick={onClose} size="small">
 							<CloseCircle variant="Bold" />
 						</IconButton>
 					</Grid>
@@ -1187,7 +1187,7 @@ const SegmentFormModal: React.FC<SegmentFormModalProps> = ({ open, onClose, onSa
 												</Grid>
 
 												<Grid item xs={12} md={1}>
-													<IconButton color="error" onClick={() => handleRemoveFilter(index)} disabled={filters.length === 1 || saving}>
+													<IconButton aria-label="Eliminar filtro" color="error" onClick={() => handleRemoveFilter(index)} disabled={filters.length === 1 || saving}>
 														<Trash size={18} />
 													</IconButton>
 												</Grid>
@@ -1240,7 +1240,7 @@ const SegmentFormModal: React.FC<SegmentFormModalProps> = ({ open, onClose, onSa
 									<TextField
 										fullWidth
 										label="Buscar contactos"
-										placeholder="Escriba para buscar por email, nombre o apellido..."
+										placeholder="Escriba para buscar por email, nombre o apellido…"
 										value={contactSearchTerm}
 										onChange={handleContactSearch}
 										sx={{ mb: 2 }}
@@ -1263,7 +1263,7 @@ const SegmentFormModal: React.FC<SegmentFormModalProps> = ({ open, onClose, onSa
 											<Box sx={{ p: 3, textAlign: "center" }}>
 												<CircularProgress size={24} />
 												<Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
-													Buscando contactos...
+													Buscando contactos…
 												</Typography>
 											</Box>
 										) : !contactSearchTerm ? (
@@ -1441,7 +1441,7 @@ const SegmentFormModal: React.FC<SegmentFormModalProps> = ({ open, onClose, onSa
 					disabled={loading || saving || !name}
 					startIcon={saving && <CircularProgress size={20} color="inherit" />}
 				>
-					{saving ? "Guardando..." : isEditMode ? "Actualizar Segmento" : "Crear Segmento"}
+					{saving ? "Guardando…" : isEditMode ? "Actualizar Segmento" : "Crear Segmento"}
 				</Button>
 			</DialogActions>
 		</Dialog>

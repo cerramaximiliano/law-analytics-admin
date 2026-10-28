@@ -30,6 +30,7 @@ import { useSnackbar } from "notistack";
 import { useTheme, alpha } from "@mui/material/styles";
 import RagWorkersService, { CostPricing, PipelineLlmConfig } from "api/ragWorkers";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
+import { formatNumber } from "utils/format";
 
 const WorkerPricingTab = () => {
 	const theme = useTheme();
@@ -338,12 +339,12 @@ const WorkerPricingTab = () => {
 								</TableCell>
 								<TableCell align="right">
 									<Typography variant="body2" sx={{ fontFamily: "monospace", fontWeight: 600 }}>
-										${p.inputPricePer1M.toFixed(2)}
+										${formatNumber(p.inputPricePer1M, 2)}
 									</Typography>
 								</TableCell>
 								<TableCell align="right">
 									<Typography variant="body2" sx={{ fontFamily: "monospace", fontWeight: 600 }}>
-										${p.outputPricePer1M.toFixed(2)}
+										${formatNumber(p.outputPricePer1M, 2)}
 									</Typography>
 								</TableCell>
 								<TableCell>

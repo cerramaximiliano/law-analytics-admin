@@ -150,7 +150,7 @@ const LoadingButtonStyle = styled(MuiLoadingButton, {
 		height: "100%",
 		borderRadius: shape === "rounded" ? "50%" : 8,
 		opacity: 0,
-		transition: "all 0.5s",
+		transition: "opacity 0.5s, box-shadow 0.5s",
 	},
 
 	":active::after": {

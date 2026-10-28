@@ -12,6 +12,7 @@ import { dispatch, RootState } from "store";
 import { useNavigate } from "react-router-dom";
 import useAuth from "hooks/useAuth";
 import { openSnackbar } from "store/reducers/snackbar";
+import { clickableProps } from "utils/a11y";
 
 // Define el tipo para el modo
 type VerificationMode = "register" | "reset";
@@ -231,7 +232,7 @@ const AuthCodeVerification = ({ mode = "register", email: propEmail, onVerificat
 						disabled={isVerifying}
 						startIcon={isVerifying ? <CircularProgress size={20} color="inherit" /> : null}
 					>
-						{isVerifying ? "Verificando..." : mode === "register" ? "Verificar y continuar" : "Verificar código"}
+						{isVerifying ? "Verificando…" : mode === "register" ? "Verificar y continuar" : "Verificar código"}
 					</Button>
 				</AnimateButton>
 			</Grid>
@@ -249,9 +250,9 @@ const AuthCodeVerification = ({ mode = "register", email: propEmail, onVerificat
 							opacity: isResending ? 0.6 : 1,
 						}}
 						color="primary"
-						onClick={handleResendCode}
+						{...clickableProps(handleResendCode)}
 					>
-						{isResending ? "Enviando..." : "Reenviar código"}
+						{isResending ? "Enviando…" : "Reenviar código"}
 					</Typography>
 				</Stack>
 			</Grid>

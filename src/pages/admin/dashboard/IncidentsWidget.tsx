@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Box, Typography, Paper, Chip, Skeleton, Stack, Tooltip, ButtonBase, Collapse, Button, alpha } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import { useNavigate } from "react-router-dom";
+import { Link as RouterLink } from "react-router-dom";
 import { Danger, TickCircle, Clock, ArrowDown2, ArrowUp2 } from "iconsax-react";
 import { LIVE_GREEN, STALE_AMBER, headerBorder, headerShadow } from "themes/dashboardTokens";
 import IncidentsService, { Incident, IncidentSummary, IncidentSummaryRow, IncidentSeverity } from "api/incidents";
@@ -79,7 +79,6 @@ type Row = IncidentSummaryRow | Incident;
 
 const IncidentsWidget = () => {
 	const theme = useTheme();
-	const navigate = useNavigate();
 	const isDark = theme.palette.mode === "dark";
 	const [summary, setSummary] = useState<IncidentSummary | null>(null);
 	const [loading, setLoading] = useState(true);
@@ -218,9 +217,10 @@ const IncidentsWidget = () => {
 		return (
 			<Paper
 				elevation={0}
-				onClick={() => navigate("/admin/incidentes")}
+				component={RouterLink}
+				to="/admin/incidentes"
 				sx={{
-					p: { xs: 1.5, sm: 2 },
+					textDecoration: "none", color: "inherit", display: "block", p: { xs: 1.5, sm: 2 },
 					borderRadius: 2,
 					cursor: "pointer",
 					border: `1px solid ${alpha(LIVE_GREEN, 0.35)}`,
@@ -330,7 +330,8 @@ const IncidentsWidget = () => {
 			>
 				<ButtonBase
 					focusRipple
-					onClick={() => navigate("/admin/incidentes")}
+					component={RouterLink}
+					to="/admin/incidentes"
 					aria-label="Abrir el panel de incidentes"
 					sx={{
 						flexGrow: 1,
@@ -482,7 +483,7 @@ const IncidentsWidget = () => {
 						{/* El tema global capitaliza cada palabra de los botones
 						    (typography.button). En etiquetas de una palabra no se
 						    nota; acá dejaba "Abrir El Panel De Incidentes". */}
-						<Button size="small" variant="text" sx={{ textTransform: "none" }} onClick={() => navigate("/admin/incidentes")}>
+						<Button size="small" variant="text" sx={{ textTransform: "none" }} component={RouterLink} to="/admin/incidentes">
 							Abrir el panel de incidentes
 						</Button>
 					</Box>

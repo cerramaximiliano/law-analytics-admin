@@ -387,7 +387,7 @@ const CarpetasPivotsEje = () => {
 										</Typography>
 									</Stack>
 									<Typography variant="h4" color="info.main" fontWeight="bold">
-										{totalCount.toLocaleString()}
+										{totalCount.toLocaleString("es-AR")}
 									</Typography>
 								</Stack>
 							</CardContent>
@@ -579,7 +579,7 @@ const CarpetasPivotsEje = () => {
 														onClick={() => toggleRowExpansion(id)}
 													>
 														<TableCell>
-															<IconButton size="small">{isExpanded ? <ArrowUp2 size={18} /> : <ArrowDown2 size={18} />}</IconButton>
+															<IconButton size="small" aria-label={isExpanded ? "Contraer fila" : "Expandir fila"} aria-expanded={isExpanded}>{isExpanded ? <ArrowUp2 size={18} /> : <ArrowDown2 size={18} />}</IconButton>
 														</TableCell>
 														<TableCell>
 															<Typography

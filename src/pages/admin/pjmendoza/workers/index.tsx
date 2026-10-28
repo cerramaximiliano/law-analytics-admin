@@ -71,6 +71,7 @@ import configPjMendoza, {
 	IEffectiveSchedule,
 	IWorkerSchedule,
 } from "api/configPjMendoza";
+import { formatBytes, formatPercent } from "utils/format";
 
 // ========== INTERFACES ==========
 
@@ -1181,7 +1182,7 @@ const PjMendozaWorkersConfig: React.FC = () => {
 										%
 									</Typography>
 									<Typography variant="body2" color="text.secondary">
-										CPU / Memoria: {((workersData?.managerState.systemResources?.memoryUsage || 0) * 100).toFixed(0)}%
+										CPU / Memoria: {formatPercent((workersData?.managerState.systemResources?.memoryUsage || 0) * 100, 0)}
 									</Typography>
 								</Box>
 								<Cpu size={32} color={STALE_AMBER} />
@@ -1267,7 +1268,7 @@ const PjMendozaWorkersConfig: React.FC = () => {
 												color="text.secondary"
 												sx={{ display: "block", mt: 0.75, fontVariantNumeric: "tabular-nums" }}
 											>
-												{(pipelineStats.documentos.bytesEnS3 / 1024 / 1024).toFixed(1)} MB · {pipelineStats.documentos.adjuntosEnS3}{" "}
+												{formatBytes(pipelineStats.documentos.bytesEnS3)} · {pipelineStats.documentos.adjuntosEnS3}{" "}
 												adjuntos
 												{pipelineStats.documentos.pdf.failed > 0 ? ` · ${pipelineStats.documentos.pdf.failed} fallidos` : ""}
 												{pipelineStats.documentos.pdf.pending > 0 ? ` · ${pipelineStats.documentos.pdf.pending} en cola` : ""}
@@ -1778,7 +1779,7 @@ const PjMendozaWorkersConfig: React.FC = () => {
 													<Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.5 }}>
 														<Typography variant="body2">CPU</Typography>
 														<Typography variant="body2">
-															{((workersData?.managerState.systemResources?.cpuUsage || 0) * 100).toFixed(1)}%
+															{formatPercent((workersData?.managerState.systemResources?.cpuUsage || 0) * 100)}
 														</Typography>
 													</Box>
 													<LinearProgress
@@ -1796,7 +1797,7 @@ const PjMendozaWorkersConfig: React.FC = () => {
 													<Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.5 }}>
 														<Typography variant="body2">Memoria</Typography>
 														<Typography variant="body2">
-															{((workersData?.managerState.systemResources?.memoryUsage || 0) * 100).toFixed(1)}%
+															{formatPercent((workersData?.managerState.systemResources?.memoryUsage || 0) * 100)}
 														</Typography>
 													</Box>
 													<LinearProgress
@@ -1856,12 +1857,12 @@ const PjMendozaWorkersConfig: React.FC = () => {
 														</TableRow>
 														<TableRow>
 															<TableCell>Umbral CPU</TableCell>
-															<TableCell align="right">{((workersData?.globalSettings?.cpuThreshold || 0.75) * 100).toFixed(0)}%</TableCell>
+															<TableCell align="right">{formatPercent((workersData?.globalSettings?.cpuThreshold || 0.75) * 100, 0)}</TableCell>
 														</TableRow>
 														<TableRow>
 															<TableCell>Umbral Memoria</TableCell>
 															<TableCell align="right">
-																{((workersData?.globalSettings?.memoryThreshold || 0.8) * 100).toFixed(0)}%
+																{formatPercent((workersData?.globalSettings?.memoryThreshold || 0.8) * 100, 0)}
 															</TableCell>
 														</TableRow>
 														<TableRow>
@@ -1998,7 +1999,7 @@ const PjMendozaWorkersConfig: React.FC = () => {
 												<Box sx={{ display: "flex", justifyContent: "space-between" }}>
 													<Typography variant="body2">Tasa de éxito:</Typography>
 													<Typography variant="body2" fontWeight="bold">
-														{summaryStats.processed > 0 ? ((summaryStats.success / summaryStats.processed) * 100).toFixed(1) : 0}%
+														{formatPercent(summaryStats.processed > 0 ? (summaryStats.success / summaryStats.processed) * 100 : 0)}
 													</Typography>
 												</Box>
 											</Stack>

@@ -27,7 +27,8 @@ import {
 } from "@mui/material";
 import { Calendar, Timer1, DollarCircle, Notification, Refresh, ArrowDown2, ArrowUp2 } from "iconsax-react";
 import { alpha } from "@mui/material/styles";
-import dayjs from "utils/dayjs-config";
+import { formatDateTime } from "utils/format";
+import { clickableProps } from "utils/a11y";
 import CopyButton from "components/CopyButton";
 import { RootState } from "store";
 import notificationMonitoringService from "services/notificationMonitoringService";
@@ -87,7 +88,7 @@ const UpcomingNotifications = ({ onRefresh }: Props) => {
 			if (isNaN(dateObj.getTime())) {
 				return "Fecha no disponible";
 			}
-			return dayjs(dateObj).format("DD/MM/YYYY HH:mm");
+			return formatDateTime(dateObj);
 		} catch (error) {
 			return "Fecha no disponible";
 		}
@@ -178,7 +179,7 @@ const UpcomingNotifications = ({ onRefresh }: Props) => {
 						<Grid item xs={12}>
 							<Card>
 								<CardContent>
-									<Box sx={{ display: "flex", alignItems: "center", mb: 2, cursor: "pointer" }} onClick={() => toggleSection("events")}>
+									<Box sx={{ display: "flex", alignItems: "center", mb: 2, cursor: "pointer" }} {...clickableProps(() => toggleSection("events"))} aria-expanded={expandedSections.events}>
 										<Calendar size={24} color={theme.palette.info.main} />
 										<Typography variant="h6" sx={{ ml: 1, flexGrow: 1 }}>
 											Eventos próximos ({upcomingEvents.data.length})
@@ -249,7 +250,7 @@ const UpcomingNotifications = ({ onRefresh }: Props) => {
 						<Grid item xs={12}>
 							<Card>
 								<CardContent>
-									<Box sx={{ display: "flex", alignItems: "center", mb: 2, cursor: "pointer" }} onClick={() => toggleSection("tasks")}>
+									<Box sx={{ display: "flex", alignItems: "center", mb: 2, cursor: "pointer" }} {...clickableProps(() => toggleSection("tasks"))} aria-expanded={expandedSections.tasks}>
 										<Timer1 size={24} color={theme.palette.warning.main} />
 										<Typography variant="h6" sx={{ ml: 1, flexGrow: 1 }}>
 											Tareas próximas ({upcomingTasks.data.length})
@@ -328,7 +329,7 @@ const UpcomingNotifications = ({ onRefresh }: Props) => {
 						<Grid item xs={12}>
 							<Card>
 								<CardContent>
-									<Box sx={{ display: "flex", alignItems: "center", mb: 2, cursor: "pointer" }} onClick={() => toggleSection("movements")}>
+									<Box sx={{ display: "flex", alignItems: "center", mb: 2, cursor: "pointer" }} {...clickableProps(() => toggleSection("movements"))} aria-expanded={expandedSections.movements}>
 										<DollarCircle size={24} color={theme.palette.success.main} />
 										<Typography variant="h6" sx={{ ml: 1, flexGrow: 1 }}>
 											Movimientos próximos ({upcomingMovements.data.length})
@@ -423,7 +424,7 @@ const UpcomingNotifications = ({ onRefresh }: Props) => {
 						<Grid item xs={12}>
 							<Card>
 								<CardContent>
-									<Box sx={{ display: "flex", alignItems: "center", mb: 2, cursor: "pointer" }} onClick={() => toggleSection("alerts")}>
+									<Box sx={{ display: "flex", alignItems: "center", mb: 2, cursor: "pointer" }} {...clickableProps(() => toggleSection("alerts"))} aria-expanded={expandedSections.alerts}>
 										<Notification size={24} color={theme.palette.error.main} />
 										<Typography variant="h6" sx={{ ml: 1, flexGrow: 1 }}>
 											Alertas pendientes ({pendingAlerts.data.length})

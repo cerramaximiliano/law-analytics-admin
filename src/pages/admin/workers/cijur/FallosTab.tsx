@@ -32,6 +32,7 @@ import {
 import { CloseCircle, DocumentText, SearchNormal1 } from "iconsax-react";
 import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER, PRO_TEAL } from "themes/dashboardTokens";
 import { CijurFallo, getCijurFallo, getCijurFallos } from "api/cijur";
+import { clickableProps } from "utils/a11y";
 
 const COLOR_CANAL: Record<string, string> = { PROVINCIAL: PRO_TEAL, NACIONAL: BRAND_BLUE };
 
@@ -94,6 +95,7 @@ export default function FallosTab() {
 		<Stack spacing={2}>
 			<Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} alignItems={{ sm: "center" }}>
 				<TextField
+					inputProps={{ "aria-label": "Buscar por carátula, tribunal o voces" }}
 					size="small"
 					placeholder="Buscar por carátula, tribunal o voces…"
 					value={q}
@@ -158,7 +160,7 @@ export default function FallosTab() {
 								items.map((f) => {
 									const color = COLOR_CANAL[f.canal] || BRAND_BLUE;
 									return (
-										<TableRow key={f._id} hover sx={{ cursor: "pointer" }} onClick={() => abrirDetalle(f._id)}>
+										<TableRow key={f._id} hover sx={{ cursor: "pointer" }} {...clickableProps(() => abrirDetalle(f._id), { asRow: true })}>
 											<TableCell sx={{ maxWidth: 380 }}>
 												<Typography variant="body2" noWrap title={f.caratula || f.titulo}>
 													{f.caratula || f.titulo || "(sin carátula)"}
@@ -230,7 +232,7 @@ export default function FallosTab() {
 							<Typography variant="h6" sx={{ pr: 2 }}>
 								{detalle.caratula || detalle.titulo || "Fallo"}
 							</Typography>
-							<IconButton size="small" onClick={() => setDetalle(null)}>
+							<IconButton aria-label="Cerrar" size="small" onClick={() => setDetalle(null)}>
 								<CloseCircle size={20} />
 							</IconButton>
 						</Stack>

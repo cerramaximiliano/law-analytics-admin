@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import { Box, Chip, Collapse, Paper, Table, TableBody, TableCell, TableHead, TableRow, Typography } from "@mui/material";
 import { JourneyCampaignStats, JourneyV2 } from "api/journey";
 import { dateShort, fmt } from "./journeyFormat";
+import { clickableProps } from "utils/a11y";
 
 const DARK = "#1f1f1f";
 const STATUS_LABEL: Record<string, string> = { paused: "Pausada", completed: "Completada", archived: "Archivada" };
@@ -41,7 +42,7 @@ const JourneyHistorial: React.FC<Props> = ({ v2, onOpen }) => {
 					<Box key={g.key} sx={{ mb: 1.5 }}>
 						<Box
 							sx={{ display: "flex", gap: 1, alignItems: "center", cursor: many ? "pointer" : "default" }}
-							onClick={() => many && setOpenGroups((o) => ({ ...o, [g.key]: !o[g.key] }))}
+							{...(many ? clickableProps(() => setOpenGroups((o) => ({ ...o, [g.key]: !o[g.key] }))) : {})}
 						>
 							<Chip size="small" label={g.key} />
 							<Typography variant="caption" color="textSecondary">
@@ -64,7 +65,7 @@ const JourneyHistorial: React.FC<Props> = ({ v2, onOpen }) => {
 								</TableHead>
 								<TableBody>
 									{g.list.map(([id, c]) => (
-										<TableRow key={id} hover onClick={() => onOpen(id)} sx={{ cursor: "pointer" }}>
+										<TableRow key={id} hover {...clickableProps(() => onOpen(id), { asRow: true })} sx={{ cursor: "pointer" }}>
 											<TableCell>{c.name}</TableCell>
 											<TableCell>
 												<Chip

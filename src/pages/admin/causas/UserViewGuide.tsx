@@ -476,7 +476,12 @@ export default function UserViewGuide() {
 													<Fragment key={i}>
 														<TableRow hover sx={{ "& td": { borderBottom: open ? "none" : undefined } }}>
 															<TableCell>
-																<IconButton size="small" onClick={() => setExpanded((p) => ({ ...p, [i]: !open }))}>
+																<IconButton
+																	size="small"
+																	aria-label={open ? "Contraer fila" : "Expandir fila"}
+																	aria-expanded={open}
+																	onClick={() => setExpanded((p) => ({ ...p, [i]: !open }))}
+																>
 																	{open ? <ArrowUp2 size={14} /> : <ArrowDown2 size={14} />}
 																</IconButton>
 															</TableCell>

@@ -54,7 +54,7 @@ const MobileSection = () => {
 		<>
 			<Box sx={{ flexShrink: 0, ml: 0.75 }}>
 				<IconButton
-					aria-label="open more menu"
+					aria-label="Más opciones"
 					ref={anchorRef}
 					aria-controls={open ? "menu-list-grow" : undefined}
 					aria-haspopup="true"

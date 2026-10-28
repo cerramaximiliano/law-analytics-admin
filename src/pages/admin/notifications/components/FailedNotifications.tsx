@@ -24,7 +24,7 @@ import {
 } from "@mui/material";
 import { Refresh, Eye } from "iconsax-react";
 import { alpha } from "@mui/material/styles";
-import dayjs from "utils/dayjs-config";
+import { formatDateTime } from "utils/format";
 import CopyButton from "components/CopyButton";
 import notificationMonitoringService from "services/notificationMonitoringService";
 import { headerBorder } from "themes/dashboardTokens";
@@ -101,7 +101,7 @@ const FailedNotifications = () => {
 			if (isNaN(dateObj.getTime())) {
 				return "Fecha no disponible";
 			}
-			return dayjs(dateObj).format("DD/MM/YYYY HH:mm");
+			return formatDateTime(dateObj);
 		} catch {
 			return "Fecha no disponible";
 		}

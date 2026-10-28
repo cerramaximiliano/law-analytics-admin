@@ -32,6 +32,7 @@ import { useSnackbar } from "notistack";
 import { useTabIndexParam } from "hooks/useTabParam";
 import WorkerSubTabs, { SubTabDef } from "./WorkerSubTabs";
 import StuckDocumentsService, { StuckDocumentsConfig, StuckDocumentsStats, StuckDocumentsLog, StuckDocument } from "api/stuckDocuments";
+import ConfirmDialog from "components/admin/ConfirmDialog";
 
 // Helper para formatear fecha
 const formatDate = (dateStr?: string | null): string => {
@@ -195,7 +196,10 @@ const StuckDocumentsWorker = () => {
 	};
 
 	// Resetear estadisticas
+	const [confirmResetStats, setConfirmResetStats] = useState(false);
+
 	const handleResetStats = async () => {
+		setConfirmResetStats(false);
 		try {
 			const response = await StuckDocumentsService.resetStats();
 			if (response.success) {
@@ -315,6 +319,7 @@ const StuckDocumentsWorker = () => {
 								</Typography>
 								{editing ? (
 									<TextField
+										inputProps={{ "aria-label": "Cron schedule" }}
 										size="small"
 										value={editValues.schedule?.cronPattern ?? config?.schedule?.cronPattern ?? ""}
 										onChange={(e) =>
@@ -345,7 +350,7 @@ const StuckDocumentsWorker = () => {
 										type="number"
 										value={editValues.batch_size ?? config?.batch_size ?? 3}
 										onChange={(e) => setEditValues({ ...editValues, batch_size: parseInt(e.target.value) })}
-										inputProps={{ min: 1, max: 10 }}
+										inputProps={{ "aria-label": "Batch size", min: 1, max: 10 }}
 									/>
 								) : (
 									<>
@@ -368,7 +373,7 @@ const StuckDocumentsWorker = () => {
 										type="number"
 										value={editValues.lock_timeout_minutes ?? config?.lock_timeout_minutes ?? 20}
 										onChange={(e) => setEditValues({ ...editValues, lock_timeout_minutes: parseInt(e.target.value) })}
-										inputProps={{ min: 5, max: 60 }}
+										inputProps={{ "aria-label": "Lock timeout", min: 5, max: 60 }}
 									/>
 								) : (
 									<>
@@ -413,7 +418,7 @@ const StuckDocumentsWorker = () => {
 												schedule: { ...editValues.schedule, workingHoursStart: parseInt(e.target.value) } as any,
 											})
 										}
-										inputProps={{ min: 0, max: 23 }}
+										inputProps={{ "aria-label": "Hora inicio", min: 0, max: 23 }}
 									/>
 								) : (
 									<Typography variant="body2">{config?.schedule?.workingHoursStart || 8}:00</Typography>
@@ -436,7 +441,7 @@ const StuckDocumentsWorker = () => {
 												schedule: { ...editValues.schedule, workingHoursEnd: parseInt(e.target.value) } as any,
 											})
 										}
-										inputProps={{ min: 0, max: 24 }}
+										inputProps={{ "aria-label": "Hora fin", min: 0, max: 24 }}
 									/>
 								) : (
 									<Typography variant="body2">{config?.schedule?.workingHoursEnd || 22}:00</Typography>
@@ -492,7 +497,7 @@ const StuckDocumentsWorker = () => {
 								Docs procesados
 							</Typography>
 							<Typography variant="h4" sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}>
-								{config?.documents_processed?.toLocaleString() || 0}
+								{config?.documents_processed?.toLocaleString("es-AR") || 0}
 							</Typography>
 						</CardContent>
 					</Card>
@@ -508,7 +513,7 @@ const StuckDocumentsWorker = () => {
 								color="success.main"
 								sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}
 							>
-								{config?.documents_fixed?.toLocaleString() || 0}
+								{config?.documents_fixed?.toLocaleString("es-AR") || 0}
 							</Typography>
 						</CardContent>
 					</Card>
@@ -524,7 +529,7 @@ const StuckDocumentsWorker = () => {
 								color="error.main"
 								sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}
 							>
-								{config?.documents_failed?.toLocaleString() || 0}
+								{config?.documents_failed?.toLocaleString("es-AR") || 0}
 							</Typography>
 						</CardContent>
 					</Card>
@@ -562,7 +567,7 @@ const StuckDocumentsWorker = () => {
 											Total Pendientes
 										</Typography>
 										<Typography variant="h4" color="primary.main">
-											{stats.pending.total?.toLocaleString() || 0}
+											{stats.pending.total?.toLocaleString("es-AR") || 0}
 										</Typography>
 									</CardContent>
 								</Card>
@@ -574,7 +579,7 @@ const StuckDocumentsWorker = () => {
 											<Typography variant="caption" color="text.secondary">
 												{fuero}
 											</Typography>
-											<Typography variant="h6">{(data as any).total?.toLocaleString() || 0}</Typography>
+											<Typography variant="h6">{(data as any).total?.toLocaleString("es-AR") || 0}</Typography>
 											<Stack direction="row" spacing={0.5} sx={{ mt: 0.5 }}>
 												<Chip label={`App: ${(data as any).app || 0}`} size="small" variant="outlined" sx={{ fontSize: "0.65rem" }} />
 											</Stack>
@@ -787,10 +792,19 @@ const StuckDocumentsWorker = () => {
 
 			{/* Boton reset stats */}
 			<Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-				<Button variant="outlined" color="warning" onClick={handleResetStats}>
+				<Button variant="outlined" color="warning" onClick={() => setConfirmResetStats(true)}>
 					Resetear Estadisticas
 				</Button>
 			</Box>
+			<ConfirmDialog
+				open={confirmResetStats}
+				title="¿Resetear las estadísticas del worker de documentos trabados?"
+				description="Los contadores acumulados vuelven a cero y no se pueden recuperar."
+				confirmLabel="Resetear"
+				confirmColor="warning"
+				onConfirm={handleResetStats}
+				onClose={() => setConfirmResetStats(false)}
+			/>
 		</Stack>
 	);
 

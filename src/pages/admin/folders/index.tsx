@@ -56,6 +56,7 @@ import CausaDetalleModal from "../causas/CausaDetalleModal";
 import FolderEditModal from "./FolderEditModal";
 import CausaEditModal from "./CausaEditModal";
 import FolderDetalleModal from "./FolderDetalleModal";
+import ConfirmDialog from "components/admin/ConfirmDialog";
 
 // Mapeo de fueros a nombres legibles
 const FUERO_LABELS: Record<string, string> = {
@@ -147,6 +148,7 @@ const FoldersPage = () => {
 	// Sincronización de stats de folders por usuario
 	const [syncingUserId, setSyncingUserId] = useState<string | null>(null);
 	const [bulkSyncing, setBulkSyncing] = useState(false);
+	const [confirmBulkSync, setConfirmBulkSync] = useState(false);
 
 	const formatSyncResultMessage = (r: SyncFolderStatsResult): string => {
 		if (!r.changed) return `Stats ya estaban correctos (${r.email || r.userId})`;
@@ -184,7 +186,7 @@ const FoldersPage = () => {
 		`Sync masivo: ${r.processed}/${r.totalUsers} usuarios procesados, ${r.changedUsers} con cambios, ${r.errors} errores`;
 
 	const handleBulkSyncFolderStats = async () => {
-		if (!window.confirm("¿Sincronizar los stats de folders de TODOS los usuarios? Puede tardar varios segundos.")) return;
+		setConfirmBulkSync(false);
 		setBulkSyncing(true);
 		try {
 			const response = await UserStatsService.syncFolderStatsBulk();
@@ -519,7 +521,7 @@ const FoldersPage = () => {
 								value={searchText}
 								onChange={(e) => setSearchText(e.target.value)}
 								size="small"
-								placeholder="Nombre, materia, expediente..."
+								placeholder="Nombre, materia, expediente…"
 								onKeyPress={(e) => e.key === "Enter" && handleSearch()}
 							/>
 						</Grid>
@@ -645,7 +647,7 @@ const FoldersPage = () => {
 									variant="outlined"
 									color="info"
 									startIcon={bulkSyncing ? <CircularProgress size={14} /> : <Calculator size={18} />}
-									onClick={handleBulkSyncFolderStats}
+									onClick={() => setConfirmBulkSync(true)}
 									disabled={bulkSyncing || loading}
 									size="small"
 								>
@@ -857,6 +859,7 @@ const FoldersPage = () => {
 																<Tooltip title={`Recalcular stats de folders del usuario ${folder.user.email || folder.user._id}`}>
 																	<span>
 																		<IconButton
+																			aria-label="Recalcular stats de folders del usuario"
 																			size="small"
 																			color="info"
 																			onClick={() => handleSyncFolderStats(folder.user!._id)}
@@ -916,6 +919,16 @@ const FoldersPage = () => {
 			{/* Modal de Detalle de Folder */}
 			<FolderDetalleModal open={detailModalOpen} onClose={handleCloseDetailModal} folder={selectedFolderForDetail} />
 			<CausaUserViewDialog open={!!userViewFolderId} onClose={() => setUserViewFolderId(null)} folderId={userViewFolderId} />
+			<ConfirmDialog
+				open={confirmBulkSync}
+				title="¿Sincronizar los stats de folders de todos los usuarios?"
+				description="Puede tardar varios segundos."
+				confirmLabel="Sincronizar"
+				confirmColor="primary"
+				loading={bulkSyncing}
+				onConfirm={handleBulkSyncFolderStats}
+				onClose={() => setConfirmBulkSync(false)}
+			/>
 		</MainCard>
 	);
 };

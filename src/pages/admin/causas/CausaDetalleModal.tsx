@@ -77,6 +77,8 @@ import {
 	Refresh2,
 } from "iconsax-react";
 import { useSnackbar } from "notistack";
+import { formatBytes } from "utils/format";
+import ActionConfirmDialog from "components/admin/ConfirmDialog";
 
 interface CausaDetalleModalProps {
 	open: boolean;
@@ -195,6 +197,7 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 	const [navigationCodeData, setNavigationCodeData] = useState<NavigationCodeDoc | null>(null);
 	const [loadingNavCode, setLoadingNavCode] = useState(false);
 	const [isReVerifying, setIsReVerifying] = useState(false);
+	const [confirmAction, setConfirmAction] = useState<"reverify" | "clearHistory" | null>(null);
 
 	// Estados para tab de cobertura de textos (solo PJN)
 	const [coverageData, setCoverageData] = useState<CausaCoveragePendientesResponse | null>(null);
@@ -274,7 +277,7 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 	// Re-encolar causa para verificación
 	const handleReVerify = async () => {
 		if (!causa) return;
-		if (!window.confirm("¿Re-encolar esta causa para verificación? El worker la procesará en su próximo ciclo.")) return;
+		setConfirmAction(null);
 
 		try {
 			setIsReVerifying(true);
@@ -892,9 +895,7 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 
 	// Limpiar todo el historial de actualizaciones
 	const handleClearUpdateHistory = async () => {
-		if (!window.confirm("¿Está seguro de que desea eliminar todo el historial de actualizaciones?")) {
-			return;
-		}
+		setConfirmAction(null);
 
 		try {
 			setClearingHistory(true);
@@ -1239,6 +1240,7 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 								</Typography>
 								{isEditing ? (
 									<TextField
+										inputProps={{ "aria-label": "Carátula" }}
 										fullWidth
 										size="small"
 										value={editedCausa.caratula || ""}
@@ -1256,6 +1258,7 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 								</Typography>
 								{isEditing ? (
 									<TextField
+										inputProps={{ "aria-label": "Juzgado" }}
 										fullWidth
 										size="small"
 										value={editedCausa.juzgado || ""}
@@ -1273,6 +1276,7 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 								</Typography>
 								{isEditing ? (
 									<TextField
+										inputProps={{ "aria-label": "Objeto" }}
 										fullWidth
 										size="small"
 										value={editedCausa.objeto || ""}
@@ -1298,6 +1302,7 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 										</Typography>
 										{isEditing ? (
 											<TextField
+												inputProps={{ "aria-label": "Última actualización" }}
 												fullWidth
 												type="datetime-local"
 												size="small"
@@ -1316,6 +1321,7 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 										</Typography>
 										{isEditing ? (
 											<TextField
+												inputProps={{ "aria-label": "Fecha último movimiento" }}
 												fullWidth
 												type="date"
 												size="small"
@@ -1496,6 +1502,7 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 																	<Tooltip title="Ver notificaciones">
 																		<span>
 																			<IconButton
+																				aria-label="Ver notificaciones"
 																				size="small"
 																				color="info"
 																				onClick={() => handleViewNotifications(mov)}
@@ -1508,6 +1515,7 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 																	<Tooltip title="Enviar notificación">
 																		<span>
 																			<IconButton
+																				aria-label="Enviar notificación"
 																				size="small"
 																				color="primary"
 																				onClick={() => handleNotifyMovimiento(actualIndex)}
@@ -1569,10 +1577,10 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 											color="error"
 											size="small"
 											startIcon={<Trash size={18} />}
-											onClick={handleClearUpdateHistory}
+											onClick={() => setConfirmAction("clearHistory")}
 											disabled={clearingHistory}
 										>
-											{clearingHistory ? "Limpiando..." : "Limpiar Todo"}
+											{clearingHistory ? "Limpiando…" : "Limpiar Todo"}
 										</Button>
 									</Stack>
 								)}
@@ -2166,7 +2174,7 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 																<TableCell sx={{ maxWidth: 200 }}>
 																	<Typography variant="caption" color="text.secondary" sx={{ wordBreak: "break-word" }}>
 																		{p.motivo || "—"}
-																		{p.pdfBytes ? ` · ${(p.pdfBytes / 1024 / 1024).toFixed(1)} MB` : ""}
+																		{p.pdfBytes ? ` · ${formatBytes(p.pdfBytes)}` : ""}
 																	</Typography>
 																</TableCell>
 															</TableRow>
@@ -2430,10 +2438,10 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 											color="warning"
 											size="small"
 											startIcon={isReVerifying ? <CircularProgress size={16} /> : <Refresh2 size={18} />}
-											onClick={handleReVerify}
+											onClick={() => setConfirmAction("reverify")}
 											disabled={isReVerifying}
 										>
-											{isReVerifying ? "Re-encolando..." : "Re-verificar"}
+											{isReVerifying ? "Re-encolando…" : "Re-verificar"}
 										</Button>
 										<Typography variant="caption" color="textSecondary" sx={{ ml: 1 }}>
 											Re-encola el expediente para que el worker lo verifique en su próximo ciclo
@@ -2573,7 +2581,7 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 								Cancelar
 							</Button>
 							<Button onClick={handleSaveEdit} startIcon={<Save2 size={18} />} variant="contained" disabled={isSaving}>
-								{isSaving ? "Guardando..." : "Guardar"}
+								{isSaving ? "Guardando…" : "Guardar"}
 							</Button>
 						</>
 					) : (
@@ -2595,7 +2603,7 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 						Cancelar
 					</Button>
 					<Button onClick={handleConfirmDelete} variant="contained" color="error" disabled={isDeleting} startIcon={<Trash size={18} />}>
-						{isDeleting ? "Eliminando..." : "Eliminar"}
+						{isDeleting ? "Eliminando…" : "Eliminar"}
 					</Button>
 				</ConfirmDialogActions>
 			</ConfirmDialog>
@@ -2666,7 +2674,7 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 						Cancelar
 					</Button>
 					<Button onClick={handleAddMovimiento} variant="contained" disabled={isAddingMovimiento} startIcon={<AddCircle size={18} />}>
-						{isAddingMovimiento ? "Agregando..." : "Agregar"}
+						{isAddingMovimiento ? "Agregando…" : "Agregar"}
 					</Button>
 				</ConfirmDialogActions>
 			</ConfirmDialog>
@@ -2676,7 +2684,7 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 				<ConfirmDialogTitle>
 					<Box display="flex" justifyContent="space-between" alignItems="center">
 						<Typography variant="h6">Notificaciones del Movimiento</Typography>
-						<IconButton onClick={() => setNotificationsDialogOpen(false)} size="small">
+						<IconButton aria-label="Cerrar" onClick={() => setNotificationsDialogOpen(false)} size="small">
 							<CloseCircle />
 						</IconButton>
 					</Box>
@@ -2804,7 +2812,7 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 				<ConfirmDialogTitle>
 					<Box display="flex" justifyContent="space-between" alignItems="center">
 						<Typography variant="h6">Enviar Notificación</Typography>
-						<IconButton onClick={handleCancelSendNotification} size="small">
+						<IconButton aria-label="Cerrar" onClick={handleCancelSendNotification} size="small">
 							<CloseCircle />
 						</IconButton>
 					</Box>
@@ -2863,6 +2871,23 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 					</Button>
 				</ConfirmDialogActions>
 			</ConfirmDialog>
+
+			<ActionConfirmDialog
+				open={confirmAction === "reverify"}
+				title="¿Re-encolar esta causa para verificación?"
+				description="El worker la procesará en su próximo ciclo."
+				confirmLabel="Re-encolar"
+				confirmColor="primary"
+				onConfirm={handleReVerify}
+				onClose={() => setConfirmAction(null)}
+			/>
+			<ActionConfirmDialog
+				open={confirmAction === "clearHistory"}
+				title="¿Eliminar todo el historial de actualizaciones de esta causa?"
+				confirmLabel="Eliminar historial"
+				onConfirm={handleClearUpdateHistory}
+				onClose={() => setConfirmAction(null)}
+			/>
 		</>
 	);
 };

@@ -55,6 +55,8 @@ import {
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import FeedbackService, { UserFeedback, FeedbackFilters, FeedbackStatus, FeedbackType } from "api/feedback";
+import ConfirmDialog from "components/admin/ConfirmDialog";
+import { formatNumber } from "utils/format";
 
 const STATUS_CONFIG: Record<FeedbackStatus, { color: "warning" | "info" | "success" | "default" | "error"; label: string }> = {
 	pending: { color: "warning", label: "Pendiente" },
@@ -231,6 +233,7 @@ const FeedbackAdminPage = () => {
 		}
 	};
 
+	const [forcePublishMsg, setForcePublishMsg] = useState<string | null>(null);
 	const doPublish = async (force = false) => {
 		if (!selected) return;
 		try {
@@ -243,9 +246,7 @@ const FeedbackAdminPage = () => {
 		} catch (e: any) {
 			const msg: string = e?.response?.data?.message || e?.message || "Error al publicar";
 			if (msg.includes("consentimiento") && !force) {
-				if (window.confirm(`${msg}\n\n¿Forzar publicación de todos modos?`)) {
-					await doPublish(true);
-				}
+				setForcePublishMsg(msg);
 			} else {
 				enqueueSnackbar(msg, { variant: "error" });
 			}
@@ -472,7 +473,7 @@ const FeedbackAdminPage = () => {
 								) : (
 									<Stack direction="row" alignItems="baseline" spacing={1}>
 										<Typography variant="h4" sx={{ fontVariantNumeric: "tabular-nums" }}>
-											{stats?.avgRating?.avg ? Number(stats.avgRating.avg).toFixed(2) : "—"}
+											{stats?.avgRating?.avg ? formatNumber(Number(stats.avgRating.avg), 2) : "—"}
 										</Typography>
 										<Typography variant="caption" color="text.secondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
 											({stats?.avgRating?.count || 0})
@@ -555,7 +556,8 @@ const FeedbackAdminPage = () => {
 							<TextField
 								fullWidth
 								size="small"
-								placeholder="Buscar por contenido, nombre o email..."
+								placeholder="Buscar por contenido, nombre o email…"
+								inputProps={{ "aria-label": "Buscar por contenido, nombre o email" }}
 								value={searchTerm}
 								onChange={(e) => {
 									setSearchTerm(e.target.value);
@@ -1076,6 +1078,19 @@ const FeedbackAdminPage = () => {
 					</Button>
 				</DialogActions>
 			</Dialog>
+			<ConfirmDialog
+				open={!!forcePublishMsg}
+				title="¿Forzar la publicación de este feedback?"
+				description={forcePublishMsg || undefined}
+				confirmLabel="Forzar publicación"
+				confirmColor="warning"
+				loading={busy}
+				onConfirm={() => {
+					setForcePublishMsg(null);
+					doPublish(true);
+				}}
+				onClose={() => setForcePublishMsg(null)}
+			/>
 		</MainCard>
 	);
 };

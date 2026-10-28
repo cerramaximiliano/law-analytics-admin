@@ -62,6 +62,8 @@ import MainCard from "components/MainCard";
 import ImageActions from "components/ImageActions";
 import CopyButton from "components/CopyButton";
 import { fetchImageBlob } from "utils/imageActions";
+import { clickableProps } from "utils/a11y";
+import { useTabIndexParam } from "hooks/useTabParam";
 import DailySyncPanel from "components/pjn/DailySyncPanel";
 import CrossViewLinks from "components/admin/CrossViewLink";
 import pjnCredentialsService, {
@@ -79,6 +81,8 @@ import EmailLogsService from "api/emailLogs";
 import { EmailLog } from "types/email-log";
 
 // Colores para estados
+const TAB_SLUGS = ["credenciales", "actividad-sync", "movimientos", "notif-credenciales", "alertas-admin"] as const;
+
 const getSyncStatusColor = (status: string) => {
 	switch (status) {
 		case "completed":
@@ -323,7 +327,7 @@ const CredencialesPJN = () => {
 	const theme = useTheme();
 
 	// Tab activo
-	const [tabValue, setTabValue] = useState(0);
+	const [tabValue, setTabValue] = useTabIndexParam("tab", TAB_SLUGS);
 
 	// Estado de datos
 	const [credentials, setCredentials] = useState<PjnCredential[]>([]);
@@ -912,7 +916,7 @@ const CredencialesPJN = () => {
 				<Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
 					<CircularProgress size={24} />
 					<Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
-						Cargando estadísticas...
+						Cargando estadísticas…
 					</Typography>
 				</Box>
 			)}
@@ -1119,7 +1123,9 @@ const CredencialesPJN = () => {
 									fullWidth
 									size="small"
 									label="Buscar usuario"
-									placeholder="Nombre o email..."
+									placeholder="Nombre o email…"
+									autoComplete="off"
+									inputProps={{ spellCheck: false }}
 									value={searchText}
 									onChange={(e) => setSearchText(e.target.value)}
 									onKeyPress={(e) => e.key === "Enter" && handleSearch()}
@@ -1470,9 +1476,9 @@ const CredencialesPJN = () => {
 															<Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.65rem", lineHeight: 1 }}>
 																{cred.extractionStatus === "completed"
 																	? (cred.processedCausasCount || 0) >= (cred.expectedCausasCount || 1)
-																		? "Finalizando..."
+																		? "Finalizando…"
 																		: "Procesando cola"
-																	: "Extrayendo..."}
+																	: "Extrayendo…"}
 															</Typography>
 														</Box>
 													) : (
@@ -1926,7 +1932,7 @@ const CredencialesPJN = () => {
 							<Box sx={{ display: "flex", justifyContent: "center", py: 3 }}>
 								<CircularProgress size={28} />
 								<Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
-									Cargando actividad detallada...
+									Cargando actividad detallada…
 								</Typography>
 							</Box>
 						</Grid>
@@ -2409,7 +2415,7 @@ const CredencialesPJN = () => {
 								</Typography>
 							</Grid>
 							{[
-								{ value: stats.movementTotals.totalMovements.toLocaleString(), label: "Total Movimientos", color: "text.primary" },
+								{ value: stats.movementTotals.totalMovements.toLocaleString("es-AR"), label: "Total Movimientos", color: "text.primary" },
 								{ value: stats.movementTotals.avgPerFolder, label: "Prom. Mov/Carpeta", color: "text.primary" },
 								{ value: stats.movementTotals.foldersWithMovements, label: "Carpetas con Movimientos", color: "text.primary" },
 								{
@@ -2468,6 +2474,8 @@ const CredencialesPJN = () => {
 								size="small"
 								label="Filtrar por email destinatario"
 								placeholder="Ej: usuario@mail.com"
+								autoComplete="off"
+								inputProps={{ spellCheck: false }}
 								value={emailLogsUserFilter}
 								onChange={(e) => setEmailLogsUserFilter(e.target.value)}
 								onKeyPress={(e) => {
@@ -2961,12 +2969,14 @@ const CredencialesPJN = () => {
 																	component="img"
 																	src={err.screenshotUrl}
 																	alt="screenshot del login"
-																	onClick={() =>
-																		setScreenshotLightbox({
-																			url: err.screenshotUrl as string,
-																			label: `login-error ${err.timestamp || ""}`.trim(),
-																		})
-																	}
+																	{...clickableProps(
+																		() =>
+																			setScreenshotLightbox({
+																				url: err.screenshotUrl as string,
+																				label: `login-error ${err.timestamp || ""}`.trim(),
+																			}),
+																		{ label: "Ampliar screenshot del login" },
+																	)}
 																	sx={{
 																		width: 72,
 																		height: 44,
@@ -3129,7 +3139,7 @@ const CredencialesPJN = () => {
 						disabled={resetSyncDialog.loading || resetSyncDialog.executing}
 						startIcon={resetSyncDialog.executing ? <CircularProgress size={16} /> : undefined}
 					>
-						{resetSyncDialog.executing ? "Reseteando..." : "Resetear sincronización"}
+						{resetSyncDialog.executing ? "Reseteando…" : "Resetear sincronización"}
 					</Button>
 				</DialogActions>
 			</Dialog>
@@ -3196,7 +3206,7 @@ const CredencialesPJN = () => {
 						disabled={creating || !createForm.userId || !createForm.cuil || !createForm.password}
 						startIcon={creating ? <CircularProgress size={16} /> : undefined}
 					>
-						{creating ? "Creando..." : "Crear"}
+						{creating ? "Creando…" : "Crear"}
 					</Button>
 				</DialogActions>
 			</Dialog>
@@ -3603,7 +3613,7 @@ const CredencialesPJN = () => {
 						disabled={updatePasswordDialog.loading || !updatePasswordDialog.password.trim()}
 						startIcon={updatePasswordDialog.loading ? <CircularProgress size={16} /> : <Lock size={16} />}
 					>
-						{updatePasswordDialog.loading ? "Guardando..." : "Guardar contraseña"}
+						{updatePasswordDialog.loading ? "Guardando…" : "Guardar contraseña"}
 					</Button>
 				</DialogActions>
 			</Dialog>

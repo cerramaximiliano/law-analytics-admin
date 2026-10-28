@@ -31,6 +31,7 @@ import { useSnackbar } from "notistack";
 import { WorkersService, WorkerConfig } from "api/workers";
 import { ManagerConfigService, ManagerStatusResponse, ManagerAlertsResponse } from "api/managerConfig";
 import AdvancedConfigModal from "./AdvancedConfigModal";
+import { formatPercent } from "utils/format";
 
 // Enums según el modelo mongoose
 const VERIFICATION_MODE_OPTIONS = [
@@ -111,7 +112,7 @@ const VerificationWorker = () => {
 	const formatDate = (date: any): string => {
 		if (!date) return "N/A";
 		const dateStr = typeof date === "string" ? date : date.$date;
-		return new Date(dateStr).toLocaleString("es-ES");
+		return new Date(dateStr).toLocaleString("es-AR");
 	};
 
 	// Manejar edición
@@ -378,6 +379,7 @@ const VerificationWorker = () => {
 									<TableCell>
 										{isEditing ? (
 											<TextField
+												inputProps={{ "aria-label": "Worker ID" }}
 												size="small"
 												value={editValues.worker_id || ""}
 												onChange={(e) => setEditValues({ ...editValues, worker_id: e.target.value })}
@@ -393,6 +395,7 @@ const VerificationWorker = () => {
 										{isEditing ? (
 											<FormControl size="small" fullWidth>
 												<Select
+													inputProps={{ "aria-label": "Modo de verificación" }}
 													value={editValues.verification_mode || ""}
 													onChange={(e) => setEditValues({ ...editValues, verification_mode: e.target.value })}
 												>
@@ -410,6 +413,7 @@ const VerificationWorker = () => {
 									<TableCell align="center">
 										{isEditing ? (
 											<TextField
+												inputProps={{ "aria-label": "Tamaño de lote" }}
 												size="small"
 												type="number"
 												value={editValues.batch_size || ""}
@@ -424,6 +428,7 @@ const VerificationWorker = () => {
 										{isEditing ? (
 											<FormControl size="small" sx={{ minWidth: 120 }}>
 												<Select
+													inputProps={{ "aria-label": "Proveedor de captcha" }}
 													value={editValues.captcha?.defaultProvider || config.captcha?.defaultProvider || "2captcha"}
 													onChange={(e) =>
 														setEditValues({
@@ -448,17 +453,17 @@ const VerificationWorker = () => {
 									</TableCell>
 									<TableCell align="center">
 										<Typography variant="body2" fontWeight={500}>
-											{config.documents_verified?.toLocaleString() || 0}
+											{config.documents_verified?.toLocaleString("es-AR") || 0}
 										</Typography>
 									</TableCell>
 									<TableCell align="center">
 										<Typography variant="body2" color="success.main" fontWeight={500}>
-											{config.documents_valid?.toLocaleString() || 0}
+											{config.documents_valid?.toLocaleString("es-AR") || 0}
 										</Typography>
 									</TableCell>
 									<TableCell align="center">
 										<Typography variant="body2" color="error.main" fontWeight={500}>
-											{config.documents_invalid?.toLocaleString() || 0}
+											{config.documents_invalid?.toLocaleString("es-AR") || 0}
 										</Typography>
 									</TableCell>
 									<TableCell align="center">
@@ -551,7 +556,7 @@ const VerificationWorker = () => {
 								Total verificados
 							</Typography>
 							<Typography variant="h4" sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}>
-								{configs.reduce((acc, c) => acc + (c.documents_verified || 0), 0).toLocaleString()}
+								{configs.reduce((acc, c) => acc + (c.documents_verified || 0), 0).toLocaleString("es-AR")}
 							</Typography>
 						</CardContent>
 					</Card>
@@ -570,7 +575,7 @@ const VerificationWorker = () => {
 								{(() => {
 									const total = configs.reduce((acc, c) => acc + (c.documents_verified || 0), 0);
 									const valid = configs.reduce((acc, c) => acc + (c.documents_valid || 0), 0);
-									return total > 0 ? `${((valid / total) * 100).toFixed(1)}%` : "0%";
+									return total > 0 ? formatPercent((valid / total) * 100, 1) : "0%";
 								})()}
 							</Typography>
 						</CardContent>

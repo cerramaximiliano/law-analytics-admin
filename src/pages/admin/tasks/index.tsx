@@ -77,6 +77,8 @@ import {
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/es";
+import { formatDate } from "utils/format";
+import { clickableProps } from "utils/a11y";
 
 dayjs.extend(relativeTime);
 dayjs.locale("es");
@@ -436,7 +438,7 @@ const AdminTasks: React.FC = () => {
 			<Box sx={{ p: 2, display: "flex", flexWrap: "wrap", gap: 2, alignItems: "center" }}>
 				<TextField
 					size="small"
-					placeholder="Buscar tareas..."
+					placeholder="Buscar tareas…"
 					value={searchInput}
 					onChange={(e) => setSearchInput(e.target.value)}
 					onKeyPress={(e) => e.key === "Enter" && handleSearch()}
@@ -449,7 +451,7 @@ const AdminTasks: React.FC = () => {
 						),
 						endAdornment: searchInput && (
 							<InputAdornment position="end">
-								<IconButton size="small" onClick={handleClearSearch}>
+								<IconButton aria-label="Limpiar búsqueda" size="small" onClick={handleClearSearch}>
 									<CloseCircle size={16} />
 								</IconButton>
 							</InputAdornment>
@@ -557,7 +559,7 @@ const AdminTasks: React.FC = () => {
 					</>
 				)}
 
-				<IconButton
+				<IconButton aria-label="Actualizar tareas"
 					onClick={() => {
 						fetchTasks();
 						fetchStats();
@@ -649,7 +651,7 @@ const AdminTasks: React.FC = () => {
 									key={task._id}
 									hover
 									selected={selectedIds.includes(task._id)}
-									onClick={() => handleOpenDetail(task)}
+									{...clickableProps(() => handleOpenDetail(task), { asRow: true })}
 									sx={{ cursor: "pointer" }}
 								>
 									<TableCell padding="checkbox" onClick={(e) => e.stopPropagation()}>
@@ -754,7 +756,7 @@ const AdminTasks: React.FC = () => {
 													color={task.isOverdue ? "error" : "textPrimary"}
 													fontWeight={task.isOverdue ? "bold" : "normal"}
 												>
-													{dayjs(task.dueDate).format("DD/MM/YY")}
+													{formatDate(task.dueDate, "dateShort")}
 												</Typography>
 												<Typography variant="caption" color={task.isOverdue ? "error" : "textSecondary"}>
 													{dayjs(task.dueDate).fromNow()}

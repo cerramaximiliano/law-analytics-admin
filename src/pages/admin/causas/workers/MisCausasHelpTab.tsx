@@ -891,7 +891,7 @@ if (existingCausa && excludedSet.has(existingCausa._id.toString())) {
 						<Typography variant="body2">
 							Para revertir una exclusión (que el sync vuelva a crear la carpeta), eliminar la entrada en MongoDB:
 							<code style={{ display: "block", marginTop: 4 }}>
-								{"db['pjn-credentials'].updateOne({ userId }, { $pull: { excludedCausas: { causaId: ObjectId('...') } } })"}
+								{"db['pjn-credentials'].updateOne({ userId }, { $pull: { excludedCausas: { causaId: ObjectId('…') } } })"}
 							</code>
 						</Typography>
 					</Alert>
@@ -1089,7 +1089,7 @@ if (allScrapedKeys) {
 						<Typography variant="body2">
 							Para limpiar el flag manualmente sin esperar al próximo sync:
 							<code style={{ display: "block", marginTop: 4 }}>
-								{"db.folders.updateOne({ _id: ObjectId('...') }, { $unset: { pjnNotFound: 1 } })"}
+								{"db.folders.updateOne({ _id: ObjectId('…') }, { $unset: { pjnNotFound: 1 } })"}
 							</code>
 						</Typography>
 					</Alert>

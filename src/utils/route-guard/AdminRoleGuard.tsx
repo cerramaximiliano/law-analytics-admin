@@ -45,7 +45,7 @@ const AdminRoleGuard = ({ children }: AdminRoleGuardProps) => {
 
 	// Mostrar un mensaje mientras verificamos los permisos
 	if (isChecking) {
-		return <div>Verificando permisos...</div>;
+		return <div>Verificando permisos…</div>;
 	}
 
 	// TEMPORAL: Solo verificar que esté logueado

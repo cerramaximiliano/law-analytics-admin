@@ -44,6 +44,7 @@ import DeleteUserDialog from "./DeleteUserDialog";
 import EditUserModal from "./EditUserModal";
 import UserResourcesTab from "./UserResourcesTab";
 import { formatCurrency } from "utils/formatCurrency";
+import { formatNumber } from "utils/format";
 
 // assets
 import {
@@ -970,9 +971,9 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 
 				let message = `Almacenamiento sincronizado para ${response.data?.user?.email || "el usuario"}`;
 				if (response.data?.changed) {
-					message += `. Antes: ${beforeMB.toFixed(2)} MB, Después: ${afterMB.toFixed(2)} MB (${
+					message += `. Antes: ${formatNumber(beforeMB, 2)} MB, Después: ${formatNumber(afterMB, 2)} MB (${
 						difference > 0 ? "+" : ""
-					}${difference.toFixed(2)} MB)`;
+					}${formatNumber(difference, 2)} MB)`;
 				}
 
 				storeDispatch(
@@ -1158,7 +1159,7 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 									},
 								}}
 							>
-								{syncingSubscription ? "Sincronizando..." : "Sincronizar"}
+								{syncingSubscription ? "Sincronizando…" : "Sincronizar"}
 							</Button>
 						</Tooltip>
 					</Box>
@@ -1208,7 +1209,7 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 								},
 							}}
 						>
-							{syncingSubscription ? "Sincronizando..." : "Sincronizar"}
+							{syncingSubscription ? "Sincronizando…" : "Sincronizar"}
 						</Button>
 					</Tooltip>
 				</Box>
@@ -1302,14 +1303,14 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 				<Stack direction="row" justifyContent="space-between" alignItems="center">
 					<Typography variant="subtitle1">Inicio del período actual</Typography>
 					<Typography variant="body2">
-						{subscription.currentPeriodStart ? new Date(subscription.currentPeriodStart).toLocaleDateString() : "Información no disponible"}
+						{subscription.currentPeriodStart ? new Date(subscription.currentPeriodStart).toLocaleDateString("es-AR") : "Información no disponible"}
 					</Typography>
 				</Stack>
 
 				<Stack direction="row" justifyContent="space-between" alignItems="center">
 					<Typography variant="subtitle1">Fin del período actual</Typography>
 					<Typography variant="body2">
-						{subscription.currentPeriodEnd ? new Date(subscription.currentPeriodEnd).toLocaleDateString() : "Información no disponible"}
+						{subscription.currentPeriodEnd ? new Date(subscription.currentPeriodEnd).toLocaleDateString("es-AR") : "Información no disponible"}
 					</Typography>
 				</Stack>
 
@@ -1321,7 +1322,7 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 				{subscription.canceledAt && (
 					<Stack direction="row" justifyContent="space-between" alignItems="center">
 						<Typography variant="subtitle1">Fecha de cancelación</Typography>
-						<Typography variant="body2">{new Date(subscription.canceledAt).toLocaleDateString()}</Typography>
+						<Typography variant="body2">{new Date(subscription.canceledAt).toLocaleDateString("es-AR")}</Typography>
 					</Stack>
 				)}
 
@@ -1342,7 +1343,7 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 										<Typography variant="caption">
 											Efectivo:{" "}
 											{subscription.pendingPlanChange.effectiveDate
-												? new Date(subscription.pendingPlanChange.effectiveDate).toLocaleDateString()
+												? new Date(subscription.pendingPlanChange.effectiveDate).toLocaleDateString("es-AR")
 												: "No especificada"}
 										</Typography>
 									</Paper>
@@ -1392,7 +1393,7 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 																	onClick={handleSaveGracePeriod}
 																	disabled={savingGracePeriod}
 																>
-																	{savingGracePeriod ? "Guardando..." : "Guardar"}
+																	{savingGracePeriod ? "Guardando…" : "Guardar"}
 																</Button>
 																<Button
 																	size="small"
@@ -1411,7 +1412,7 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 														<Typography variant="caption">
 															Expira:{" "}
 															{subscription.downgradeGracePeriod.expiresAt
-																? new Date(subscription.downgradeGracePeriod.expiresAt).toLocaleDateString()
+																? new Date(subscription.downgradeGracePeriod.expiresAt).toLocaleDateString("es-AR")
 																: "No especificada"}
 														</Typography>
 														{subscription.downgradeGracePeriod.autoArchiveScheduled !== undefined && (
@@ -1423,7 +1424,7 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 												)}
 											</Box>
 											{!isEditingGracePeriod && (
-												<IconButton size="small" onClick={() => setIsEditingGracePeriod(true)} sx={{ ml: 1 }}>
+												<IconButton aria-label="Editar período de gracia" size="small" onClick={() => setIsEditingGracePeriod(true)} sx={{ ml: 1 }}>
 													<Edit2 size={16} />
 												</IconButton>
 											)}
@@ -1458,7 +1459,7 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 												)}
 											</Stack>
 										}
-										secondary={new Date(history.changedAt).toLocaleString()}
+										secondary={new Date(history.changedAt).toLocaleString("es-AR")}
 									/>
 								</ListItem>
 							))}
@@ -1479,14 +1480,14 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 				<Stack direction="row" justifyContent="space-between" alignItems="center">
 					<Typography variant="subtitle1">Creado</Typography>
 					<Typography variant="body2">
-						{subscription.createdAt ? new Date(subscription.createdAt).toLocaleString() : "Información no disponible"}
+						{subscription.createdAt ? new Date(subscription.createdAt).toLocaleString("es-AR") : "Información no disponible"}
 					</Typography>
 				</Stack>
 
 				<Stack direction="row" justifyContent="space-between" alignItems="center">
 					<Typography variant="subtitle1">Última actualización</Typography>
 					<Typography variant="body2">
-						{subscription.updatedAt ? new Date(subscription.updatedAt).toLocaleString() : "Información no disponible"}
+						{subscription.updatedAt ? new Date(subscription.updatedAt).toLocaleString("es-AR") : "Información no disponible"}
 					</Typography>
 				</Stack>
 			</Stack>
@@ -1499,17 +1500,17 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 			<Stack spacing={2}>
 				<Stack direction="row" justifyContent="space-between" alignItems="center">
 					<Typography variant="subtitle1">Último acceso</Typography>
-					<Typography variant="body2">{userData?.lastLogin ? new Date(userData.lastLogin).toLocaleString() : "Nunca"}</Typography>
+					<Typography variant="body2">{userData?.lastLogin ? new Date(userData.lastLogin).toLocaleString("es-AR") : "Nunca"}</Typography>
 				</Stack>
 
 				<Stack direction="row" justifyContent="space-between" alignItems="center">
 					<Typography variant="subtitle1">Fecha de registro</Typography>
-					<Typography variant="body2">{userData?.createdAt ? new Date(userData.createdAt).toLocaleString() : "-"}</Typography>
+					<Typography variant="body2">{userData?.createdAt ? new Date(userData.createdAt).toLocaleString("es-AR") : "-"}</Typography>
 				</Stack>
 
 				<Stack direction="row" justifyContent="space-between" alignItems="center">
 					<Typography variant="subtitle1">Última actualización</Typography>
-					<Typography variant="body2">{userData?.updatedAt ? new Date(userData.updatedAt).toLocaleString() : "-"}</Typography>
+					<Typography variant="body2">{userData?.updatedAt ? new Date(userData.updatedAt).toLocaleString("es-AR") : "-"}</Typography>
 				</Stack>
 			</Stack>
 		);
@@ -1793,7 +1794,7 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 											<Box>
 												<Typography variant="subtitle2">{calc.type}</Typography>
 												<Typography variant="caption" color="textSecondary">
-													{calc.classType} {new Date(calc.date).toLocaleDateString()}
+													{calc.classType} {new Date(calc.date).toLocaleDateString("es-AR")}
 												</Typography>
 											</Box>
 											<Typography variant="body2" fontWeight="medium">
@@ -1895,12 +1896,12 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 													{event.title}
 												</Typography>
 												<Typography variant="caption" color="textSecondary">
-													{new Date(event.start).toLocaleDateString()} {event.type}
+													{new Date(event.start).toLocaleDateString("es-AR")} {event.type}
 												</Typography>
 											</Box>
 											{!event.allDay && (
 												<Typography variant="caption" color="textSecondary">
-													{new Date(event.start).toLocaleTimeString([], {
+													{new Date(event.start).toLocaleTimeString("es-AR", {
 														hour: "2-digit",
 														minute: "2-digit",
 													})}
@@ -1999,7 +2000,7 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 								<Typography variant="subtitle2" color="text.secondary">
 									Creado
 								</Typography>
-								<Typography variant="body2">{new Date(stripeHistory.customer.created).toLocaleString()}</Typography>
+								<Typography variant="body2">{new Date(stripeHistory.customer.created).toLocaleString("es-AR")}</Typography>
 							</Stack>
 						</Grid>
 					</Grid>
@@ -2075,14 +2076,14 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 												Período Actual
 											</Typography>
 											<Typography variant="body2">
-												{new Date(sub.current_period_start).toLocaleDateString()} - {new Date(sub.current_period_end).toLocaleDateString()}
+												{new Date(sub.current_period_start).toLocaleDateString("es-AR")} - {new Date(sub.current_period_end).toLocaleDateString("es-AR")}
 											</Typography>
 										</Grid>
 										<Grid item xs={12} md={6}>
 											<Typography variant="caption" color="text.secondary">
 												Creada
 											</Typography>
-											<Typography variant="body2">{new Date(sub.created).toLocaleString()}</Typography>
+											<Typography variant="body2">{new Date(sub.created).toLocaleString("es-AR")}</Typography>
 										</Grid>
 										{sub.plan && (
 											<Grid item xs={12}>
@@ -2100,7 +2101,7 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 										{sub.canceled_at && (
 											<Grid item xs={12}>
 												<Typography variant="caption" color="error">
-													Cancelada el: {new Date(sub.canceled_at).toLocaleString()}
+													Cancelada el: {new Date(sub.canceled_at).toLocaleString("es-AR")}
 												</Typography>
 											</Grid>
 										)}
@@ -2124,7 +2125,7 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 										<Grid item xs={12} md={3}>
 											<Typography variant="subtitle2">{invoice.number || invoice.id}</Typography>
 											<Typography variant="caption" color="text.secondary">
-												{new Date(invoice.created).toLocaleDateString()}
+												{new Date(invoice.created).toLocaleDateString("es-AR")}
 											</Typography>
 										</Grid>
 										<Grid item xs={12} md={3}>
@@ -2247,7 +2248,7 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 							onClick={syncMarketingData}
 							disabled={syncingMarketing}
 						>
-							{syncingMarketing ? "Sincronizando..." : "Sincronizar con Marketing"}
+							{syncingMarketing ? "Sincronizando…" : "Sincronizar con Marketing"}
 						</Button>
 					</Box>
 				</Stack>
@@ -2484,7 +2485,7 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 						<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
 							<CircularProgress size={20} />
 							<Typography variant="body2" color="text.secondary">
-								Cargando segmentos...
+								Cargando segmentos…
 							</Typography>
 						</Box>
 					) : (
@@ -2532,7 +2533,7 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 															onClick={() => handleAddToSegment(segment._id!)}
 															disabled={addingToSegment !== null}
 														>
-															{addingToSegment === segment._id ? "Agregando..." : "Agregar"}
+															{addingToSegment === segment._id ? "Agregando…" : "Agregar"}
 														</Button>
 													)}
 												</Stack>
@@ -2563,7 +2564,7 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 								<Typography variant="subtitle2" color="text.secondary">
 									Creado
 								</Typography>
-								<Typography variant="body2">{contact?.createdAt ? new Date(contact.createdAt).toLocaleString() : "-"}</Typography>
+								<Typography variant="body2">{contact?.createdAt ? new Date(contact.createdAt).toLocaleString("es-AR") : "-"}</Typography>
 							</Stack>
 						</Grid>
 						<Grid item xs={12} md={6}>
@@ -2571,7 +2572,7 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 								<Typography variant="subtitle2" color="text.secondary">
 									Última actualización
 								</Typography>
-								<Typography variant="body2">{contact?.updatedAt ? new Date(contact.updatedAt).toLocaleString() : "-"}</Typography>
+								<Typography variant="body2">{contact?.updatedAt ? new Date(contact.updatedAt).toLocaleString("es-AR") : "-"}</Typography>
 							</Stack>
 						</Grid>
 					</Grid>
@@ -2770,7 +2771,7 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 												<Stack direction="row" justifyContent="space-between" alignItems="center">
 													<Typography variant="subtitle1">Fecha de registro</Typography>
 													<Typography variant="body2">
-														{userData?.createdAt ? new Date(userData.createdAt).toLocaleDateString() : "-"}
+														{userData?.createdAt ? new Date(userData.createdAt).toLocaleDateString("es-AR") : "-"}
 													</Typography>
 												</Stack>
 											</Stack>
@@ -2960,7 +2961,7 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 								disabled={resettingOnboarding}
 								startIcon={resettingOnboarding ? <CircularProgress size={16} /> : <RefreshCircle size={16} />}
 							>
-								{resettingOnboarding ? "Reseteando..." : "Resetear Onboarding"}
+								{resettingOnboarding ? "Reseteando…" : "Resetear Onboarding"}
 							</Button>
 						</Stack>
 						<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>

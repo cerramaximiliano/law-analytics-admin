@@ -12,6 +12,7 @@ import SegmentsPanel from "sections/admin/marketing/SegmentsPanel";
 import MarketingQuickNav from "components/admin/marketing/MarketingQuickNav";
 import { Refresh, Data2 } from "iconsax-react";
 import { useRequestQueueRefresh } from "hooks/useRequestQueueRefresh";
+import { useTabIndexParam } from "hooks/useTabParam";
 import { BRAND_BLUE, LIVE_GREEN, LIVE_PULSE_KEYFRAMES } from "themes/dashboardTokens";
 
 // ==============================|| ADMIN - MARKETING CONTACTS ||============================== //
@@ -70,9 +71,11 @@ function TabPanel(props: TabPanelProps) {
 	);
 }
 
+const TAB_SLUGS = ["contactos", "segmentos"] as const;
+
 const MarketingContacts = () => {
 	// Tab state
-	const [tabValue, setTabValue] = useState<number>(0);
+	const [tabValue, setTabValue] = useTabIndexParam("tab", TAB_SLUGS);
 
 	// Server status state
 	const [serverStatus, setServerStatus] = useState<ServiceStatus>({
@@ -232,7 +235,7 @@ const MarketingContacts = () => {
 						</Typography>
 						<Typography variant="body2">
 							Estado:{" "}
-							{serverStatus.status === "online" ? "En línea" : serverStatus.status === "offline" ? "Fuera de línea" : "Verificando..."}
+							{serverStatus.status === "online" ? "En línea" : serverStatus.status === "offline" ? "Fuera de línea" : "Verificando…"}
 						</Typography>
 						<Typography variant="caption" color="text.secondary">
 							{serverStatus.baseUrl} • IP: {serverStatus.ip}

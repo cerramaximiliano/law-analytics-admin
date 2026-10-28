@@ -25,6 +25,7 @@ import {
 } from "@mui/material";
 import { Refresh } from "iconsax-react";
 import SearchLogService, { PublicLogResponse, SearchLogQueryStat, SemanticLogResponse } from "api/searchLog";
+import { clickableProps } from "utils/a11y";
 
 const PAGE_SIZE = 25;
 const DAY_OPTIONS = [7, 30, 90, 365];
@@ -198,10 +199,10 @@ const SearchLogPanel = () => {
 										hover
 										selected={userId === u.userId}
 										sx={{ cursor: "pointer" }}
-										onClick={() => {
+										{...clickableProps(() => {
 											setUserId(userId === u.userId ? "" : u.userId);
 											resetPage();
-										}}
+										}, { asRow: true })}
 									>
 										<TableCell>{u.email || u.userId}</TableCell>
 										<TableCell>{u.plan || "—"}</TableCell>

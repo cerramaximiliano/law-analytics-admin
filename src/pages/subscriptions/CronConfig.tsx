@@ -29,6 +29,7 @@ import CronConfigService, { CronConfig, UpdateCronConfigParams } from "api/cronC
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/es";
+import { formatDateTime } from "utils/format";
 
 dayjs.extend(relativeTime);
 dayjs.locale("es");
@@ -294,7 +295,7 @@ const CronConfigPage = () => {
 									</Typography>
 									<Stack direction="row" spacing={0.5} alignItems="center">
 										<Clock size={14} />
-										<Typography variant="body2">{config?.nextRun ? dayjs(config.nextRun).format("DD/MM/YYYY HH:mm") : "-"}</Typography>
+										<Typography variant="body2">{config?.nextRun ? formatDateTime(config.nextRun) : "-"}</Typography>
 									</Stack>
 									{config?.nextRun && (
 										<Typography variant="caption" color="text.secondary">
@@ -403,6 +404,8 @@ const CronConfigPage = () => {
 										fullWidth
 										label="Tu Email (Admin)"
 										type="email"
+										autoComplete="email"
+										inputProps={{ spellCheck: false }}
 										value={adminEmail}
 										onChange={(e) => setAdminEmail(e.target.value)}
 										placeholder="admin@lawanalytics.app"
@@ -417,7 +420,7 @@ const CronConfigPage = () => {
 										label="Notas (Opcional)"
 										value={notes}
 										onChange={(e) => setNotes(e.target.value)}
-										placeholder="Motivo del cambio..."
+										placeholder="Motivo del cambio…"
 										size="small"
 									/>
 								</Grid>
@@ -433,7 +436,7 @@ const CronConfigPage = () => {
 											disabled={saving || !adminEmail}
 											startIcon={saving ? <CircularProgress size={16} color="inherit" /> : <Save2 size={16} />}
 										>
-											{saving ? "Guardando..." : "Guardar Cambios"}
+											{saving ? "Guardando…" : "Guardar Cambios"}
 										</Button>
 									</Stack>
 								</Grid>
@@ -456,6 +459,8 @@ const CronConfigPage = () => {
 										fullWidth
 										label="Tu Email (Admin)"
 										type="email"
+										autoComplete="email"
+										inputProps={{ spellCheck: false }}
 										value={adminEmail}
 										onChange={(e) => setAdminEmail(e.target.value)}
 										placeholder="admin@lawanalytics.app"
@@ -503,7 +508,7 @@ const CronConfigPage = () => {
 										{config.history.slice(0, 10).map((entry, index) => (
 											<TableRow key={index}>
 												<TableCell>
-													<Typography variant="caption">{dayjs(entry.updatedAt).format("DD/MM/YYYY HH:mm")}</Typography>
+													<Typography variant="caption">{formatDateTime(entry.updatedAt)}</Typography>
 												</TableCell>
 												<TableCell>
 													<Typography variant="caption">{entry.updatedBy}</Typography>

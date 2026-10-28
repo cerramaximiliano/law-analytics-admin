@@ -36,6 +36,7 @@ import { CausasPjMendozaService, CausaPjMendoza, WorkerStatsResponse, Eligibilit
 import { Refresh, Eye, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, TickCircle, CloseSquare, Lock1, Repeat } from "iconsax-react";
 import CausaDetalleModalPjMendoza from "./CausaDetalleModalPjMendoza";
 import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER } from "themes/dashboardTokens";
+import { formatPercent } from "utils/format";
 
 // Helper para formatear fechas
 const formatDate = (date: { $date: string } | string | undefined): string => {
@@ -456,14 +457,14 @@ const CarpetasVerificadasPjMendoza = () => {
 											letterSpacing: "-0.01em",
 										}}
 									>
-										{totalCount.toLocaleString()}
+										{totalCount.toLocaleString("es-AR")}
 										<Typography
 											component="span"
 											variant="body2"
 											color="text.secondary"
 											sx={{ ml: 0.5, fontVariantNumeric: "tabular-nums" }}
 										>
-											/ {totalInDatabase.toLocaleString()}
+											/ {totalInDatabase.toLocaleString("es-AR")}
 										</Typography>
 									</Typography>
 								</Stack>
@@ -571,7 +572,7 @@ const CarpetasVerificadasPjMendoza = () => {
 								value={searchCaratula}
 								onChange={(e) => setSearchCaratula(e.target.value)}
 								size="small"
-								placeholder="Buscar en carátula..."
+								placeholder="Buscar en carátula…"
 							/>
 						</Grid>
 					</Grid>
@@ -682,7 +683,7 @@ const CarpetasVerificadasPjMendoza = () => {
 								<Box display="flex" alignItems="center" gap={1}>
 									<CircularProgress size={16} />
 									<Typography variant="caption" color="text.secondary">
-										Cargando estadísticas...
+										Cargando estadísticas…
 									</Typography>
 								</Box>
 							) : eligibilityStats ? (
@@ -723,7 +724,7 @@ const CarpetasVerificadasPjMendoza = () => {
 											</Tooltip>
 										</Stack>
 									</Stack>
-									<Tooltip title={`${eligibilityStats.coveragePercent.toFixed(1)}% de documentos elegibles actualizados hoy`}>
+									<Tooltip title={`${formatPercent(eligibilityStats.coveragePercent, 1)} de documentos elegibles actualizados hoy`}>
 										<LinearProgress
 											variant="determinate"
 											value={eligibilityStats.coveragePercent}
@@ -744,7 +745,7 @@ const CarpetasVerificadasPjMendoza = () => {
 										/>
 									</Tooltip>
 									<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5, textAlign: "right" }}>
-										{eligibilityStats.coveragePercent.toFixed(1)}% cobertura
+										{formatPercent(eligibilityStats.coveragePercent, 1)} cobertura
 									</Typography>
 								</Box>
 							) : (

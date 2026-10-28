@@ -276,7 +276,7 @@ const AnalyzeLogsModal = ({ open, onClose, filters }: Props) => {
 						<Stack direction="row" spacing={1}>
 							{usage && (
 								<Typography variant="caption" color="text.disabled">
-									Tokens: {usage.total_tokens?.toLocaleString() || "?"} (prompt {usage.prompt_tokens}, completion {usage.completion_tokens})
+									Tokens: {usage.total_tokens?.toLocaleString("es-AR") || "?"} (prompt {usage.prompt_tokens}, completion {usage.completion_tokens})
 								</Typography>
 							)}
 						</Stack>
@@ -301,7 +301,7 @@ const AnalyzeLogsModal = ({ open, onClose, filters }: Props) => {
 						disabled={loading}
 						startIcon={loading ? <CircularProgress size={16} color="inherit" /> : <Magicpen size={18} />}
 					>
-						{loading ? "Analizando..." : "Analizar"}
+						{loading ? "Analizando…" : "Analizar"}
 					</Button>
 				)}
 			</DialogActions>

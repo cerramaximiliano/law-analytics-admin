@@ -55,12 +55,12 @@ import {
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import PdfTemplatesAdminService, { PdfTemplate, PdfTemplateStats, PdfField } from "api/pdfTemplatesAdmin";
-import dayjs from "dayjs";
+import { formatDateTime } from "utils/format";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-const formatDate = (d?: string) => (d ? dayjs(d).format("DD/MM/YYYY HH:mm") : "-");
+const formatDate = (d?: string) => (d ? formatDateTime(d) : "-");
 
 const CATEGORY_LABELS: Record<string, string> = {
 	postal: "Postal",
@@ -100,7 +100,7 @@ const StatCard: React.FC<{ label: string; value: number; color: string; loading?
 				<Skeleton variant="text" width={50} height={32} />
 			) : (
 				<Typography variant="h3" sx={{ color, fontWeight: 700, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}>
-					{value.toLocaleString()}
+					{value.toLocaleString("es-AR")}
 				</Typography>
 			)}
 		</Paper>
@@ -199,7 +199,7 @@ const DetailDialog: React.FC<DetailDialogProps> = ({ open, template, onClose, on
 								</Box>
 							))}
 							<Button variant="outlined" size="small" startIcon={<Cloud size={14} />} onClick={handleOpenPdf} disabled={loadingUrl}>
-								{loadingUrl ? "Generando URL..." : "Abrir PDF base en S3"}
+								{loadingUrl ? "Generando URL…" : "Abrir PDF base en S3"}
 							</Button>
 						</Stack>
 					</Grid>
@@ -498,7 +498,7 @@ const EditDialog: React.FC<EditDialogProps> = ({ open, template, onClose, onSave
 					Cancelar
 				</Button>
 				<Button onClick={handleSave} variant="contained" disabled={saving}>
-					{saving ? "Guardando..." : template ? "Guardar cambios" : "Crear"}
+					{saving ? "Guardando…" : template ? "Guardar cambios" : "Crear"}
 				</Button>
 			</DialogActions>
 		</Dialog>
@@ -530,7 +530,7 @@ const DeleteDialog: React.FC<DeleteDialogProps> = ({ open, template, onClose, on
 				Cancelar
 			</Button>
 			<Button onClick={onConfirm} color="error" variant="contained" disabled={loading}>
-				{loading ? "Eliminando..." : "Eliminar"}
+				{loading ? "Eliminando…" : "Eliminar"}
 			</Button>
 		</DialogActions>
 	</Dialog>
@@ -779,7 +779,8 @@ const PdfTemplatesPage: React.FC = () => {
 			<Box sx={{ p: { xs: 1.5, sm: 2 }, display: "flex", gap: 2, flexWrap: "wrap", borderBottom: 1, borderColor: "divider" }}>
 				<TextField
 					size="small"
-					placeholder="Buscar nombre, slug..."
+					placeholder="Buscar nombre, slug…"
+					inputProps={{ "aria-label": "Buscar nombre, slug" }}
 					value={searchInput}
 					onChange={(e) => setSearchInput(e.target.value)}
 					onKeyPress={(e) => e.key === "Enter" && handleSearch()}
@@ -792,7 +793,7 @@ const PdfTemplatesPage: React.FC = () => {
 						),
 						endAdornment: searchInput && (
 							<InputAdornment position="end">
-								<IconButton size="small" onClick={handleClearSearch}>
+								<IconButton size="small" onClick={handleClearSearch} aria-label="Limpiar búsqueda">
 									<CloseCircle size={14} />
 								</IconButton>
 							</InputAdornment>

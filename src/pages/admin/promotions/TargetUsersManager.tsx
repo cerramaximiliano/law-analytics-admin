@@ -34,6 +34,7 @@ import { Segment } from "types/segment";
 import TargetContactsTab from "./TargetContactsTab";
 import { BRAND_BLUE } from "themes/dashboardTokens";
 import CopyButton from "components/CopyButton";
+import ConfirmDialog from "components/admin/ConfirmDialog";
 
 interface TargetUsersManagerProps {
 	discountId: string;
@@ -46,6 +47,7 @@ interface TargetUsersManagerProps {
 const TargetUsersManager = ({ discountId, discountCode, isPublic, frozenSegment, onUpdate }: TargetUsersManagerProps) => {
 	const { enqueueSnackbar } = useSnackbar();
 	const [activeTab, setActiveTab] = useState(0);
+	const [confirmClearOpen, setConfirmClearOpen] = useState(false);
 	const [loading, setLoading] = useState(true);
 	const [targetUsers, setTargetUsers] = useState<TargetUser[]>([]);
 	const [totalTargetUsers, setTotalTargetUsers] = useState(0);
@@ -208,10 +210,6 @@ const TargetUsersManager = ({ discountId, discountCode, isPublic, frozenSegment,
 	};
 
 	const handleClearAllUsers = async () => {
-		if (!window.confirm("¿Estás seguro de eliminar todos los usuarios objetivo? El descuento quedará disponible para todos.")) {
-			return;
-		}
-
 		setAddLoading(true);
 		try {
 			const response = await discountsService.setTargetUsers(discountId, { userIds: [] });
@@ -222,6 +220,7 @@ const TargetUsersManager = ({ discountId, discountCode, isPublic, frozenSegment,
 			enqueueSnackbar(error.message || "Error al limpiar usuarios", { variant: "error" });
 		} finally {
 			setAddLoading(false);
+			setConfirmClearOpen(false);
 		}
 	};
 
@@ -388,7 +387,7 @@ const TargetUsersManager = ({ discountId, discountCode, isPublic, frozenSegment,
 									size="small"
 									color="warning"
 									startIcon={<UserRemove size={18} />}
-									onClick={handleClearAllUsers}
+									onClick={() => setConfirmClearOpen(true)}
 									disabled={addLoading || frozenSegment}
 								>
 									Limpiar Todos
@@ -549,7 +548,7 @@ const TargetUsersManager = ({ discountId, discountCode, isPublic, frozenSegment,
 						<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
 							Buscar y agregar usuarios
 						</Typography>
-						<IconButton size="small" onClick={() => setAddDialogOpen(false)}>
+						<IconButton aria-label="Cerrar" size="small" onClick={() => setAddDialogOpen(false)}>
 							<CloseCircle size={20} />
 						</IconButton>
 					</Stack>
@@ -569,7 +568,8 @@ const TargetUsersManager = ({ discountId, discountCode, isPublic, frozenSegment,
 							<TextField
 								{...params}
 								label="Buscar por email o nombre"
-								placeholder="Escribe al menos 2 caracteres..."
+								inputProps={{ ...params.inputProps, spellCheck: false }}
+								placeholder="Escribe al menos 2 caracteres…"
 								InputProps={{
 									...params.InputProps,
 									startAdornment: (
@@ -602,7 +602,7 @@ const TargetUsersManager = ({ discountId, discountCode, isPublic, frozenSegment,
 						renderTags={(value, getTagProps) =>
 							value.map((option, index) => <Chip {...getTagProps({ index })} key={option._id} label={option.email} size="small" />)
 						}
-						noOptionsText={searchQuery.length < 2 ? "Escribe para buscar..." : "No se encontraron usuarios"}
+						noOptionsText={searchQuery.length < 2 ? "Escribe para buscar…" : "No se encontraron usuarios"}
 					/>
 
 					{selectedUsers.length > 0 && (
@@ -633,7 +633,7 @@ const TargetUsersManager = ({ discountId, discountCode, isPublic, frozenSegment,
 						<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
 							Agregar usuarios por email
 						</Typography>
-						<IconButton size="small" onClick={() => setAddByEmailDialogOpen(false)}>
+						<IconButton aria-label="Cerrar" size="small" onClick={() => setAddByEmailDialogOpen(false)}>
 							<CloseCircle size={20} />
 						</IconButton>
 					</Stack>
@@ -648,7 +648,8 @@ const TargetUsersManager = ({ discountId, discountCode, isPublic, frozenSegment,
 						multiline
 						rows={6}
 						label="Emails"
-						placeholder="usuario1@email.com, usuario2@email.com&#10;o uno por línea..."
+						placeholder="usuario1@email.com, usuario2@email.com&#10;o uno por línea…"
+						inputProps={{ spellCheck: false }}
 						value={emailsToAdd}
 						onChange={(e) => setEmailsToAdd(e.target.value)}
 					/>
@@ -684,7 +685,7 @@ const TargetUsersManager = ({ discountId, discountCode, isPublic, frozenSegment,
 						<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
 							Gestionar segmentos
 						</Typography>
-						<IconButton size="small" onClick={() => setSegmentDialogOpen(false)}>
+						<IconButton aria-label="Cerrar" size="small" onClick={() => setSegmentDialogOpen(false)}>
 							<CloseCircle size={20} />
 						</IconButton>
 					</Stack>
@@ -708,7 +709,7 @@ const TargetUsersManager = ({ discountId, discountCode, isPublic, frozenSegment,
 							<TextField
 								{...params}
 								label="Segmentos"
-								placeholder={selectedSegments.length === 0 ? "Seleccionar segmentos..." : ""}
+								placeholder={selectedSegments.length === 0 ? "Seleccionar segmentos…" : ""}
 								InputProps={{
 									...params.InputProps,
 									endAdornment: (
@@ -731,7 +732,7 @@ const TargetUsersManager = ({ discountId, discountCode, isPublic, frozenSegment,
 								/>
 							))
 						}
-						noOptionsText={loadingSegments ? "Cargando..." : "No hay segmentos disponibles"}
+						noOptionsText={loadingSegments ? "Cargando…" : "No hay segmentos disponibles"}
 					/>
 					{selectedSegments.length > 0 && (
 						<Box sx={{ mt: 2 }}>
@@ -756,6 +757,17 @@ const TargetUsersManager = ({ discountId, discountCode, isPublic, frozenSegment,
 					</Button>
 				</DialogActions>
 			</Dialog>
+
+			<ConfirmDialog
+				open={confirmClearOpen}
+				title={`¿Eliminar los ${totalTargetUsers} usuarios objetivo?`}
+				description="El descuento quedará disponible para todos."
+				confirmLabel="Eliminar todos"
+				confirmColor="error"
+				loading={addLoading}
+				onConfirm={handleClearAllUsers}
+				onClose={() => setConfirmClearOpen(false)}
+			/>
 		</Box>
 	);
 };

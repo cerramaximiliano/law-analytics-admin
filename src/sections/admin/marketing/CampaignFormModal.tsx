@@ -58,6 +58,7 @@ import { CampaignService, SchedulerFrequencyService } from "store/reducers/campa
 import { SegmentService } from "store/reducers/segments";
 import { useSnackbar } from "notistack";
 import { DEFAULT_FREQUENCY_POLICY, getPolicy } from "utils/campaignCoordination";
+import { formatDate } from "utils/format";
 import { ORDEN_VENCIDOS_LABEL, QUOTA_MODE_HELP, QUOTA_MODE_LABEL } from "./coordination/labels";
 
 // Extend dayjs with timezone support
@@ -770,7 +771,7 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 										</Typography>
 										<Typography variant="body2" paragraph>
 											<strong>2. SEQUENCE (Secuencia)</strong>
-											<br />• Serie de emails enviados en orden estricto (0, 1, 2, 3...)
+											<br />• Serie de emails enviados en orden estricto (0, 1, 2, 3…)
 											<br />• Los contactos avanzan paso a paso
 											<br />• No pueden saltar pasos
 											<br />• Respeta tiempos de espera entre emails
@@ -947,7 +948,7 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 												</Typography>
 												<Typography variant="body2" color="text.secondary">
 													{promo.discountType === "percentage" ? `${promo.discountValue}%` : `${promo.currency} ${promo.discountValue}`}
-													{promo.validUntil ? ` · hasta ${dayjs(promo.validUntil).format("DD/MM/YYYY")}` : ""}
+													{promo.validUntil ? ` · hasta ${formatDate(promo.validUntil)}` : ""}
 												</Typography>
 												{!promo.vigente && <Chip size="small" color="warning" variant="outlined" label="no vigente" />}
 												{promo.targeted && <Chip size="small" color="info" variant="outlined" label="dirigida" />}
@@ -968,7 +969,7 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 								return (
 									<Alert severity="warning" sx={{ mt: 1 }}>
 										La promo <strong>{selected.code}</strong> no está vigente hoy
-										{selected.validUntil ? ` (vence/venció el ${dayjs(selected.validUntil).format("DD/MM/YYYY")})` : ""}. La campaña no va a
+										{selected.validUntil ? ` (vence/venció el ${formatDate(selected.validUntil)})` : ""}. La campaña no va a
 										poder activarse mientras la promo no esté vigente.
 									</Alert>
 								);

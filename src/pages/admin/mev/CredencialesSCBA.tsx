@@ -57,6 +57,7 @@ import { enqueueSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import ImageActions from "components/ImageActions";
 import CopyButton from "components/CopyButton";
+import { clickableProps } from "utils/a11y";
 import { useTabParam, useTabIndexParam } from "hooks/useTabParam";
 import { AddCircle } from "iconsax-react";
 import scbaCredentialsService, {
@@ -687,7 +688,7 @@ const CredencialesSCBA = () => {
 										fullWidth
 										size="small"
 										label="Buscar usuario"
-										placeholder="Nombre o email..."
+										placeholder="Nombre o email…"
 										value={searchText}
 										onChange={(e) => setSearchText(e.target.value)}
 										onKeyPress={(e) => e.key === "Enter" && handleSearch()}
@@ -988,6 +989,9 @@ const CredencialesSCBA = () => {
 										size="small"
 										label="Filtrar por email destinatario"
 										placeholder="Ej: usuario@mail.com"
+										type="email"
+										autoComplete="off"
+										inputProps={{ spellCheck: false }}
 										value={emailLogsUserFilter}
 										onChange={(e) => setEmailLogsUserFilter(e.target.value)}
 										onKeyPress={(e) => {
@@ -1591,7 +1595,7 @@ const CredencialesSCBA = () => {
 						disabled={creating || !createForm.userId || !createForm.username || !createForm.password}
 						startIcon={creating ? <CircularProgress size={16} /> : undefined}
 					>
-						{creating ? "Creando..." : "Crear"}
+						{creating ? "Creando…" : "Crear"}
 					</Button>
 				</DialogActions>
 			</Dialog>
@@ -1857,9 +1861,10 @@ const CredencialesSCBA = () => {
 											p.url ? (
 												<Box
 													key={p.page}
-													onClick={() =>
-														setSnapshotPreview({ url: p.url as string, label: `${snap.date} — página ${p.page}`, s3Key: p.s3Key })
-													}
+													{...clickableProps(
+														() => setSnapshotPreview({ url: p.url as string, label: `${snap.date} — página ${p.page}`, s3Key: p.s3Key }),
+														{ label: `Ver página ${p.page}` },
+													)}
 													sx={{
 														cursor: "pointer",
 														border: (t) => `1px solid ${t.palette.divider}`,

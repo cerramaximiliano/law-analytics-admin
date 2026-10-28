@@ -184,7 +184,7 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({ open, onClose
 	// Format date helper
 	const formatDate = (dateString?: string | Date | null) => {
 		if (!dateString) return "-";
-		return new Date(dateString).toLocaleDateString("es-ES", {
+		return new Date(dateString).toLocaleDateString("es-AR", {
 			year: "numeric",
 			month: "long",
 			day: "numeric",
@@ -247,7 +247,7 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({ open, onClose
 						<Typography variant="h5">Detalles de la Campaña</Typography>
 					</Grid>
 					<Grid item>
-						<IconButton onClick={onClose} size="small">
+						<IconButton aria-label="Cerrar" onClick={onClose} size="small">
 							<CloseCircle variant="Bold" />
 						</IconButton>
 					</Grid>
@@ -483,7 +483,7 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({ open, onClose
 													<Typography variant="body2" color="textSecondary">
 														Número estimado de contactos
 													</Typography>
-													<Typography variant="body1">{campaign.segmentInfo.estimatedCount.toLocaleString()}</Typography>
+													<Typography variant="body1">{campaign.segmentInfo.estimatedCount.toLocaleString("es-AR")}</Typography>
 												</Grid>
 												<Grid item xs={12} sm={6}>
 													<Typography variant="body2" color="textSecondary">

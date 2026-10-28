@@ -65,6 +65,8 @@ import MEVWorkersService, { MEVWorkerConfig, SystemConfig } from "api/workersMEV
 import SyncCheckTab from "./SyncCheckTab";
 import WorkerManagerTab from "./WorkerManagerTab";
 import ScbaManagerTab from "./ScbaManagerTab";
+import { clickableProps } from "utils/a11y";
+import { formatPercent } from "utils/format";
 
 interface WorkerTab {
 	label: string;
@@ -213,7 +215,7 @@ const MEVWorkers = () => {
 	// Formatear fecha
 	const formatDate = (date: string | undefined): string => {
 		if (!date) return "N/A";
-		return new Date(date).toLocaleString("es-ES");
+		return new Date(date).toLocaleString("es-AR");
 	};
 
 	// Formatear fecha con tiempo transcurrido
@@ -242,7 +244,7 @@ const MEVWorkers = () => {
 		}
 
 		return {
-			formatted: dateObj.toLocaleString("es-ES"),
+			formatted: dateObj.toLocaleString("es-AR"),
 			elapsed,
 		};
 	};
@@ -392,11 +394,11 @@ const MEVWorkers = () => {
 	const formatSystemValue = (value: any, dataType: string): string => {
 		switch (dataType) {
 			case "date":
-				return value ? new Date(value).toLocaleString("es-ES") : "N/A";
+				return value ? new Date(value).toLocaleString("es-AR") : "N/A";
 			case "boolean":
 				return value ? "Sí" : "No";
 			case "number":
-				return value?.toLocaleString() || "0";
+				return value?.toLocaleString("es-AR") || "0";
 			case "json":
 				return typeof value === "object" ? JSON.stringify(value, null, 2) : value;
 			default:
@@ -501,13 +503,13 @@ const MEVWorkers = () => {
 							backgroundColor: "background.paper",
 							height: "100%",
 							cursor: "pointer",
-							transition: "all 0.2s",
+							transition: "box-shadow 0.2s, transform 0.2s",
 							"&:hover": {
 								boxShadow: 2,
 								transform: "translateY(-2px)",
 							},
 						}}
-						onClick={() => setWorkerInfoModalOpen(true)}
+						{...clickableProps(() => setWorkerInfoModalOpen(true))}
 					>
 						<CardContent>
 							<Stack direction="row" spacing={1} alignItems="center" justifyContent="center">
@@ -531,13 +533,13 @@ const MEVWorkers = () => {
 							backgroundColor: "background.paper",
 							height: "100%",
 							cursor: "pointer",
-							transition: "all 0.2s",
+							transition: "box-shadow 0.2s, transform 0.2s",
 							"&:hover": {
 								boxShadow: 2,
 								transform: "translateY(-2px)",
 							},
 						}}
-						onClick={() => setGuideModalOpen(true)}
+						{...clickableProps(() => setGuideModalOpen(true))}
 					>
 						<CardContent>
 							<Stack direction="row" spacing={1} alignItems="center" justifyContent="center">
@@ -561,13 +563,13 @@ const MEVWorkers = () => {
 							backgroundColor: "background.default",
 							height: "100%",
 							cursor: "pointer",
-							transition: "all 0.2s",
+							transition: "box-shadow 0.2s, transform 0.2s",
 							"&:hover": {
 								boxShadow: 2,
 								transform: "translateY(-2px)",
 							},
 						}}
-						onClick={() => setEligibilityModalOpen(true)}
+						{...clickableProps(() => setEligibilityModalOpen(true))}
 					>
 						<CardContent>
 							<Stack direction="row" spacing={1} alignItems="center" justifyContent="center">
@@ -731,6 +733,7 @@ const MEVWorkers = () => {
 															<TableCell>
 																{isEditing ? (
 																	<TextField
+																		inputProps={{ "aria-label": "Worker ID" }}
 																		size="small"
 																		value={editValues.worker_id || ""}
 																		onChange={(e) => setEditValues({ ...editValues, worker_id: e.target.value })}
@@ -743,6 +746,7 @@ const MEVWorkers = () => {
 															<TableCell align="center">
 																{isEditing ? (
 																	<TextField
+																		inputProps={{ "aria-label": "Tamaño de lote" }}
 																		size="small"
 																		type="number"
 																		value={editValues.batch_size || ""}
@@ -756,6 +760,7 @@ const MEVWorkers = () => {
 															<TableCell align="center">
 																{isEditing ? (
 																	<TextField
+																		inputProps={{ "aria-label": "Delay (ms)" }}
 																		size="small"
 																		type="number"
 																		value={editValues.delay_between_searches || ""}
@@ -769,6 +774,7 @@ const MEVWorkers = () => {
 															<TableCell align="center">
 																{isEditing ? (
 																	<TextField
+																		inputProps={{ "aria-label": "Reintentos" }}
 																		size="small"
 																		type="number"
 																		value={editValues.max_retries || ""}
@@ -782,6 +788,7 @@ const MEVWorkers = () => {
 															<TableCell align="center">
 																{isEditing ? (
 																	<TextField
+																		inputProps={{ "aria-label": "Máximo de movimientos" }}
 																		size="small"
 																		type="number"
 																		value={editValues.settings?.max_movimientos ?? ""}
@@ -808,17 +815,17 @@ const MEVWorkers = () => {
 															</TableCell>
 															<TableCell align="center">
 																<Typography variant="body2" fontWeight={500}>
-																	{config.documents_verified?.toLocaleString() || 0}
+																	{config.documents_verified?.toLocaleString("es-AR") || 0}
 																</Typography>
 															</TableCell>
 															<TableCell align="center">
 																<Typography variant="body2" color="success.main" fontWeight={500}>
-																	{config.documents_valid?.toLocaleString() || 0}
+																	{config.documents_valid?.toLocaleString("es-AR") || 0}
 																</Typography>
 															</TableCell>
 															<TableCell align="center">
 																<Typography variant="body2" color="warning.main" fontWeight={500}>
-																	{config.documents_not_found?.toLocaleString() || 0}
+																	{config.documents_not_found?.toLocaleString("es-AR") || 0}
 																</Typography>
 															</TableCell>
 															<TableCell align="center">
@@ -1099,17 +1106,17 @@ const MEVWorkers = () => {
 														</TableCell>
 														<TableCell align="center">
 															<Typography variant="body2" fontWeight={500}>
-																{config.documents_verified?.toLocaleString() || 0}
+																{config.documents_verified?.toLocaleString("es-AR") || 0}
 															</Typography>
 														</TableCell>
 														<TableCell align="center">
 															<Typography variant="body2" color="success.main" fontWeight={500}>
-																{config.documents_valid?.toLocaleString() || 0}
+																{config.documents_valid?.toLocaleString("es-AR") || 0}
 															</Typography>
 														</TableCell>
 														<TableCell align="center">
 															<Typography variant="body2" color="warning.main" fontWeight={500}>
-																{config.documents_not_found?.toLocaleString() || 0}
+																{config.documents_not_found?.toLocaleString("es-AR") || 0}
 															</Typography>
 														</TableCell>
 														<TableCell align="center">
@@ -1120,11 +1127,11 @@ const MEVWorkers = () => {
 															/>
 														</TableCell>
 														<TableCell align="center">
-															<Typography variant="body2">{config.statistics?.total_searches?.toLocaleString() || 0}</Typography>
+															<Typography variant="body2">{config.statistics?.total_searches?.toLocaleString("es-AR") || 0}</Typography>
 														</TableCell>
 														<TableCell align="center">
 															<Typography variant="body2" color="success.main">
-																{config.statistics?.successful_searches?.toLocaleString() || 0}
+																{config.statistics?.successful_searches?.toLocaleString("es-AR") || 0}
 															</Typography>
 														</TableCell>
 														<TableCell align="center">
@@ -1186,7 +1193,7 @@ const MEVWorkers = () => {
 								Total Verificados
 							</Typography>
 							<Typography variant="h4">
-								{verificationConfigs.reduce((acc, c) => acc + (c.documents_verified || 0), 0).toLocaleString()}
+								{verificationConfigs.reduce((acc, c) => acc + (c.documents_verified || 0), 0).toLocaleString("es-AR")}
 							</Typography>
 						</CardContent>
 					</Card>
@@ -1201,7 +1208,7 @@ const MEVWorkers = () => {
 								{(() => {
 									const total = verificationConfigs.reduce((acc, c) => acc + (c.documents_verified || 0), 0);
 									const valid = verificationConfigs.reduce((acc, c) => acc + (c.documents_valid || 0), 0);
-									return total > 0 ? `${((valid / total) * 100).toFixed(1)}%` : "0%";
+									return formatPercent(total > 0 ? (valid / total) * 100 : 0);
 								})()}
 							</Typography>
 						</CardContent>
@@ -1223,7 +1230,7 @@ const MEVWorkers = () => {
 										Total Búsquedas
 									</Typography>
 									<Typography variant="body2" fontWeight={500}>
-										{verificationConfigs[0].statistics.total_searches?.toLocaleString() || 0}
+										{verificationConfigs[0].statistics.total_searches?.toLocaleString("es-AR") || 0}
 									</Typography>
 								</Stack>
 							</Grid>
@@ -1233,7 +1240,7 @@ const MEVWorkers = () => {
 										Búsquedas Exitosas
 									</Typography>
 									<Typography variant="body2" fontWeight={500} color="success.main">
-										{verificationConfigs[0].statistics.successful_searches?.toLocaleString() || 0}
+										{verificationConfigs[0].statistics.successful_searches?.toLocaleString("es-AR") || 0}
 									</Typography>
 								</Stack>
 							</Grid>
@@ -1243,7 +1250,7 @@ const MEVWorkers = () => {
 										Búsquedas Fallidas
 									</Typography>
 									<Typography variant="body2" fontWeight={500} color="error.main">
-										{verificationConfigs[0].statistics.failed_searches?.toLocaleString() || 0}
+										{verificationConfigs[0].statistics.failed_searches?.toLocaleString("es-AR") || 0}
 									</Typography>
 								</Stack>
 							</Grid>
@@ -1253,7 +1260,7 @@ const MEVWorkers = () => {
 										Uptime (horas)
 									</Typography>
 									<Typography variant="body2" fontWeight={500}>
-										{verificationConfigs[0].statistics.uptime_hours?.toLocaleString() || 0}
+										{verificationConfigs[0].statistics.uptime_hours?.toLocaleString("es-AR") || 0}
 									</Typography>
 								</Stack>
 							</Grid>
@@ -1489,6 +1496,7 @@ const MEVWorkers = () => {
 															<TableCell>
 																{isEditing ? (
 																	<TextField
+																		inputProps={{ "aria-label": "Worker ID" }}
 																		size="small"
 																		value={editValues.worker_id || ""}
 																		onChange={(e) => setEditValues({ ...editValues, worker_id: e.target.value })}
@@ -1501,6 +1509,7 @@ const MEVWorkers = () => {
 															<TableCell align="center">
 																{isEditing ? (
 																	<TextField
+																		inputProps={{ "aria-label": "Tamaño de lote" }}
 																		size="small"
 																		type="number"
 																		value={editValues.batch_size || ""}
@@ -1514,6 +1523,7 @@ const MEVWorkers = () => {
 															<TableCell align="center">
 																{isEditing ? (
 																	<TextField
+																		inputProps={{ "aria-label": "Delay (ms)" }}
 																		size="small"
 																		type="number"
 																		value={editValues.delay_between_searches || ""}
@@ -1527,6 +1537,7 @@ const MEVWorkers = () => {
 															<TableCell align="center">
 																{isEditing ? (
 																	<TextField
+																		inputProps={{ "aria-label": "Reintentos" }}
 																		size="small"
 																		type="number"
 																		value={editValues.max_retries || ""}
@@ -1540,6 +1551,7 @@ const MEVWorkers = () => {
 															<TableCell align="center">
 																{isEditing ? (
 																	<TextField
+																		inputProps={{ "aria-label": "Máximo de movimientos" }}
 																		size="small"
 																		type="number"
 																		value={editValues.settings?.max_movimientos ?? ""}
@@ -1567,6 +1579,7 @@ const MEVWorkers = () => {
 															<TableCell align="center">
 																{isEditing ? (
 																	<TextField
+																		inputProps={{ "aria-label": "Frecuencia (horas)" }}
 																		size="small"
 																		type="number"
 																		value={editValues.settings?.update_frequency_hours ?? ""}
@@ -1591,17 +1604,17 @@ const MEVWorkers = () => {
 															</TableCell>
 															<TableCell align="center">
 																<Typography variant="body2" fontWeight={500}>
-																	{config.documents_verified?.toLocaleString() || 0}
+																	{config.documents_verified?.toLocaleString("es-AR") || 0}
 																</Typography>
 															</TableCell>
 															<TableCell align="center">
 																<Typography variant="body2" color="success.main" fontWeight={500}>
-																	{config.documents_valid?.toLocaleString() || 0}
+																	{config.documents_valid?.toLocaleString("es-AR") || 0}
 																</Typography>
 															</TableCell>
 															<TableCell align="center">
 																<Typography variant="body2" color="warning.main" fontWeight={500}>
-																	{config.documents_not_found?.toLocaleString() || 0}
+																	{config.documents_not_found?.toLocaleString("es-AR") || 0}
 																</Typography>
 															</TableCell>
 															<TableCell align="center">
@@ -1882,17 +1895,17 @@ const MEVWorkers = () => {
 														</TableCell>
 														<TableCell align="center">
 															<Typography variant="body2" fontWeight={500}>
-																{config.documents_verified?.toLocaleString() || 0}
+																{config.documents_verified?.toLocaleString("es-AR") || 0}
 															</Typography>
 														</TableCell>
 														<TableCell align="center">
 															<Typography variant="body2" color="success.main" fontWeight={500}>
-																{config.documents_valid?.toLocaleString() || 0}
+																{config.documents_valid?.toLocaleString("es-AR") || 0}
 															</Typography>
 														</TableCell>
 														<TableCell align="center">
 															<Typography variant="body2" color="warning.main" fontWeight={500}>
-																{config.documents_not_found?.toLocaleString() || 0}
+																{config.documents_not_found?.toLocaleString("es-AR") || 0}
 															</Typography>
 														</TableCell>
 														<TableCell align="center">
@@ -1903,11 +1916,11 @@ const MEVWorkers = () => {
 															/>
 														</TableCell>
 														<TableCell align="center">
-															<Typography variant="body2">{config.statistics?.total_searches?.toLocaleString() || 0}</Typography>
+															<Typography variant="body2">{config.statistics?.total_searches?.toLocaleString("es-AR") || 0}</Typography>
 														</TableCell>
 														<TableCell align="center">
 															<Typography variant="body2" color="success.main">
-																{config.statistics?.successful_searches?.toLocaleString() || 0}
+																{config.statistics?.successful_searches?.toLocaleString("es-AR") || 0}
 															</Typography>
 														</TableCell>
 														<TableCell align="center">
@@ -1969,7 +1982,7 @@ const MEVWorkers = () => {
 								Total Actualizados
 							</Typography>
 							<Typography variant="h4">
-								{updateConfigs.reduce((acc, c) => acc + (c.documents_verified || 0), 0).toLocaleString()}
+								{updateConfigs.reduce((acc, c) => acc + (c.documents_verified || 0), 0).toLocaleString("es-AR")}
 							</Typography>
 						</CardContent>
 					</Card>
@@ -1984,7 +1997,7 @@ const MEVWorkers = () => {
 								{(() => {
 									const total = updateConfigs.reduce((acc, c) => acc + (c.documents_verified || 0), 0);
 									const valid = updateConfigs.reduce((acc, c) => acc + (c.documents_valid || 0), 0);
-									return total > 0 ? `${((valid / total) * 100).toFixed(1)}%` : "0%";
+									return formatPercent(total > 0 ? (valid / total) * 100 : 0);
 								})()}
 							</Typography>
 						</CardContent>
@@ -2060,7 +2073,7 @@ const MEVWorkers = () => {
 										InputProps={{
 											readOnly: !editingCredentials,
 											endAdornment: (
-												<IconButton size="small" onClick={() => setShowPassword(!showPassword)} edge="end">
+												<IconButton aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"} size="small" onClick={() => setShowPassword(!showPassword)} edge="end">
 													{showPassword ? <EyeSlash size={18} /> : <Eye size={18} />}
 												</IconButton>
 											),
@@ -2102,7 +2115,7 @@ const MEVWorkers = () => {
 						justifyContent="space-between"
 						alignItems="center"
 						sx={{ cursor: "pointer" }}
-						onClick={() => setInstructionsOpen(!instructionsOpen)}
+						{...clickableProps(() => setInstructionsOpen(!instructionsOpen))}
 					>
 						<Stack direction="row" spacing={1} alignItems="center">
 							<InfoCircle size={20} color={theme.palette.info.main} />
@@ -2110,7 +2123,7 @@ const MEVWorkers = () => {
 								Instructivo de Uso - Configuración del Sistema MEV
 							</Typography>
 						</Stack>
-						<IconButton size="small">{instructionsOpen ? <ArrowUp2 size={20} /> : <ArrowDown2 size={20} />}</IconButton>
+						<IconButton aria-label={instructionsOpen ? "Ocultar instructivo" : "Mostrar instructivo"} size="small">{instructionsOpen ? <ArrowUp2 size={20} /> : <ArrowDown2 size={20} />}</IconButton>
 					</Box>
 
 					<Collapse in={instructionsOpen}>
@@ -2305,6 +2318,7 @@ const MEVWorkers = () => {
 													/>
 												) : config.dataType === "number" ? (
 													<TextField
+														inputProps={{ "aria-label": `Valor de ${config.key}` }}
 														size="small"
 														type="number"
 														value={editSystemValues.value || ""}
@@ -2313,6 +2327,7 @@ const MEVWorkers = () => {
 													/>
 												) : (
 													<TextField
+														inputProps={{ "aria-label": `Valor de ${config.key}` }}
 														size="small"
 														value={editSystemValues.value || ""}
 														onChange={(e) => setEditSystemValues({ ...editSystemValues, value: e.target.value })}

@@ -30,6 +30,7 @@ import HcRelevamientoService, { CasoDetalle, COMPONENTES, Correcciones, EstadoRe
 import { STALE_AMBER, headerBorder } from "themes/dashboardTokens";
 import { EstadoChip, MotivoChip, fmtFechaHora, fmtNum, headSx, isoDia, COLOR_ESTADO, GRIS } from "./comun";
 import { ListaCargas, SubirPrpa } from "./CargaPrpa";
+import { formatPercent } from "utils/format";
 
 interface Props {
 	id: string | null;
@@ -56,6 +57,8 @@ const TRAMOS = [
 	["antes", "Antes 7/1994"],
 	["despues", "Después 7/1994"],
 ] as const;
+const UNIDADES = { a: "años", m: "meses", d: "días" } as const;
+
 const CLASES = [
 	["dep", "Dependencia"],
 	["aut", "Autónomo"],
@@ -246,7 +249,7 @@ export default function CasoDrawer({ id: idInicial, onClose, onGuardado }: Props
 							))}
 						</Stack>
 					</Box>
-					<IconButton onClick={onClose}>
+					<IconButton aria-label="Cerrar" onClick={onClose}>
 						<CloseCircle size={20} />
 					</IconButton>
 				</Stack>
@@ -337,7 +340,7 @@ export default function CasoDrawer({ id: idInicial, onClose, onGuardado }: Props
 													/>
 												</TableCell>
 												<TableCell align="right" sx={{ fontFamily: "monospace" }}>
-													{c.e === null || c.e === undefined ? "—" : `${(c.e * 100).toFixed(4)} %`}
+													{c.e === null || c.e === undefined ? "—" : formatPercent(c.e * 100, 4)}
 												</TableCell>
 												<TableCell sx={{ fontSize: "0.75rem" }}>
 													{[c.regla ? `${c.regla}=${String(c.valor)}` : "", c.nota || ""].filter(Boolean).join(" · ")}
@@ -483,7 +486,7 @@ export default function CasoDrawer({ id: idInicial, onClose, onGuardado }: Props
 									{TRAMOS.map(([t, label]) => (
 										<TableRow key={t}>
 											<TableCell sx={{ fontSize: "0.75rem", whiteSpace: "nowrap" }}>{label}</TableCell>
-											{CLASES.map(([k]) => (
+											{CLASES.map(([k, clase]) => (
 												<TableCell key={k} align="center">
 													<Stack direction="row" spacing={0.5} justifyContent="center">
 														{(["a", "m", "d"] as const).map((u) => (
@@ -497,7 +500,7 @@ export default function CasoDrawer({ id: idInicial, onClose, onGuardado }: Props
 																	setTiempos((x) => ({ ...x, [t]: { ...x[t], [k]: { ...x[t][k], [u]: v } } }));
 																	tocar("tiempos");
 																}}
-																inputProps={{ min: 0, max: 99 }}
+																inputProps={{ "aria-label": `${label} — ${clase} (${UNIDADES[u]})`, min: 0, max: 99 }}
 																sx={{ width: 58, ...numSx }}
 															/>
 														))}
@@ -512,6 +515,7 @@ export default function CasoDrawer({ id: idInicial, onClose, onGuardado }: Props
 											<Stack direction="row" spacing={0.5}>
 												{(["a", "m", "d"] as const).map((u) => (
 													<TextField
+														inputProps={{ "aria-label": `Total impreso (${UNIDADES[u]})` }}
 														key={u}
 														size="small"
 														type="number"
@@ -582,6 +586,7 @@ export default function CasoDrawer({ id: idInicial, onClose, onGuardado }: Props
 											<TableRow key={i} sx={f.dudosa ? { bgcolor: alpha(STALE_AMBER, isDark ? 0.14 : 0.1) } : undefined}>
 												<TableCell>
 													<TextField
+														inputProps={{ "aria-label": `Período, fila ${i + 1}` }}
 														size="small"
 														type="month"
 														value={f.periodo}
@@ -591,6 +596,7 @@ export default function CasoDrawer({ id: idInicial, onClose, onGuardado }: Props
 												</TableCell>
 												<TableCell>
 													<TextField
+														inputProps={{ "aria-label": `Hasta, fila ${i + 1}` }}
 														size="small"
 														type="month"
 														value={f.hasta}
@@ -600,6 +606,7 @@ export default function CasoDrawer({ id: idInicial, onClose, onGuardado }: Props
 												</TableCell>
 												<TableCell>
 													<TextField
+														inputProps={{ "aria-label": `Meses, fila ${i + 1}` }}
 														size="small"
 														type="number"
 														value={f.meses}
@@ -613,12 +620,13 @@ export default function CasoDrawer({ id: idInicial, onClose, onGuardado }: Props
 														type="number"
 														value={f.importe}
 														onChange={(e) => set("importe", e.target.value)}
-														inputProps={{ step: "any" }}
+														inputProps={{ "aria-label": `Importe, fila ${i + 1}`, step: "any" }}
 														sx={{ width: 140, ...numSx }}
 													/>
 												</TableCell>
 												<TableCell>
 													<TextField
+														inputProps={{ "aria-label": `Moneda, fila ${i + 1}` }}
 														size="small"
 														value={f.moneda}
 														onChange={(e) => set("moneda", e.target.value)}
@@ -662,6 +670,7 @@ export default function CasoDrawer({ id: idInicial, onClose, onGuardado }: Props
 
 						{seccion("Nota")}
 						<TextField
+							inputProps={{ "aria-label": "Nota" }}
 							fullWidth
 							multiline
 							minRows={2}

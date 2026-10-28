@@ -20,6 +20,7 @@ import { Refresh2, DocumentText, Book1, Clock } from "iconsax-react";
 import { FueroStat } from "api/scrapingManager";
 import { labelCortoDeFuero, paletaDeFuero } from "utils/fueros";
 import { useFueroStats, formatNumber, formatTimeAgo } from "./useFueroStats";
+import { formatPercent } from "utils/format";
 
 /**
  * El reparto fuero por fuero: una barra con su porcentaje y, debajo, cuántas
@@ -170,7 +171,7 @@ const FueroDetallePanel = () => {
 														</Typography>
 														{stats && data.causas.count > 0 && (
 															<Typography variant="caption" color="text.secondary">
-																({((data.escritos.count / data.causas.count) * 100).toFixed(1)}%)
+																({formatPercent((data.escritos.count / data.causas.count) * 100, 1)})
 															</Typography>
 														)}
 													</Stack>

@@ -30,7 +30,7 @@ const Search = () => {
 					}
 					aria-describedby="header-search-text"
 					inputProps={{
-						"aria-label": "weight",
+						"aria-label": "Buscar (Ctrl + K)",
 					}}
 					placeholder="Ctrl + K"
 					sx={{

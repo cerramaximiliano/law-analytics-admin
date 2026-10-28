@@ -26,6 +26,7 @@ import { useSnackbar } from "notistack";
 import HcRelevamientoService, { AnexoDetalle, Componente } from "api/hcRelevamiento";
 import { LIVE_GREEN, headerBorder } from "themes/dashboardTokens";
 import { COLOR_ESTADO, EstadoChip, GRIS, ROJO, fmtFechaHora, fmtNum, headSx, isoDia } from "./comun";
+import { formatPercent } from "utils/format";
 
 interface Props {
 	id: string | null;
@@ -102,7 +103,7 @@ export default function AnexoDrawer({ id, onClose }: Props) {
 							))}
 						</Stack>
 					</Box>
-					<IconButton onClick={onClose}>
+					<IconButton aria-label="Cerrar" onClick={onClose}>
 						<CloseCircle size={20} />
 					</IconButton>
 				</Stack>
@@ -183,7 +184,7 @@ export default function AnexoDrawer({ id, onClose }: Props) {
 											</TableCell>
 											<TableCell>{c ? <EstadoChip estado={c.estado} isDark={isDark} /> : "—"}</TableCell>
 											<TableCell align="right" sx={mono}>
-												{c?.e === null || c?.e === undefined ? "—" : `${(c.e * 100).toFixed(3)} %`}
+												{c?.e === null || c?.e === undefined ? "—" : formatPercent(c.e * 100, 3)}
 											</TableCell>
 											<TableCell sx={{ fontSize: "0.72rem" }}>
 												{[c?.regla ? `${c.regla}=${String(c.valor)}` : "", c?.nota || ""].filter(Boolean).join(" · ") || "—"}

@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { Box, Typography, Paper, Chip, Skeleton, alpha } from "@mui/material";
 import { ArrowRight2, Cloud } from "iconsax-react";
 import { useTheme } from "@mui/material/styles";
-import { useNavigate } from "react-router-dom";
+import { Link as RouterLink } from "react-router-dom";
 import { LIVE_GREEN, STALE_AMBER, LIVE_PULSE_KEYFRAMES, headerBorder, headerShadow } from "themes/dashboardTokens";
 
 type ServiceStatus = "online" | "offline" | "checking";
@@ -44,7 +44,6 @@ interface ServiceState {
 
 const ServicesStatusWidget = () => {
 	const theme = useTheme();
-	const navigate = useNavigate();
 	const [services, setServices] = useState<ServiceState[]>(
 		SERVICES.map((s) => ({ name: s.name, shortName: s.shortName, status: "checking" as ServiceStatus })),
 	);
@@ -123,9 +122,10 @@ const ServicesStatusWidget = () => {
 	return (
 		<Paper
 			elevation={0}
-			onClick={() => navigate("/admin/server-status")}
+			component={RouterLink}
+			to="/admin/server-status"
 			sx={{
-				p: { xs: 1.5, sm: 2.5 },
+				textDecoration: "none", color: "inherit", display: "block", p: { xs: 1.5, sm: 2.5 },
 				borderRadius: 2,
 				bgcolor: theme.palette.background.paper,
 				border: `1px solid ${statusBorderColor}`,

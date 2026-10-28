@@ -155,7 +155,7 @@ const WhatsAppInstancesCard = () => {
 				</Button>
 				<Tooltip title="Refrescar">
 					<span>
-						<IconButton size="small" onClick={load} disabled={loading}>
+						<IconButton aria-label="Refrescar" size="small" onClick={load} disabled={loading}>
 							<Refresh size={16} />
 						</IconButton>
 					</span>
@@ -236,6 +236,7 @@ const WhatsAppInstancesCard = () => {
 										<FormControl size="small" variant="standard">
 											<Select
 												value={i.status}
+												inputProps={{ "aria-label": `Estado de ${i.name}` }}
 												disabled={busyName === i.name}
 												onChange={(e) => patch(i.name, { status: e.target.value as WhatsAppInstanceStatus })}
 												sx={{ fontSize: "0.8rem", color: STATUS_COLOR(i.status, theme), fontWeight: 600 }}

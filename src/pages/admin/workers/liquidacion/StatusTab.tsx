@@ -4,6 +4,7 @@ import { CloseCircle, Play, Refresh, Refresh2 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import LiquidacionWorkerConfigService, { FullDoc, Pm2Action, Pm2ProcessStatus, WorkerHeartbeat, WorkerKey } from "api/liquidacionWorkerConfig";
 import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER, LIVE_PULSE_KEYFRAMES, headerBorder } from "themes/dashboardTokens";
+import { formatBytes as formatBytesIntl, formatNumber as formatNumberIntl, formatPercent } from "utils/format";
 
 interface Props {
 	doc: FullDoc | null;
@@ -71,9 +72,7 @@ function formatUptime(ms: number | null): string {
 
 function formatBytes(n: number): string {
 	if (!n) return "—";
-	if (n < 1024) return `${n}B`;
-	if (n < 1024 * 1024) return `${(n / 1024).toFixed(0)}KB`;
-	return `${(n / 1024 / 1024).toFixed(0)}MB`;
+	return formatBytesIntl(n, 0);
 }
 
 export default function StatusTab({ doc, loading, onRefresh }: Props) {
@@ -193,7 +192,7 @@ export default function StatusTab({ doc, loading, onRefresh }: Props) {
 								{formatNumber(todayCount)}
 								{dailyLimit > 0 && (
 									<Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1, fontVariantNumeric: "tabular-nums" }}>
-										/ {formatNumber(dailyLimit)} ({dailyPct.toFixed(0)}%)
+										/ {formatNumber(dailyLimit)} ({formatPercent(dailyPct, 0)})
 									</Typography>
 								)}
 							</Typography>
@@ -549,7 +548,7 @@ export default function StatusTab({ doc, loading, onRefresh }: Props) {
 									{formatNumber(causasWithData)}
 								</Typography>
 								<Typography variant="body2" color="text.secondary">
-									de {formatNumber(causasTotal)} causas con URLs ({causasPct.toFixed(1)}%)
+									de {formatNumber(causasTotal)} causas con URLs ({formatPercent(causasPct, 1)})
 								</Typography>
 							</Stack>
 							<Typography variant="caption" color="text.secondary">
@@ -689,7 +688,7 @@ export default function StatusTab({ doc, loading, onRefresh }: Props) {
 							<Typography variant="caption" color="text.secondary">
 								duración
 							</Typography>
-							<Typography variant="body2">{lastRun.elapsedMs ? `${(lastRun.elapsedMs / 1000).toFixed(1)}s` : "—"}</Typography>
+							<Typography variant="body2">{lastRun.elapsedMs ? `${formatNumberIntl(lastRun.elapsedMs / 1000, 1)} s` : "—"}</Typography>
 						</Grid>
 						<Grid item xs={6} md={3}>
 							<Typography variant="caption" color="text.secondary">

@@ -27,6 +27,7 @@ import {
 import { useSnackbar } from "notistack";
 import { getNormativa, createNormativa, updateNormativa, getPlazosPendientes, referenciasEnAtlas, PlazoNormativaRegla, PendienteRegla, TipoProceso } from "api/plazos";
 import { useQueryParam } from "hooks/useTabParam";
+import { clickableProps } from "utils/a11y";
 
 const EMPTY: Partial<PlazoNormativaRegla> & { _id: string } = {
 	_id: "",
@@ -479,10 +480,16 @@ export default function NormativaTab() {
 									return (
 										<TableRow key={r._id} hover sx={conVariantes ? { bgcolor: "action.hover" } : undefined}>
 											<TableCell>{r.prioridad}</TableCell>
-											<TableCell sx={{ cursor: "pointer" }} onClick={() => {
-													setEsVariante(false);
-													setEditing(r);
-												}}>
+											<TableCell
+												sx={{ cursor: "pointer" }}
+												{...clickableProps(
+													() => {
+														setEsVariante(false);
+														setEditing(r);
+													},
+													{ asRow: true },
+												)}
+											>
 												<Typography variant="body2" sx={{ fontWeight: 600 }}>
 													{r.label}{" "}
 													{r.tipoProceso && (

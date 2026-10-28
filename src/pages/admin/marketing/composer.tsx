@@ -39,6 +39,8 @@ import emailComposerService, { RecipientOption, EmailDraft } from "api/emailComp
 import EmailLogsService from "api/emailLogs";
 import { EmailLog } from "types/email-log";
 import { BRAND_BLUE } from "themes/dashboardTokens";
+import ConfirmDialog from "components/admin/ConfirmDialog";
+import { useTabIndexParam } from "hooks/useTabParam";
 
 const SENDERS = [
 	{ value: "cuentas", label: "Cuentas (cuentas@lawanalytics.app)" },
@@ -49,14 +51,38 @@ const QUILL_MODULES = {
 	toolbar: [["bold", "italic", "underline"], [{ list: "ordered" }, { list: "bullet" }], ["link"], ["clean"]],
 };
 
+// Quill arma la barra con <button> de solo ícono y sin nombre: se lo damos al montar.
+const QUILL_BUTTON_LABELS: Record<string, string> = {
+	"ql-bold": "Negrita",
+	"ql-italic": "Cursiva",
+	"ql-underline": "Subrayado",
+	"ql-list:ordered": "Lista numerada",
+	"ql-list:bullet": "Lista con viñetas",
+	"ql-link": "Insertar link",
+	"ql-clean": "Quitar formato",
+};
+
+const labelQuillEditor = (container: HTMLDivElement | null) => {
+	if (!container) return;
+	container.querySelectorAll<HTMLButtonElement>(".ql-toolbar button").forEach((button) => {
+		const format = [...button.classList].find((c) => c.startsWith("ql-"));
+		const value = button.getAttribute("value");
+		const label = QUILL_BUTTON_LABELS[value ? `${format}:${value}` : format ?? ""];
+		if (label) button.setAttribute("aria-label", label);
+	});
+	container.querySelector(".ql-editor")?.setAttribute("aria-label", "Contenido");
+};
+
 const EMAIL_RE = /^[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}$/;
 const DEFAULT_SIGNATURE = "Saludos cordiales,\nMaximiliano — Equipo Law||Analytics";
 
 const fmtDate = (d?: string | null) => (d ? new Date(d).toLocaleString("es-AR") : "—");
 
+const TAB_SLUGS = ["componer", "borradores", "enviados"] as const;
+
 const EmailComposer = () => {
 	const { enqueueSnackbar } = useSnackbar();
-	const [tab, setTab] = useState(0);
+	const [tab, setTab] = useTabIndexParam("tab", TAB_SLUGS);
 
 	// Estado de composición
 	const [from, setFrom] = useState<"cuentas" | "soporte">("cuentas");
@@ -85,6 +111,8 @@ const EmailComposer = () => {
 	const [drafts, setDrafts] = useState<EmailDraft[]>([]);
 	const [loadingDrafts, setLoadingDrafts] = useState(false);
 	const [savingDraft, setSavingDraft] = useState(false);
+	const [draftToDelete, setDraftToDelete] = useState<EmailDraft | null>(null);
+	const [deletingDraft, setDeletingDraft] = useState(false);
 
 	// Enviados
 	const [sentLogs, setSentLogs] = useState<EmailLog[]>([]);
@@ -206,12 +234,16 @@ const EmailComposer = () => {
 
 	const deleteDraft = async (id: string) => {
 		try {
+			setDeletingDraft(true);
 			await emailComposerService.deleteDraft(id);
 			setDrafts((prev) => prev.filter((d) => d._id !== id));
 			if (currentDraftId === id) setCurrentDraftId(null);
 			enqueueSnackbar("Borrador eliminado", { variant: "success" });
+			setDraftToDelete(null);
 		} catch (e: any) {
 			enqueueSnackbar(e?.message || "Error eliminando", { variant: "error" });
+		} finally {
+			setDeletingDraft(false);
 		}
 	};
 
@@ -357,6 +389,7 @@ const EmailComposer = () => {
 											{...params}
 											label="Destinatarios"
 											placeholder="Buscar usuario/contacto o escribir un email"
+											inputProps={{ ...params.inputProps, spellCheck: false }}
 											helperText={
 												invalidRecipients.length > 0
 													? `Hay ${invalidRecipients.length} email(s) inválido(s)`
@@ -378,7 +411,7 @@ const EmailComposer = () => {
 
 								<TextField size="small" fullWidth label="Asunto" value={subject} onChange={(e) => setSubject(e.target.value)} />
 
-								<Box>
+								<Box ref={labelQuillEditor}>
 									<Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: "block" }}>
 										Contenido
 									</Typography>
@@ -523,7 +556,7 @@ const EmailComposer = () => {
 													Cargar
 												</Button>
 												<Tooltip title="Eliminar">
-													<IconButton size="small" color="error" onClick={() => deleteDraft(d._id)}>
+													<IconButton size="small" color="error" onClick={() => setDraftToDelete(d)}>
 														<Trash size={18} />
 													</IconButton>
 												</Tooltip>
@@ -610,6 +643,16 @@ const EmailComposer = () => {
 					</Button>
 				</DialogActions>
 			</Dialog>
+
+			<ConfirmDialog
+				open={draftToDelete !== null}
+				title={`¿Eliminar el borrador «${draftToDelete?.subject || "Sin asunto"}»?`}
+				description="El borrador se borra definitivamente y no se puede recuperar."
+				confirmLabel="Eliminar"
+				loading={deletingDraft}
+				onConfirm={() => draftToDelete && deleteDraft(draftToDelete._id)}
+				onClose={() => setDraftToDelete(null)}
+			/>
 		</Box>
 	);
 };

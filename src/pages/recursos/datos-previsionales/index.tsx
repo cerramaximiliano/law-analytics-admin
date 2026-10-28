@@ -60,6 +60,8 @@ import {
 	Stats,
 	YearEntry,
 } from "utils/datosPrevsionalesService";
+import { clickableProps } from "utils/a11y";
+import { useTabIndexParam } from "hooks/useTabParam";
 
 // ─── Tab panel ────────────────────────────────────────────────────────────────
 
@@ -332,6 +334,7 @@ const EditDialog = ({ open, doc, missingDate, onClose, onSave }: EditDialogProps
 							{(form.links ?? []).map((link, idx) => (
 								<Stack key={idx} direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
 									<TextField
+										inputProps={{ "aria-label": `Link ${idx + 1}` }}
 										fullWidth
 										size="small"
 										placeholder="https://..."
@@ -342,7 +345,7 @@ const EditDialog = ({ open, doc, missingDate, onClose, onSave }: EditDialogProps
 											setForm((f) => ({ ...f, links: updated }));
 										}}
 									/>
-									<IconButton
+									<IconButton aria-label="Eliminar enlace"
 										size="small"
 										color="error"
 										onClick={() => {
@@ -530,7 +533,7 @@ const CoverageGrid = ({
 												) : (
 													<Tooltip title={`Agregar ${MESES[idx]} ${row.anio}`}>
 														<Box
-															onClick={() => onAddMissing(fecha)}
+															{...clickableProps(() => onAddMissing(fecha))}
 															sx={{
 																width: 22,
 																height: 22,
@@ -589,12 +592,14 @@ const CoverageGrid = ({
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
+const TAB_SLUGS = ["listado", "cobertura", "estadisticas"] as const;
+
 const DatosPrevisionales = () => {
 	const { enqueueSnackbar } = useSnackbar();
 	const theme = useTheme();
 
 	// Tabs
-	const [tabValue, setTabValue] = useState(0);
+	const [tabValue, setTabValue] = useTabIndexParam("tab", TAB_SLUGS);
 
 	// Stats
 	const [stats, setStats] = useState<Stats | null>(null);
@@ -956,7 +961,7 @@ const DatosPrevisionales = () => {
 											<>
 												<TableRow key={row._id} hover sx={{ "& td": { borderBottom: expandedRow === row._id ? "none" : undefined } }}>
 													<TableCell sx={{ py: 0 }}>
-														<IconButton size="small" onClick={() => setExpandedRow((v) => (v === row._id ? null : row._id))}>
+														<IconButton aria-label={expandedRow === row._id ? "Contraer fila" : "Expandir fila"} size="small" onClick={() => setExpandedRow((v) => (v === row._id ? null : row._id))}>
 															{expandedRow === row._id ? <ArrowUp2 size={14} /> : <ArrowDown2 size={14} />}
 														</IconButton>
 													</TableCell>

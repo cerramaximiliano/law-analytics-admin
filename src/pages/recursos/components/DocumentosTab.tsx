@@ -32,6 +32,7 @@ import {
 import { useSnackbar } from "notistack";
 import { Refresh, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, Trash, DocumentText, Eye, Link21 } from "iconsax-react";
 import legalAxios from "utils/legalAxios";
+import { formatBytes } from "utils/format";
 
 // Tipos
 interface Patron {
@@ -193,9 +194,7 @@ const DocumentosTab = () => {
 	// Formatear tamaño
 	const formatSize = (bytes?: number) => {
 		if (!bytes) return "-";
-		if (bytes < 1024) return `${bytes} B`;
-		if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-		return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+		return formatBytes(bytes, bytes < 1024 * 1024 ? 1 : 2);
 	};
 
 	// Handlers de selección
@@ -324,13 +323,13 @@ const DocumentosTab = () => {
 							<TextField
 								fullWidth
 								label="Patrón (letras)"
-								placeholder="Ej: AAEA, BBCD..."
+								placeholder="Ej: AAEA, BBCD…"
 								value={patronFilter}
 								onChange={(e) => setPatronFilter(e.target.value.toUpperCase())}
 								onKeyPress={(e) => e.key === "Enter" && handleSearch()}
 								InputProps={{
 									endAdornment: patronFilter && (
-										<IconButton size="small" onClick={() => setPatronFilter("")}>
+										<IconButton aria-label="Limpiar filtro de patrón" size="small" onClick={() => setPatronFilter("")}>
 											<CloseCircle size={16} />
 										</IconButton>
 									),
@@ -433,7 +432,7 @@ const DocumentosTab = () => {
 										<TableCell>
 											<Box display="flex" alignItems="center" gap={1}>
 												Fecha Descubrimiento
-												<IconButton size="small" onClick={handleSort}>
+												<IconButton aria-label={sortOrder === "asc" ? "Ordenar por fecha descendente" : "Ordenar por fecha ascendente"} size="small" onClick={handleSort}>
 													{sortOrder === "asc" ? <ArrowUp size={16} /> : <ArrowDown size={16} />}
 												</IconButton>
 											</Box>

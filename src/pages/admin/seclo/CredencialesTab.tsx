@@ -117,7 +117,8 @@ export default function CredencialesTab() {
 			<Box display="flex" gap={1.5} mb={2} flexWrap="wrap" alignItems="center">
 				<TextField
 					size="small"
-					placeholder="Buscar usuario..."
+					placeholder="Buscar usuario…"
+					inputProps={{ "aria-label": "Buscar usuario" }}
 					value={search}
 					onChange={(e) => setSearch(e.target.value)}
 					onKeyDown={(e) => e.key === "Enter" && handleSearch()}
@@ -153,7 +154,7 @@ export default function CredencialesTab() {
 						{loading ? (
 							<TableRow>
 								<TableCell colSpan={7} align="center">
-									Cargando...
+									Cargando…
 								</TableCell>
 							</TableRow>
 						) : credentials.length === 0 ? (
@@ -254,7 +255,13 @@ export default function CredencialesTab() {
 												}
 											>
 												<span>
-													<IconButton size="small" color="info" onClick={() => handleValidate(cred)} disabled={validatingIds.has(cred._id)}>
+													<IconButton
+														aria-label="Validar credencial"
+														size="small"
+														color="info"
+														onClick={() => handleValidate(cred)}
+														disabled={validatingIds.has(cred._id)}
+													>
 														{validatingIds.has(cred._id) ? <CircularProgress size={14} /> : <FlashCircle size={16} />}
 													</IconButton>
 												</span>
@@ -390,7 +397,7 @@ export default function CredencialesTab() {
 													sx={{ fontFamily: "monospace", fontSize: 13, mt: 0.25 }}
 													endAdornment={
 														<InputAdornment position="end">
-															<IconButton size="small" onClick={() => setShowPassword((p) => !p)} edge="end">
+															<IconButton aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"} size="small" onClick={() => setShowPassword((p) => !p)} edge="end">
 																{showPassword ? <EyeSlash size={16} /> : <Eye size={16} />}
 															</IconButton>
 														</InputAdornment>

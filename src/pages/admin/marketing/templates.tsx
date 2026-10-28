@@ -1778,6 +1778,7 @@ const EmailTemplates = () => {
 							value={filter}
 							onChange={handleFilterChange}
 							placeholder="Buscar por nombre, asunto o descripción"
+							inputProps={{ "aria-label": "Buscar por nombre, asunto o descripción" }}
 							size="small"
 							InputProps={{
 								startAdornment: (
@@ -2086,7 +2087,7 @@ const EmailTemplates = () => {
 															size="small"
 														/>
 													</TableCell>
-													<TableCell sx={COL_LG}>{new Date(template.updatedAt).toLocaleDateString()}</TableCell>
+													<TableCell sx={COL_LG}>{new Date(template.updatedAt).toLocaleDateString("es-AR")}</TableCell>
 													<TableCell align="center">
 														<Stack direction="row" spacing={1} justifyContent="center">
 															<IconButton aria-label="ver" size="small" color="info" onClick={() => handleOpenDetail(template)}>
@@ -2441,7 +2442,8 @@ const EmailTemplates = () => {
 													<TextField
 														size="small"
 														fullWidth
-														placeholder="Buscar en el código HTML..."
+														placeholder="Buscar en el código HTML…"
+														inputProps={{ "aria-label": "Buscar en el código HTML" }}
 														value={viewHtmlSearchQuery}
 														onChange={(e) => setViewHtmlSearchQuery(e.target.value)}
 														onKeyDown={(e) => {
@@ -2630,7 +2632,7 @@ const EmailTemplates = () => {
 													</TableContainer>
 													<Box sx={{ mt: 2 }}>
 														<Typography variant="caption" color="textSecondary">
-															Los enlaces con variables (${"{"}...{"}"}) se resaltan en naranja ya que su valor se define dinámicamente.
+															Los enlaces con variables (${"{"}…{"}"}) se resaltan en naranja ya que su valor se define dinámicamente.
 														</Typography>
 													</Box>
 												</>
@@ -2839,7 +2841,8 @@ const EmailTemplates = () => {
 														<TextField
 															size="small"
 															fullWidth
-															placeholder="Buscar en el código HTML..."
+															placeholder="Buscar en el código HTML…"
+															inputProps={{ "aria-label": "Buscar en el código HTML" }}
 															value={htmlSearchQuery}
 															onChange={(e) => setHtmlSearchQuery(e.target.value)}
 															onKeyPress={(e) => {
@@ -2943,7 +2946,7 @@ const EmailTemplates = () => {
 							<Button onClick={handleCloseEdit}>Cancelar</Button>
 							<AnimateButton>
 								<Button variant="contained" color="primary" onClick={handleUpdateTemplate} disabled={updating}>
-									{updating ? "Actualizando..." : "Guardar cambios"}
+									{updating ? "Actualizando…" : "Guardar cambios"}
 								</Button>
 							</AnimateButton>
 						</DialogActions>
@@ -2986,8 +2989,8 @@ const EmailTemplates = () => {
 								>
 									{toggling
 										? templateToToggle.isActive
-											? "Desactivando..."
-											: "Activando..."
+											? "Desactivando…"
+											: "Activando…"
 										: templateToToggle.isActive
 										? "Desactivar"
 										: "Activar"}
@@ -3039,6 +3042,9 @@ const EmailTemplates = () => {
 								<Grid item xs={12}>
 									<TextField
 										label="Email del destinatario"
+										type="email"
+										autoComplete="email"
+										inputProps={{ spellCheck: false }}
 										fullWidth
 										value={emailData.email}
 										onChange={handleEmailChange}
@@ -3086,7 +3092,7 @@ const EmailTemplates = () => {
 									onClick={handleSendEmail}
 									disabled={sending || !emailData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailData.email)}
 								>
-									{sending ? "Enviando..." : "Enviar email"}
+									{sending ? "Enviando…" : "Enviar email"}
 								</Button>
 							</AnimateButton>
 						</DialogActions>
@@ -3201,7 +3207,7 @@ const EmailTemplates = () => {
 											handleAddVariable(value.name);
 										}
 									}}
-									renderInput={(params) => <TextField {...params} label="Agregar variable" size="small" placeholder="Buscar variable..." />}
+									renderInput={(params) => <TextField {...params} label="Agregar variable" size="small" placeholder="Buscar variable…" />}
 									size="small"
 									fullWidth
 									blurOnSelect
@@ -3623,7 +3629,7 @@ const EmailTemplates = () => {
 					<Button onClick={handleCloseCreate}>Cancelar</Button>
 					<AnimateButton>
 						<Button variant="contained" color="primary" onClick={handleCreateTemplate} disabled={creating}>
-							{creating ? "Creando..." : "Crear plantilla"}
+							{creating ? "Creando…" : "Crear plantilla"}
 						</Button>
 					</AnimateButton>
 				</DialogActions>
@@ -3720,7 +3726,7 @@ const EmailTemplates = () => {
 													</Typography>
 												</Stack>
 												<Typography variant="caption" color="text.secondary">
-													{(tpl.htmlBody || "").length.toLocaleString()} B
+													{(tpl.htmlBody || "").length.toLocaleString("es-AR")} B
 												</Typography>
 											</Stack>
 										</Box>
@@ -3809,7 +3815,7 @@ const EmailTemplates = () => {
 								disabled={promoting}
 								startIcon={promoting ? <CircularProgress size={16} color="inherit" /> : <TickCircle size={16} />}
 							>
-								{promoting ? "Promoviendo..." : "Promover ahora"}
+								{promoting ? "Promoviendo…" : "Promover ahora"}
 							</Button>
 						</DialogActions>
 					</>
@@ -3831,7 +3837,7 @@ const EmailTemplates = () => {
 							</Typography>
 							{templateToRevert.metadata?.previousVersion?.snapshotAt && (
 								<Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1 }}>
-									Snapshot tomado el {new Date(templateToRevert.metadata.previousVersion.snapshotAt).toLocaleString()}
+									Snapshot tomado el {new Date(templateToRevert.metadata.previousVersion.snapshotAt).toLocaleString("es-AR")}
 								</Typography>
 							)}
 							<Typography variant="caption" color="text.secondary">
@@ -3849,7 +3855,7 @@ const EmailTemplates = () => {
 								disabled={reverting}
 								startIcon={reverting ? <CircularProgress size={16} color="inherit" /> : <Refresh size={16} />}
 							>
-								{reverting ? "Revirtiendo..." : "Revertir ahora"}
+								{reverting ? "Revirtiendo…" : "Revertir ahora"}
 							</Button>
 						</DialogActions>
 					</>

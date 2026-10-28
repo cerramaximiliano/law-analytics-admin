@@ -26,6 +26,7 @@ import { useSnackbar } from "notistack";
 import { WorkersService, ScrapingHistory } from "api/workers";
 import { FUERO_OPTIONS as CATALOGO_FUEROS } from "utils/fueros";
 import StatStrip from "components/admin/StatStrip";
+import { formatPercent } from "utils/format";
 
 // Los fueros salen del catálogo compartido: esta lista estaba congelada en
 // los seis originales y no mostraba los 22 que se cablearon después.
@@ -37,7 +38,7 @@ const YEAR_OPTIONS = Array.from({ length: 12 }, (_, i) => String(CURRENT_YEAR - 
 function formatDate(date: any): string {
 	if (!date) return "-";
 	const dateStr = typeof date === "string" ? date : date.$date;
-	return new Date(dateStr).toLocaleDateString("es-ES", {
+	return new Date(dateStr).toLocaleDateString("es-AR", {
 		day: "2-digit",
 		month: "2-digit",
 		year: "numeric",
@@ -47,7 +48,7 @@ function formatDate(date: any): string {
 function formatDateFull(date: any): string {
 	if (!date) return "-";
 	const dateStr = typeof date === "string" ? date : date.$date;
-	return new Date(dateStr).toLocaleString("es-ES");
+	return new Date(dateStr).toLocaleString("es-AR");
 }
 
 function getRelativeTime(date: any): string {
@@ -319,7 +320,7 @@ const RangeHistoryPanel: React.FC = () => {
 										const hId = typeof h._id === "string" ? h._id : h._id.$oid;
 										const processed = h.documents_processed || 0;
 										const found = h.documents_found || 0;
-										const rate = processed > 0 ? ((found / processed) * 100).toFixed(1) : "-";
+										const rate = processed > 0 ? formatPercent((found / processed) * 100, 1) : "-";
 
 										return (
 											<TableRow key={hId} hover>
@@ -336,11 +337,11 @@ const RangeHistoryPanel: React.FC = () => {
 												</TableCell>
 												<TableCell align="center">
 													<Typography variant="body2" fontSize="0.8rem">
-														{h.range_start?.toLocaleString()} - {h.range_end?.toLocaleString()}
+														{h.range_start?.toLocaleString("es-AR")} - {h.range_end?.toLocaleString("es-AR")}
 													</Typography>
 												</TableCell>
 												<TableCell align="center">
-													<Typography variant="body2">{processed.toLocaleString()}</Typography>
+													<Typography variant="body2">{processed.toLocaleString("es-AR")}</Typography>
 												</TableCell>
 												<TableCell align="center">
 													<Typography
@@ -348,12 +349,12 @@ const RangeHistoryPanel: React.FC = () => {
 														fontWeight={found > 0 ? 600 : 400}
 														color={found > 0 ? "success.main" : "text.secondary"}
 													>
-														{found.toLocaleString()}
+														{found.toLocaleString("es-AR")}
 													</Typography>
 												</TableCell>
 												<TableCell align="center">
 													<Typography variant="body2" fontSize="0.75rem" color="text.secondary">
-														{rate !== "-" ? `${rate}%` : "-"}
+														{rate}
 													</Typography>
 												</TableCell>
 												<TableCell align="center">

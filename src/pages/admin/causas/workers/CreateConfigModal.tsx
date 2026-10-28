@@ -306,7 +306,7 @@ const CreateConfigModal: React.FC<CreateConfigModalProps> = ({ open, onClose, on
 					Cancelar
 				</Button>
 				<Button variant="contained" onClick={handleSubmit} disabled={loading} startIcon={loading && <CircularProgress size={16} />}>
-					{loading ? "Creando..." : "Crear Worker"}
+					{loading ? "Creando…" : "Crear Worker"}
 				</Button>
 			</DialogActions>
 		</Dialog>

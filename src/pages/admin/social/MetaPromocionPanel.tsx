@@ -49,6 +49,7 @@ import {
 	type SocialPost,
 	type PiezaPromo,
 } from "api/socialPosts";
+import { formatPercent } from "utils/format";
 
 interface Props {
 	post: SocialPost;
@@ -344,7 +345,7 @@ const MetaPromocionPanel = ({ post, pieza = "post", onChange }: Props) => {
 						<Typography variant="caption" color="text.secondary">
 							Impresiones {Number(ins.impressions || 0).toLocaleString("es-AR")} · alcance {Number(ins.reach || 0).toLocaleString("es-AR")}{" "}
 							· clics en el enlace {Number(ins.inline_link_clicks || 0).toLocaleString("es-AR")} · CTR{" "}
-							{ins.ctr ? `${Number(ins.ctr).toFixed(2)}%` : "—"} · CPC {ars(ins.cpc)} · gastado {ars(ins.spend)}
+							{ins.ctr ? formatPercent(Number(ins.ctr), 2) : "—"} · CPC {ars(ins.cpc)} · gastado {ars(ins.spend)}
 						</Typography>
 					) : (
 						<Typography variant="caption" color="text.secondary">
@@ -387,7 +388,7 @@ const MetaPromocionPanel = ({ post, pieza = "post", onChange }: Props) => {
 											<TableCell>{h.fecha.slice(5).split("-").reverse().join("/")}</TableCell>
 											<TableCell align="right">{h.impressions.toLocaleString("es-AR")}</TableCell>
 											<TableCell align="right">{h.inlineLinkClicks}</TableCell>
-											<TableCell align="right">{h.ctr === null ? "—" : `${Number(h.ctr).toFixed(2)}%`}</TableCell>
+											<TableCell align="right">{h.ctr === null ? "—" : formatPercent(Number(h.ctr), 2)}</TableCell>
 											<TableCell align="right">{h.cpc === null ? "—" : ars(h.cpc)}</TableCell>
 											<TableCell align="right">{ars(h.spend)}</TableCell>
 											{promo?.objetivo === "interaccion" ? (

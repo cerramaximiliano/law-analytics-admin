@@ -12,6 +12,7 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers";
 import { BRAND_BLUE } from "themes/dashboardTokens";
+import { formatDate, formatPercent } from "utils/format";
 
 const NotificationSummary = () => {
 	const theme = useTheme();
@@ -127,7 +128,7 @@ const NotificationSummary = () => {
 					</Box>
 					<Box sx={{ flexGrow: 1 }}>
 						<Typography variant="h4" sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.01em" }}>
-							{value.toLocaleString()}
+							{value.toLocaleString("es-AR")}
 						</Typography>
 						<Typography variant="body2" color="text.secondary">
 							{title}
@@ -182,7 +183,7 @@ const NotificationSummary = () => {
 								if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
 									return "Período no disponible";
 								}
-								return `${dayjs(startDate).format("DD/MM/YYYY")} - ${dayjs(endDate).format("DD/MM/YYYY")}`;
+								return `${formatDate(startDate)} - ${formatDate(endDate)}`;
 							} catch {
 								return "Período no disponible";
 							}
@@ -247,7 +248,7 @@ const NotificationSummary = () => {
 								letterSpacing: "-0.02em",
 							}}
 						>
-							{summary.data.totalNotifications.toLocaleString()}
+							{summary.data.totalNotifications.toLocaleString("es-AR")}
 						</Typography>
 
 						<Box sx={{ mb: 2 }}>
@@ -268,7 +269,7 @@ const NotificationSummary = () => {
 									/>
 								</Box>
 								<Typography variant="body2" sx={{ fontWeight: 500, fontVariantNumeric: "tabular-nums" }}>
-									{((summary.data.alerts.delivered / summary.data.alerts.total) * 100).toFixed(1)}%
+									{formatPercent((summary.data.alerts.delivered / summary.data.alerts.total) * 100, 1)}
 								</Typography>
 							</Box>
 						</Box>
@@ -289,7 +290,7 @@ const NotificationSummary = () => {
 									cx="50%"
 									cy="50%"
 									labelLine={false}
-									label={({ name, percent }: any) => `${name}: ${((percent || 0) * 100).toFixed(0)}%`}
+									label={({ name, percent }: any) => `${name}: ${formatPercent((percent || 0) * 100, 0)}`}
 									outerRadius={80}
 									fill="#8884d8"
 									dataKey="value"

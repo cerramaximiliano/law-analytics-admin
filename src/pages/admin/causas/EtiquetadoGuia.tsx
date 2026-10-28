@@ -953,7 +953,7 @@ const EtiquetadoGuia = ({ open, onClose }: { open: boolean; onClose: () => void 
 			<Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
 				<Stack direction="row" alignItems="center" spacing={1}>
 					{vista !== "principal" && (
-						<IconButton size="small" onClick={() => setVista("principal")}>
+						<IconButton aria-label="Volver" size="small" onClick={() => setVista("principal")}>
 							<ArrowLeft size={18} />
 						</IconButton>
 					)}
@@ -968,7 +968,7 @@ const EtiquetadoGuia = ({ open, onClose }: { open: boolean; onClose: () => void 
 					</Typography>
 					{vista === "principal" && <Chip size="small" variant="outlined" label="taxonomía v2" />}
 				</Stack>
-				<IconButton size="small" onClick={onClose}>
+				<IconButton aria-label="Cerrar" size="small" onClick={onClose}>
 					<CloseSquare size={20} />
 				</IconButton>
 			</Stack>

@@ -48,6 +48,7 @@ import scbaCausasService, { ScbaSyncedCausa, ScbaSyncedCausasSummary } from "api
 import scbaCredentialsService, { ScbaCredential } from "api/scbaCredentials";
 import { Refresh, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, Repeat, Eye, InfoCircle } from "iconsax-react";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
+import { formatDate as formatDateValue } from "utils/format";
 
 dayjs.locale("es");
 
@@ -224,7 +225,7 @@ const CausasMEVByCredential = () => {
 
 	const formatDate = (date: string | null | undefined): string => {
 		if (!date) return "—";
-		return dayjs(date).format("DD/MM/YYYY");
+		return formatDateValue(date);
 	};
 
 	const handleOpenJson = async (causa: ScbaSyncedCausa) => {
@@ -268,7 +269,7 @@ const CausasMEVByCredential = () => {
 											Total Causas
 										</Typography>
 										<Typography variant="h4" color="primary.main" fontWeight="bold">
-											{summary.totalCausas.toLocaleString()}
+											{summary.totalCausas.toLocaleString("es-AR")}
 										</Typography>
 									</CardContent>
 								</Card>
@@ -280,7 +281,7 @@ const CausasMEVByCredential = () => {
 											Con Movimientos
 										</Typography>
 										<Typography variant="h4" color="success.main" fontWeight="bold">
-											{summary.withMovements.toLocaleString()}
+											{summary.withMovements.toLocaleString("es-AR")}
 										</Typography>
 									</CardContent>
 								</Card>
@@ -292,7 +293,7 @@ const CausasMEVByCredential = () => {
 											Sin Movimientos
 										</Typography>
 										<Typography variant="h4" color="warning.main" fontWeight="bold">
-											{summary.withoutMovements.toLocaleString()}
+											{summary.withoutMovements.toLocaleString("es-AR")}
 										</Typography>
 									</CardContent>
 								</Card>
@@ -304,7 +305,7 @@ const CausasMEVByCredential = () => {
 											Removidas
 										</Typography>
 										<Typography variant="h4" color="error.main" fontWeight="bold">
-											{summary.removed.toLocaleString()}
+											{summary.removed.toLocaleString("es-AR")}
 										</Typography>
 									</CardContent>
 								</Card>
@@ -316,7 +317,7 @@ const CausasMEVByCredential = () => {
 											Actualizadas hoy
 										</Typography>
 										<Typography variant="h4" fontWeight="bold">
-											{summary.updatedToday.toLocaleString()}
+											{summary.updatedToday.toLocaleString("es-AR")}
 										</Typography>
 									</CardContent>
 								</Card>
@@ -394,6 +395,7 @@ const CausasMEVByCredential = () => {
 						<TextField
 							size="small"
 							placeholder="Buscar número SCBA o carátula"
+							inputProps={{ "aria-label": "Buscar número SCBA o carátula" }}
 							value={search}
 							onChange={(e) => setSearch(e.target.value)}
 							onKeyDown={(e) => {
@@ -709,6 +711,7 @@ const CausasMEVByCredential = () => {
 							JSON — {selectedCausa?.scbaNumber || `${selectedCausa?.number ?? ""}/${selectedCausa?.year ?? ""}`}
 						</Typography>
 						<IconButton
+							aria-label="Cerrar"
 							onClick={handleCloseJson}
 							size="small"
 							sx={{

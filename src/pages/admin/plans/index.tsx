@@ -53,6 +53,9 @@ import UpdatePriceModal from "./UpdatePriceModal";
 import PlanOrderTab from "./PlanOrderTab";
 import ManagedServicesPanel from "./ManagedServicesPanel";
 import { isManagedPlanFeature } from "utils/managedPlanFeatures";
+import { useTabIndexParam } from "hooks/useTabParam";
+
+const TAB_SLUGS = ["planes", "ordenamiento"] as const;
 
 const PlansManagement = () => {
 	const theme = useTheme();
@@ -68,7 +71,7 @@ const PlansManagement = () => {
 	const [syncLoading, setSyncLoading] = useState(false);
 	const [showDetailedInfo, setShowDetailedInfo] = useState(false);
 	const [updatePriceModalOpen, setUpdatePriceModalOpen] = useState(false);
-	const [activeTab, setActiveTab] = useState(0);
+	const [activeTab, setActiveTab] = useTabIndexParam("tab", TAB_SLUGS);
 
 	const fetchPlans = async () => {
 		try {
@@ -229,7 +232,7 @@ const PlansManagement = () => {
 								"&:active": { transform: "translate(0, 1px)" },
 							}}
 						>
-							{syncLoading ? "Sincronizando..." : "Sincronizar con Stripe"}
+							{syncLoading ? "Sincronizando…" : "Sincronizar con Stripe"}
 						</Button>
 						<Button
 							variant="contained"
@@ -272,7 +275,7 @@ const PlansManagement = () => {
 						<Typography variant="subtitle2" fontWeight="bold">
 							Nota de Seguridad sobre Precios
 						</Typography>
-						<IconButton size="small" onClick={() => setShowDetailedInfo(!showDetailedInfo)} sx={{ ml: 1 }}>
+						<IconButton aria-label={showDetailedInfo ? "Ocultar detalles" : "Mostrar detalles"} aria-expanded={showDetailedInfo} size="small" onClick={() => setShowDetailedInfo(!showDetailedInfo)} sx={{ ml: 1 }}>
 							{showDetailedInfo ? <ArrowUp2 size={16} /> : <ArrowDown2 size={16} />}
 						</IconButton>
 					</Box>
@@ -326,7 +329,7 @@ const PlansManagement = () => {
 								</Typography>
 								<Box sx={{ bgcolor: "background.default", p: 1, borderRadius: 1, mb: 2 }}>
 									<code style={{ fontSize: "0.75rem" }}>
-										STRIPE_SECRET_KEY=sk_live_xxxxx...
+										STRIPE_SECRET_KEY=sk_live_xxxxx…
 										<br />
 										NODE_ENV=production
 									</code>

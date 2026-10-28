@@ -91,7 +91,7 @@ function LogRow({ log }: { log: LogEntry }) {
 				</TableCell>
 				<TableCell sx={{ width: 30 }}>
 					{canExpand && (
-						<IconButton size="small" sx={{ p: 0.25 }}>
+						<IconButton size="small" sx={{ p: 0.25 }} aria-label={expanded ? "Contraer detalle" : "Expandir detalle"} aria-expanded={expanded}>
 							{expanded ? <ArrowUp2 size={12} /> : <ArrowDown2 size={12} />}
 						</IconButton>
 					)}
@@ -654,7 +654,7 @@ const SystemLogs = () => {
 				}}
 				rowsPerPageOptions={[10, 25, 50, 100, 200, 500]}
 				labelRowsPerPage="Por página:"
-				labelDisplayedRows={({ from: f, to: t, count }) => `${f}–${t} de ${count.toLocaleString()}`}
+				labelDisplayedRows={({ from: f, to: t, count }) => `${f}–${t} de ${count.toLocaleString("es-AR")}`}
 			/>
 
 			<AnalyzeLogsModal open={analyzeOpen} onClose={() => setAnalyzeOpen(false)} filters={currentFilters} />

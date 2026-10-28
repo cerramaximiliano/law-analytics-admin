@@ -43,6 +43,7 @@ import UserLifecycleService, {
 	UserLifecycleSnapshot,
 } from "api/userLifecycle";
 import { useSnackbar } from "notistack";
+import { formatDate } from "utils/format";
 
 const fmtNum = (n: number | undefined | null): string => new Intl.NumberFormat("es-AR").format(n || 0);
 
@@ -331,7 +332,7 @@ const LifecycleTab: React.FC = () => {
 						onClick={() => setRunDialogOpen(true)}
 						disabled={running}
 					>
-						{running ? "Corriendo..." : "Ejecutar ahora"}
+						{running ? "Corriendo…" : "Ejecutar ahora"}
 					</Button>
 					<Tooltip title="Refrescar">
 						<IconButton onClick={handleRefresh}>
@@ -393,7 +394,7 @@ const LifecycleTab: React.FC = () => {
 								<Chip
 									size="small"
 									icon={<Warning2 size={14} />}
-									label={`En espera hasta ${dayjs(overview.holdUntil).format("DD/MM/YY")}`}
+									label={`En espera hasta ${formatDate(overview.holdUntil, "dateShort")}`}
 									color="warning"
 									variant="outlined"
 								/>
@@ -429,7 +430,7 @@ const LifecycleTab: React.FC = () => {
 						onClick={handleSave}
 						disabled={!dirty || saving || configLoading}
 					>
-						{saving ? "Guardando..." : "Guardar cambios"}
+						{saving ? "Guardando…" : "Guardar cambios"}
 					</Button>
 				</Stack>
 				{configLoading || !draft ? (
@@ -536,6 +537,7 @@ const LifecycleTab: React.FC = () => {
 						size="small"
 						displayEmpty
 						value={actionsFilter}
+						inputProps={{ "aria-label": "Filtrar acciones" }}
 						onChange={(e) => {
 							setActionsPage(0);
 							setActionsFilter(e.target.value);
@@ -571,7 +573,7 @@ const LifecycleTab: React.FC = () => {
 							)}
 							{actions.map((a) => (
 								<TableRow key={a._id} hover>
-									<TableCell>{dayjs(a.at).format("DD/MM/YY HH:mm")}</TableCell>
+									<TableCell>{formatDate(a.at, "dateTimeShort")}</TableCell>
 									<TableCell>
 										<Chip size="small" label={ACTION_LABELS[a.action]?.label || a.action} color={ACTION_LABELS[a.action]?.color} variant="outlined" />
 									</TableCell>
@@ -626,7 +628,7 @@ const LifecycleTab: React.FC = () => {
 							)}
 							{snapshots.map((s) => (
 								<TableRow key={s._id} hover>
-									<TableCell>{dayjs(s.date).format("DD/MM/YY")}</TableCell>
+									<TableCell>{formatDate(s.date, "dateShort")}</TableCell>
 									<TableCell align="right">{fmtNum(s.totals.users)}</TableCell>
 									<TableCell align="right">{fmtNum(s.totals.verified)}</TableCell>
 									<TableCell align="right">{fmtNum(s.totals.unverified)}</TableCell>

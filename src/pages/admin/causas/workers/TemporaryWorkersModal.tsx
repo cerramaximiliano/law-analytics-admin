@@ -27,6 +27,8 @@ import { useTheme } from "@mui/material/styles";
 import { Trash, Refresh, Warning2 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { WorkersService, WorkerConfig } from "api/workers";
+import ConfirmDialog from "components/admin/ConfirmDialog";
+import { formatPercent } from "utils/format";
 
 interface TemporaryWorkersModalProps {
 	open: boolean;
@@ -42,6 +44,8 @@ const TemporaryWorkersModal: React.FC<TemporaryWorkersModalProps> = ({ open, onC
 	const [deletingAll, setDeletingAll] = useState(false);
 	const [temporaryWorkers, setTemporaryWorkers] = useState<WorkerConfig[]>([]);
 	const [selectedIds, setSelectedIds] = useState<string[]>([]);
+	const [workerToDelete, setWorkerToDelete] = useState<WorkerConfig | null>(null);
+	const [confirmDeleteSelected, setConfirmDeleteSelected] = useState(false);
 
 	// Obtener el ID real del documento
 	const getConfigId = (config: WorkerConfig): string => {
@@ -55,7 +59,7 @@ const TemporaryWorkersModal: React.FC<TemporaryWorkersModalProps> = ({ open, onC
 	const formatDate = (date: any): string => {
 		if (!date) return "N/A";
 		const dateStr = typeof date === "string" ? date : date.$date;
-		return new Date(dateStr).toLocaleString("es-ES");
+		return new Date(dateStr).toLocaleString("es-AR");
 	};
 
 	// Cargar workers temporarios
@@ -178,6 +182,7 @@ const TemporaryWorkersModal: React.FC<TemporaryWorkersModalProps> = ({ open, onC
 	};
 
 	return (
+		<>
 		<Dialog open={open} onClose={handleClose} maxWidth="lg" fullWidth>
 			<DialogTitle sx={{ pb: 1.5 }}>
 				<Stack direction="row" alignItems="center" spacing={1.25}>
@@ -198,7 +203,7 @@ const TemporaryWorkersModal: React.FC<TemporaryWorkersModalProps> = ({ open, onC
 
 					<Box display="flex" justifyContent="space-between" alignItems="center">
 						<Typography variant="body2" color="text.secondary">
-							{loading ? "Cargando..." : `${temporaryWorkers.length} worker(s) temporario(s) encontrado(s)`}
+							{loading ? "Cargando…" : `${temporaryWorkers.length} worker(s) temporario(s) encontrado(s)`}
 						</Typography>
 						<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 							{selectedIds.length > 0 && (
@@ -207,7 +212,7 @@ const TemporaryWorkersModal: React.FC<TemporaryWorkersModalProps> = ({ open, onC
 									color="error"
 									size="small"
 									startIcon={deletingAll ? <CircularProgress size={16} /> : <Trash size={16} />}
-									onClick={handleDeleteSelected}
+									onClick={() => setConfirmDeleteSelected(true)}
 									disabled={deletingAll}
 								>
 									Eliminar seleccionados ({selectedIds.length})
@@ -287,7 +292,7 @@ const TemporaryWorkersModal: React.FC<TemporaryWorkersModalProps> = ({ open, onC
 												</TableCell>
 												<TableCell align="center">
 													<Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>
-														{config.range_start?.toLocaleString()} - {config.range_end?.toLocaleString()}
+														{config.range_start?.toLocaleString("es-AR")} - {config.range_end?.toLocaleString("es-AR")}
 													</Typography>
 												</TableCell>
 												<TableCell align="center">
@@ -299,7 +304,7 @@ const TemporaryWorkersModal: React.FC<TemporaryWorkersModalProps> = ({ open, onC
 															sx={{ height: 6, borderRadius: 3 }}
 														/>
 														<Typography variant="caption" color="text.secondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
-															{progress.toFixed(1)}%
+															{formatPercent(progress, 1)}
 														</Typography>
 													</Box>
 												</TableCell>
@@ -321,7 +326,8 @@ const TemporaryWorkersModal: React.FC<TemporaryWorkersModalProps> = ({ open, onC
 														<IconButton
 															size="small"
 															color="error"
-															onClick={() => handleDelete(config)}
+															aria-label="Eliminar worker temporario"
+															onClick={() => setWorkerToDelete(config)}
 															disabled={deleting === configId || deletingAll}
 														>
 															{deleting === configId ? <CircularProgress size={16} /> : <Trash size={16} />}
@@ -343,6 +349,28 @@ const TemporaryWorkersModal: React.FC<TemporaryWorkersModalProps> = ({ open, onC
 				</Button>
 			</DialogActions>
 		</Dialog>
+		<ConfirmDialog
+			open={!!workerToDelete}
+			title={`¿Eliminar el worker temporario ${workerToDelete?.worker_id || "sin nombre"}?`}
+			confirmLabel="Eliminar"
+			onConfirm={() => {
+				const config = workerToDelete;
+				setWorkerToDelete(null);
+				if (config) handleDelete(config);
+			}}
+			onClose={() => setWorkerToDelete(null)}
+		/>
+		<ConfirmDialog
+			open={confirmDeleteSelected}
+			title={`¿Eliminar ${selectedIds.length} worker(s) temporario(s) seleccionado(s)?`}
+			confirmLabel="Eliminar"
+			onConfirm={() => {
+				setConfirmDeleteSelected(false);
+				handleDeleteSelected();
+			}}
+			onClose={() => setConfirmDeleteSelected(false)}
+		/>
+		</>
 	);
 };
 

@@ -1,9 +1,12 @@
 import React from "react";
-import { ReactNode, useMemo } from "react";
+import { ReactNode, useEffect, useMemo } from "react";
 
 // material-ui
 import { CssBaseline, StyledEngineProvider } from "@mui/material";
 import { createTheme, ThemeOptions, ThemeProvider, Theme, TypographyVariantsOptions } from "@mui/material/styles";
+
+// third-party
+import { MotionConfig } from "framer-motion";
 
 // project-imports
 import Palette from "./palette";
@@ -79,11 +82,18 @@ export default function ThemeCustomization({ children }: ThemeCustomizationProps
 	const themes: Theme = createTheme(themeOptions);
 	themes.components = componentsOverride(themes);
 
+	// La barra del navegador móvil toma el color del fondo de la página, no un azul fijo.
+	const pageBackground = themes.palette.background.default;
+	useEffect(() => {
+		document.querySelector('meta[name="theme-color"]')?.setAttribute("content", pageBackground);
+	}, [pageBackground]);
+
 	return (
 		<StyledEngineProvider injectFirst>
 			<ThemeProvider theme={themes}>
-				<CssBaseline />
-				{children}
+				{/* enableColorScheme: scrollbars e inputs nativos siguen el modo oscuro */}
+				<CssBaseline enableColorScheme />
+				<MotionConfig reducedMotion="user">{children}</MotionConfig>
 			</ThemeProvider>
 		</StyledEngineProvider>
 	);

@@ -201,7 +201,7 @@ const EditContactModal: React.FC<EditContactModalProps> = ({ open, onClose, cont
 						<Typography variant="h5">{isEditMode ? "Editar Contacto" : "Nuevo Contacto"}</Typography>
 					</Grid>
 					<Grid item>
-						<IconButton onClick={onClose} size="small">
+						<IconButton aria-label="Cerrar" onClick={onClose} size="small">
 							<CloseCircle variant="Bold" />
 						</IconButton>
 					</Grid>
@@ -233,6 +233,9 @@ const EditContactModal: React.FC<EditContactModalProps> = ({ open, onClose, cont
 								required
 								label="Email"
 								name="email"
+								type="email"
+								autoComplete="off"
+								inputProps={{ spellCheck: false }}
 								value={email}
 								onChange={(e) => setEmail(e.target.value)}
 								error={!!formError.email}
@@ -382,7 +385,7 @@ const EditContactModal: React.FC<EditContactModalProps> = ({ open, onClose, cont
 					disabled={loading || saving || !email}
 					startIcon={saving && <CircularProgress size={20} color="inherit" />}
 				>
-					{saving ? "Guardando..." : isEditMode ? "Guardar Cambios" : "Crear Contacto"}
+					{saving ? "Guardando…" : isEditMode ? "Guardar Cambios" : "Crear Contacto"}
 				</Button>
 			</DialogActions>
 		</Dialog>

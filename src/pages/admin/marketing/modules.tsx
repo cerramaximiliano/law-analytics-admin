@@ -527,10 +527,10 @@ const EmailModules = () => {
 												</TableCell>
 												<TableCell align="center">
 													<Stack direction="row" spacing={1} justifyContent="center">
-														<IconButton size="small" color="info" onClick={() => handleOpenDetail(module)}>
+														<IconButton size="small" color="info" aria-label="Ver módulo" onClick={() => handleOpenDetail(module)}>
 															<Eye size={18} />
 														</IconButton>
-														<IconButton size="small" color="primary" onClick={() => handleOpenEdit(module)}>
+														<IconButton size="small" color="primary" aria-label="Editar módulo" onClick={() => handleOpenEdit(module)}>
 															<Edit2 size={18} />
 														</IconButton>
 														<Tooltip title="Copiar sintaxis">
@@ -545,7 +545,7 @@ const EmailModules = () => {
 																<Copy size={18} />
 															</IconButton>
 														</Tooltip>
-														<IconButton size="small" color="error" onClick={() => handleOpenDelete(module)} disabled={!module.isActive}>
+														<IconButton size="small" color="error" aria-label="Desactivar módulo" onClick={() => handleOpenDelete(module)} disabled={!module.isActive}>
 															<Trash size={18} />
 														</IconButton>
 													</Stack>
@@ -688,6 +688,7 @@ const EmailModules = () => {
 							<TabPanel value={viewTab} index={1}>
 								<Box sx={{ display: "flex", justifyContent: "flex-end", mb: 1 }}>
 									<IconButton
+										aria-label="Copiar HTML"
 										onClick={() => {
 											navigator.clipboard.writeText(selectedModule.htmlContent);
 											enqueueSnackbar("HTML copiado", { variant: "success" });
@@ -843,7 +844,7 @@ const EmailModules = () => {
 					<Button onClick={handleCloseCreate}>Cancelar</Button>
 					<AnimateButton>
 						<Button variant="contained" onClick={handleCreateModule} disabled={creating}>
-							{creating ? "Creando..." : "Crear módulo"}
+							{creating ? "Creando…" : "Crear módulo"}
 						</Button>
 					</AnimateButton>
 				</DialogActions>
@@ -963,7 +964,7 @@ const EmailModules = () => {
 							<Button onClick={handleCloseEdit}>Cancelar</Button>
 							<AnimateButton>
 								<Button variant="contained" onClick={handleUpdateModule} disabled={updating}>
-									{updating ? "Guardando..." : "Guardar cambios"}
+									{updating ? "Guardando…" : "Guardar cambios"}
 								</Button>
 							</AnimateButton>
 						</DialogActions>
@@ -990,7 +991,7 @@ const EmailModules = () => {
 							<Button onClick={handleCloseDelete}>Cancelar</Button>
 							<AnimateButton>
 								<Button variant="contained" color="error" onClick={handleDeleteModule} disabled={deleting}>
-									{deleting ? "Desactivando..." : "Desactivar"}
+									{deleting ? "Desactivando…" : "Desactivar"}
 								</Button>
 							</AnimateButton>
 						</DialogActions>

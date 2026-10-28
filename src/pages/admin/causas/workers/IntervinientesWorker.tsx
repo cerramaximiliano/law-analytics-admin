@@ -67,6 +67,7 @@ import ExtraInfoConfigService, {
 	DailyStat,
 	DailyStatsSummary,
 } from "api/extraInfoConfig";
+import ConfirmDialog from "components/admin/ConfirmDialog";
 
 // Interfaz para tabs laterales
 
@@ -343,7 +344,10 @@ const IntervinientesWorker = () => {
 	};
 
 	// Resetear estadísticas
+	const [confirmResetStats, setConfirmResetStats] = useState(false);
+
 	const handleResetStats = async () => {
+		setConfirmResetStats(false);
 		try {
 			const response = await ExtraInfoConfigService.resetStats();
 			if (response.success) {
@@ -490,6 +494,7 @@ const IntervinientesWorker = () => {
 								</Typography>
 								{editing ? (
 									<TextField
+										inputProps={{ "aria-label": "Cron schedule" }}
 										size="small"
 										value={editValues.schedule?.cronExpression ?? config?.schedule?.cronExpression ?? ""}
 										onChange={(e) =>
@@ -520,7 +525,7 @@ const IntervinientesWorker = () => {
 										type="number"
 										value={editValues.batch_size ?? config?.batch_size ?? 5}
 										onChange={(e) => setEditValues({ ...editValues, batch_size: parseInt(e.target.value) })}
-										inputProps={{ min: 1, max: 20 }}
+										inputProps={{ "aria-label": "Batch size", min: 1, max: 20 }}
 									/>
 								) : (
 									<>
@@ -603,7 +608,7 @@ const IntervinientesWorker = () => {
 												schedule: { ...editValues.schedule, workStartHour: parseInt(e.target.value) } as any,
 											})
 										}
-										inputProps={{ min: 0, max: 23 }}
+										inputProps={{ "aria-label": "Hora inicio", min: 0, max: 23 }}
 									/>
 								) : (
 									<Typography variant="body2">{config?.schedule?.workStartHour || 8}:00</Typography>
@@ -626,7 +631,7 @@ const IntervinientesWorker = () => {
 												schedule: { ...editValues.schedule, workEndHour: parseInt(e.target.value) } as any,
 											})
 										}
-										inputProps={{ min: 0, max: 24 }}
+										inputProps={{ "aria-label": "Hora fin", min: 0, max: 24 }}
 									/>
 								) : (
 									<Typography variant="body2">{config?.schedule?.workEndHour || 22}:00</Typography>
@@ -792,11 +797,11 @@ const IntervinientesWorker = () => {
 								Docs procesados
 							</Typography>
 							<Typography variant="h4" sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}>
-								{stats?.global?.documentsProcessed?.toLocaleString() || 0}
+								{stats?.global?.documentsProcessed?.toLocaleString("es-AR") || 0}
 								{eligibleCount?.total ? (
 									<Typography component="span" variant="body2" color="text.secondary">
 										{" / "}
-										{eligibleCount.total.toLocaleString()}
+										{eligibleCount.total.toLocaleString("es-AR")}
 									</Typography>
 								) : null}
 							</Typography>
@@ -824,7 +829,7 @@ const IntervinientesWorker = () => {
 								color="info.main"
 								sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}
 							>
-								{intervinientesStats?.totalIntervinientes?.toLocaleString() || 0}
+								{intervinientesStats?.totalIntervinientes?.toLocaleString("es-AR") || 0}
 							</Typography>
 							<Stack direction="row" spacing={1} sx={{ mt: 1 }}>
 								<Chip label={`P: ${intervinientesStats?.byTipo?.PARTE || 0}`} size="small" variant="outlined" />
@@ -844,7 +849,7 @@ const IntervinientesWorker = () => {
 								color="success.main"
 								sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}
 							>
-								{stats?.global?.contactsSynced?.toLocaleString() || 0}
+								{stats?.global?.contactsSynced?.toLocaleString("es-AR") || 0}
 							</Typography>
 						</CardContent>
 					</Card>
@@ -860,7 +865,7 @@ const IntervinientesWorker = () => {
 								color="error.main"
 								sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}
 							>
-								{stats?.global?.documentsError?.toLocaleString() || 0}
+								{stats?.global?.documentsError?.toLocaleString("es-AR") || 0}
 							</Typography>
 						</CardContent>
 					</Card>
@@ -954,7 +959,7 @@ const IntervinientesWorker = () => {
 											Total Elegibles
 										</Typography>
 										<Typography variant="h4" color="primary.main">
-											{eligibleCount.total.toLocaleString()}
+											{eligibleCount.total.toLocaleString("es-AR")}
 										</Typography>
 									</CardContent>
 								</Card>
@@ -966,7 +971,7 @@ const IntervinientesWorker = () => {
 											<Typography variant="caption" color="text.secondary" sx={{ textTransform: "capitalize" }}>
 												{fuero}
 											</Typography>
-											<Typography variant="h6">{(count as number)?.toLocaleString() || 0}</Typography>
+											<Typography variant="h6">{(count as number)?.toLocaleString("es-AR") || 0}</Typography>
 										</CardContent>
 									</Card>
 								</Grid>
@@ -986,10 +991,19 @@ const IntervinientesWorker = () => {
 
 			{/* Botón reset stats */}
 			<Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-				<Button variant="outlined" color="warning" onClick={handleResetStats}>
+				<Button variant="outlined" color="warning" onClick={() => setConfirmResetStats(true)}>
 					Resetear Estadísticas
 				</Button>
 			</Box>
+			<ConfirmDialog
+				open={confirmResetStats}
+				title="¿Resetear las estadísticas del worker de intervinientes?"
+				description="Los contadores acumulados vuelven a cero y no se pueden recuperar."
+				confirmLabel="Resetear"
+				confirmColor="warning"
+				onConfirm={handleResetStats}
+				onClose={() => setConfirmResetStats(false)}
+			/>
 		</Stack>
 	);
 
@@ -1129,7 +1143,7 @@ const IntervinientesWorker = () => {
 								<Typography variant="caption" color="text.secondary">
 									Total Usuarios
 								</Typography>
-								<Typography variant="h5">{allUsers?.summary?.totalUsersInSystem?.toLocaleString() || 0}</Typography>
+								<Typography variant="h5">{allUsers?.summary?.totalUsersInSystem?.toLocaleString("es-AR") || 0}</Typography>
 							</CardContent>
 						</Card>
 					</Grid>
@@ -1140,7 +1154,7 @@ const IntervinientesWorker = () => {
 									Sync Habilitado
 								</Typography>
 								<Typography variant="h5" color="success.main">
-									{allUsers?.summary?.usersWithSyncEnabled?.toLocaleString() || 0}
+									{allUsers?.summary?.usersWithSyncEnabled?.toLocaleString("es-AR") || 0}
 								</Typography>
 							</CardContent>
 						</Card>
@@ -1152,7 +1166,7 @@ const IntervinientesWorker = () => {
 									Sync Deshabilitado
 								</Typography>
 								<Typography variant="h5" color="text.secondary">
-									{allUsers?.summary?.usersWithSyncDisabled?.toLocaleString() || 0}
+									{allUsers?.summary?.usersWithSyncDisabled?.toLocaleString("es-AR") || 0}
 								</Typography>
 							</CardContent>
 						</Card>
@@ -1165,8 +1179,9 @@ const IntervinientesWorker = () => {
 						<Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ sm: "center" }} justifyContent="space-between">
 							<Stack direction={{ xs: "column", sm: "row" }} spacing={2} flex={1}>
 								<TextField
+									inputProps={{ "aria-label": "Buscar por email o nombre" }}
 									size="small"
-									placeholder="Buscar por email o nombre..."
+									placeholder="Buscar por email o nombre…"
 									value={usersSearch}
 									onChange={(e) => setUsersSearch(e.target.value)}
 									sx={{ minWidth: 250 }}
@@ -1263,7 +1278,7 @@ const IntervinientesWorker = () => {
 										<TableCell colSpan={5} align="center" sx={{ py: 4 }}>
 											<CircularProgress size={24} />
 											<Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-												Cargando usuarios...
+												Cargando usuarios…
 											</Typography>
 										</TableCell>
 									</TableRow>
@@ -1404,7 +1419,7 @@ const IntervinientesWorker = () => {
 													Total procesados
 												</Typography>
 												<Typography variant="h5" color="primary.main">
-													{dailySummary.totals.processed.toLocaleString()}
+													{dailySummary.totals.processed.toLocaleString("es-AR")}
 												</Typography>
 											</Stack>
 										</Grid>
@@ -1437,7 +1452,7 @@ const IntervinientesWorker = () => {
 													Intervinientes extraídos
 												</Typography>
 												<Typography variant="h6" color="info.main">
-													{dailySummary.totals.intervinientesExtracted.toLocaleString()}
+													{dailySummary.totals.intervinientesExtracted.toLocaleString("es-AR")}
 												</Typography>
 											</Stack>
 										</Grid>
@@ -1447,7 +1462,7 @@ const IntervinientesWorker = () => {
 													Contactos sincronizados
 												</Typography>
 												<Typography variant="h6" color="success.main">
-													{dailySummary.totals.contactsSynced.toLocaleString()}
+													{dailySummary.totals.contactsSynced.toLocaleString("es-AR")}
 												</Typography>
 											</Stack>
 										</Grid>
@@ -1457,7 +1472,7 @@ const IntervinientesWorker = () => {
 													Errores
 												</Typography>
 												<Typography variant="h6" color="error.main">
-													{dailySummary.totals.errors.toLocaleString()}
+													{dailySummary.totals.errors.toLocaleString("es-AR")}
 												</Typography>
 											</Stack>
 										</Grid>
@@ -1466,7 +1481,7 @@ const IntervinientesWorker = () => {
 												<Typography variant="caption" color="text.secondary">
 													Ciclos ejecutados
 												</Typography>
-												<Typography variant="h6">{dailySummary.totals.cyclesRun.toLocaleString()}</Typography>
+												<Typography variant="h6">{dailySummary.totals.cyclesRun.toLocaleString("es-AR")}</Typography>
 											</Stack>
 										</Grid>
 									</Grid>
@@ -1522,28 +1537,28 @@ const IntervinientesWorker = () => {
 																{index === 0 && <Chip label="Hoy" size="small" color="primary" sx={{ ml: 1, height: 18 }} />}
 															</Typography>
 														</TableCell>
-														<TableCell align="right">{stat.totalEligible.toLocaleString()}</TableCell>
+														<TableCell align="right">{stat.totalEligible.toLocaleString("es-AR")}</TableCell>
 														<TableCell align="right">
 															<Typography variant="body2" color="primary.main" fontWeight="medium">
-																{stat.processed.toLocaleString()}
+																{stat.processed.toLocaleString("es-AR")}
 															</Typography>
 														</TableCell>
 														<TableCell align="right">
 															<Typography variant="body2" color="success.main">
-																{stat.success.toLocaleString()}
+																{stat.success.toLocaleString("es-AR")}
 															</Typography>
 														</TableCell>
 														<TableCell align="right">
 															<Typography variant="body2" color={stat.errors > 0 ? "error.main" : "text.secondary"}>
-																{stat.errors.toLocaleString()}
+																{stat.errors.toLocaleString("es-AR")}
 															</Typography>
 														</TableCell>
 														<TableCell align="right">
 															<Typography variant="body2" color={stat.pending > 0 ? "warning.main" : "success.main"}>
-																{stat.pending.toLocaleString()}
+																{stat.pending.toLocaleString("es-AR")}
 															</Typography>
 														</TableCell>
-														<TableCell align="right">{stat.intervinientesExtracted.toLocaleString()}</TableCell>
+														<TableCell align="right">{stat.intervinientesExtracted.toLocaleString("es-AR")}</TableCell>
 														<TableCell align="right">{stat.cyclesRun}</TableCell>
 													</TableRow>
 												))
@@ -1587,7 +1602,7 @@ const IntervinientesWorker = () => {
 																borderRadius: 0.5,
 																minWidth: 8,
 																cursor: "pointer",
-																transition: "all 0.2s",
+																transition: "background-color 0.2s",
 																"&:hover": {
 																	backgroundColor: theme.palette.primary.main,
 																},
