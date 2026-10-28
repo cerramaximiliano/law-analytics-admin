@@ -235,7 +235,11 @@ const JourneyCampaignDetail: React.FC<Props> = ({ campaign: c, period, onClose }
 								<TableCell>Asunto · plantilla · demora · condición</TableCell>
 								<TableCell align="right">En este paso hoy</TableCell>
 								<TableCell align="right">Enviados</TableCell>
-								<TableCell align="right">Entregados</TableCell>
+								<TableCell align="right">
+									<Tooltip title="Correos con estado «entregado». Los que después se dieron de baja o se quejaron ya no cuentan como entregados, así que las tasas de apertura y clic se calculan sobre este número.">
+										<span>Entregados</span>
+									</Tooltip>
+								</TableCell>
 								<TableCell align="right">Apertura</TableCell>
 								<TableCell align="right">Clic</TableCell>
 								<TableCell align="right">Rebote def./temp.</TableCell>

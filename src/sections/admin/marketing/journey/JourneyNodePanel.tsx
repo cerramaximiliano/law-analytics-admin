@@ -272,6 +272,7 @@ const JourneyNodePanel: React.FC<Props> = ({ data, node, highlightCampaigns, onL
 						title={NODE_TITLES[node] || node}
 						totals={data.v2.categories[node === "contenido" ? "contenido" : node] ?? null}
 						convertedLabel={node === "captacion" ? "Convertidos (altas en la app)" : "Convertidos a plan pago"}
+						deletedConversions={node === "captacion" ? data.v2.orphans?.conversions : undefined}
 					/>
 					{node === "contenido" && (
 						<JourneyAccumulated title="Avisos de servicio" totals={data.v2.categories.servicio ?? null} convertedLabel="Convertidos" />

@@ -120,6 +120,7 @@ export interface JourneyCategoryTotals {
 
 export interface JourneyV2 {
 	periods: JourneyPeriod[];
+	orphans?: { conversions: number };
 	campaigns: Record<string, JourneyCampaignStats>;
 	categories: Record<string, JourneyCategoryTotals | null>;
 	cohorts: Record<string, Array<{ week: string; entered: number; converted: number }>>;

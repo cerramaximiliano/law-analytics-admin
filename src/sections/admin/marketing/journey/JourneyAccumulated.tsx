@@ -81,6 +81,7 @@ const JourneyAccumulated: React.FC<{ title: string; totals: JourneyCategoryTotal
 								{totals.converted ? `${fmt(totals.converted)} altas en la app` : ""}
 								{totals.converted && totals.paid ? " · " : ""}
 								{totals.paid ? `${fmt(totals.paid)} pasaron a plan pago` : ""}
+								{deletedConversions ? ` · +${fmt(deletedConversions)} de campañas borradas (no figuran en ninguna campaña)` : ""}
 							</Typography>
 						</TableCell>
 					</TableRow>
