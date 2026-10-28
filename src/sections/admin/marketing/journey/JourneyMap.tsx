@@ -10,9 +10,7 @@ export type JourneyNodeId =
 	| "registro"
 	| "onboarding"
 	| "conversion"
-	| "conversion:previsional"
-	| "conversion:archivadas"
-	| "conversion:tope"
+	| `conversion:${string}`
 	| "cliente"
 	| "inactivo"
 	| "activo_free"
@@ -43,6 +41,11 @@ const JourneyMap: React.FC<Props> = ({ data, selected, highlight, onSelect }) =>
 	const stages = data.stages;
 	const sub = stages.conversion.sub;
 	const entradas = data.flows.entradas;
+
+	// Subetapas de conversión dinámicas: la caja crece con la cantidad y baja la fila inferior
+	const subKeys = stages.conversion.subOrder ?? Object.keys(sub);
+	const convH = Math.max(290, 76 + subKeys.length * 74);
+	const bottomY = Math.max(330, 10 + convH + 30);
 
 	interface NodeBox {
 		id: JourneyNodeId;
@@ -105,7 +108,7 @@ const JourneyMap: React.FC<Props> = ({ data, selected, highlight, onSelect }) =>
 			x: 725,
 			y: 10,
 			w: 255,
-			h: 290,
+			h: convH,
 			color: t.conversion?.color || "#7C3AED",
 			title: "Conversión",
 			lines: [`${fmt(stages.counts.conversion?.total)} usuarios · ${fmt(stages.conversion.en_campania)} en campaña`],
@@ -124,7 +127,7 @@ const JourneyMap: React.FC<Props> = ({ data, selected, highlight, onSelect }) =>
 		{
 			id: "inactivo",
 			x: 470,
-			y: 330,
+			y: bottomY,
 			w: 210,
 			h: 90,
 			color: t.reactivacion?.color || "#EA580C",
@@ -135,7 +138,7 @@ const JourneyMap: React.FC<Props> = ({ data, selected, highlight, onSelect }) =>
 		{
 			id: "activo_free",
 			x: 725,
-			y: 330,
+			y: bottomY,
 			w: 255,
 			h: 90,
 			color: "#94A3B8",
@@ -145,7 +148,7 @@ const JourneyMap: React.FC<Props> = ({ data, selected, highlight, onSelect }) =>
 		{
 			id: "contenido",
 			x: 10,
-			y: 330,
+			y: bottomY,
 			w: 420,
 			h: 90,
 			color: t.contenido?.color || "#CA8A04",
@@ -157,29 +160,16 @@ const JourneyMap: React.FC<Props> = ({ data, selected, highlight, onSelect }) =>
 		},
 	];
 
-	const subBoxes: Array<{ id: JourneyNodeId; label: string; value: string; sinCampania: number | undefined; color: string }> = [
-		{
-			id: "conversion:previsional",
-			label: "Previsional",
-			value: `${fmt(stages.counts.conversion?.sub?.previsional)} · ${fmt(sub.previsional.en_campania)} en campaña`,
-			sinCampania: sub.previsional.sin_campania,
-			color: "#6D28D9",
-		},
-		{
-			id: "conversion:archivadas",
-			label: "Causas archivadas",
-			value: `${fmt(stages.counts.conversion?.sub?.archivadas)} · ${fmt(sub.archivadas.en_campania)} en campaña`,
-			sinCampania: sub.archivadas.sin_campania,
-			color: "#7C3AED",
-		},
-		{
-			id: "conversion:tope",
-			label: "Tope de causas",
-			value: `${fmt(stages.counts.conversion?.sub?.tope)} · ${fmt(sub.tope.en_campania)} en campaña`,
-			sinCampania: sub.tope.sin_campania,
-			color: "#8B5CF6",
-		},
-	];
+	const SUB_COLORS = ["#6D28D9", "#7C3AED", "#8B5CF6", "#A78BFA", "#C4B5FD"];
+	const subBoxes: Array<{ id: JourneyNodeId; label: string; value: string; sinCampania: number | undefined; color: string }> = subKeys.map(
+		(k, i) => ({
+			id: `conversion:${k}` as JourneyNodeId,
+			label: sub[k]?.label || k,
+			value: `${fmt(stages.counts.conversion?.sub?.[k] ?? sub[k]?.total)} · ${fmt(sub[k]?.en_campania)} en campaña`,
+			sinCampania: sub[k]?.sin_campania,
+			color: SUB_COLORS[i % SUB_COLORS.length],
+		}),
+	);
 
 	const isHighlighted = (id: JourneyNodeId) =>
 		highlight.includes(id) || (id === "conversion" && highlight.some((h) => h.startsWith("conversion:")));
@@ -196,7 +186,13 @@ const JourneyMap: React.FC<Props> = ({ data, selected, highlight, onSelect }) =>
 	);
 
 	return (
-		<svg viewBox="0 0 1190 440" width="100%" role="img" aria-label="Mapa del recorrido del contacto" style={{ display: "block" }}>
+		<svg
+			viewBox={`0 0 1190 ${bottomY + 110}`}
+			width="100%"
+			role="img"
+			aria-label="Mapa del recorrido del contacto"
+			style={{ display: "block" }}
+		>
 			<defs>
 				<marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
 					<path d="M 0 0 L 10 5 L 0 10 z" fill={muted} />
@@ -207,8 +203,8 @@ const JourneyMap: React.FC<Props> = ({ data, selected, highlight, onSelect }) =>
 			{arrow(425, 155, 470, 115, entradas.onboarding !== undefined ? fmt(entradas.onboarding) : undefined)}
 			{arrow(680, 115, 725, 115, entradas.conversion !== undefined ? fmt(entradas.conversion) : undefined)}
 			{arrow(980, 155, 1030, 155, entradas.cliente !== undefined ? fmt(entradas.cliente) : undefined)}
-			{arrow(580, 190, 580, 330, entradas.inactivo !== undefined ? fmt(entradas.inactivo) : undefined)}
-			{arrow(680, 190, 725, 350, entradas.activo_free !== undefined ? fmt(entradas.activo_free) : undefined)}
+			{arrow(580, 190, 580, bottomY, entradas.inactivo !== undefined ? fmt(entradas.inactivo) : undefined)}
+			{arrow(680, 190, 725, bottomY + 20, entradas.activo_free !== undefined ? fmt(entradas.activo_free) : undefined)}
 
 			{nodes.map((n) => {
 				const active = selected === n.id || (n.id === "conversion" && selected?.startsWith("conversion:"));

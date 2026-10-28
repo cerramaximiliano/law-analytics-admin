@@ -148,7 +148,10 @@ export interface JourneyMapData {
 	stages: {
 		counts: Record<string, { total: number; sub: Record<string, number> }>;
 		onboarding: JourneyStageData;
-		conversion: JourneyStageData & { sub: Record<"previsional" | "archivadas" | "tope", JourneyStageData> };
+		conversion: JourneyStageData & {
+			subOrder?: string[];
+			sub: Record<string, JourneyStageData & { label?: string; total?: number }>;
+		};
 		inactivo: JourneyStageData;
 		cliente: { total: number };
 		activo_free: { total: number };

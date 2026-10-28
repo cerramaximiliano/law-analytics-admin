@@ -182,9 +182,6 @@ const NODE_TITLES: Record<string, string> = {
 	registro: "Registro",
 	onboarding: "Onboarding",
 	conversion: "Conversión",
-	"conversion:previsional": "Conversión · previsional",
-	"conversion:archivadas": "Conversión · causas archivadas",
-	"conversion:tope": "Conversión · tope de causas",
 	cliente: "Cliente",
 	inactivo: "Inactivo · Reconquista",
 	activo_free: "Activo free",
@@ -231,8 +228,8 @@ const JourneyNodePanel: React.FC<Props> = ({ data, node, highlightCampaigns, onL
 		];
 		reasons = stages.conversion.reasons || null;
 	} else if (node.startsWith("conversion:")) {
-		const key = node.split(":")[1] as "previsional" | "archivadas" | "tope";
-		const s = stages.conversion.sub[key];
+		const key = node.slice("conversion:".length);
+		const s = stages.conversion.sub[key] || {};
 		campaigns = s.campaigns || [];
 		scope = node;
 		buckets = [
@@ -256,10 +253,15 @@ const JourneyNodePanel: React.FC<Props> = ({ data, node, highlightCampaigns, onL
 		note = `${fmt(stages.activo_free.total)} usuarios free con más de 30 días de alta y sin conversión: sin campaña por diseño.`;
 	}
 
+	const nodeTitle =
+		NODE_TITLES[node] ||
+		(node.startsWith("conversion:") ? `Conversión · ${stages.conversion.sub[node.slice(11)]?.label || node.slice(11)}` : node);
+
 	return (
 		<Paper variant="outlined" sx={{ p: 2 }}>
 			<Typography variant="h6" gutterBottom>
-				{NODE_TITLES[node] || node}
+				{NODE_TITLES[node] ||
+					(node.startsWith("conversion:") ? `Conversión · ${data.stages.conversion.sub[node.slice(11)]?.label || node.slice(11)}` : node)}
 			</Typography>
 			{note && (
 				<Alert severity="info" sx={{ mb: 2 }}>
@@ -269,7 +271,7 @@ const JourneyNodePanel: React.FC<Props> = ({ data, node, highlightCampaigns, onL
 			{data.v2 && node !== "registro" && node !== "cliente" && node !== "activo_free" && (
 				<>
 					<JourneyAccumulated
-						title={NODE_TITLES[node] || node}
+						title={nodeTitle}
 						totals={data.v2.categories[node === "contenido" ? "contenido" : node] ?? null}
 						convertedLabel={node === "captacion" ? "Convertidos (altas en la app)" : "Convertidos a plan pago"}
 						deletedConversions={node === "captacion" ? data.v2.orphans?.conversions : undefined}
