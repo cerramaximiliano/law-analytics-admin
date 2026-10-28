@@ -196,7 +196,7 @@ const MEVCredentials = () => {
 												inputProps={{ "aria-label": "URL de recuperación" }}
 												size="small"
 												fullWidth
-												placeholder="https://mev.scba.gov.ar/..."
+												placeholder="https://mev.scba.gov.ar/…"
 												value={urlInput}
 												onChange={(e) => setUrlInput(e.target.value)}
 											/>

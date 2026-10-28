@@ -31,6 +31,7 @@ import { useSnackbar } from "notistack";
 import { WorkersService, WorkerConfig } from "api/workers";
 import { ManagerConfigService, ManagerStatusResponse, ManagerAlertsResponse } from "api/managerConfig";
 import AdvancedConfigModal from "./AdvancedConfigModal";
+import { formatPercent } from "utils/format";
 
 // Enums según el modelo mongoose
 const VERIFICATION_MODE_OPTIONS = [
@@ -574,7 +575,7 @@ const VerificationWorker = () => {
 								{(() => {
 									const total = configs.reduce((acc, c) => acc + (c.documents_verified || 0), 0);
 									const valid = configs.reduce((acc, c) => acc + (c.documents_valid || 0), 0);
-									return total > 0 ? `${((valid / total) * 100).toFixed(1)}%` : "0%";
+									return total > 0 ? formatPercent((valid / total) * 100, 1) : "0%";
 								})()}
 							</Typography>
 						</CardContent>

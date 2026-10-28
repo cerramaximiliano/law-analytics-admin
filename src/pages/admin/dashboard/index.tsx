@@ -78,6 +78,7 @@ import CollapsibleSection from "./CollapsibleSection";
 import SectionNav from "./SectionNav";
 import CoverageSummary from "./CoverageSummary";
 import { clickableProps } from "utils/a11y";
+import { formatPercent } from "utils/format";
 
 // Theme-aware color helper - maps semantic roles to MUI theme palette tokens
 // Usage: const COLORS = getThemeColors(theme) inside any component with useTheme()
@@ -2356,7 +2357,7 @@ const AdminDashboard = () => {
 														: COLORS.error.main,
 											}}
 										>
-											{ejeEligibilityStats.coveragePercent.toFixed(1)}%
+											{formatPercent(ejeEligibilityStats.coveragePercent, 1)}
 										</Typography>
 									</Box>
 									<LinearProgress
@@ -2529,7 +2530,7 @@ const AdminDashboard = () => {
 														: COLORS.error.main,
 											}}
 										>
-											{pjsaltaEligibilityStats.coveragePercent.toFixed(1)}%
+											{formatPercent(pjsaltaEligibilityStats.coveragePercent, 1)}
 										</Typography>
 									</Box>
 									<LinearProgress
@@ -2709,7 +2710,7 @@ const AdminDashboard = () => {
 														: COLORS.error.main,
 											}}
 										>
-											{pjcatamarcaEligibilityStats.coveragePercent.toFixed(1)}%
+											{formatPercent(pjcatamarcaEligibilityStats.coveragePercent, 1)}
 										</Typography>
 									</Box>
 									<LinearProgress
@@ -2889,7 +2890,7 @@ const AdminDashboard = () => {
 														: COLORS.error.main,
 											}}
 										>
-											{pjmendozaEligibilityStats.coveragePercent.toFixed(1)}%
+											{formatPercent(pjmendozaEligibilityStats.coveragePercent, 1)}
 										</Typography>
 									</Box>
 									<LinearProgress

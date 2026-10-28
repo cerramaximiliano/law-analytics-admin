@@ -46,6 +46,7 @@ import ScraperService, { ScraperConfig, ScraperJob, ScraperRun, ScraperJobStats,
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 import CrossViewLinks from "components/admin/CrossViewLink";
 import { clickableProps } from "utils/a11y";
+import ConfirmDialog from "components/admin/ConfirmDialog";
 import { formatDate as formatDateIntl } from "utils/format";
 
 interface TabPanelProps {
@@ -647,6 +648,7 @@ const JobsTab = () => {
 	const [clearDialogOpen, setClearDialogOpen] = useState(false);
 	const [clearing, setClearing] = useState(false);
 	const [deletingId, setDeletingId] = useState<string | null>(null);
+	const [jobToDelete, setJobToDelete] = useState<ScraperJob | null>(null);
 
 	const fetchJobs = useCallback(async () => {
 		try {
@@ -711,6 +713,7 @@ const JobsTab = () => {
 			enqueueSnackbar(error?.message || "Error al eliminar job", { variant: "error" });
 		} finally {
 			setDeletingId(null);
+			setJobToDelete(null);
 		}
 	};
 
@@ -863,7 +866,7 @@ const JobsTab = () => {
 									</TableCell>
 									<TableCell align="center">
 										<Tooltip title="Eliminar job">
-											<IconButton size="small" color="error" disabled={deletingId === job._id} onClick={() => handleDelete(job._id)}>
+											<IconButton size="small" color="error" disabled={deletingId === job._id} onClick={() => setJobToDelete(job)}>
 												<Trash size={16} />
 											</IconButton>
 										</Tooltip>
@@ -903,6 +906,16 @@ const JobsTab = () => {
 					</Button>
 				</DialogActions>
 			</Dialog>
+
+			<ConfirmDialog
+				open={jobToDelete !== null}
+				title={`¿Eliminar el job ${jobToDelete?.jobType ?? ""}${jobToDelete?.entityId ? ` de ${jobToDelete.entityId}` : ""}?`}
+				confirmLabel="Eliminar"
+				confirmColor="error"
+				loading={deletingId !== null}
+				onConfirm={() => jobToDelete && handleDelete(jobToDelete._id)}
+				onClose={() => setJobToDelete(null)}
+			/>
 		</Stack>
 	);
 };

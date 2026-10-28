@@ -33,6 +33,7 @@ import {
 	WorkerHourlyDaySummaryResponse,
 	WorkerHourlyScalingEventsResponse,
 } from "api/workers";
+import { formatNumber } from "utils/format";
 
 // Stat Card Component
 interface StatCardProps {
@@ -303,7 +304,7 @@ const HourlyStatsPanel: React.FC<HourlyStatsPanelProps> = ({ workerType = "app-u
 													<Typography color="info.main">{stats.movimientosFound}</Typography>
 												</TableCell>
 												<TableCell align="right">
-													{stats.avgWorkers.toFixed(1)} / {stats.maxWorkers}
+													{formatNumber(stats.avgWorkers, 1)} / {stats.maxWorkers}
 												</TableCell>
 												<TableCell align="right">{stats.pendingAtEnd ?? "-"}</TableCell>
 											</TableRow>

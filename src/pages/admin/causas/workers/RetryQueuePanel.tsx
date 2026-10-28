@@ -16,6 +16,7 @@ import {
 import { Refresh } from "iconsax-react";
 import CausasPjnService from "api/causasPjn";
 import { labelCortoDeFuero } from "utils/fueros";
+import { formatPercent } from "utils/format";
 
 /**
  * Estado de la cola del retry worker.
@@ -130,7 +131,7 @@ const RetryQueuePanel: React.FC = () => {
 							</Typography>
 							<Typography variant="h3">{total.toLocaleString("es-AR")}</Typography>
 							<Typography variant="caption" color="text.secondary">
-								{total > 0 ? `${((data.agotados / total) * 100).toFixed(1)}% descartado` : "sin documentos"}
+								{total > 0 ? `${formatPercent((data.agotados / total) * 100, 1)} descartado` : "sin documentos"}
 							</Typography>
 						</CardContent>
 					</Card>

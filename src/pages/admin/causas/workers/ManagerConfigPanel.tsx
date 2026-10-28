@@ -46,6 +46,7 @@ import {
 	ManagerAlertsResponse,
 } from "api/managerConfig";
 import { labelCortoDeFuero } from "utils/fueros";
+import { formatPercent as formatPct } from "utils/format";
 
 // Nombres de los fueros
 // Las etiquetas salen del catálogo compartido, que cubre las 28 jurisdicciones
@@ -212,7 +213,7 @@ const ManagerConfigPanel: React.FC = () => {
 
 	// Formatear porcentaje
 	const formatPercent = (value: number) => {
-		return `${(value * 100).toFixed(1)}%`;
+		return formatPct(value * 100, 1);
 	};
 
 	const hasChanges = Object.keys(editedSettings).length > 0;
@@ -565,7 +566,7 @@ const ManagerConfigPanel: React.FC = () => {
 								{/* Umbrales de recursos */}
 								<Grid item xs={12} sm={3}>
 									<Typography variant="caption" color="text.secondary">
-										Umbral CPU: {((getValue("cpuThreshold") || 0) * 100).toFixed(0)}%
+										Umbral CPU: {formatPct((getValue("cpuThreshold") || 0) * 100, 0)}
 									</Typography>
 									<Slider
 										size="small"
@@ -579,7 +580,7 @@ const ManagerConfigPanel: React.FC = () => {
 								</Grid>
 								<Grid item xs={12} sm={3}>
 									<Typography variant="caption" color="text.secondary">
-										Umbral Memoria: {((getValue("memoryThreshold") || 0) * 100).toFixed(0)}%
+										Umbral Memoria: {formatPct((getValue("memoryThreshold") || 0) * 100, 0)}
 									</Typography>
 									<Slider
 										size="small"

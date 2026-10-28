@@ -26,6 +26,7 @@ import { useSnackbar } from "notistack";
 import { WorkersService, ScrapingHistory } from "api/workers";
 import { FUERO_OPTIONS as CATALOGO_FUEROS } from "utils/fueros";
 import StatStrip from "components/admin/StatStrip";
+import { formatPercent } from "utils/format";
 
 // Los fueros salen del catálogo compartido: esta lista estaba congelada en
 // los seis originales y no mostraba los 22 que se cablearon después.
@@ -319,7 +320,7 @@ const RangeHistoryPanel: React.FC = () => {
 										const hId = typeof h._id === "string" ? h._id : h._id.$oid;
 										const processed = h.documents_processed || 0;
 										const found = h.documents_found || 0;
-										const rate = processed > 0 ? ((found / processed) * 100).toFixed(1) : "-";
+										const rate = processed > 0 ? formatPercent((found / processed) * 100, 1) : "-";
 
 										return (
 											<TableRow key={hId} hover>
@@ -353,7 +354,7 @@ const RangeHistoryPanel: React.FC = () => {
 												</TableCell>
 												<TableCell align="center">
 													<Typography variant="body2" fontSize="0.75rem" color="text.secondary">
-														{rate !== "-" ? `${rate}%` : "-"}
+														{rate}
 													</Typography>
 												</TableCell>
 												<TableCell align="center">

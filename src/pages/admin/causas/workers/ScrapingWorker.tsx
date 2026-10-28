@@ -78,6 +78,7 @@ import ScrapingStatsPanel from "./ScrapingStatsPanel";
 import { useTabIndexParam } from "hooks/useTabParam";
 import WorkerSubTabs, { SubTabDef } from "./WorkerSubTabs";
 import { FUERO_OPTIONS as CATALOGO_FUEROS } from "utils/fueros";
+import { formatNumber, formatPercent } from "utils/format";
 
 // Enums para el worker de scraping
 // Los fueros salen del catálogo compartido: esta lista estaba congelada en
@@ -1318,7 +1319,7 @@ const ScrapingWorker = () => {
 																	sx={{ height: 8, borderRadius: 4 }}
 																/>
 																<Typography variant="caption" color="text.secondary">
-																	{progress.toFixed(1)}%
+																	{formatPercent(progress, 1)}
 																</Typography>
 															</Box>
 														</TableCell>
@@ -1330,7 +1331,7 @@ const ScrapingWorker = () => {
 																		fontWeight={500}
 																		color={config.balance?.current && config.balance.current > 1 ? "success.main" : "warning.main"}
 																	>
-																		${config.balance?.current?.toFixed(2) || "0.00"}
+																		${formatNumber(config.balance?.current || 0, 2)}
 																	</Typography>
 																	<Typography variant="caption" color="text.secondary">
 																		{config.balance?.provider || "N/A"}
@@ -1496,7 +1497,7 @@ const ScrapingWorker = () => {
 												Balance Total
 											</Typography>
 											<Typography variant="h4" color="info.main">
-												${configs.reduce((acc, c) => acc + (c.balance?.current || 0), 0).toFixed(2)}
+												${formatNumber(configs.reduce((acc, c) => acc + (c.balance?.current || 0), 0), 2)}
 											</Typography>
 										</CardContent>
 									</Card>

@@ -32,6 +32,7 @@ import { useSnackbar } from "notistack";
 import { useTabIndexParam } from "hooks/useTabParam";
 import WorkerSubTabs, { SubTabDef } from "./WorkerSubTabs";
 import StuckDocumentsService, { StuckDocumentsConfig, StuckDocumentsStats, StuckDocumentsLog, StuckDocument } from "api/stuckDocuments";
+import ConfirmDialog from "components/admin/ConfirmDialog";
 
 // Helper para formatear fecha
 const formatDate = (dateStr?: string | null): string => {
@@ -195,7 +196,10 @@ const StuckDocumentsWorker = () => {
 	};
 
 	// Resetear estadisticas
+	const [confirmResetStats, setConfirmResetStats] = useState(false);
+
 	const handleResetStats = async () => {
+		setConfirmResetStats(false);
 		try {
 			const response = await StuckDocumentsService.resetStats();
 			if (response.success) {
@@ -788,10 +792,19 @@ const StuckDocumentsWorker = () => {
 
 			{/* Boton reset stats */}
 			<Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-				<Button variant="outlined" color="warning" onClick={handleResetStats}>
+				<Button variant="outlined" color="warning" onClick={() => setConfirmResetStats(true)}>
 					Resetear Estadisticas
 				</Button>
 			</Box>
+			<ConfirmDialog
+				open={confirmResetStats}
+				title="¿Resetear las estadísticas del worker de documentos trabados?"
+				description="Los contadores acumulados vuelven a cero y no se pueden recuperar."
+				confirmLabel="Resetear"
+				confirmColor="warning"
+				onConfirm={handleResetStats}
+				onClose={() => setConfirmResetStats(false)}
+			/>
 		</Stack>
 	);
 

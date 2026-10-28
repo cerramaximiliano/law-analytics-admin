@@ -37,6 +37,7 @@ import PjnHtmlDriftPanel from "./PjnHtmlDriftPanel";
 import WorkerStatistics from "./WorkerStatistics";
 import { useTabIndexParam } from "hooks/useTabParam";
 import WorkerSubTabs, { SubTabDef } from "./WorkerSubTabs";
+import { formatPercent } from "utils/format";
 
 // Umbral de lastUpdate por nivel de prioridad (configuracion-app-update.threshold_hours_por_nivel; pjn-models prioridadCola).
 type NivelPrioridad = "alta" | "media" | "baja" | "archivo";
@@ -402,7 +403,7 @@ const AppUpdateWorker = () => {
 												sx={{ height: 6, borderRadius: 3 }}
 											/>
 											<Typography variant="caption" color="text.secondary">
-												{successRate.toFixed(1)}%
+												{formatPercent(successRate, 1)}
 											</Typography>
 										</Box>
 									</TableCell>
@@ -505,7 +506,7 @@ const AppUpdateWorker = () => {
 								{(() => {
 									const totalChecked = configs.reduce((acc, c) => acc + (c.documents_checked || 0), 0);
 									const totalUpdated = configs.reduce((acc, c) => acc + (c.documents_updated || 0), 0);
-									return totalChecked > 0 ? `${((totalUpdated / totalChecked) * 100).toFixed(1)}%` : "0%";
+									return totalChecked > 0 ? formatPercent((totalUpdated / totalChecked) * 100, 1) : "0%";
 								})()}
 							</Typography>
 						</CardContent>

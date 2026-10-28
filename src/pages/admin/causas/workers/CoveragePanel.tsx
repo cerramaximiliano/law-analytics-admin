@@ -40,6 +40,7 @@ import { WorkersService, ScrapingCoverageData, CoverageGap, WorkerConfig, RealCo
 import { BRAND_BLUE } from "themes/dashboardTokens";
 import CreateConfigModal from "./CreateConfigModal";
 import { FUERO_OPTIONS as CATALOGO_FUEROS } from "utils/fueros";
+import { formatPercent } from "utils/format";
 
 // ─── Constantes ───────────────────────────────────────────────────────────────
 // Los fueros salen del catálogo compartido: esta lista estaba congelada en
@@ -1484,7 +1485,7 @@ const CoveragePanel: React.FC = () => {
 												</TableCell>
 												<TableCell align="right">
 													<Typography variant="body2" color="success.main" fontWeight={600}>
-														{calculateProgress(ph.worker).toFixed(0)}%
+														{formatPercent(calculateProgress(ph.worker), 0)}
 													</Typography>
 												</TableCell>
 												<TableCell align="center">

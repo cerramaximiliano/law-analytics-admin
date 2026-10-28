@@ -71,6 +71,7 @@ import DailySummaryPanel from "./DailySummaryPanel";
 import ZeroMovementsProtectionPanel from "./ZeroMovementsProtectionPanel";
 import TandasCapacityPanel from "./TandasCapacityPanel";
 import { FUERO_CODES, labelDeFuero } from "utils/fueros";
+import { formatPercent } from "utils/format";
 
 // Fueros disponibles: del catálogo compartido, que además de los 11 que había
 // acá incluye las casaciones penales y los 15 distritos federales del interior.
@@ -296,9 +297,9 @@ const WorkerStatistics: React.FC = () => {
 					}
 
 					// Calcular tasas de éxito
-					totals.successRate = totals.processed > 0 ? `${((totals.successful / totals.processed) * 100).toFixed(1)}%` : "0%";
+					totals.successRate = totals.processed > 0 ? formatPercent((totals.successful / totals.processed) * 100, 1) : "0%";
 					totals.captchaSuccessRate =
-						totals.captchaAttempts > 0 ? `${((totals.captchaSuccessful / totals.captchaAttempts) * 100).toFixed(1)}%` : "0%";
+						totals.captchaAttempts > 0 ? formatPercent((totals.captchaSuccessful / totals.captchaAttempts) * 100, 1) : "0%";
 
 					statsResponse = {
 						success: true,
@@ -345,9 +346,9 @@ const WorkerStatistics: React.FC = () => {
 						}
 					}
 
-					totals.successRate = totals.processed > 0 ? `${((totals.successful / totals.processed) * 100).toFixed(1)}%` : "0%";
+					totals.successRate = totals.processed > 0 ? formatPercent((totals.successful / totals.processed) * 100, 1) : "0%";
 					totals.captchaSuccessRate =
-						totals.captchaAttempts > 0 ? `${((totals.captchaSuccessful / totals.captchaAttempts) * 100).toFixed(1)}%` : "0%";
+						totals.captchaAttempts > 0 ? formatPercent((totals.captchaSuccessful / totals.captchaAttempts) * 100, 1) : "0%";
 
 					statsResponse = {
 						success: true,
@@ -1123,7 +1124,7 @@ const WorkerStatistics: React.FC = () => {
 														</TableCell>
 														<TableCell align="right">
 															<Chip
-																label={`${successRate}%`}
+																label={formatPercent(Number(successRate), 1)}
 																size="small"
 																color={Number(successRate) >= 80 ? "success" : Number(successRate) >= 50 ? "warning" : "error"}
 																variant="outlined"

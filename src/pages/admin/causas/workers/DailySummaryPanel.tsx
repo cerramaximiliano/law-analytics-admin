@@ -36,6 +36,7 @@ import dayjs, { nowInTimezone, formatInTimezone } from "utils/dayjs-config";
 import type { Dayjs } from "dayjs";
 import { Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend, ComposedChart, Line } from "recharts";
 import { WorkersService, WorkerDailySummaryData, WorkerDailySummaryChartResponse, WorkerDailySummaryCompareResponse } from "api/workers";
+import { formatNumber, formatPercent } from "utils/format";
 
 // Stat Card Component
 interface StatCardProps {
@@ -292,7 +293,7 @@ const DailySummaryPanel: React.FC<DailySummaryPanelProps> = ({ workerType = "app
 					<Grid item xs={6} sm={4} md={2}>
 						<StatCard
 							title="Tasa éxito"
-							value={`${(todaySummary?.totals.successRate || 0).toFixed(1)}%`}
+							value={formatPercent(todaySummary?.totals.successRate || 0, 1)}
 							icon={<Chart size={18} />}
 							color={theme.palette.info.main}
 							loading={loading}
@@ -362,7 +363,7 @@ const DailySummaryPanel: React.FC<DailySummaryPanelProps> = ({ workerType = "app
 											borderRadius: 8,
 										}}
 										formatter={(value: number, name: string) => {
-											if (name === "successRateNum") return [`${value.toFixed(1)}%`, "Tasa Éxito"];
+											if (name === "successRateNum") return [formatPercent(value, 1), "Tasa Éxito"];
 											return [
 												value.toLocaleString("es-AR"),
 												name === "processed"
@@ -472,11 +473,11 @@ const DailySummaryPanel: React.FC<DailySummaryPanelProps> = ({ workerType = "app
 														color={stats.successRate > 90 ? "success" : stats.successRate > 70 ? "warning" : "error"}
 														sx={{ height: 6, borderRadius: 3, width: 60, display: "inline-block", mr: 1 }}
 													/>
-													<Typography variant="caption">{stats.successRate.toFixed(1)}%</Typography>
+													<Typography variant="caption">{formatPercent(stats.successRate, 1)}</Typography>
 												</TableCell>
 												<TableCell align="right">
 													<Typography variant="body2">
-														{stats.avgProcessingTime ? `${(stats.avgProcessingTime / 1000).toFixed(1)}s` : "-"}
+														{stats.avgProcessingTime ? `${formatNumber(stats.avgProcessingTime / 1000, 1)}s` : "-"}
 													</Typography>
 												</TableCell>
 												<TableCell align="right">
@@ -561,7 +562,7 @@ const DailySummaryPanel: React.FC<DailySummaryPanelProps> = ({ workerType = "app
 															<Typography variant="body2" color="text.secondary">
 																Tasa éxito:
 															</Typography>
-															<Typography variant="body2">{comparison.date1.totals.successRate?.toFixed(1)}%</Typography>
+															<Typography variant="body2">{formatPercent(comparison.date1.totals.successRate, 1)}</Typography>
 														</Box>
 													</Stack>
 												</CardContent>
@@ -605,7 +606,7 @@ const DailySummaryPanel: React.FC<DailySummaryPanelProps> = ({ workerType = "app
 															<Typography variant="body2" color="text.secondary">
 																Tasa éxito:
 															</Typography>
-															<Typography variant="body2">{comparison.date2.totals.successRate?.toFixed(1)}%</Typography>
+															<Typography variant="body2">{formatPercent(comparison.date2.totals.successRate, 1)}</Typography>
 														</Box>
 													</Stack>
 												</CardContent>

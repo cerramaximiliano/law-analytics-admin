@@ -28,6 +28,7 @@ import { Trash, Refresh, Warning2 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { WorkersService, WorkerConfig } from "api/workers";
 import ConfirmDialog from "components/admin/ConfirmDialog";
+import { formatPercent } from "utils/format";
 
 interface TemporaryWorkersModalProps {
 	open: boolean;
@@ -303,7 +304,7 @@ const TemporaryWorkersModal: React.FC<TemporaryWorkersModalProps> = ({ open, onC
 															sx={{ height: 6, borderRadius: 3 }}
 														/>
 														<Typography variant="caption" color="text.secondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
-															{progress.toFixed(1)}%
+															{formatPercent(progress, 1)}
 														</Typography>
 													</Box>
 												</TableCell>

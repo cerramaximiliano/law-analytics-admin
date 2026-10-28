@@ -30,10 +30,13 @@ import {
 import EnhancedTablePagination from "components/EnhancedTablePagination";
 import MainCard from "components/MainCard";
 import { clickableProps } from "utils/a11y";
+import { useTabIndexParam } from "hooks/useTabParam";
 import { Edit2, Refresh } from "iconsax-react";
 import EtapaAnotacionesService, { EstadoAnotacion, ItemCola } from "api/etapaAnotaciones";
 import { BRAND_BLUE } from "themes/dashboardTokens";
 import { ACCIONES_REQUERIDAS, ACTOS_PROCESALES, DIM_LABELS, DimKey, OBJETOS_DECIDIDOS } from "./etiquetadoTaxonomia";
+
+const TAB_SLUGS = ["cola", "cobertura"] as const;
 
 const ESTADO_COLOR: Record<EstadoAnotacion, "default" | "warning" | "info" | "success" | "error"> = {
 	pendiente: "default",
@@ -61,7 +64,7 @@ const EtiquetadoDataset = () => {
 	const [fueroFilter, setFueroFilter] = useState<string>("todos");
 	const [soloSugeridas, setSoloSugeridas] = useState(false);
 	// Tab activo: 0 = cola, 1 = cobertura de clases (carga on-demand)
-	const [tab, setTab] = useState(0);
+	const [tab, setTab] = useTabIndexParam("tab", TAB_SLUGS);
 	const [cobertura, setCobertura] = useState<Awaited<ReturnType<typeof EtapaAnotacionesService.getCobertura>> | null>(null);
 	const [coberturaLoading, setCoberturaLoading] = useState(false);
 
@@ -111,6 +114,12 @@ const EtiquetadoDataset = () => {
 	useEffect(() => {
 		cargar();
 	}, [cargar]);
+
+	// Si se entra directo por URL al tab de cobertura, cargarla (cambiarTab solo cubre el clic).
+	useEffect(() => {
+		if (tab === 1 && !cobertura && !coberturaLoading) cargarCobertura();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [tab]);
 
 	return (
 		<MainCard

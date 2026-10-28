@@ -28,6 +28,7 @@ import { useSnackbar } from "notistack";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from "recharts";
 import { ScrapingStatsService, StatsTotals, FueroBreakdown, HourBreakdown, DayBreakdown } from "api/scrapingStats";
 import { labelCortoDeFuero } from "utils/fueros";
+import { formatPercent } from "utils/format";
 
 // ====== Helpers ======
 
@@ -37,7 +38,7 @@ function fmt(n: number): string {
 
 function pct(num: number, total: number): string {
 	if (!total) return "0%";
-	return `${((num / total) * 100).toFixed(1)}%`;
+	return formatPercent((num / total) * 100, 1);
 }
 
 function todayStr(): string {

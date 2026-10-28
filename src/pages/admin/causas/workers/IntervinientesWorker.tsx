@@ -67,6 +67,7 @@ import ExtraInfoConfigService, {
 	DailyStat,
 	DailyStatsSummary,
 } from "api/extraInfoConfig";
+import ConfirmDialog from "components/admin/ConfirmDialog";
 
 // Interfaz para tabs laterales
 
@@ -343,7 +344,10 @@ const IntervinientesWorker = () => {
 	};
 
 	// Resetear estadísticas
+	const [confirmResetStats, setConfirmResetStats] = useState(false);
+
 	const handleResetStats = async () => {
+		setConfirmResetStats(false);
 		try {
 			const response = await ExtraInfoConfigService.resetStats();
 			if (response.success) {
@@ -987,10 +991,19 @@ const IntervinientesWorker = () => {
 
 			{/* Botón reset stats */}
 			<Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-				<Button variant="outlined" color="warning" onClick={handleResetStats}>
+				<Button variant="outlined" color="warning" onClick={() => setConfirmResetStats(true)}>
 					Resetear Estadísticas
 				</Button>
 			</Box>
+			<ConfirmDialog
+				open={confirmResetStats}
+				title="¿Resetear las estadísticas del worker de intervinientes?"
+				description="Los contadores acumulados vuelven a cero y no se pueden recuperar."
+				confirmLabel="Resetear"
+				confirmColor="warning"
+				onConfirm={handleResetStats}
+				onClose={() => setConfirmResetStats(false)}
+			/>
 		</Stack>
 	);
 

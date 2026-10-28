@@ -63,6 +63,7 @@ import ImageActions from "components/ImageActions";
 import CopyButton from "components/CopyButton";
 import { fetchImageBlob } from "utils/imageActions";
 import { clickableProps } from "utils/a11y";
+import { useTabIndexParam } from "hooks/useTabParam";
 import DailySyncPanel from "components/pjn/DailySyncPanel";
 import CrossViewLinks from "components/admin/CrossViewLink";
 import pjnCredentialsService, {
@@ -80,6 +81,8 @@ import EmailLogsService from "api/emailLogs";
 import { EmailLog } from "types/email-log";
 
 // Colores para estados
+const TAB_SLUGS = ["credenciales", "actividad-sync", "movimientos", "notif-credenciales", "alertas-admin"] as const;
+
 const getSyncStatusColor = (status: string) => {
 	switch (status) {
 		case "completed":
@@ -324,7 +327,7 @@ const CredencialesPJN = () => {
 	const theme = useTheme();
 
 	// Tab activo
-	const [tabValue, setTabValue] = useState(0);
+	const [tabValue, setTabValue] = useTabIndexParam("tab", TAB_SLUGS);
 
 	// Estado de datos
 	const [credentials, setCredentials] = useState<PjnCredential[]>([]);
