@@ -952,7 +952,7 @@ const EmailLogsPage = () => {
 							disabled={deleting}
 							startIcon={deleting ? <CircularProgress size={16} color="inherit" /> : <Trash size={16} />}
 						>
-							{deleting ? "Eliminando..." : "Eliminar"}
+							{deleting ? "Eliminando…" : "Eliminar"}
 						</Button>
 					</DialogActions>
 				</Dialog>

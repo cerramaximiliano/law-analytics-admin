@@ -673,7 +673,7 @@ const GenerateAICampaignModal = ({ open, onClose, onCampaignSaved }: Props) => {
 								onClick={handleGenerate}
 								disabled={!canGenerate || busy}
 							>
-								{generating ? "Generando campaña (puede tardar 30-60s)..." : campaign ? "Regenerar campaña" : "Generar campaña"}
+								{generating ? "Generando campaña (puede tardar 30-60s)…" : campaign ? "Regenerar campaña" : "Generar campaña"}
 							</Button>
 
 							{usage && (
@@ -913,7 +913,7 @@ const GenerateAICampaignModal = ({ open, onClose, onCampaignSaved }: Props) => {
 														disabled={busy || !(refinePrompts[emailTab] || "").trim()}
 														sx={{ flex: 1 }}
 													>
-														{refiningIndex === emailTab ? "Aplicando..." : "Refinar con AI"}
+														{refiningIndex === emailTab ? "Aplicando…" : "Refinar con AI"}
 													</Button>
 													<Button
 														size="small"
@@ -1036,7 +1036,7 @@ const GenerateAICampaignModal = ({ open, onClose, onCampaignSaved }: Props) => {
 					onClick={handleSave}
 					disabled={!canSave || busy}
 				>
-					{saving ? "Guardando..." : "Guardar campaña completa"}
+					{saving ? "Guardando…" : "Guardar campaña completa"}
 				</Button>
 			</DialogActions>
 		</Dialog>

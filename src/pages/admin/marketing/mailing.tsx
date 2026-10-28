@@ -674,7 +674,7 @@ const MailingCampaigns = () => {
 						</Typography>
 						<Typography variant="body2">
 							Estado:{" "}
-							{serverStatus.status === "online" ? "En línea" : serverStatus.status === "offline" ? "Fuera de línea" : "Verificando..."}
+							{serverStatus.status === "online" ? "En línea" : serverStatus.status === "offline" ? "Fuera de línea" : "Verificando…"}
 						</Typography>
 						<Typography variant="caption" color="text.secondary">
 							{serverStatus.baseUrl} • IP: {serverStatus.ip}
@@ -870,7 +870,7 @@ const MailingCampaigns = () => {
 													<Typography variant="subtitle2">{campaign.name}</Typography>
 													{campaign.description && (
 														<Typography variant="caption" color="textSecondary">
-															{campaign.description.length > 50 ? `${campaign.description.substring(0, 50)}...` : campaign.description}
+															{campaign.description.length > 50 ? `${campaign.description.substring(0, 50)}…` : campaign.description}
 														</Typography>
 													)}
 												</TableCell>
@@ -1268,7 +1268,7 @@ const MailingCampaigns = () => {
 						disabled={duplicating}
 						startIcon={duplicating ? <CircularProgress size={16} color="inherit" /> : <Copy size={18} />}
 					>
-						{duplicating ? "Duplicando..." : "Duplicar campaña"}
+						{duplicating ? "Duplicando…" : "Duplicar campaña"}
 					</Button>
 				</DialogActions>
 			</Dialog>

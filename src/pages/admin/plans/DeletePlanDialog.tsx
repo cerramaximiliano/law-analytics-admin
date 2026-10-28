@@ -65,7 +65,7 @@ const DeletePlanDialog = ({ open, onClose, onConfirm, plan, loading = false }: D
 						"&:active": { transform: "scale(0.98)" },
 					}}
 				>
-					{loading ? "Eliminando..." : "Eliminar"}
+					{loading ? "Eliminando…" : "Eliminar"}
 				</Button>
 			</DialogActions>
 		</Dialog>

@@ -402,7 +402,7 @@ const GraceTab = ({ testMode }: { testMode: boolean }) => {
 													}}
 												/>
 												<Button size="small" variant="contained" onClick={handleGraceSave} disabled={savingGrace}>
-													{savingGrace ? "Guardando..." : "Guardar"}
+													{savingGrace ? "Guardando…" : "Guardar"}
 												</Button>
 												<Button size="small" onClick={() => setEditingGraceField(null)}>
 													Cancelar
@@ -883,7 +883,7 @@ const TrialsTab = ({ testMode }: { testMode: boolean }) => {
 													}}
 												/>
 												<Button size="small" variant="contained" onClick={handleSave} disabled={saving}>
-													{saving ? "Guardando..." : "Guardar"}
+													{saving ? "Guardando…" : "Guardar"}
 												</Button>
 												<Button size="small" onClick={() => setEditingPlan(null)}>
 													Cancelar

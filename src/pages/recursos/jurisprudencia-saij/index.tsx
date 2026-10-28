@@ -996,7 +996,7 @@ export default function JurisprudenciaSaijPage() {
 
 					<TextField
 						size="small"
-						placeholder="Buscar..."
+						placeholder="Buscar…"
 						value={searchInput}
 						onChange={(e) => setSearchInput(e.target.value)}
 						onKeyDown={(e) => e.key === "Enter" && handleSearch()}

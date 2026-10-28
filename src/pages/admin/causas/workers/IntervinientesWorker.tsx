@@ -1166,7 +1166,7 @@ const IntervinientesWorker = () => {
 							<Stack direction={{ xs: "column", sm: "row" }} spacing={2} flex={1}>
 								<TextField
 									size="small"
-									placeholder="Buscar por email o nombre..."
+									placeholder="Buscar por email o nombre…"
 									value={usersSearch}
 									onChange={(e) => setUsersSearch(e.target.value)}
 									sx={{ minWidth: 250 }}
@@ -1263,7 +1263,7 @@ const IntervinientesWorker = () => {
 										<TableCell colSpan={5} align="center" sx={{ py: 4 }}>
 											<CircularProgress size={24} />
 											<Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-												Cargando usuarios...
+												Cargando usuarios…
 											</Typography>
 										</TableCell>
 									</TableRow>

@@ -349,7 +349,7 @@ const MarketingSuppression = () => {
 						</Typography>
 						<Typography variant="body2">
 							Estado:{" "}
-							{serverStatus.status === "online" ? "En línea" : serverStatus.status === "offline" ? "Fuera de línea" : "Verificando..."}
+							{serverStatus.status === "online" ? "En línea" : serverStatus.status === "offline" ? "Fuera de línea" : "Verificando…"}
 						</Typography>
 					</Box>
 				</Alert>
@@ -423,7 +423,7 @@ const MarketingSuppression = () => {
 			<Box sx={{ mb: 2, display: "flex", gap: 2, flexWrap: "wrap", alignItems: "center" }}>
 				<TextField
 					size="small"
-					placeholder="Buscar email..."
+					placeholder="Buscar email…"
 					value={searchTerm}
 					onChange={handleSearchChange}
 					InputProps={{
@@ -516,7 +516,7 @@ const MarketingSuppression = () => {
 							{paginatedEmails.length === 0 ? (
 								<TableRow>
 									<TableCell colSpan={3} align="center">
-										{loading ? "Cargando..." : "No hay emails suprimidos"}
+										{loading ? "Cargando…" : "No hay emails suprimidos"}
 									</TableCell>
 								</TableRow>
 							) : (
@@ -623,7 +623,7 @@ const MarketingSuppression = () => {
 						disabled={syncing || !dryRunResults || dryRunResults.contactsUpdated === 0}
 						startIcon={syncing ? <CircularProgress size={18} color="inherit" /> : null}
 					>
-						{syncing ? "Sincronizando..." : "Confirmar Sincronización"}
+						{syncing ? "Sincronizando…" : "Confirmar Sincronización"}
 					</Button>
 				</DialogActions>
 			</Dialog>

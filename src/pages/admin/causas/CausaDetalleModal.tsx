@@ -1572,7 +1572,7 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 											onClick={handleClearUpdateHistory}
 											disabled={clearingHistory}
 										>
-											{clearingHistory ? "Limpiando..." : "Limpiar Todo"}
+											{clearingHistory ? "Limpiando…" : "Limpiar Todo"}
 										</Button>
 									</Stack>
 								)}
@@ -2433,7 +2433,7 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 											onClick={handleReVerify}
 											disabled={isReVerifying}
 										>
-											{isReVerifying ? "Re-encolando..." : "Re-verificar"}
+											{isReVerifying ? "Re-encolando…" : "Re-verificar"}
 										</Button>
 										<Typography variant="caption" color="textSecondary" sx={{ ml: 1 }}>
 											Re-encola el expediente para que el worker lo verifique en su próximo ciclo
@@ -2573,7 +2573,7 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 								Cancelar
 							</Button>
 							<Button onClick={handleSaveEdit} startIcon={<Save2 size={18} />} variant="contained" disabled={isSaving}>
-								{isSaving ? "Guardando..." : "Guardar"}
+								{isSaving ? "Guardando…" : "Guardar"}
 							</Button>
 						</>
 					) : (
@@ -2595,7 +2595,7 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 						Cancelar
 					</Button>
 					<Button onClick={handleConfirmDelete} variant="contained" color="error" disabled={isDeleting} startIcon={<Trash size={18} />}>
-						{isDeleting ? "Eliminando..." : "Eliminar"}
+						{isDeleting ? "Eliminando…" : "Eliminar"}
 					</Button>
 				</ConfirmDialogActions>
 			</ConfirmDialog>
@@ -2666,7 +2666,7 @@ const CausaDetalleModal = ({ open, onClose, causa, onCausaUpdated, apiService = 
 						Cancelar
 					</Button>
 					<Button onClick={handleAddMovimiento} variant="contained" disabled={isAddingMovimiento} startIcon={<AddCircle size={18} />}>
-						{isAddingMovimiento ? "Agregando..." : "Agregar"}
+						{isAddingMovimiento ? "Agregando…" : "Agregar"}
 					</Button>
 				</ConfirmDialogActions>
 			</ConfirmDialog>

@@ -232,7 +232,7 @@ const MarketingContacts = () => {
 						</Typography>
 						<Typography variant="body2">
 							Estado:{" "}
-							{serverStatus.status === "online" ? "En línea" : serverStatus.status === "offline" ? "Fuera de línea" : "Verificando..."}
+							{serverStatus.status === "online" ? "En línea" : serverStatus.status === "offline" ? "Fuera de línea" : "Verificando…"}
 						</Typography>
 						<Typography variant="caption" color="text.secondary">
 							{serverStatus.baseUrl} • IP: {serverStatus.ip}

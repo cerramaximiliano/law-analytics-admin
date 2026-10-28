@@ -946,7 +946,7 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 									<TextField
 										{...params}
 										label="Segmentos de Contactos"
-										placeholder={formData.targetSegments.length === 0 ? "Seleccionar segmentos..." : ""}
+										placeholder={formData.targetSegments.length === 0 ? "Seleccionar segmentos…" : ""}
 										helperText={
 											formData.targetSegments.length > 0
 												? `${formData.targetSegments.length} segmento(s) seleccionado(s)`
@@ -1000,10 +1000,10 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 										<TextField
 											{...params}
 											label="Buscar usuarios por email o nombre"
-											placeholder={pendingTargetUsers.length === 0 ? "Escribí al menos 2 caracteres..." : ""}
+											placeholder={pendingTargetUsers.length === 0 ? "Escribí al menos 2 caracteres…" : ""}
 											helperText={
 												loadingTargetUsers
-													? "Cargando usuarios existentes..."
+													? "Cargando usuarios existentes…"
 													: pendingTargetUsers.length > 0
 													? `${pendingTargetUsers.length} usuario(s) seleccionado(s)`
 													: "Dejar vacío para no restringir por usuarios individuales"
@@ -1044,7 +1044,7 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 											<Chip {...getTagProps({ index })} key={option._id} label={option.email} size="small" icon={<UserAdd size={14} />} />
 										))
 									}
-									noOptionsText={userSearchQuery.length < 2 ? "Escribí para buscar..." : "No se encontraron usuarios"}
+									noOptionsText={userSearchQuery.length < 2 ? "Escribí para buscar…" : "No se encontraron usuarios"}
 								/>
 							</Grid>
 						</>
@@ -1080,7 +1080,7 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 											<TextField
 												{...params}
 												label="Buscar contactos por email o nombre"
-												placeholder={pendingTargetContacts.length === 0 ? "Escribí al menos 2 caracteres..." : ""}
+												placeholder={pendingTargetContacts.length === 0 ? "Escribí al menos 2 caracteres…" : ""}
 												helperText={
 													pendingTargetContacts.length > 0
 														? `${pendingTargetContacts.length} contacto(s) seleccionado(s)`
@@ -1131,7 +1131,7 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 												/>
 											))
 										}
-										noOptionsText={contactSearchQuery.length < 2 ? "Escribí para buscar..." : "No se encontraron contactos"}
+										noOptionsText={contactSearchQuery.length < 2 ? "Escribí para buscar…" : "No se encontraron contactos"}
 									/>
 								</Grid>
 							</>
@@ -1318,7 +1318,7 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 						"&:active": { transform: "scale(0.98)" },
 					}}
 				>
-					{loading ? "Guardando..." : isEditing ? "Actualizar" : "Crear"}
+					{loading ? "Guardando…" : isEditing ? "Actualizar" : "Crear"}
 				</Button>
 			</DialogActions>
 		</Dialog>

@@ -795,7 +795,7 @@ const GenerateAITemplateModal = ({ open, onClose, onTemplateSaved, sourceTemplat
 									fullWidth
 									size="large"
 								>
-									{generating ? "Generando..." : "Generar"}
+									{generating ? "Generando…" : "Generar"}
 								</Button>
 							) : (
 								<Stack spacing={1.5}>
@@ -811,7 +811,7 @@ const GenerateAITemplateModal = ({ open, onClose, onTemplateSaved, sourceTemplat
 										value={refinementPrompt}
 										onChange={(e) => setRefinementPrompt(e.target.value)}
 										disabled={busy}
-										placeholder="Ej: hacé el subject más corto, cambiá el color del CTA a verde, agregá una línea sobre soporte 24/7..."
+										placeholder="Ej: hacé el subject más corto, cambiá el color del CTA a verde, agregá una línea sobre soporte 24/7…"
 										helperText="Se enviará el template actual como contexto. El modelo aplicará solo los cambios pedidos."
 									/>
 									<Button
@@ -822,7 +822,7 @@ const GenerateAITemplateModal = ({ open, onClose, onTemplateSaved, sourceTemplat
 										disabled={refinementPrompt.trim().length === 0 || busy}
 										fullWidth
 									>
-										{refining ? "Aplicando cambios..." : "Regenerar con cambios"}
+										{refining ? "Aplicando cambios…" : "Regenerar con cambios"}
 									</Button>
 									<Stack direction="row" spacing={1}>
 										<Button
@@ -1050,7 +1050,7 @@ const GenerateAITemplateModal = ({ open, onClose, onTemplateSaved, sourceTemplat
 					onClick={handleSave}
 					disabled={!canSave || busy}
 				>
-					{saving ? "Guardando..." : "Guardar plantilla"}
+					{saving ? "Guardando…" : "Guardar plantilla"}
 				</Button>
 			</DialogActions>
 		</Dialog>

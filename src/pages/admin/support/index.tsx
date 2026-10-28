@@ -579,7 +579,7 @@ const SupportContactsPage = () => {
 								<TextField
 									fullWidth
 									size="small"
-									placeholder="Buscar por nombre, email o asunto..."
+									placeholder="Buscar por nombre, email o asunto…"
 									value={searchTerm}
 									onChange={(e) => {
 										setSearchTerm(e.target.value);
@@ -1015,7 +1015,7 @@ const SupportContactsPage = () => {
 							Cancelar
 						</Button>
 						<Button variant="contained" onClick={handleUpdate} disabled={updating}>
-							{updating ? "Guardando..." : "Guardar"}
+							{updating ? "Guardando…" : "Guardar"}
 						</Button>
 					</DialogActions>
 				</Dialog>
@@ -1044,7 +1044,7 @@ const SupportContactsPage = () => {
 							Cancelar
 						</Button>
 						<Button variant="contained" color="error" onClick={handleConfirmDelete} disabled={deleting}>
-							{deleting ? "Eliminando..." : "Eliminar"}
+							{deleting ? "Eliminando…" : "Eliminar"}
 						</Button>
 					</DialogActions>
 				</Dialog>
@@ -1065,7 +1065,7 @@ const SupportContactsPage = () => {
 							Cancelar
 						</Button>
 						<Button variant="contained" color="error" onClick={handleBulkDelete} disabled={bulkDeleting}>
-							{bulkDeleting ? "Eliminando..." : `Eliminar ${selectedIds.length} contactos`}
+							{bulkDeleting ? "Eliminando…" : `Eliminar ${selectedIds.length} contactos`}
 						</Button>
 					</DialogActions>
 				</Dialog>
@@ -1092,7 +1092,7 @@ const SupportContactsPage = () => {
 							Cancelar
 						</Button>
 						<Button variant="contained" onClick={handleBulkStatusUpdate} disabled={bulkUpdating || !bulkStatus}>
-							{bulkUpdating ? "Actualizando..." : "Actualizar"}
+							{bulkUpdating ? "Actualizando…" : "Actualizar"}
 						</Button>
 					</DialogActions>
 				</Dialog>
@@ -1190,7 +1190,7 @@ const SupportContactsPage = () => {
 										fullWidth
 										multiline
 										rows={5}
-										placeholder="Escribe tu respuesta aqui..."
+										placeholder="Escribe tu respuesta aqui…"
 										value={replyMessage}
 										onChange={(e) => setReplyMessage(e.target.value)}
 										variant="outlined"
@@ -1217,7 +1217,7 @@ const SupportContactsPage = () => {
 							onClick={handleReply}
 							disabled={replying || !replyMessage.trim()}
 						>
-							{replying ? "Enviando..." : "Enviar Respuesta"}
+							{replying ? "Enviando…" : "Enviar Respuesta"}
 						</Button>
 					</DialogActions>
 				</Dialog>

@@ -305,7 +305,7 @@ const UpdateRangeModal: React.FC<UpdateRangeModalProps> = ({ open, onClose, onSu
 					disabled={loading || !isCompleted}
 					startIcon={loading && <CircularProgress size={16} />}
 				>
-					{loading ? "Actualizando..." : "Actualizar Rango e Iniciar"}
+					{loading ? "Actualizando…" : "Actualizar Rango e Iniciar"}
 				</Button>
 			</DialogActions>
 		</Dialog>

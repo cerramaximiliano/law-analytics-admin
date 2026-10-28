@@ -231,7 +231,7 @@ const AuthCodeVerification = ({ mode = "register", email: propEmail, onVerificat
 						disabled={isVerifying}
 						startIcon={isVerifying ? <CircularProgress size={20} color="inherit" /> : null}
 					>
-						{isVerifying ? "Verificando..." : mode === "register" ? "Verificar y continuar" : "Verificar código"}
+						{isVerifying ? "Verificando…" : mode === "register" ? "Verificar y continuar" : "Verificar código"}
 					</Button>
 				</AnimateButton>
 			</Grid>
@@ -251,7 +251,7 @@ const AuthCodeVerification = ({ mode = "register", email: propEmail, onVerificat
 						color="primary"
 						onClick={handleResendCode}
 					>
-						{isResending ? "Enviando..." : "Reenviar código"}
+						{isResending ? "Enviando…" : "Reenviar código"}
 					</Typography>
 				</Stack>
 			</Grid>

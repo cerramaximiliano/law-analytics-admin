@@ -186,7 +186,7 @@ const ExpedientesEditor: React.FC<ExpedientesEditorProps> = ({ contact, onSaved 
 					Expedientes y colección de origen
 				</Typography>
 				<Button variant="contained" size="small" onClick={handleSave} disabled={saving || rows.length === 0}>
-					{saving ? "Guardando..." : "Guardar cambios"}
+					{saving ? "Guardando…" : "Guardar cambios"}
 				</Button>
 			</Stack>
 			<Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>

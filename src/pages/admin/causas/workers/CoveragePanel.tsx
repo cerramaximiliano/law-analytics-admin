@@ -323,7 +323,7 @@ const AssignDialog: React.FC<{
 					disabled={loading}
 					startIcon={loading ? <CircularProgress size={16} /> : <Flash size={16} />}
 				>
-					{loading ? "Asignando..." : "Confirmar"}
+					{loading ? "Asignando…" : "Confirmar"}
 				</Button>
 			</DialogActions>
 		</Dialog>
@@ -586,7 +586,7 @@ const CoveragePanel: React.FC = () => {
 						const isHistorical = yr <= maxHistYear;
 						const score = isHistorical
 							? (maxHistYear + 1 - yr) * 1000 // más antiguo = mayor score
-							: Math.max(1, 50 - (yr - maxHistYear) * 10); // futuros: 50, 40, 30... (muy bajo)
+							: Math.max(1, 50 - (yr - maxHistYear) * 10); // futuros: 50, 40, 30… (muy bajo)
 						bestCandidates.push({
 							worker,
 							type: "empty_year",
@@ -725,7 +725,7 @@ const CoveragePanel: React.FC = () => {
 							disabled={fueroLoading}
 							size="small"
 						>
-							{fueroLoading ? "Cargando..." : "Cargar todos los años"}
+							{fueroLoading ? "Cargando…" : "Cargar todos los años"}
 						</Button>
 					</Stack>
 
@@ -1144,7 +1144,7 @@ const CoveragePanel: React.FC = () => {
 							size="small"
 							sx={{ whiteSpace: "nowrap", flexShrink: 0 }}
 						>
-							{globalLoading ? "Escaneando..." : "Escanear todo"}
+							{globalLoading ? "Escaneando…" : "Escanear todo"}
 						</Button>
 					</Stack>
 
@@ -1152,7 +1152,7 @@ const CoveragePanel: React.FC = () => {
 						<Box>
 							<LinearProgress />
 							<Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
-								Analizando todos los fueros y años con registros...
+								Analizando todos los fueros y años con registros…
 							</Typography>
 						</Box>
 					)}

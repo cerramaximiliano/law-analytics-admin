@@ -578,7 +578,7 @@ export default function JurisprudenciaPjnPage() {
 					<Stack spacing={2}>
 						<TextField
 							label="ID de sentencia"
-							placeholder="Ej: 6643abc123def456..."
+							placeholder="Ej: 6643abc123def456…"
 							fullWidth
 							value={sentenciaId}
 							onChange={(e) => setSentenciaId(e.target.value)}

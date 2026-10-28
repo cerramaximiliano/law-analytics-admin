@@ -466,7 +466,7 @@ const EmailVerificationWorker = () => {
 								</Stack>
 								<Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1 }}>
 									<Chip label={config.enabled ? "Activo" : "Inactivo"} color={config.enabled ? "success" : "default"} size="small" />
-									{config.processing?.isRunning && <Chip label="Procesando..." color="warning" size="small" icon={<Timer1 size={14} />} />}
+									{config.processing?.isRunning && <Chip label="Procesando…" color="warning" size="small" icon={<Timer1 size={14} />} />}
 								</Stack>
 							</CardContent>
 						</Card>

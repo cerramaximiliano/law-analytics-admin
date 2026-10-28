@@ -335,7 +335,7 @@ const JudicialMovementsModal = ({ open, onClose, movements, loading, error, onMo
 							</Typography>
 							<Typography variant="body2" sx={{ mt: 1 }}>
 								<strong>Detalle:</strong> {movementToDelete.movimiento.detalle.substring(0, 100)}
-								{movementToDelete.movimiento.detalle.length > 100 && "..."}
+								{movementToDelete.movimiento.detalle.length > 100 && "…"}
 							</Typography>
 						</Box>
 					)}

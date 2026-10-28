@@ -2441,7 +2441,7 @@ const EmailTemplates = () => {
 													<TextField
 														size="small"
 														fullWidth
-														placeholder="Buscar en el código HTML..."
+														placeholder="Buscar en el código HTML…"
 														value={viewHtmlSearchQuery}
 														onChange={(e) => setViewHtmlSearchQuery(e.target.value)}
 														onKeyDown={(e) => {
@@ -2630,7 +2630,7 @@ const EmailTemplates = () => {
 													</TableContainer>
 													<Box sx={{ mt: 2 }}>
 														<Typography variant="caption" color="textSecondary">
-															Los enlaces con variables (${"{"}...{"}"}) se resaltan en naranja ya que su valor se define dinámicamente.
+															Los enlaces con variables (${"{"}…{"}"}) se resaltan en naranja ya que su valor se define dinámicamente.
 														</Typography>
 													</Box>
 												</>
@@ -2839,7 +2839,7 @@ const EmailTemplates = () => {
 														<TextField
 															size="small"
 															fullWidth
-															placeholder="Buscar en el código HTML..."
+															placeholder="Buscar en el código HTML…"
 															value={htmlSearchQuery}
 															onChange={(e) => setHtmlSearchQuery(e.target.value)}
 															onKeyPress={(e) => {
@@ -2943,7 +2943,7 @@ const EmailTemplates = () => {
 							<Button onClick={handleCloseEdit}>Cancelar</Button>
 							<AnimateButton>
 								<Button variant="contained" color="primary" onClick={handleUpdateTemplate} disabled={updating}>
-									{updating ? "Actualizando..." : "Guardar cambios"}
+									{updating ? "Actualizando…" : "Guardar cambios"}
 								</Button>
 							</AnimateButton>
 						</DialogActions>
@@ -2986,8 +2986,8 @@ const EmailTemplates = () => {
 								>
 									{toggling
 										? templateToToggle.isActive
-											? "Desactivando..."
-											: "Activando..."
+											? "Desactivando…"
+											: "Activando…"
 										: templateToToggle.isActive
 										? "Desactivar"
 										: "Activar"}
@@ -3086,7 +3086,7 @@ const EmailTemplates = () => {
 									onClick={handleSendEmail}
 									disabled={sending || !emailData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailData.email)}
 								>
-									{sending ? "Enviando..." : "Enviar email"}
+									{sending ? "Enviando…" : "Enviar email"}
 								</Button>
 							</AnimateButton>
 						</DialogActions>
@@ -3201,7 +3201,7 @@ const EmailTemplates = () => {
 											handleAddVariable(value.name);
 										}
 									}}
-									renderInput={(params) => <TextField {...params} label="Agregar variable" size="small" placeholder="Buscar variable..." />}
+									renderInput={(params) => <TextField {...params} label="Agregar variable" size="small" placeholder="Buscar variable…" />}
 									size="small"
 									fullWidth
 									blurOnSelect
@@ -3623,7 +3623,7 @@ const EmailTemplates = () => {
 					<Button onClick={handleCloseCreate}>Cancelar</Button>
 					<AnimateButton>
 						<Button variant="contained" color="primary" onClick={handleCreateTemplate} disabled={creating}>
-							{creating ? "Creando..." : "Crear plantilla"}
+							{creating ? "Creando…" : "Crear plantilla"}
 						</Button>
 					</AnimateButton>
 				</DialogActions>
@@ -3809,7 +3809,7 @@ const EmailTemplates = () => {
 								disabled={promoting}
 								startIcon={promoting ? <CircularProgress size={16} color="inherit" /> : <TickCircle size={16} />}
 							>
-								{promoting ? "Promoviendo..." : "Promover ahora"}
+								{promoting ? "Promoviendo…" : "Promover ahora"}
 							</Button>
 						</DialogActions>
 					</>
@@ -3849,7 +3849,7 @@ const EmailTemplates = () => {
 								disabled={reverting}
 								startIcon={reverting ? <CircularProgress size={16} color="inherit" /> : <Refresh size={16} />}
 							>
-								{reverting ? "Revirtiendo..." : "Revertir ahora"}
+								{reverting ? "Revirtiendo…" : "Revertir ahora"}
 							</Button>
 						</DialogActions>
 					</>

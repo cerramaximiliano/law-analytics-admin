@@ -656,7 +656,7 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 										</Typography>
 										<Typography variant="body2" paragraph>
 											<strong>2. SEQUENCE (Secuencia)</strong>
-											<br />• Serie de emails enviados en orden estricto (0, 1, 2, 3...)
+											<br />• Serie de emails enviados en orden estricto (0, 1, 2, 3…)
 											<br />• Los contactos avanzan paso a paso
 											<br />• No pueden saltar pasos
 											<br />• Respeta tiempos de espera entre emails

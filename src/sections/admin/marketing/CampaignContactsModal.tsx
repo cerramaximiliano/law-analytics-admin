@@ -351,7 +351,7 @@ const CampaignContactsModal = ({ campaign, open, onClose, onContactsChange }: Ca
 					});
 
 					// Mostrar mensaje inicial
-					enqueueSnackbar(result.message || "Procesando contactos en segundo plano...", {
+					enqueueSnackbar(result.message || "Procesando contactos en segundo plano…", {
 						variant: "info",
 						anchorOrigin: { vertical: "bottom", horizontal: "right" },
 					});
@@ -445,9 +445,9 @@ const CampaignContactsModal = ({ campaign, open, onClose, onContactsChange }: Ca
 						</Box>
 						<Typography variant="body1" gutterBottom>
 							{processStatus.status === "processing"
-								? "Procesando contactos..."
+								? "Procesando contactos…"
 								: processStatus.status === "esperando"
-								? "En espera..."
+								? "En espera…"
 								: processStatus.status === "completed"
 								? "Completado"
 								: processStatus.status}
@@ -597,7 +597,7 @@ const CampaignContactsModal = ({ campaign, open, onClose, onContactsChange }: Ca
 											fullWidth
 											variant="outlined"
 											size="small"
-											placeholder="Buscar contactos por nombre, email..."
+											placeholder="Buscar contactos por nombre, email…"
 											value={contactSearch}
 											onChange={(e) => setContactSearch(e.target.value)}
 											onKeyPress={(e) => e.key === "Enter" && handleContactSearch()}
@@ -757,7 +757,7 @@ const CampaignContactsModal = ({ campaign, open, onClose, onContactsChange }: Ca
 											fullWidth
 											variant="outlined"
 											size="small"
-											placeholder="Buscar segmentos por nombre..."
+											placeholder="Buscar segmentos por nombre…"
 											value={segmentSearch}
 											onChange={(e) => setSegmentSearch(e.target.value)}
 											onKeyPress={(e) => e.key === "Enter" && handleSegmentSearch()}
@@ -892,7 +892,7 @@ const CampaignContactsModal = ({ campaign, open, onClose, onContactsChange }: Ca
 										disabled={addingAllContacts || !canAddContacts}
 										startIcon={addingAllContacts ? <CircularProgress size={20} color="inherit" /> : <UserAdd />}
 									>
-										{addingAllContacts ? "Añadiendo todos..." : "Añadir todos los activos"}
+										{addingAllContacts ? "Añadiendo todos…" : "Añadir todos los activos"}
 									</Button>
 								</span>
 							</Tooltip>
@@ -910,7 +910,7 @@ const CampaignContactsModal = ({ campaign, open, onClose, onContactsChange }: Ca
 								}
 								startIcon={submitting ? <CircularProgress size={20} color="inherit" /> : <Add />}
 							>
-								{submitting ? "Añadiendo..." : "Añadir a la Campaña"}
+								{submitting ? "Añadiendo…" : "Añadir a la Campaña"}
 							</Button>
 						</Box>
 					</Box>

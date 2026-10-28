@@ -471,7 +471,7 @@ const ActionDialog = ({ open, initial, onClose, onSave, saving }: ActionDialogPr
 					Cancelar
 				</Button>
 				<Button variant="contained" onClick={() => onSave(form)} disabled={saving || !isValid}>
-					{saving ? "Guardando..." : isEdit ? "Guardar cambios" : "Crear acción"}
+					{saving ? "Guardando…" : isEdit ? "Guardar cambios" : "Crear acción"}
 				</Button>
 			</DialogActions>
 		</Dialog>
@@ -640,7 +640,7 @@ const EditorActionsSection = () => {
 					</Tooltip>
 					<Tooltip title="Poblar con acciones predeterminadas (solo crea las que no existen)">
 						<Button size="small" variant="outlined" onClick={handleSeed} disabled={seeding} startIcon={<Magicpen size={14} />}>
-							{seeding ? "Cargando..." : "Seed"}
+							{seeding ? "Cargando…" : "Seed"}
 						</Button>
 					</Tooltip>
 					<Tooltip title="Refrescar">

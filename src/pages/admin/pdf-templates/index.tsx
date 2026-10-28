@@ -199,7 +199,7 @@ const DetailDialog: React.FC<DetailDialogProps> = ({ open, template, onClose, on
 								</Box>
 							))}
 							<Button variant="outlined" size="small" startIcon={<Cloud size={14} />} onClick={handleOpenPdf} disabled={loadingUrl}>
-								{loadingUrl ? "Generando URL..." : "Abrir PDF base en S3"}
+								{loadingUrl ? "Generando URL…" : "Abrir PDF base en S3"}
 							</Button>
 						</Stack>
 					</Grid>
@@ -498,7 +498,7 @@ const EditDialog: React.FC<EditDialogProps> = ({ open, template, onClose, onSave
 					Cancelar
 				</Button>
 				<Button onClick={handleSave} variant="contained" disabled={saving}>
-					{saving ? "Guardando..." : template ? "Guardar cambios" : "Crear"}
+					{saving ? "Guardando…" : template ? "Guardar cambios" : "Crear"}
 				</Button>
 			</DialogActions>
 		</Dialog>
@@ -530,7 +530,7 @@ const DeleteDialog: React.FC<DeleteDialogProps> = ({ open, template, onClose, on
 				Cancelar
 			</Button>
 			<Button onClick={onConfirm} color="error" variant="contained" disabled={loading}>
-				{loading ? "Eliminando..." : "Eliminar"}
+				{loading ? "Eliminando…" : "Eliminar"}
 			</Button>
 		</DialogActions>
 	</Dialog>
@@ -779,7 +779,7 @@ const PdfTemplatesPage: React.FC = () => {
 			<Box sx={{ p: { xs: 1.5, sm: 2 }, display: "flex", gap: 2, flexWrap: "wrap", borderBottom: 1, borderColor: "divider" }}>
 				<TextField
 					size="small"
-					placeholder="Buscar nombre, slug..."
+					placeholder="Buscar nombre, slug…"
 					value={searchInput}
 					onChange={(e) => setSearchInput(e.target.value)}
 					onKeyPress={(e) => e.key === "Enter" && handleSearch()}

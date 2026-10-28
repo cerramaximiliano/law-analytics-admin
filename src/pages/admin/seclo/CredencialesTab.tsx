@@ -117,7 +117,7 @@ export default function CredencialesTab() {
 			<Box display="flex" gap={1.5} mb={2} flexWrap="wrap" alignItems="center">
 				<TextField
 					size="small"
-					placeholder="Buscar usuario..."
+					placeholder="Buscar usuario…"
 					value={search}
 					onChange={(e) => setSearch(e.target.value)}
 					onKeyDown={(e) => e.key === "Enter" && handleSearch()}
@@ -153,7 +153,7 @@ export default function CredencialesTab() {
 						{loading ? (
 							<TableRow>
 								<TableCell colSpan={7} align="center">
-									Cargando...
+									Cargando…
 								</TableCell>
 							</TableRow>
 						) : credentials.length === 0 ? (

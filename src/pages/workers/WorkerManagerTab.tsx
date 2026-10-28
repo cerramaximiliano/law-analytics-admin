@@ -556,7 +556,7 @@ export default function WorkerManagerTab() {
 							"&:active": { transform: "scale(0.97)" },
 						}}
 					>
-						{saving ? "Guardando..." : "Guardar"}
+						{saving ? "Guardando…" : "Guardar"}
 					</Button>
 					<Button
 						variant="outlined"

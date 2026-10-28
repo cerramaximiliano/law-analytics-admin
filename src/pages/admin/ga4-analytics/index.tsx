@@ -1351,7 +1351,7 @@ const GA4Dashboard = () => {
 					<Box sx={{ width: "100%", py: 4 }}>
 						<LinearProgress />
 						<Typography variant="body2" color="textSecondary" sx={{ mt: 2, textAlign: "center" }}>
-							Cargando datos de navegación...
+							Cargando datos de navegación…
 						</Typography>
 					</Box>
 				) : (
@@ -1543,7 +1543,7 @@ const GA4Dashboard = () => {
 					<Box sx={{ width: "100%", py: 4 }}>
 						<LinearProgress />
 						<Typography variant="body2" color="textSecondary" sx={{ mt: 2, textAlign: "center" }}>
-							Cargando datos de navegación...
+							Cargando datos de navegación…
 						</Typography>
 					</Box>
 				) : (
@@ -1696,7 +1696,7 @@ const GA4Dashboard = () => {
 									<ResponsiveContainer width="100%" height="100%">
 										<BarChart
 											data={navData.pageFlow.slice(0, 10).map((f) => ({
-												name: `${(f?.fromPage || "").substring(0, 15)}... → ${(f?.toPage || "").substring(0, 15)}...`,
+												name: `${(f?.fromPage || "").substring(0, 15)}… → ${(f?.toPage || "").substring(0, 15)}…`,
 												transitions: f?.transitions ?? 0,
 												fullFrom: f?.fromPage || "",
 												fullTo: f?.toPage || "",
@@ -1740,7 +1740,7 @@ const GA4Dashboard = () => {
 					<Box sx={{ width: "100%", py: 4 }}>
 						<LinearProgress />
 						<Typography variant="body2" color="textSecondary" sx={{ mt: 2, textAlign: "center" }}>
-							Cargando eventos disponibles...
+							Cargando eventos disponibles…
 						</Typography>
 					</Box>
 				) : (
@@ -1872,7 +1872,7 @@ const GA4Dashboard = () => {
 																{event}
 															</Typography>
 															<Typography variant="caption" color="textSecondary" sx={{ display: { xs: "none", sm: "block" } }}>
-																{getEventDescription(event).substring(0, 40)}...
+																{getEventDescription(event).substring(0, 40)}…
 															</Typography>
 														</Box>
 													</Box>
@@ -1894,7 +1894,7 @@ const GA4Dashboard = () => {
 										disabled={selectedEvents.length < 2 || funnelLoading}
 										fullWidth
 									>
-										{funnelLoading ? "Generando..." : "Generar Funnel"}
+										{funnelLoading ? "Generando…" : "Generar Funnel"}
 									</Button>
 									<Button variant="outlined" color="error" onClick={handleClearFunnel} disabled={selectedEvents.length === 0}>
 										<Trash size={18} />
@@ -2150,7 +2150,7 @@ const GA4Dashboard = () => {
 					<Box sx={{ width: "100%", py: 4 }}>
 						<LinearProgress />
 						<Typography variant="body2" color="textSecondary" sx={{ mt: 2, textAlign: "center" }}>
-							Cargando eventos disponibles...
+							Cargando eventos disponibles…
 						</Typography>
 					</Box>
 				) : (
@@ -2199,7 +2199,7 @@ const GA4Dashboard = () => {
 										onChange={(e) => handleSelectEventForExplorer(e.target.value)}
 									>
 										<MenuItem value="">
-											<em>Seleccionar evento...</em>
+											<em>Seleccionar evento…</em>
 										</MenuItem>
 										{eventsData?.allEvents?.map((event) => (
 											<MenuItem key={event.eventName} value={event.eventName}>
@@ -2355,7 +2355,7 @@ const GA4Dashboard = () => {
 																dataKey="value"
 																tick={{ fill: theme.palette.text.secondary, fontSize: 10 }}
 																width={55}
-																tickFormatter={(val: string) => (val.length > 8 ? `${val.substring(0, 8)}...` : val)}
+																tickFormatter={(val: string) => (val.length > 8 ? `${val.substring(0, 8)}…` : val)}
 															/>
 															<RechartsTooltip />
 															<Bar dataKey="count" fill={COLORS.primary.main} radius={[0, 4, 4, 0]} name="Eventos" />

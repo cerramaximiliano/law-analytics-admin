@@ -347,7 +347,7 @@ const ConfigTab = () => {
 						"&:active:not(:disabled)": { transform: "scale(0.98)" },
 					}}
 				>
-					{saving ? "Guardando..." : "Guardar configuración"}
+					{saving ? "Guardando…" : "Guardar configuración"}
 				</Button>
 			</Box>
 		</Stack>

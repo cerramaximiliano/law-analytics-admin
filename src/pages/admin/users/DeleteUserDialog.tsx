@@ -166,7 +166,7 @@ const DeleteUserDialog: React.FC<DeleteUserDialogProps> = ({ user, open, onClose
 						"&:active": { transform: "scale(0.98)" },
 					}}
 				>
-					{isDeleting ? "Eliminando..." : "Eliminar"}
+					{isDeleting ? "Eliminando…" : "Eliminar"}
 				</Button>
 			</DialogActions>
 		</ResponsiveDialog>

@@ -379,7 +379,7 @@ const ServerStatus = () => {
 											{service.name}
 										</Typography>
 										<Chip
-											label={service.status === "online" ? "Online" : service.status === "offline" ? "Offline" : "..."}
+											label={service.status === "online" ? "Online" : service.status === "offline" ? "Offline" : "…"}
 											color={service.status === "online" ? "success" : service.status === "offline" ? "error" : "warning"}
 											size="small"
 											variant={service.status === "online" ? "filled" : "outlined"}

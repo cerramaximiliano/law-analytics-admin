@@ -263,7 +263,7 @@ const CarpetasNoVerificadasEje = () => {
 								value={searchCaratula}
 								onChange={(e) => setSearchCaratula(e.target.value)}
 								size="small"
-								placeholder="Buscar en carátula..."
+								placeholder="Buscar en carátula…"
 							/>
 						</Grid>
 						<Grid item xs={12} md={6} lg={2}>

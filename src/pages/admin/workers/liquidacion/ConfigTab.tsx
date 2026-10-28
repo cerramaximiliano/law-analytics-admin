@@ -347,7 +347,7 @@ export default function ConfigTab({ doc, loading, onSaved }: Props) {
 												.filter(Boolean),
 										)
 									}
-									helperText="Códigos separados por coma (CSS, CIV, CNT...)"
+									helperText="Códigos separados por coma (CSS, CIV, CNT…)"
 									fullWidth
 									size="small"
 									InputProps={{ sx: { fontFamily: "monospace" } }}

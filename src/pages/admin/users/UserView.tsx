@@ -1158,7 +1158,7 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 									},
 								}}
 							>
-								{syncingSubscription ? "Sincronizando..." : "Sincronizar"}
+								{syncingSubscription ? "Sincronizando…" : "Sincronizar"}
 							</Button>
 						</Tooltip>
 					</Box>
@@ -1208,7 +1208,7 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 								},
 							}}
 						>
-							{syncingSubscription ? "Sincronizando..." : "Sincronizar"}
+							{syncingSubscription ? "Sincronizando…" : "Sincronizar"}
 						</Button>
 					</Tooltip>
 				</Box>
@@ -1392,7 +1392,7 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 																	onClick={handleSaveGracePeriod}
 																	disabled={savingGracePeriod}
 																>
-																	{savingGracePeriod ? "Guardando..." : "Guardar"}
+																	{savingGracePeriod ? "Guardando…" : "Guardar"}
 																</Button>
 																<Button
 																	size="small"
@@ -2247,7 +2247,7 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 							onClick={syncMarketingData}
 							disabled={syncingMarketing}
 						>
-							{syncingMarketing ? "Sincronizando..." : "Sincronizar con Marketing"}
+							{syncingMarketing ? "Sincronizando…" : "Sincronizar con Marketing"}
 						</Button>
 					</Box>
 				</Stack>
@@ -2484,7 +2484,7 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 						<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
 							<CircularProgress size={20} />
 							<Typography variant="body2" color="text.secondary">
-								Cargando segmentos...
+								Cargando segmentos…
 							</Typography>
 						</Box>
 					) : (
@@ -2532,7 +2532,7 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 															onClick={() => handleAddToSegment(segment._id!)}
 															disabled={addingToSegment !== null}
 														>
-															{addingToSegment === segment._id ? "Agregando..." : "Agregar"}
+															{addingToSegment === segment._id ? "Agregando…" : "Agregar"}
 														</Button>
 													)}
 												</Stack>
@@ -2960,7 +2960,7 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 								disabled={resettingOnboarding}
 								startIcon={resettingOnboarding ? <CircularProgress size={16} /> : <RefreshCircle size={16} />}
 							>
-								{resettingOnboarding ? "Reseteando..." : "Resetear Onboarding"}
+								{resettingOnboarding ? "Reseteando…" : "Resetear Onboarding"}
 							</Button>
 						</Stack>
 						<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>

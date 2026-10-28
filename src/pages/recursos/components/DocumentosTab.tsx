@@ -324,7 +324,7 @@ const DocumentosTab = () => {
 							<TextField
 								fullWidth
 								label="Patrón (letras)"
-								placeholder="Ej: AAEA, BBCD..."
+								placeholder="Ej: AAEA, BBCD…"
 								value={patronFilter}
 								onChange={(e) => setPatronFilter(e.target.value.toUpperCase())}
 								onKeyPress={(e) => e.key === "Enter" && handleSearch()}

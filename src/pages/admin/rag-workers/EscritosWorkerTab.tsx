@@ -244,7 +244,7 @@ function EscritosRateConfigCard() {
 					Descartar
 				</Button>
 				<Button variant="contained" size="small" onClick={handleSave} disabled={!dirty || saving || loading} sx={{ textTransform: "none" }}>
-					{saving ? "Guardando..." : "Guardar"}
+					{saving ? "Guardando…" : "Guardar"}
 				</Button>
 			</Stack>
 		</Paper>
@@ -641,7 +641,7 @@ function ConfigSection() {
 
 			<Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" useFlexGap>
 				<Button variant="contained" onClick={save} disabled={!dirty || saving} startIcon={<TickCircle size={18} />}>
-					{saving ? "Guardando..." : "Guardar cambios"}
+					{saving ? "Guardando…" : "Guardar cambios"}
 				</Button>
 				{dirty && (
 					<Button
@@ -1005,7 +1005,7 @@ function BusquedaSection() {
 				multiline
 				minRows={2}
 				maxRows={5}
-				placeholder="Ej: responsabilidad objetiva del empleador por accidente de trabajo..."
+				placeholder="Ej: responsabilidad objetiva del empleador por accidente de trabajo…"
 				value={query}
 				onChange={(e) => setQuery(e.target.value)}
 				onKeyDown={(e) => {
@@ -1030,7 +1030,7 @@ function BusquedaSection() {
 				startIcon={<SearchNormal1 size={18} />}
 				sx={{ alignSelf: "flex-start" }}
 			>
-				{loading ? "Buscando..." : "Buscar en escritos"}
+				{loading ? "Buscando…" : "Buscar en escritos"}
 			</Button>
 
 			{loading && <LinearProgress />}
@@ -1201,7 +1201,7 @@ const EscritosWorkerTab: React.FC = () => {
 							</Typography>
 						</Box>
 						<Button size="small" onClick={loadPineconeStats} disabled={pineconeStatsLoading} sx={{ textTransform: "none" }}>
-							{pineconeStatsLoading ? "Cargando..." : "Refrescar"}
+							{pineconeStatsLoading ? "Cargando…" : "Refrescar"}
 						</Button>
 					</Stack>
 

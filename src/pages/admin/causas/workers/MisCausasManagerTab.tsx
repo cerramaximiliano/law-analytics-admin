@@ -278,7 +278,7 @@ const MisCausasManagerTab: React.FC<Props> = ({ config, onConfigUpdate }) => {
 			{hasChanges && (
 				<Box display="flex" justifyContent="flex-end">
 					<Button variant="contained" onClick={handleSave} disabled={saving} startIcon={<TickCircle size={18} />}>
-						{saving ? "Guardando..." : "Guardar Cambios"}
+						{saving ? "Guardando…" : "Guardar Cambios"}
 					</Button>
 				</Box>
 			)}

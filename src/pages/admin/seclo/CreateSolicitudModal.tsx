@@ -508,7 +508,7 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 								onInputChange={(_, v) => handleUserSearch(v)}
 								onChange={(_, v) => handleSelectUser(v)}
 								value={selectedUser}
-								noOptionsText={userSearch.length < 2 ? "Escribí para buscar..." : "Sin resultados"}
+								noOptionsText={userSearch.length < 2 ? "Escribí para buscar…" : "Sin resultados"}
 								renderInput={(params) => <TextField {...params} label="Usuario *" placeholder="Buscá por nombre o email" />}
 							/>
 						</Grid>
@@ -590,7 +590,7 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 							<Grid item xs={12} sx={{ display: "flex", alignItems: "center", gap: 1 }}>
 								<CircularProgress size={16} />
 								<Typography variant="body2" color="text.secondary">
-									Cargando contactos y carpetas...
+									Cargando contactos y carpetas…
 								</Typography>
 							</Grid>
 						)}
@@ -1643,7 +1643,7 @@ export default function CreateSolicitudModal({ open, onClose }: Props) {
 								onClick={handleSubmit}
 								disabled={submitting || !canAdvance()}
 							>
-								{submitting ? "Creando..." : dryRunMode ? "Crear en modo DEV" : "Crear solicitud"}
+								{submitting ? "Creando…" : dryRunMode ? "Crear en modo DEV" : "Crear solicitud"}
 							</Button>
 						)}
 					</Box>

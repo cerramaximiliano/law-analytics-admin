@@ -406,7 +406,7 @@ const CausaEditModal = ({ open, onClose, causa, causaType, folderId, onCausaUpda
 						"&:active": { transform: "scale(0.98)" },
 					}}
 				>
-					{isSaving ? "Sincronizando..." : "Aplicar cambios"}
+					{isSaving ? "Sincronizando…" : "Aplicar cambios"}
 				</Button>
 			</DialogActions>
 		</Dialog>

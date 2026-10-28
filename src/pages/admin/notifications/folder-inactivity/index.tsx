@@ -716,7 +716,7 @@ const FolderInactivity = ({ embedded }: { embedded?: boolean }) => {
 							<TextField
 								fullWidth
 								size="small"
-								placeholder="Buscar carpeta..."
+								placeholder="Buscar carpeta…"
 								value={search}
 								onChange={(e) => setSearch(e.target.value)}
 								onKeyDown={handleSearchKeyDown}

@@ -339,7 +339,7 @@ export default function GroupsPage() {
 				<Box component="form" onSubmit={handleSearch} sx={{ flex: 1, display: "flex", gap: 1 }}>
 					<TextField
 						size="small"
-						placeholder="Buscar por nombre o email del owner..."
+						placeholder="Buscar por nombre o email del owner…"
 						value={searchInput}
 						onChange={(e) => setSearchInput(e.target.value)}
 						InputProps={{

@@ -749,17 +749,17 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 				</Button>
 				{activeTab === 0 && (
 					<Button onClick={handleSave} variant="contained" disabled={loading}>
-						{loading ? "Guardando..." : "Guardar Configuración"}
+						{loading ? "Guardando…" : "Guardar Configuración"}
 					</Button>
 				)}
 				{activeTab === 1 && showRangeTab && (
 					<Button onClick={handleUpdateRange} variant="contained" disabled={loading || !isRangeValid()}>
-						{loading ? "Actualizando..." : "Actualizar Rango"}
+						{loading ? "Actualizando…" : "Actualizar Rango"}
 					</Button>
 				)}
 				{showProbeTab && activeTab === (showRangeTab ? 2 : 1) && (
 					<Button onClick={handleSaveProbe} variant="contained" disabled={loading || !isProbeValid()}>
-						{loading ? "Guardando..." : "Guardar Probe"}
+						{loading ? "Guardando…" : "Guardar Probe"}
 					</Button>
 				)}
 			</DialogActions>

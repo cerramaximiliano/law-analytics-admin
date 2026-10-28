@@ -843,7 +843,7 @@ const EmailModules = () => {
 					<Button onClick={handleCloseCreate}>Cancelar</Button>
 					<AnimateButton>
 						<Button variant="contained" onClick={handleCreateModule} disabled={creating}>
-							{creating ? "Creando..." : "Crear módulo"}
+							{creating ? "Creando…" : "Crear módulo"}
 						</Button>
 					</AnimateButton>
 				</DialogActions>
@@ -963,7 +963,7 @@ const EmailModules = () => {
 							<Button onClick={handleCloseEdit}>Cancelar</Button>
 							<AnimateButton>
 								<Button variant="contained" onClick={handleUpdateModule} disabled={updating}>
-									{updating ? "Guardando..." : "Guardar cambios"}
+									{updating ? "Guardando…" : "Guardar cambios"}
 								</Button>
 							</AnimateButton>
 						</DialogActions>
@@ -990,7 +990,7 @@ const EmailModules = () => {
 							<Button onClick={handleCloseDelete}>Cancelar</Button>
 							<AnimateButton>
 								<Button variant="contained" color="error" onClick={handleDeleteModule} disabled={deleting}>
-									{deleting ? "Desactivando..." : "Desactivar"}
+									{deleting ? "Desactivando…" : "Desactivar"}
 								</Button>
 							</AnimateButton>
 						</DialogActions>

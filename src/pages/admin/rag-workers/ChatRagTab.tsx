@@ -117,7 +117,7 @@ const CausaSelector: React.FC<{ onSelect: (causa: IndexationCausa) => void }> = 
 
 			<TextField
 				size="small"
-				placeholder="Buscar por carátula..."
+				placeholder="Buscar por carátula…"
 				value={search}
 				onChange={(e) => setSearch(e.target.value)}
 				InputProps={{
@@ -506,7 +506,7 @@ const ChatInterface: React.FC<{ causa: IndexationCausa; onBack: () => void }> = 
 					multiline
 					maxRows={4}
 					size="small"
-					placeholder="Escribe tu mensaje..."
+					placeholder="Escribe tu mensaje…"
 					value={input}
 					onChange={(e) => setInput(e.target.value)}
 					onKeyDown={handleKeyDown}
@@ -774,7 +774,7 @@ const MessageBubble: React.FC<{ message: ChatMessage; theme: any; onRetry: (msgI
 					sx={{ whiteSpace: "pre-wrap", wordBreak: "break-word", lineHeight: 1.6, color: hasError ? theme.palette.error.main : undefined }}
 				>
 					{message.content}
-					{message.streaming && !message.content && "..."}
+					{message.streaming && !message.content && "…"}
 					{message.streaming && message.content && (
 						<Box
 							component="span"
@@ -825,7 +825,7 @@ const MessageBubble: React.FC<{ message: ChatMessage; theme: any; onRetry: (msgI
 							const label = parts.length > 0 ? parts.join(" · ") : `Fuente ${i + 1}`;
 
 							// Tooltip: preview del texto del chunk
-							const tooltipText = cit.chunkText ? `${cit.chunkText.substring(0, 150)}${cit.chunkText.length > 150 ? "..." : ""}` : label;
+							const tooltipText = cit.chunkText ? `${cit.chunkText.substring(0, 150)}${cit.chunkText.length > 150 ? "…" : ""}` : label;
 
 							const isClickable = !!cit.sourceUrl;
 

@@ -1995,7 +1995,7 @@ const Suscripciones = () => {
 						disabled={updatingGracePeriod || !newExpiresAt || !adminEmail}
 						startIcon={updatingGracePeriod ? <CircularProgress size={16} color="inherit" /> : <Edit size={16} />}
 					>
-						{updatingGracePeriod ? "Actualizando..." : "Actualizar"}
+						{updatingGracePeriod ? "Actualizando…" : "Actualizar"}
 					</Button>
 				</DialogActions>
 			</Dialog>
@@ -2102,7 +2102,7 @@ const Suscripciones = () => {
 						disabled={cancelingSubscription}
 						startIcon={cancelingSubscription ? <CircularProgress size={16} /> : <CloseCircle size={16} />}
 					>
-						{cancelingSubscription ? "Procesando..." : "Confirmar Baja"}
+						{cancelingSubscription ? "Procesando…" : "Confirmar Baja"}
 					</Button>
 				</DialogActions>
 			</Dialog>
@@ -2229,7 +2229,7 @@ const Suscripciones = () => {
 						disabled={resettingSubscription}
 						startIcon={resettingSubscription ? <CircularProgress size={16} color="inherit" /> : <Trash size={16} />}
 					>
-						{resettingSubscription ? "Reseteando..." : "Confirmar Reseteo"}
+						{resettingSubscription ? "Reseteando…" : "Confirmar Reseteo"}
 					</Button>
 				</DialogActions>
 			</Dialog>
@@ -2333,7 +2333,7 @@ const Suscripciones = () => {
 						disabled={syncingWithStripe}
 						startIcon={syncingWithStripe ? <CircularProgress size={16} color="inherit" /> : <RefreshCircle size={16} />}
 					>
-						{syncingWithStripe ? "Sincronizando..." : "Sincronizar"}
+						{syncingWithStripe ? "Sincronizando…" : "Sincronizar"}
 					</Button>
 				</DialogActions>
 			</Dialog>

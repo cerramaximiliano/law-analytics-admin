@@ -437,7 +437,7 @@ const AdminTasks: React.FC = () => {
 			<Box sx={{ p: 2, display: "flex", flexWrap: "wrap", gap: 2, alignItems: "center" }}>
 				<TextField
 					size="small"
-					placeholder="Buscar tareas..."
+					placeholder="Buscar tareas…"
 					value={searchInput}
 					onChange={(e) => setSearchInput(e.target.value)}
 					onKeyPress={(e) => e.key === "Enter" && handleSearch()}

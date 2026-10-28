@@ -301,7 +301,7 @@ const AnalyzeLogsModal = ({ open, onClose, filters }: Props) => {
 						disabled={loading}
 						startIcon={loading ? <CircularProgress size={16} color="inherit" /> : <Magicpen size={18} />}
 					>
-						{loading ? "Analizando..." : "Analizar"}
+						{loading ? "Analizando…" : "Analizar"}
 					</Button>
 				)}
 			</DialogActions>

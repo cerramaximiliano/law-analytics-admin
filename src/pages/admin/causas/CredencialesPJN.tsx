@@ -912,7 +912,7 @@ const CredencialesPJN = () => {
 				<Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
 					<CircularProgress size={24} />
 					<Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
-						Cargando estadísticas...
+						Cargando estadísticas…
 					</Typography>
 				</Box>
 			)}
@@ -1119,7 +1119,7 @@ const CredencialesPJN = () => {
 									fullWidth
 									size="small"
 									label="Buscar usuario"
-									placeholder="Nombre o email..."
+									placeholder="Nombre o email…"
 									value={searchText}
 									onChange={(e) => setSearchText(e.target.value)}
 									onKeyPress={(e) => e.key === "Enter" && handleSearch()}
@@ -1470,9 +1470,9 @@ const CredencialesPJN = () => {
 															<Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.65rem", lineHeight: 1 }}>
 																{cred.extractionStatus === "completed"
 																	? (cred.processedCausasCount || 0) >= (cred.expectedCausasCount || 1)
-																		? "Finalizando..."
+																		? "Finalizando…"
 																		: "Procesando cola"
-																	: "Extrayendo..."}
+																	: "Extrayendo…"}
 															</Typography>
 														</Box>
 													) : (
@@ -1926,7 +1926,7 @@ const CredencialesPJN = () => {
 							<Box sx={{ display: "flex", justifyContent: "center", py: 3 }}>
 								<CircularProgress size={28} />
 								<Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
-									Cargando actividad detallada...
+									Cargando actividad detallada…
 								</Typography>
 							</Box>
 						</Grid>
@@ -3129,7 +3129,7 @@ const CredencialesPJN = () => {
 						disabled={resetSyncDialog.loading || resetSyncDialog.executing}
 						startIcon={resetSyncDialog.executing ? <CircularProgress size={16} /> : undefined}
 					>
-						{resetSyncDialog.executing ? "Reseteando..." : "Resetear sincronización"}
+						{resetSyncDialog.executing ? "Reseteando…" : "Resetear sincronización"}
 					</Button>
 				</DialogActions>
 			</Dialog>
@@ -3196,7 +3196,7 @@ const CredencialesPJN = () => {
 						disabled={creating || !createForm.userId || !createForm.cuil || !createForm.password}
 						startIcon={creating ? <CircularProgress size={16} /> : undefined}
 					>
-						{creating ? "Creando..." : "Crear"}
+						{creating ? "Creando…" : "Crear"}
 					</Button>
 				</DialogActions>
 			</Dialog>
@@ -3603,7 +3603,7 @@ const CredencialesPJN = () => {
 						disabled={updatePasswordDialog.loading || !updatePasswordDialog.password.trim()}
 						startIcon={updatePasswordDialog.loading ? <CircularProgress size={16} /> : <Lock size={16} />}
 					>
-						{updatePasswordDialog.loading ? "Guardando..." : "Guardar contraseña"}
+						{updatePasswordDialog.loading ? "Guardando…" : "Guardar contraseña"}
 					</Button>
 				</DialogActions>
 			</Dialog>

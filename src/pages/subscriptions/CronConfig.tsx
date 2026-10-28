@@ -418,7 +418,7 @@ const CronConfigPage = () => {
 										label="Notas (Opcional)"
 										value={notes}
 										onChange={(e) => setNotes(e.target.value)}
-										placeholder="Motivo del cambio..."
+										placeholder="Motivo del cambio…"
 										size="small"
 									/>
 								</Grid>
@@ -434,7 +434,7 @@ const CronConfigPage = () => {
 											disabled={saving || !adminEmail}
 											startIcon={saving ? <CircularProgress size={16} color="inherit" /> : <Save2 size={16} />}
 										>
-											{saving ? "Guardando..." : "Guardar Cambios"}
+											{saving ? "Guardando…" : "Guardar Cambios"}
 										</Button>
 									</Stack>
 								</Grid>

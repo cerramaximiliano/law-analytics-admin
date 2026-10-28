@@ -507,7 +507,7 @@ const TokenConfigPage = () => {
 											disabled={saving}
 											startIcon={saving ? <CircularProgress size={16} color="inherit" /> : <Save2 size={16} />}
 										>
-											{saving ? "Guardando..." : "Guardar cambios"}
+											{saving ? "Guardando…" : "Guardar cambios"}
 										</Button>
 									</Stack>
 								</Grid>

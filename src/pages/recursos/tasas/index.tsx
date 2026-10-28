@@ -185,7 +185,7 @@ const FechasFaltantesRow = ({ tasa, colSpan, onRellenar, loading }: FechasFaltan
 									startIcon={loading ? <CircularProgress size={12} /> : undefined}
 									sx={{ fontSize: "0.7rem", py: 0.25, minWidth: 90 }}
 								>
-									{loading ? "Iniciando..." : "Rellenar"}
+									{loading ? "Iniciando…" : "Rellenar"}
 								</Button>
 							</span>
 						</Tooltip>
@@ -556,7 +556,7 @@ const TasasInteres = () => {
 										onClick={handleRellenarTodos}
 										startIcon={loadingRellenar ? <CircularProgress size={14} /> : undefined}
 									>
-										{loadingRellenar ? "Iniciando..." : "Rellenar Gaps"}
+										{loadingRellenar ? "Iniciando…" : "Rellenar Gaps"}
 									</Button>
 								</span>
 							</Tooltip>

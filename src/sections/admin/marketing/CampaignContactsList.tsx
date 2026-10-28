@@ -425,7 +425,7 @@ const CampaignContactsList = ({ campaign, open, onClose, onContactsChange }: Cam
 					});
 
 					// Mostrar mensaje inicial
-					enqueueSnackbar(result.message || "Procesando eliminación de contactos en segundo plano...", {
+					enqueueSnackbar(result.message || "Procesando eliminación de contactos en segundo plano…", {
 						variant: "info",
 						anchorOrigin: { vertical: "bottom", horizontal: "right" },
 					});
@@ -553,9 +553,9 @@ const CampaignContactsList = ({ campaign, open, onClose, onContactsChange }: Cam
 						</Box>
 						<Typography variant="body1" gutterBottom>
 							{deletionProcessStatus.status === "processing"
-								? "Procesando eliminación..."
+								? "Procesando eliminación…"
 								: deletionProcessStatus.status === "esperando"
-								? "En espera..."
+								? "En espera…"
 								: deletionProcessStatus.status === "completed"
 								? "Completado"
 								: deletionProcessStatus.status}
@@ -653,7 +653,7 @@ const CampaignContactsList = ({ campaign, open, onClose, onContactsChange }: Cam
 												disabled={syncing}
 												sx={{ textTransform: "none" }}
 											>
-												{syncing ? "Recalculando..." : "Recalcular contadores"}
+												{syncing ? "Recalculando…" : "Recalcular contadores"}
 											</Button>
 										)}
 										{totalCount > 0 && (
@@ -682,7 +682,7 @@ const CampaignContactsList = ({ campaign, open, onClose, onContactsChange }: Cam
 										fullWidth
 										variant="outlined"
 										size="small"
-										placeholder="Buscar contactos por nombre, email..."
+										placeholder="Buscar contactos por nombre, email…"
 										value={searchTerm}
 										onChange={(e) => setSearchTerm(e.target.value)}
 										onKeyPress={(e) => e.key === "Enter" && handleSearch()}

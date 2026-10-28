@@ -382,7 +382,7 @@ const EditContactModal: React.FC<EditContactModalProps> = ({ open, onClose, cont
 					disabled={loading || saving || !email}
 					startIcon={saving && <CircularProgress size={20} color="inherit" />}
 				>
-					{saving ? "Guardando..." : isEditMode ? "Guardar Cambios" : "Crear Contacto"}
+					{saving ? "Guardando…" : isEditMode ? "Guardar Cambios" : "Crear Contacto"}
 				</Button>
 			</DialogActions>
 		</Dialog>

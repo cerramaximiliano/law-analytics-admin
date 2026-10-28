@@ -251,7 +251,7 @@ const BatchCreateWorkersModal: React.FC<BatchCreateWorkersModalProps> = ({ open,
 						label="Delay Incremental (segundos)"
 						value={delayIncrement}
 						onChange={(e) => setDelayIncrement(Number(e.target.value))}
-						helperText="Cada worker tendrá N*incremento segundos de delay (0, 30, 60...)"
+						helperText="Cada worker tendrá N*incremento segundos de delay (0, 30, 60…)"
 						inputProps={{ min: 0 }}
 					/>
 
@@ -327,7 +327,7 @@ const BatchCreateWorkersModal: React.FC<BatchCreateWorkersModalProps> = ({ open,
 					Cancelar
 				</Button>
 				<Button variant="contained" onClick={handleSubmit} disabled={loading} startIcon={loading && <CircularProgress size={16} />}>
-					{loading ? "Creando..." : `Crear ${ranges.length} Workers`}
+					{loading ? "Creando…" : `Crear ${ranges.length} Workers`}
 				</Button>
 			</DialogActions>
 		</Dialog>

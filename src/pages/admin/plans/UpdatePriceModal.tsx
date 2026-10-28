@@ -297,7 +297,7 @@ const UpdatePriceModal = ({ open, onClose, plan, onSuccess }: UpdatePriceModalPr
 													<TableCell>
 														<Box display="flex" alignItems="center" gap={1}>
 															<Typography variant="caption" fontFamily="monospace">
-																{stripePrice.id.substring(0, 20)}...
+																{stripePrice.id.substring(0, 20)}…
 															</Typography>
 															{isDefault && <Chip label="Predeterminado" size="small" color="primary" />}
 														</Box>

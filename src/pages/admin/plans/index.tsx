@@ -229,7 +229,7 @@ const PlansManagement = () => {
 								"&:active": { transform: "translate(0, 1px)" },
 							}}
 						>
-							{syncLoading ? "Sincronizando..." : "Sincronizar con Stripe"}
+							{syncLoading ? "Sincronizando…" : "Sincronizar con Stripe"}
 						</Button>
 						<Button
 							variant="contained"
@@ -326,7 +326,7 @@ const PlansManagement = () => {
 								</Typography>
 								<Box sx={{ bgcolor: "background.default", p: 1, borderRadius: 1, mb: 2 }}>
 									<code style={{ fontSize: "0.75rem" }}>
-										STRIPE_SECRET_KEY=sk_live_xxxxx...
+										STRIPE_SECRET_KEY=sk_live_xxxxx…
 										<br />
 										NODE_ENV=production
 									</code>

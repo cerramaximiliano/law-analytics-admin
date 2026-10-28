@@ -431,7 +431,7 @@ const SurveysAdminPage = () => {
 							<TextField
 								fullWidth
 								size="small"
-								placeholder="Buscar por título o slug..."
+								placeholder="Buscar por título o slug…"
 								value={searchTerm}
 								onChange={(e) => {
 									setSearchTerm(e.target.value);
@@ -861,7 +861,7 @@ const SurveysAdminPage = () => {
 						Cancelar
 					</Button>
 					<Button variant="contained" onClick={handleSave} disabled={busy}>
-						{busy ? "Guardando..." : editing ? "Actualizar" : "Crear"}
+						{busy ? "Guardando…" : editing ? "Actualizar" : "Crear"}
 					</Button>
 				</DialogActions>
 			</Dialog>

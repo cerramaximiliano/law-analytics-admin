@@ -136,7 +136,7 @@ export default function CreateCredencialModal({ open, onClose }: Props) {
 									"&:active:not(:disabled)": { transform: "scale(0.98)" },
 								}}
 							>
-								{isSubmitting ? "Guardando..." : "Crear credencial"}
+								{isSubmitting ? "Guardando…" : "Crear credencial"}
 							</Button>
 						</DialogActions>
 					</form>

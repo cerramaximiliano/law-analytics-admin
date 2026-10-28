@@ -426,7 +426,7 @@ function FolderPickerDialog({
 				<TextField
 					fullWidth
 					size="small"
-					placeholder="Buscar carpeta..."
+					placeholder="Buscar carpeta…"
 					value={search}
 					onChange={(e) => setSearch(e.target.value)}
 					onKeyDown={(e) => e.key === "Enter" && doSearch(search)}
@@ -1145,7 +1145,7 @@ function ScheduleEditor({ sol }: { sol: SecloSolicitud }) {
 				<Grid item xs={12}>
 					<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 						<Button size="small" variant="contained" disabled={!isDirty || saving} onClick={handleSave}>
-							{saving ? "Guardando..." : "Guardar programación"}
+							{saving ? "Guardando…" : "Guardar programación"}
 						</Button>
 						{sol.scheduledAt && (
 							<Button
@@ -1651,7 +1651,7 @@ export default function SolicitudesTab() {
 			<Box display="flex" gap={1.5} mb={2} flexWrap="wrap" alignItems="center">
 				<TextField
 					size="small"
-					placeholder="Buscar usuario..."
+					placeholder="Buscar usuario…"
 					value={search}
 					onChange={(e) => setSearch(e.target.value)}
 					onKeyDown={(e) => e.key === "Enter" && handleSearch()}
@@ -1813,7 +1813,7 @@ export default function SolicitudesTab() {
 						{loading ? (
 							<TableRow>
 								<TableCell colSpan={9} align="center">
-									Cargando...
+									Cargando…
 								</TableCell>
 							</TableRow>
 						) : solicitudes.length === 0 ? (

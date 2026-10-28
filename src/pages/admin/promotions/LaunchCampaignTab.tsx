@@ -613,7 +613,7 @@ const LaunchCampaignTab = ({ discount, onCampaignLaunched }: Props) => {
 													{...params}
 													label="Buscar template"
 													size="small"
-													placeholder="Escribí para filtrar..."
+													placeholder="Escribí para filtrar…"
 													InputProps={{
 														...params.InputProps,
 														endAdornment: (
@@ -1351,7 +1351,7 @@ const LaunchCampaignTab = ({ discount, onCampaignLaunched }: Props) => {
 											disabled={activateLoading}
 											startIcon={activateLoading ? <CircularProgress size={14} color="inherit" /> : <Send2 size={14} />}
 										>
-											{activateLoading ? "Activando..." : "Activar ahora"}
+											{activateLoading ? "Activando…" : "Activar ahora"}
 										</Button>
 									</Box>
 								)}
@@ -1388,7 +1388,7 @@ const LaunchCampaignTab = ({ discount, onCampaignLaunched }: Props) => {
 								"&:active": { transform: "scale(0.98)" },
 							}}
 						>
-							{loading ? "Procesando..." : launchImmediately ? "Crear y lanzar campaña" : "Crear campaña en borrador"}
+							{loading ? "Procesando…" : launchImmediately ? "Crear y lanzar campaña" : "Crear campaña en borrador"}
 						</Button>
 					</Stack>
 				</>

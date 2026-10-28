@@ -1008,7 +1008,7 @@ const OnboardingAnalytics: React.FC = () => {
 															}
 															sx={{ textTransform: "none", fontSize: "0.75rem", py: 0.25 }}
 														>
-															{resettingUserId === user._id ? "..." : "Reset"}
+															{resettingUserId === user._id ? "…" : "Reset"}
 														</Button>
 													</span>
 												</Tooltip>
@@ -1044,7 +1044,7 @@ const OnboardingAnalytics: React.FC = () => {
 						<TextField
 							fullWidth
 							size="small"
-							placeholder="Buscar por email o nombre (mín. 2 caracteres)..."
+							placeholder="Buscar por email o nombre (mín. 2 caracteres)…"
 							value={searchQuery}
 							onChange={(e) => setSearchQuery(e.target.value)}
 							InputProps={{
@@ -1118,7 +1118,7 @@ const OnboardingAnalytics: React.FC = () => {
 													onClick={() => openResetDialog(u)}
 													sx={{ textTransform: "none", fontSize: "0.78rem" }}
 												>
-													{resettingUserId === u._id ? "Reseteando..." : "Reset"}
+													{resettingUserId === u._id ? "Reseteando…" : "Reset"}
 												</Button>
 											</TableCell>
 										</TableRow>
@@ -1229,7 +1229,7 @@ const OnboardingAnalytics: React.FC = () => {
 							"&:active": { transform: "scale(0.98)" },
 						}}
 					>
-						{resettingUserId ? "Reseteando..." : "Resetear"}
+						{resettingUserId ? "Reseteando…" : "Resetear"}
 					</Button>
 				</DialogActions>
 			</ResponsiveDialog>

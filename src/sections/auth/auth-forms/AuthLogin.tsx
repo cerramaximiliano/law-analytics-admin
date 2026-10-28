@@ -348,7 +348,7 @@ const AuthLogin = ({ forgot, isGoogleLoading = false, onLoadingChange }: AuthLog
 												},
 											}}
 										>
-											{isSubmitting ? "Iniciando sesión..." : isGoogleLoading ? "Autenticando con Google..." : "Login"}
+											{isSubmitting ? "Iniciando sesión…" : isGoogleLoading ? "Autenticando con Google…" : "Login"}
 										</Button>
 									</AnimateButton>
 								</Grid>

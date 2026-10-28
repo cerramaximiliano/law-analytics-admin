@@ -352,7 +352,7 @@ export const UnauthorizedModal: FC<UnauthorizedModalProps> = ({ open, onClose, o
 											{isSubmitting ? (
 												<Stack direction="row" spacing={1} alignItems="center">
 													<CircularProgress size={20} color="inherit" />
-													<Typography>Iniciando sesión...</Typography>
+													<Typography>Iniciando sesión…</Typography>
 												</Stack>
 											) : (
 												"Iniciar Sesión"
@@ -370,7 +370,7 @@ export const UnauthorizedModal: FC<UnauthorizedModalProps> = ({ open, onClose, o
 											<CustomGoogleButton
 												onClick={() => googleLogin()}
 												disabled={isSubmitting}
-												text={isSubmitting ? "Iniciando sesión..." : "Iniciar sesión con Google"}
+												text={isSubmitting ? "Iniciando sesión…" : "Iniciar sesión con Google"}
 												fullWidth
 												showLoader={isSubmitting}
 											/>

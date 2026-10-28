@@ -358,7 +358,7 @@ const SupportModal = ({ open, onClose }: SupportModalProps) => {
 								helperText={errors.message ? "El mensaje es requerido" : "Proporciona todos los detalles posibles"}
 								disabled={submitting}
 								required
-								placeholder="Describe detalladamente tu consulta o problema..."
+								placeholder="Describe detalladamente tu consulta o problema…"
 							/>
 						</Stack>
 					</Box>
@@ -378,7 +378,7 @@ const SupportModal = ({ open, onClose }: SupportModalProps) => {
 							disabled={submitting}
 							startIcon={submitting ? <CircularProgress size={20} color="inherit" /> : null}
 						>
-							{submitting ? "Enviando..." : "Enviar consulta"}
+							{submitting ? "Enviando…" : "Enviar consulta"}
 						</Button>
 					</DialogActions>
 				</>

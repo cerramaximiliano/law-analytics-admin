@@ -1479,7 +1479,7 @@ const PostalTrackingPage = () => {
 						Cancelar
 					</Button>
 					<Button variant="contained" onClick={handleCreate} disabled={creating || !newCodeId.trim() || newNumberId.length !== 9}>
-						{creating ? "Creando..." : "Crear"}
+						{creating ? "Creando…" : "Crear"}
 					</Button>
 				</DialogActions>
 			</Dialog>
@@ -1510,7 +1510,7 @@ const PostalTrackingPage = () => {
 						Cancelar
 					</Button>
 					<Button variant="contained" color="error" onClick={handleConfirmDelete} disabled={deleting}>
-						{deleting ? "Eliminando..." : "Eliminar"}
+						{deleting ? "Eliminando…" : "Eliminar"}
 					</Button>
 				</DialogActions>
 			</Dialog>
@@ -1532,7 +1532,7 @@ const PostalTrackingPage = () => {
 						Cancelar
 					</Button>
 					<Button variant="contained" color="error" onClick={handleBulkDelete} disabled={bulkDeleting}>
-						{bulkDeleting ? "Eliminando..." : `Eliminar ${selectedIds.size}`}
+						{bulkDeleting ? "Eliminando…" : `Eliminar ${selectedIds.size}`}
 					</Button>
 				</DialogActions>
 			</Dialog>

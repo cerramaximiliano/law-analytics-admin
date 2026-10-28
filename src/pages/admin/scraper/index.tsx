@@ -605,7 +605,7 @@ const ConfigTab = () => {
 					Resetear a valores por defecto
 				</Button>
 				<Button variant="contained" onClick={handleSave} disabled={saving}>
-					{saving ? "Guardando..." : "Guardar cambios"}
+					{saving ? "Guardando…" : "Guardar cambios"}
 				</Button>
 			</Stack>
 
@@ -622,7 +622,7 @@ const ConfigTab = () => {
 						Cancelar
 					</Button>
 					<Button variant="contained" color="error" onClick={handleReset} disabled={resetting}>
-						{resetting ? "Reseteando..." : "Resetear"}
+						{resetting ? "Reseteando…" : "Resetear"}
 					</Button>
 				</DialogActions>
 			</Dialog>
@@ -898,7 +898,7 @@ const JobsTab = () => {
 						Cancelar
 					</Button>
 					<Button variant="contained" color="error" onClick={handleClear} disabled={clearing}>
-						{clearing ? "Limpiando..." : "Limpiar"}
+						{clearing ? "Limpiando…" : "Limpiar"}
 					</Button>
 				</DialogActions>
 			</Dialog>
@@ -1243,7 +1243,7 @@ const RunsTab = () => {
 						Cancelar
 					</Button>
 					<Button variant="contained" color="error" onClick={handleClearRuns} disabled={clearing}>
-						{clearing ? "Limpiando..." : "Limpiar"}
+						{clearing ? "Limpiando…" : "Limpiar"}
 					</Button>
 				</DialogActions>
 			</Dialog>

@@ -1043,7 +1043,7 @@ const ContactDetailModal: React.FC<ContactDetailModalProps> = ({ open, onClose, 
 																						setCampaignModalOpen(true);
 																					}}
 																				>
-																					{campaign.campaignId.substring(0, 8)}...
+																					{campaign.campaignId.substring(0, 8)}…
 																				</Button>
 																			</TableCell>
 																			<TableCell>
@@ -1707,7 +1707,7 @@ const ContactDetailModal: React.FC<ContactDetailModalProps> = ({ open, onClose, 
 												<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", py: 4 }}>
 													<CircularProgress size={32} />
 													<Typography variant="body2" color="textSecondary" sx={{ ml: 2 }}>
-														Buscando usuario...
+														Buscando usuario…
 													</Typography>
 												</Box>
 											) : userData ? (
@@ -2015,7 +2015,7 @@ const ContactDetailModal: React.FC<ContactDetailModalProps> = ({ open, onClose, 
 						disabled={resetLoading}
 						startIcon={resetLoading ? <CircularProgress size={20} /> : null}
 					>
-						{resetLoading ? "Reseteando..." : "Confirmar Reset"}
+						{resetLoading ? "Reseteando…" : "Confirmar Reset"}
 					</Button>
 				</DialogActions>
 			</Dialog>
@@ -2069,7 +2069,7 @@ const ContactDetailModal: React.FC<ContactDetailModalProps> = ({ open, onClose, 
 						}
 					>
 						{actionLoading
-							? "Procesando..."
+							? "Procesando…"
 							: actionType === "pause"
 							? "Pausar Contacto"
 							: actionType === "remove"
@@ -2139,7 +2139,7 @@ const ContactDetailModal: React.FC<ContactDetailModalProps> = ({ open, onClose, 
 								  }
 						}
 					>
-						{globalActionLoading ? "Procesando..." : globalActionType === "pause" ? "Pausar Todas" : "Reactivar Todas"}
+						{globalActionLoading ? "Procesando…" : globalActionType === "pause" ? "Pausar Todas" : "Reactivar Todas"}
 					</Button>
 				</DialogActions>
 			</Dialog>

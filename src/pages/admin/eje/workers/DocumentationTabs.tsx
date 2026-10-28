@@ -1907,7 +1907,7 @@ Usuario inicia vinculación
 ┌───────────────────┐
 │  pending          │ ◄─── source: 'user'
 │  "Causa EJE       │      details: "Causa EJE pendiente de verificación"
-│   pendiente..."   │
+│   pendiente…"   │
 └─────────┬─────────┘
           │
           ▼
@@ -1973,7 +1973,7 @@ Usuario inicia vinculación
   timestamp: "2024-02-06T15:30:00Z",
   source: "worker",
   details: "Causa verificada: PEREZ JUAN C/ GARCIA MARIA S/ DAÑOS",
-  causaId: ObjectId("..."),
+  causaId: ObjectId("…"),
   searchTerm: "J-01-00053687-9/2020-0"
 }`}
 										</pre>
@@ -2003,7 +2003,7 @@ Usuario inicia vinculación
   timestamp: "2024-02-06T15:30:00Z",
   source: "worker",
   details: "Múltiples resultados encontrados: 3 causas",
-  causaId: ObjectId("..."),  // ID del PIVOTE
+  causaId: ObjectId("…"),  // ID del PIVOTE
   searchTerm: "162321/2020"
 }`}
 										</pre>
@@ -2033,7 +2033,7 @@ Usuario inicia vinculación
   timestamp: "2024-02-06T16:45:00Z",
   source: "user",
   details: "Causa seleccionada: LOPEZ MARIA C/ BANCO X S/ COBRO",
-  causaId: ObjectId("..."),  // ID de la causa elegida
+  causaId: ObjectId("…"),  // ID de la causa elegida
   searchTerm: "162321/2020"
 }`}
 										</pre>

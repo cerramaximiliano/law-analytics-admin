@@ -465,7 +465,7 @@ const CaptchaDatasetTab = () => {
 													}
 												}}
 											>
-												{saving ? "Guardando..." : "Guardar"}
+												{saving ? "Guardando…" : "Guardar"}
 											</Button>
 										</Stack>
 										{labelMsg && (

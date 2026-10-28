@@ -1168,7 +1168,7 @@ const MisCausasWorkersTab: React.FC<Props> = ({ config, onConfigUpdate }) => {
 													disabled={isSaving}
 													startIcon={<TickCircle size={16} />}
 												>
-													{isSaving ? "Guardando..." : "Guardar Worker"}
+													{isSaving ? "Guardando…" : "Guardar Worker"}
 												</Button>
 											</Box>
 										)}

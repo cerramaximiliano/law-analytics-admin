@@ -332,7 +332,7 @@ const LifecycleTab: React.FC = () => {
 						onClick={() => setRunDialogOpen(true)}
 						disabled={running}
 					>
-						{running ? "Corriendo..." : "Ejecutar ahora"}
+						{running ? "Corriendo…" : "Ejecutar ahora"}
 					</Button>
 					<Tooltip title="Refrescar">
 						<IconButton onClick={handleRefresh}>
@@ -430,7 +430,7 @@ const LifecycleTab: React.FC = () => {
 						onClick={handleSave}
 						disabled={!dirty || saving || configLoading}
 					>
-						{saving ? "Guardando..." : "Guardar cambios"}
+						{saving ? "Guardando…" : "Guardar cambios"}
 					</Button>
 				</Stack>
 				{configLoading || !draft ? (

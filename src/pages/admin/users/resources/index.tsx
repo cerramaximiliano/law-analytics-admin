@@ -1345,7 +1345,7 @@ const UserResources: React.FC = () => {
 			<Box sx={{ p: { xs: 1.5, sm: 2 }, display: "flex", gap: 2 }}>
 				<TextField
 					size="small"
-					placeholder="Buscar..."
+					placeholder="Buscar…"
 					value={searchInput}
 					onChange={(e) => setSearchInput(e.target.value)}
 					onKeyPress={handleKeyPress}
@@ -2477,7 +2477,7 @@ const UserResources: React.FC = () => {
 								startIcon={<Trash size={14} />}
 								disabled={aiResetting}
 							>
-								{aiResetting ? "Reseteando..." : "Resetear"}
+								{aiResetting ? "Reseteando…" : "Resetear"}
 							</Button>
 						</DialogActions>
 					</Dialog>
@@ -3145,7 +3145,7 @@ const UserResources: React.FC = () => {
 						disabled={retryLoading}
 						startIcon={retryLoading ? <CircularProgress size={16} color="inherit" /> : <Refresh size={16} />}
 					>
-						{retryLoading ? "Procesando..." : "Confirmar retry"}
+						{retryLoading ? "Procesando…" : "Confirmar retry"}
 					</Button>
 				</DialogActions>
 			</Dialog>

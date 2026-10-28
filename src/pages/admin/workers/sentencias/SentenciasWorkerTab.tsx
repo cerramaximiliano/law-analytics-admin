@@ -1455,7 +1455,7 @@ function NoveltySection({ stats, loading, onRefresh }: { stats: SentenciasStats 
 								{/* Guardar */}
 								<Box>
 									<Button variant="contained" size="small" onClick={handleSave} disabled={saving || !isDirty}>
-										{saving ? "Guardando..." : "Guardar configuración"}
+										{saving ? "Guardando…" : "Guardar configuración"}
 									</Button>
 								</Box>
 							</Stack>
@@ -1589,7 +1589,7 @@ function EmbeddingsConfigCard() {
 					Descartar
 				</Button>
 				<Button variant="contained" size="small" onClick={handleSave} disabled={!dirty || saving || loading} sx={{ textTransform: "none" }}>
-					{saving ? "Guardando..." : "Guardar"}
+					{saving ? "Guardando…" : "Guardar"}
 				</Button>
 			</Stack>
 		</Paper>
@@ -1637,7 +1637,7 @@ function PineconeUsageCard() {
 					</Typography>
 				</Box>
 				<Button size="small" onClick={loadPineconeStats} disabled={pineconeStatsLoading} sx={{ textTransform: "none" }}>
-					{pineconeStatsLoading ? "Cargando..." : "Refrescar"}
+					{pineconeStatsLoading ? "Cargando…" : "Refrescar"}
 				</Button>
 			</Stack>
 
@@ -2092,7 +2092,7 @@ function ListaSection() {
 											</Typography>
 											<Typography variant="caption" sx={{ display: "block", mb: 0.5 }}>
 												<strong>Novelty</strong> en esta Lista = <code>category: &apos;novelty&apos;</code> (todas las sentencias detectadas
-												como novedad, en cualquier estado del pipeline: pendientes, OCR, error, procesadas...).
+												como novedad, en cualquier estado del pipeline: pendientes, OCR, error, procesadas…).
 											</Typography>
 											<Typography variant="caption" sx={{ display: "block" }}>
 												<strong>Publicaciones</strong> es un subconjunto:{" "}
@@ -2118,7 +2118,7 @@ function ListaSection() {
 						<TextField
 							fullWidth
 							size="small"
-							placeholder="Buscar por carátula o número..."
+							placeholder="Buscar por carátula o número…"
 							value={searchInput}
 							onChange={(e) => setSearchInput(e.target.value)}
 							onKeyDown={(e) => e.key === "Enter" && handleSearch()}
@@ -2457,7 +2457,7 @@ function SentenciaCard({ doc, onDetail }: SentenciaCardProps) {
 
 // ── AI Summary Config Panel ───────────────────────────────────────────────────
 
-const DEFAULT_PROMPT_PLACEHOLDER = `Eres un asistente jurídico especializado en derecho argentino. Tu tarea es analizar fallos judiciales y producir un resumen estructurado...
+const DEFAULT_PROMPT_PLACEHOLDER = `Eres un asistente jurídico especializado en derecho argentino. Tu tarea es analizar fallos judiciales y producir un resumen estructurado…
 
 (Dejá vacío para usar el prompt por defecto del sistema)`;
 

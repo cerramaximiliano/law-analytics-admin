@@ -806,7 +806,7 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 									<TableRow key={index}>
 										<TableCell>
 											<Typography variant="caption" sx={{ fontFamily: "monospace" }}>
-												{item.userId.slice(0, 8)}...
+												{item.userId.slice(0, 8)}…
 											</Typography>
 										</TableCell>
 										<TableCell>{formatShortDate(item.redeemedAt)}</TableCell>

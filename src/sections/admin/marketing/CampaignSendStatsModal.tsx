@@ -579,7 +579,7 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 																</Typography>
 																{email.subject && (
 																	<Typography variant="caption" color="textSecondary">
-																		{email.subject.length > 40 ? `${email.subject.substring(0, 40)}...` : email.subject}
+																		{email.subject.length > 40 ? `${email.subject.substring(0, 40)}…` : email.subject}
 																	</Typography>
 																)}
 															</TableCell>

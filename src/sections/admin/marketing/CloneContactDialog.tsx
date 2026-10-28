@@ -138,7 +138,7 @@ const CloneContactDialog: React.FC<CloneContactDialogProps> = ({ open, onClose, 
 					disabled={loading || !contactId || !newEmail.trim()}
 					startIcon={loading && <CircularProgress size={20} color="inherit" />}
 				>
-					{loading ? "Clonando..." : "Clonar contacto"}
+					{loading ? "Clonando…" : "Clonar contacto"}
 				</Button>
 			</DialogActions>
 		</Dialog>

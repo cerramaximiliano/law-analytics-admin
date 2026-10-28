@@ -300,7 +300,7 @@ const CausasUpdateConfigTab: React.FC<Props> = ({ config, onConfigUpdate }) => {
 			{hasChanges && (
 				<Box sx={{ display: "flex", justifyContent: "flex-end" }}>
 					<Button variant="contained" onClick={handleSave} disabled={saving}>
-						{saving ? "Guardando..." : "Guardar cambios"}
+						{saving ? "Guardando…" : "Guardar cambios"}
 					</Button>
 				</Box>
 			)}

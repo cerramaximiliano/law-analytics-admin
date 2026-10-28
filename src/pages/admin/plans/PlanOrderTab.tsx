@@ -157,7 +157,7 @@ const PlanOrderTab = ({ plans, onRefresh }: PlanOrderTabProps) => {
 												"&:active": { transform: "scale(0.98)" },
 											}}
 										>
-											{isSaving ? "Guardando..." : "Guardar"}
+											{isSaving ? "Guardando…" : "Guardar"}
 										</Button>
 									</Box>
 

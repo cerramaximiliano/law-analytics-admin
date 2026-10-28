@@ -198,7 +198,7 @@ const StripeWebhooks = () => {
 									"&:active": { transform: "translateY(0)" },
 								}}
 							>
-								{runningHealthCheck ? "Ejecutando..." : "Ejecutar Health Check"}
+								{runningHealthCheck ? "Ejecutando…" : "Ejecutar Health Check"}
 							</Button>
 						</Stack>
 					</CardContent>

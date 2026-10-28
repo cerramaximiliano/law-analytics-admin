@@ -264,7 +264,7 @@ const ConfiguracionTab = () => {
 							"&:active": { transform: "scale(0.98)" },
 						}}
 					>
-						{saving ? "Guardando..." : "Guardar cambios"}
+						{saving ? "Guardando…" : "Guardar cambios"}
 					</Button>
 				</Stack>
 			</Stack>

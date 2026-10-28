@@ -707,7 +707,7 @@ const ExpensesPage = () => {
 								<TextField
 									fullWidth
 									size="small"
-									placeholder="Buscar..."
+									placeholder="Buscar…"
 									value={searchTerm}
 									onChange={(e) => {
 										setSearchTerm(e.target.value);
@@ -968,7 +968,7 @@ const ExpensesPage = () => {
 							Cancelar
 						</Button>
 						<Button variant="contained" onClick={handleSubmit} disabled={saving}>
-							{saving ? "Guardando..." : editingExpense ? "Actualizar" : "Crear"}
+							{saving ? "Guardando…" : editingExpense ? "Actualizar" : "Crear"}
 						</Button>
 					</DialogActions>
 				</Dialog>
@@ -1000,7 +1000,7 @@ const ExpensesPage = () => {
 							Cancelar
 						</Button>
 						<Button variant="contained" color="error" onClick={handleConfirmDelete} disabled={deleting}>
-							{deleting ? "Eliminando..." : "Eliminar"}
+							{deleting ? "Eliminando…" : "Eliminar"}
 						</Button>
 					</DialogActions>
 				</Dialog>
@@ -1048,7 +1048,7 @@ const ExpensesPage = () => {
 							Cancelar
 						</Button>
 						<Button variant="contained" onClick={handleSaveOpenaiConfig} disabled={savingOpenaiConfig}>
-							{savingOpenaiConfig ? "Guardando..." : "Guardar"}
+							{savingOpenaiConfig ? "Guardando…" : "Guardar"}
 						</Button>
 					</DialogActions>
 				</Dialog>

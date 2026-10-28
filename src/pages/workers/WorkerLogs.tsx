@@ -2182,7 +2182,7 @@ const SearchTab: React.FC = () => {
 									handleParamChange("q", e.target.value);
 								}}
 								onKeyPress={handleKeyPress}
-								placeholder="ej: captcha, error, timeout..."
+								placeholder="ej: captcha, error, timeout…"
 							/>
 						</Grid>
 						<Grid item xs={6} md={2}>

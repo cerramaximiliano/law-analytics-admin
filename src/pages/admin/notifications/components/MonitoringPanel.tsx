@@ -162,7 +162,7 @@ const MonitoringPanel = () => {
 	useEffect(() => {
 		// Load initial data
 		const loadInitialData = async () => {
-			console.log("🚀 Loading notification monitoring data...");
+			console.log("🚀 Loading notification monitoring data…");
 			console.log("  - RefreshKey:", refreshKey);
 
 			try {

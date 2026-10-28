@@ -408,7 +408,7 @@ const SegmentsPanel = () => {
 											<Typography variant="body2">
 												{segment.description
 													? segment.description.length > 50
-														? `${segment.description.substring(0, 50)}...`
+														? `${segment.description.substring(0, 50)}…`
 														: segment.description
 													: "-"}
 											</Typography>

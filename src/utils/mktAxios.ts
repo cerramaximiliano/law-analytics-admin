@@ -138,7 +138,7 @@ mktAxios.interceptors.response.use(
 
 		// Si recibimos un error de autenticación y no hemos intentado refrescar aún
 		if (isAuthError(error) && !originalRequest._retry && !originalRequest._queued) {
-			console.log("🔄 [mktAxios] Detectado error de autenticación, intentando refresh...");
+			console.log("🔄 [mktAxios] Detectado error de autenticación, intentando refresh…");
 			originalRequest._retry = true;
 
 			try {
@@ -161,7 +161,7 @@ mktAxios.interceptors.response.use(
 				}
 
 				// Si el refresh falla, encolar la petición y mostrar modal de autenticación
-				console.log("🔓 [mktAxios] Mostrando modal de sesión expirada...");
+				console.log("🔓 [mktAxios] Mostrando modal de sesión expirada…");
 
 				// Marcar como encolada para evitar reencolar
 				originalRequest._queued = true;

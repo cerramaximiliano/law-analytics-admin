@@ -343,7 +343,7 @@ const EditLegalDocumentModal: React.FC<EditLegalDocumentModalProps> = ({ open, o
 							fullWidth
 							multiline
 							rows={3}
-							placeholder="Texto introductorio del documento..."
+							placeholder="Texto introductorio del documento…"
 							value={formData.introduction || ""}
 							onChange={(e) => handleInputChange("introduction", e.target.value)}
 						/>
@@ -482,7 +482,7 @@ const EditLegalDocumentModal: React.FC<EditLegalDocumentModalProps> = ({ open, o
 							fullWidth
 							multiline
 							rows={3}
-							placeholder="Texto de conclusion del documento..."
+							placeholder="Texto de conclusion del documento…"
 							value={formData.conclusion || ""}
 							onChange={(e) => handleInputChange("conclusion", e.target.value)}
 						/>

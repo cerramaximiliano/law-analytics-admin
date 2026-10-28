@@ -448,7 +448,7 @@ const Jurisprudencia = () => {
 									<TextField
 										fullWidth
 										label="Buscar"
-										placeholder="Título, código, contenido..."
+										placeholder="Título, código, contenido…"
 										value={searchText}
 										onChange={(e) => setSearchText(e.target.value)}
 										onKeyPress={(e) => e.key === "Enter" && handleSearch()}

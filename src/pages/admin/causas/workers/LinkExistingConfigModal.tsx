@@ -218,7 +218,7 @@ const LinkExistingConfigModal: React.FC<LinkExistingConfigModalProps> = ({ open,
 					disabled={linking || selected.length === 0}
 					startIcon={linking && <CircularProgress size={16} />}
 				>
-					{linking ? "Vinculando..." : `Vincular ${selected.length} Worker(s)`}
+					{linking ? "Vinculando…" : `Vincular ${selected.length} Worker(s)`}
 				</Button>
 			</DialogActions>
 		</Dialog>

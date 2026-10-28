@@ -473,7 +473,7 @@ const PlanFormModal = ({ open, onClose, onSave, plan }: PlanFormModalProps) => {
 						"&:active": { transform: "scale(0.98)" },
 					}}
 				>
-					{loading ? "Guardando..." : plan ? "Actualizar" : "Crear"}
+					{loading ? "Guardando…" : plan ? "Actualizar" : "Crear"}
 				</Button>
 			</DialogActions>
 		</Dialog>

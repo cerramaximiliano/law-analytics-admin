@@ -782,7 +782,7 @@ pm2 save`}
 									"&:active": { transform: "scale(0.98)" },
 								}}
 							>
-								{saving ? "Guardando..." : "Guardar configuración"}
+								{saving ? "Guardando…" : "Guardar configuración"}
 							</Button>
 						</Grid>
 					</Grid>
@@ -864,7 +864,7 @@ pm2 save`}
 																				}}
 																			>
 																				{fixLoading[`jur_${j.codigo}`]
-																					? "..."
+																					? "…"
 																					: fixApplied[`jur_${j.codigo}`]
 																					? "Agregada"
 																					: "Agregar todo"}
@@ -943,7 +943,7 @@ pm2 save`}
 																			}
 																		>
 																			{fixLoading[`add_${o.organismoCodigo}`]
-																				? "..."
+																				? "…"
 																				: fixApplied[`add_${o.organismoCodigo}`]
 																				? "Agregado"
 																				: "Agregar"}
@@ -995,7 +995,7 @@ pm2 save`}
 																			}
 																		>
 																			{fixLoading[`rm_${o.organismoCodigo}`]
-																				? "..."
+																				? "…"
 																				: fixApplied[`rm_${o.organismoCodigo}`]
 																				? "Desactivado"
 																				: "Desactivar"}
@@ -1048,7 +1048,7 @@ pm2 save`}
 								<Stack alignItems="center" py={3}>
 									<CircularProgress size={32} />
 									<Typography variant="caption" color="text.secondary" sx={{ mt: 1 }}>
-										Cargando navigation codes...
+										Cargando navigation codes…
 									</Typography>
 								</Stack>
 							) : (
@@ -1063,7 +1063,7 @@ pm2 save`}
 													label="Jurisdiccion"
 												>
 													<MenuItem value="">
-														<em>Seleccionar jurisdiccion...</em>
+														<em>Seleccionar jurisdiccion…</em>
 													</MenuItem>
 													{jurisdicciones.map((j) => (
 														<MenuItem key={j.codigo} value={j.codigo}>
@@ -1078,7 +1078,7 @@ pm2 save`}
 												<InputLabel>Organismo</InputLabel>
 												<Select value={selectedOrganismo} onChange={(e) => handleOrganismoChange(e.target.value)} label="Organismo">
 													<MenuItem value="">
-														<em>Seleccionar organismo...</em>
+														<em>Seleccionar organismo…</em>
 													</MenuItem>
 													{organismosFiltrados.map((nc) => (
 														<MenuItem key={nc.organismo.codigo} value={nc.organismo.codigo}>

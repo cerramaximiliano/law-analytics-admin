@@ -555,7 +555,7 @@ const FeedbackAdminPage = () => {
 							<TextField
 								fullWidth
 								size="small"
-								placeholder="Buscar por contenido, nombre o email..."
+								placeholder="Buscar por contenido, nombre o email…"
 								value={searchTerm}
 								onChange={(e) => {
 									setSearchTerm(e.target.value);

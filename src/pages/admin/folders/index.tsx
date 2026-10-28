@@ -519,7 +519,7 @@ const FoldersPage = () => {
 								value={searchText}
 								onChange={(e) => setSearchText(e.target.value)}
 								size="small"
-								placeholder="Nombre, materia, expediente..."
+								placeholder="Nombre, materia, expediente…"
 								onKeyPress={(e) => e.key === "Enter" && handleSearch()}
 							/>
 						</Grid>

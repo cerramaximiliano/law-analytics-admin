@@ -617,7 +617,7 @@ const WorkerStatistics: React.FC = () => {
 												{availableDates.length === 0 && (
 													<MenuItem disabled>
 														<Typography variant="body2" color="text.secondary">
-															{loadingDates ? "Cargando..." : "Sin datos disponibles"}
+															{loadingDates ? "Cargando…" : "Sin datos disponibles"}
 														</Typography>
 													</MenuItem>
 												)}

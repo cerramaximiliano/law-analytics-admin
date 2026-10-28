@@ -569,7 +569,7 @@ const TargetUsersManager = ({ discountId, discountCode, isPublic, frozenSegment,
 							<TextField
 								{...params}
 								label="Buscar por email o nombre"
-								placeholder="Escribe al menos 2 caracteres..."
+								placeholder="Escribe al menos 2 caracteres…"
 								InputProps={{
 									...params.InputProps,
 									startAdornment: (
@@ -602,7 +602,7 @@ const TargetUsersManager = ({ discountId, discountCode, isPublic, frozenSegment,
 						renderTags={(value, getTagProps) =>
 							value.map((option, index) => <Chip {...getTagProps({ index })} key={option._id} label={option.email} size="small" />)
 						}
-						noOptionsText={searchQuery.length < 2 ? "Escribe para buscar..." : "No se encontraron usuarios"}
+						noOptionsText={searchQuery.length < 2 ? "Escribe para buscar…" : "No se encontraron usuarios"}
 					/>
 
 					{selectedUsers.length > 0 && (
@@ -648,7 +648,7 @@ const TargetUsersManager = ({ discountId, discountCode, isPublic, frozenSegment,
 						multiline
 						rows={6}
 						label="Emails"
-						placeholder="usuario1@email.com, usuario2@email.com&#10;o uno por línea..."
+						placeholder="usuario1@email.com, usuario2@email.com&#10;o uno por línea…"
 						value={emailsToAdd}
 						onChange={(e) => setEmailsToAdd(e.target.value)}
 					/>
@@ -708,7 +708,7 @@ const TargetUsersManager = ({ discountId, discountCode, isPublic, frozenSegment,
 							<TextField
 								{...params}
 								label="Segmentos"
-								placeholder={selectedSegments.length === 0 ? "Seleccionar segmentos..." : ""}
+								placeholder={selectedSegments.length === 0 ? "Seleccionar segmentos…" : ""}
 								InputProps={{
 									...params.InputProps,
 									endAdornment: (
@@ -731,7 +731,7 @@ const TargetUsersManager = ({ discountId, discountCode, isPublic, frozenSegment,
 								/>
 							))
 						}
-						noOptionsText={loadingSegments ? "Cargando..." : "No hay segmentos disponibles"}
+						noOptionsText={loadingSegments ? "Cargando…" : "No hay segmentos disponibles"}
 					/>
 					{selectedSegments.length > 0 && (
 						<Box sx={{ mt: 2 }}>

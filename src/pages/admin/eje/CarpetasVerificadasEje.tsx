@@ -555,7 +555,7 @@ const CarpetasVerificadasEje = () => {
 								value={searchCaratula}
 								onChange={(e) => setSearchCaratula(e.target.value)}
 								size="small"
-								placeholder="Buscar en carátula..."
+								placeholder="Buscar en carátula…"
 							/>
 						</Grid>
 					</Grid>
@@ -666,7 +666,7 @@ const CarpetasVerificadasEje = () => {
 								<Box display="flex" alignItems="center" gap={1}>
 									<CircularProgress size={16} />
 									<Typography variant="caption" color="text.secondary">
-										Cargando estadísticas...
+										Cargando estadísticas…
 									</Typography>
 								</Box>
 							) : eligibilityStats ? (

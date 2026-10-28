@@ -402,7 +402,7 @@ const PipelineSection: React.FC = () => {
 			steps: [
 				"Lee PipelineConfig: si enabled=false o pauseUntil activo → skip total",
 				"Filtra por activeFueros (default: CIV, CNT, CSS, COM)",
-				"Pre-filtro regex: /demanda|contesta|reconven|agravio|memorial|sentencia.../",
+				"Pre-filtro regex: /demanda|contesta|reconven|agravio|memorial|sentencia…/",
 				"normalizeDocType(tipo, detalle) → docType o null",
 				"Encola en escritos-extract con jobId determinístico (deduplication automática)",
 				"Máximo 5000 movimientos encolados por ejecución",

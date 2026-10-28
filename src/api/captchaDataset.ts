@@ -93,7 +93,7 @@ export const CaptchaDatasetService = {
 	},
 
 	// URL que el browser usa para cargar el PNG (incluye baseURL).
-	// El token de auth viaja por el interceptor de workersAxios... pero <img src> no
+	// El token de auth viaja por el interceptor de workersAxios… pero <img src> no
 	// pasa por el interceptor de axios. Resolvemos eso usando un fetch con auth
 	// y un blob URL desde el componente.
 	imageURL(file: string): string {

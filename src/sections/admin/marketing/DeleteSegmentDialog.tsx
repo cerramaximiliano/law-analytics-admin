@@ -64,7 +64,7 @@ const DeleteSegmentDialog: React.FC<DeleteSegmentDialogProps> = ({ open, segment
 					disabled={loading}
 					startIcon={loading && <CircularProgress size={20} color="inherit" />}
 				>
-					{loading ? "Eliminando..." : "Eliminar"}
+					{loading ? "Eliminando…" : "Eliminar"}
 				</Button>
 			</DialogActions>
 		</Dialog>
