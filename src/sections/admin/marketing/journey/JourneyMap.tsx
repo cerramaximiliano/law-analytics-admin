@@ -11,6 +11,7 @@ export type JourneyNodeId =
 	| "onboarding"
 	| "conversion"
 	| `conversion:${string}`
+	| "interesados"
 	| "cliente"
 	| "inactivo"
 	| "activo_free"
@@ -20,13 +21,14 @@ interface Props {
 	data: JourneyMapData;
 	selected: JourneyNodeId | null;
 	highlight: JourneyNodeId[];
+	period?: string;
 	onSelect: (id: JourneyNodeId) => void;
 }
 
 const fmt = (n: number | undefined | null) => (n === undefined || n === null ? "—" : n.toLocaleString("es-AR"));
 const sum = (list: Array<{ active: number }> = []) => list.reduce((a, c) => a + c.active, 0);
 
-const JourneyMap: React.FC<Props> = ({ data, selected, highlight, onSelect }) => {
+const JourneyMap: React.FC<Props> = ({ data, selected, highlight, period = "30", onSelect }) => {
 	const theme = useTheme();
 	const dark = theme.palette.mode === "dark";
 	const text = theme.palette.text.primary;
@@ -46,6 +48,32 @@ const JourneyMap: React.FC<Props> = ({ data, selected, highlight, onSelect }) =>
 	const subKeys = stages.conversion.subOrder ?? Object.keys(sub);
 	const convH = Math.max(290, 76 + subKeys.length * 74);
 	const bottomY = Math.max(330, 10 + convH + 30);
+
+	const inter = data.captacion.interesados;
+	const interCampaigns = (data.captacion.campaigns.interesados ?? []) as Array<{ status: string; active: number }>;
+	const interStatus = interCampaigns.length
+		? interCampaigns.some((c) => c.status === "active")
+			? "activa"
+			: interCampaigns[0].status === "draft"
+			? "en borrador"
+			: "pausada"
+		: "sin campaña";
+	const interesadosLines = [
+		`${fmt(inter?.marked)} marcados`,
+		`${fmt(inter?.byPeriod?.[period])} en el período`,
+		`Campaña ${interStatus} · ${fmt(interCampaigns.reduce((a, c) => a + c.active, 0))} activos`,
+	];
+	const af = stages.activo_free;
+	const afCampaigns = af.campaigns ?? [];
+	const afLines = afCampaigns.length
+		? [
+				`${fmt(af.total)} usuarios`,
+				`${fmt(af.en_campania)} en campaña · ${fmt(af.sin_campania)} sin campaña`,
+				`${afCampaigns.length} campaña(s): ${afCampaigns
+					.map((c) => (c.status === "draft" ? "borrador" : c.status === "active" ? "activa" : c.status))
+					.join(", ")}`,
+		  ]
+		: [`${fmt(af.total)} usuarios`, "Sin campaña por diseño"];
 
 	interface NodeBox {
 		id: JourneyNodeId;
@@ -86,6 +114,16 @@ const JourneyMap: React.FC<Props> = ({ data, selected, highlight, onSelect }) =>
 			color: "#64748B",
 			title: "Registro",
 			lines: [`${fmt(data.flows.altas.total)} altas`, `últimos ${data.flows.windowDays} días`],
+		},
+		{
+			id: "interesados",
+			x: 300,
+			y: 215,
+			w: 170,
+			h: 95,
+			color: "#0EA5E9",
+			title: "Interesados",
+			lines: interesadosLines,
 		},
 		{
 			id: "onboarding",
@@ -143,7 +181,7 @@ const JourneyMap: React.FC<Props> = ({ data, selected, highlight, onSelect }) =>
 			h: 90,
 			color: "#94A3B8",
 			title: "Activo free",
-			lines: [`${fmt(stages.activo_free.total)} usuarios`, "Sin campaña por diseño"],
+			lines: afLines,
 		},
 		{
 			id: "contenido",
@@ -206,6 +244,8 @@ const JourneyMap: React.FC<Props> = ({ data, selected, highlight, onSelect }) =>
 			</defs>
 
 			{arrow(260, 155, 305, 155, data.flows.altas.total ? fmt(data.flows.altas.total) : undefined)}
+			{arrow(260, 245, 300, 255, inter ? fmt(inter.byPeriod?.[period]) : undefined)}
+			{arrow(385, 215, 370, 190)}
 			{arrow(425, 155, 470, 115, entradas.onboarding !== undefined ? fmt(entradas.onboarding) : undefined)}
 			{arrow(680, 115, 725, 115, entradas.conversion !== undefined ? fmt(entradas.conversion) : undefined)}
 			{arrow(980, 155, 1030, 155, entradas.cliente !== undefined ? fmt(entradas.cliente) : undefined)}

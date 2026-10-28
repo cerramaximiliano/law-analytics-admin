@@ -193,7 +193,7 @@ const Recorrido = () => {
 							/>
 						)}
 
-						<JourneyMap data={data} selected={selected} highlight={highlight} onSelect={setSelected} />
+						<JourneyMap data={data} selected={selected} highlight={highlight} period={period} onSelect={setSelected} />
 
 						{lookup && (
 							<Box sx={{ mt: 2 }}>
