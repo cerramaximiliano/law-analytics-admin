@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { Box, Stack, Typography, Paper, Skeleton, Tooltip, IconButton, useTheme, alpha, Chip } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import { Link as RouterLink } from "react-router-dom";
 import { Refresh, Truck } from "iconsax-react";
 import PostalTrackingAdminService, { PostalTrackingStats } from "api/postalTrackingAdmin";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
@@ -17,7 +17,6 @@ interface PostalTrackingWidgetProps {
 
 const PostalTrackingWidget: React.FC<PostalTrackingWidgetProps> = ({ onRefresh }) => {
 	const theme = useTheme();
-	const navigate = useNavigate();
 	const isDark = theme.palette.mode === "dark";
 
 	const [loading, setLoading] = useState(true);
@@ -150,8 +149,10 @@ const PostalTrackingWidget: React.FC<PostalTrackingWidgetProps> = ({ onRefresh }
 					}
 				>
 					<Box
-						onClick={() => navigate("/admin/postal-tracking")}
+						component={RouterLink}
+						to="/admin/postal-tracking"
 						sx={{
+							textDecoration: "none",
 							display: "flex",
 							alignItems: "center",
 							gap: 0.75,
@@ -173,8 +174,9 @@ const PostalTrackingWidget: React.FC<PostalTrackingWidgetProps> = ({ onRefresh }
 
 			{/* KPI principal: envíos en seguimiento activo */}
 			<Box
-				sx={{ cursor: "pointer", mb: 1.5 }}
-				onClick={() => navigate("/admin/workers/scraper")}
+				component={RouterLink}
+				to="/admin/workers/scraper"
+				sx={{ display: "block", mb: 1.5, textDecoration: "none", color: "inherit" }}
 				title="Ver el worker de seguimiento postal"
 			>
 				<Stack direction="row" alignItems="baseline" spacing={1}>

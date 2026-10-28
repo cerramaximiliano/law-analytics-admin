@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Box, Chip, Paper, Skeleton, Stack, Typography, alpha } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import { useNavigate } from "react-router-dom";
+import { Link as RouterLink } from "react-router-dom";
 import { ArrowRight2, Routing2 } from "iconsax-react";
 
 import IntegrationsConfigService from "api/integrationsConfig";
@@ -19,7 +19,6 @@ interface ServiceRow {
 
 const IntegrationsStatusWidget: React.FC = () => {
 	const theme = useTheme();
-	const navigate = useNavigate();
 	const [services, setServices] = useState<ServiceRow[]>([
 		{ key: "pjn", label: "PJN", enabled: null },
 		{ key: "scba", label: "SCBA", enabled: null },
@@ -82,9 +81,10 @@ const IntegrationsStatusWidget: React.FC = () => {
 	return (
 		<Paper
 			elevation={0}
-			onClick={() => navigate("/admin/integrations")}
+			component={RouterLink}
+			to="/admin/integrations"
 			sx={{
-				p: { xs: 1.5, sm: 2 },
+				textDecoration: "none", color: "inherit", display: "block", p: { xs: 1.5, sm: 2 },
 				borderRadius: 2,
 				bgcolor: theme.palette.background.paper,
 				border: `1px solid ${headerBorder(isDark)}`,

@@ -39,6 +39,7 @@ import emailComposerService, { RecipientOption, EmailDraft } from "api/emailComp
 import EmailLogsService from "api/emailLogs";
 import { EmailLog } from "types/email-log";
 import { BRAND_BLUE } from "themes/dashboardTokens";
+import ConfirmDialog from "components/admin/ConfirmDialog";
 
 const SENDERS = [
 	{ value: "cuentas", label: "Cuentas (cuentas@lawanalytics.app)" },
@@ -85,6 +86,8 @@ const EmailComposer = () => {
 	const [drafts, setDrafts] = useState<EmailDraft[]>([]);
 	const [loadingDrafts, setLoadingDrafts] = useState(false);
 	const [savingDraft, setSavingDraft] = useState(false);
+	const [draftToDelete, setDraftToDelete] = useState<EmailDraft | null>(null);
+	const [deletingDraft, setDeletingDraft] = useState(false);
 
 	// Enviados
 	const [sentLogs, setSentLogs] = useState<EmailLog[]>([]);
@@ -206,12 +209,16 @@ const EmailComposer = () => {
 
 	const deleteDraft = async (id: string) => {
 		try {
+			setDeletingDraft(true);
 			await emailComposerService.deleteDraft(id);
 			setDrafts((prev) => prev.filter((d) => d._id !== id));
 			if (currentDraftId === id) setCurrentDraftId(null);
 			enqueueSnackbar("Borrador eliminado", { variant: "success" });
+			setDraftToDelete(null);
 		} catch (e: any) {
 			enqueueSnackbar(e?.message || "Error eliminando", { variant: "error" });
+		} finally {
+			setDeletingDraft(false);
 		}
 	};
 
@@ -523,7 +530,7 @@ const EmailComposer = () => {
 													Cargar
 												</Button>
 												<Tooltip title="Eliminar">
-													<IconButton size="small" color="error" onClick={() => deleteDraft(d._id)}>
+													<IconButton size="small" color="error" onClick={() => setDraftToDelete(d)}>
 														<Trash size={18} />
 													</IconButton>
 												</Tooltip>
@@ -610,6 +617,16 @@ const EmailComposer = () => {
 					</Button>
 				</DialogActions>
 			</Dialog>
+
+			<ConfirmDialog
+				open={draftToDelete !== null}
+				title={`¿Eliminar el borrador «${draftToDelete?.subject || "Sin asunto"}»?`}
+				description="El borrador se borra definitivamente y no se puede recuperar."
+				confirmLabel="Eliminar"
+				loading={deletingDraft}
+				onConfirm={() => draftToDelete && deleteDraft(draftToDelete._id)}
+				onClose={() => setDraftToDelete(null)}
+			/>
 		</Box>
 	);
 };

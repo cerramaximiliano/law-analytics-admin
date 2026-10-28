@@ -18,7 +18,7 @@ import {
 	Key,
 	TaskSquare,
 } from "iconsax-react";
-import { useNavigate } from "react-router-dom";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 import {
 	PieChart,
 	Pie,
@@ -1537,7 +1537,9 @@ const AdminDashboard = () => {
 													key={chip.to}
 													label={chip.label}
 													size="small"
-													onClick={() => navigate(chip.to)}
+													component={RouterLink}
+													to={chip.to}
+													clickable
 													sx={{
 														bgcolor: alpha(BRAND_BLUE, isDark ? 0.15 : 0.09),
 														color: BRAND_BLUE,
@@ -1640,8 +1642,12 @@ const AdminDashboard = () => {
 						<Grid item xs={12} sm={6} md={4} lg={2.4}>
 							<Paper
 								elevation={0}
-								onClick={() => navigate("/recursos/tasas")}
+								component={RouterLink}
+								to="/recursos/tasas"
 								sx={{
+									textDecoration: "none",
+									color: "inherit",
+									display: "block",
 									p: { xs: 1.5, sm: 2.5 },
 									borderRadius: 2,
 									bgcolor: theme.palette.background.paper,
@@ -1756,8 +1762,12 @@ const AdminDashboard = () => {
 						<Grid item xs={12} sm={6} md={4} lg={2.4}>
 							<Paper
 								elevation={0}
-								onClick={() => navigate("/recursos/datos-previsionales")}
+								component={RouterLink}
+								to="/recursos/datos-previsionales"
 								sx={{
+									textDecoration: "none",
+									color: "inherit",
+									display: "block",
 									p: { xs: 1.5, sm: 2.5 },
 									borderRadius: 2,
 									bgcolor: theme.palette.background.paper,
@@ -2102,8 +2112,12 @@ const AdminDashboard = () => {
 					<Grid item xs={12} sm={6} md={4}>
 						<Paper
 							elevation={0}
-							onClick={() => navigate("/admin/mev/verified-app")}
+							component={RouterLink}
+							to="/admin/mev/verified-app"
 							sx={{
+								textDecoration: "none",
+								color: "inherit",
+								display: "block",
 								p: { xs: 1.5, sm: 2.5 },
 								borderRadius: 2,
 								bgcolor: theme.palette.background.paper,
@@ -2287,8 +2301,12 @@ const AdminDashboard = () => {
 					<Grid item xs={12} sm={6} md={4}>
 						<Paper
 							elevation={0}
-							onClick={() => navigate("/admin/eje/verified-app")}
+							component={RouterLink}
+							to="/admin/eje/verified-app"
 							sx={{
+								textDecoration: "none",
+								color: "inherit",
+								display: "block",
 								p: { xs: 1.5, sm: 2.5 },
 								borderRadius: 2,
 								bgcolor: theme.palette.background.paper,
@@ -2456,8 +2474,12 @@ const AdminDashboard = () => {
 					<Grid item xs={12} sm={6} md={4}>
 						<Paper
 							elevation={0}
-							onClick={() => navigate("/admin/pjsalta/verified-app")}
+							component={RouterLink}
+							to="/admin/pjsalta/verified-app"
 							sx={{
+								textDecoration: "none",
+								color: "inherit",
+								display: "block",
 								p: { xs: 1.5, sm: 2.5 },
 								borderRadius: 2,
 								bgcolor: theme.palette.background.paper,
@@ -2632,8 +2654,12 @@ const AdminDashboard = () => {
 					<Grid item xs={12} sm={6} md={4}>
 						<Paper
 							elevation={0}
-							onClick={() => navigate("/admin/pjcatamarca/verified-app")}
+							component={RouterLink}
+							to="/admin/pjcatamarca/verified-app"
 							sx={{
+								textDecoration: "none",
+								color: "inherit",
+								display: "block",
 								p: { xs: 1.5, sm: 2.5 },
 								borderRadius: 2,
 								bgcolor: theme.palette.background.paper,
@@ -2808,8 +2834,12 @@ const AdminDashboard = () => {
 					<Grid item xs={12} sm={6} md={4}>
 						<Paper
 							elevation={0}
-							onClick={() => navigate("/admin/pjmendoza/verified-app")}
+							component={RouterLink}
+							to="/admin/pjmendoza/verified-app"
 							sx={{
+								textDecoration: "none",
+								color: "inherit",
+								display: "block",
 								p: { xs: 1.5, sm: 2.5 },
 								borderRadius: 2,
 								bgcolor: theme.palette.background.paper,
@@ -2984,8 +3014,12 @@ const AdminDashboard = () => {
 					<Grid item xs={12} sm={6} md={4}>
 						<Paper
 							elevation={0}
-							onClick={() => navigate("/admin/causas/workers")}
+							component={RouterLink}
+							to="/admin/causas/workers"
 							sx={{
+								textDecoration: "none",
+								color: "inherit",
+								display: "block",
 								p: { xs: 1.5, sm: 2.5 },
 								borderRadius: 2,
 								bgcolor: theme.palette.background.paper,
@@ -3432,8 +3466,11 @@ const AdminDashboard = () => {
 								{healthAnomalies.map((a) => (
 									<Box
 										key={a.credentialId}
-										onClick={() => navigate(`/admin/causas/synced-credentials?credentialId=${a.credentialId}&conErrores=1`)}
+										component={RouterLink}
+										to={`/admin/causas/synced-credentials?credentialId=${a.credentialId}&conErrores=1`}
 										sx={{
+											textDecoration: "none",
+											color: "inherit",
 											display: "flex",
 											alignItems: "center",
 											justifyContent: "space-between",
@@ -4020,8 +4057,11 @@ const AdminDashboard = () => {
 							<Grid item xs={6} md={2}>
 								<Paper
 									elevation={0}
-									onClick={() => navigate("/admin/causas/verified-app")}
+									component={RouterLink}
+									to="/admin/causas/verified-app"
 									sx={{
+										textDecoration: "none",
+										color: "inherit",
 										p: { xs: 1.5, sm: 2 },
 										height: "100%",
 										display: "flex",
@@ -4077,8 +4117,11 @@ const AdminDashboard = () => {
 							<Grid item xs={6} md={2}>
 								<Paper
 									elevation={0}
-									onClick={() => navigate("/admin/mev/verified-app")}
+									component={RouterLink}
+									to="/admin/mev/verified-app"
 									sx={{
+										textDecoration: "none",
+										color: "inherit",
 										p: { xs: 1.5, sm: 2 },
 										height: "100%",
 										display: "flex",

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { Box, Stack, Typography, Paper, Skeleton, Tooltip, IconButton, useTheme, alpha, Chip, Grid } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { Refresh, TaskSquare, MessageQuestion, MessageText1, Archive } from "iconsax-react";
 import AdminTasksService from "api/adminTasks";
 import SupportContactsService, { SupportContact } from "api/supportContacts";
@@ -158,8 +158,9 @@ const PendingWorkWidget: React.FC = () => {
 		return (
 			<Box sx={{ height: "100%" }}>
 				<Box
-					onClick={() => navigate(linkTo)}
-					sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1, cursor: "pointer" }}
+					component={RouterLink}
+					to={linkTo}
+					sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1, textDecoration: "none", color: "inherit" }}
 					title={`Ir a ${title}`}
 				>
 					<Box
@@ -253,7 +254,7 @@ const PendingWorkWidget: React.FC = () => {
 							);
 						})}
 						{state.total > state.items.length && (
-							<Typography variant="caption" color="primary" sx={{ cursor: "pointer" }} onClick={() => navigate(linkTo)}>
+							<Typography variant="caption" color="primary" component={RouterLink} to={linkTo} sx={{ textDecoration: "none" }}>
 								Ver {state.total - state.items.length} más
 							</Typography>
 						)}

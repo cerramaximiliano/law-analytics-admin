@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { Box, Typography, Paper, Chip, Skeleton, alpha } from "@mui/material";
 import { ArrowRight2, Clock } from "iconsax-react";
 import { useTheme } from "@mui/material/styles";
-import { useNavigate } from "react-router-dom";
+import { Link as RouterLink } from "react-router-dom";
 import { LIVE_GREEN, STALE_AMBER, LIVE_PULSE_KEYFRAMES, headerBorder, headerShadow } from "themes/dashboardTokens";
 import CronHealthService, { CronHealthItem, CronHealthStatus } from "api/cronHealth";
 
@@ -18,7 +18,6 @@ const SHORT_LABEL: Record<string, string> = {
 
 const CronsStatusWidget = () => {
 	const theme = useTheme();
-	const navigate = useNavigate();
 	const [crons, setCrons] = useState<CronHealthItem[]>([]);
 	const [loading, setLoading] = useState(true);
 	const isDark = theme.palette.mode === "dark";
@@ -69,9 +68,10 @@ const CronsStatusWidget = () => {
 	return (
 		<Paper
 			elevation={0}
-			onClick={() => navigate("/admin/server-status")}
+			component={RouterLink}
+			to="/admin/server-status"
 			sx={{
-				p: { xs: 1.5, sm: 2.5 },
+				textDecoration: "none", color: "inherit", display: "block", p: { xs: 1.5, sm: 2.5 },
 				borderRadius: 2,
 				bgcolor: theme.palette.background.paper,
 				border: `1px solid ${statusBorderColor}`,
