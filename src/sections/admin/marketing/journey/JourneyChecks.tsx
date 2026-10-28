@@ -39,9 +39,12 @@ const JourneyChecks: React.FC<Props> = ({ checks, onLookup, onOpenCampaign }) =>
 							<Box sx={{ display: "flex", gap: 1, alignItems: "center", flexWrap: "wrap" }}>
 								<Chip
 									size="small"
-									label={c.status === "alert" ? c.count.toLocaleString("es-AR") : c.status === "error" ? "Error" : "0"}
+									label={
+										c.status === "alert" || c.status === "info" ? c.count.toLocaleString("es-AR") : c.status === "error" ? "Error" : "0"
+									}
 									sx={{
-										bgcolor: c.status === "alert" ? "#fca5a5" : c.status === "error" ? "#fde047" : "#86efac",
+										bgcolor:
+											c.status === "alert" ? "#fca5a5" : c.status === "error" ? "#fde047" : c.status === "info" ? "#93c5fd" : "#86efac",
 										color: DARK,
 										fontWeight: 700,
 									}}

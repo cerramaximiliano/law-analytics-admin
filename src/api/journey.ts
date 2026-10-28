@@ -134,7 +134,7 @@ export interface JourneyCheck {
 	key: string;
 	title: string;
 	count: number;
-	status: "ok" | "alert" | "error";
+	status: "ok" | "alert" | "error" | "info";
 	sample: string[];
 	sampleKind: "contactId" | "campaignId" | null;
 	action: string;
