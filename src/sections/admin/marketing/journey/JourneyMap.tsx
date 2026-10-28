@@ -161,15 +161,20 @@ const JourneyMap: React.FC<Props> = ({ data, selected, highlight, onSelect }) =>
 	];
 
 	const SUB_COLORS = ["#6D28D9", "#7C3AED", "#8B5CF6", "#A78BFA", "#C4B5FD"];
-	const subBoxes: Array<{ id: JourneyNodeId; label: string; value: string; sinCampania: number | undefined; color: string }> = subKeys.map(
-		(k, i) => ({
-			id: `conversion:${k}` as JourneyNodeId,
-			label: sub[k]?.label || k,
-			value: `${fmt(stages.counts.conversion?.sub?.[k] ?? sub[k]?.total)} · ${fmt(sub[k]?.en_campania)} en campaña`,
-			sinCampania: sub[k]?.sin_campania,
-			color: SUB_COLORS[i % SUB_COLORS.length],
-		}),
-	);
+	const subBoxes: Array<{
+		id: JourneyNodeId;
+		label: string;
+		value: string;
+		sinCampania: number | undefined;
+		inactive: boolean;
+		color: string;
+	}> = subKeys.map((k, i) => ({
+		id: `conversion:${k}` as JourneyNodeId,
+		label: sub[k]?.label || k,
+		value: `${fmt(stages.counts.conversion?.sub?.[k] ?? sub[k]?.total)} · ${fmt(sub[k]?.en_campania)} en campaña`,
+		sinCampania: sub[k]?.sin_campania,
+		color: SUB_COLORS[i % SUB_COLORS.length],
+	}));
 
 	const isHighlighted = (id: JourneyNodeId) =>
 		highlight.includes(id) || (id === "conversion" && highlight.some((h) => h.startsWith("conversion:")));
@@ -268,7 +273,7 @@ const JourneyMap: React.FC<Props> = ({ data, selected, highlight, onSelect }) =>
 											{s.value}
 										</text>
 										<text x={n.x + 20} y={y + 54} fontSize={11} fill={(s.sinCampania ?? 0) > 0 ? "#EF4444" : muted}>
-											{`${fmt(s.sinCampania)} sin campaña`}
+											{`${fmt(s.sinCampania)} sin campaña${s.inactive ? " · regla inactiva" : ""}`}
 										</text>
 									</g>
 								);

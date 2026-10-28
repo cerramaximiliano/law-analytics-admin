@@ -147,10 +147,11 @@ export interface JourneyMapData {
 	};
 	stages: {
 		counts: Record<string, { total: number; sub: Record<string, number> }>;
-		onboarding: JourneyStageData;
+		onboarding: JourneyStageData & { rule?: string | null };
+		etapasConfig?: { source: string; diasOnboarding: number | null; updatedAt: string | null };
 		conversion: JourneyStageData & {
 			subOrder?: string[];
-			sub: Record<string, JourneyStageData & { label?: string; total?: number }>;
+			sub: Record<string, JourneyStageData & { label?: string; total?: number; rule?: { text: string | null; active: boolean } | null }>;
 		};
 		inactivo: JourneyStageData;
 		cliente: { total: number };

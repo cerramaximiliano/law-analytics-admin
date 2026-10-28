@@ -219,6 +219,7 @@ const JourneyNodePanel: React.FC<Props> = ({ data, node, highlightCampaigns, onL
 			{ key: "sin_campania", label: "Sin campaña", kind: "fuga", description: "", count: s.sin_campania ?? 0 },
 		];
 		reasons = s.reasons || null;
+		if (node === "onboarding" && stages.onboarding.rule) note = `Regla del hub: ${stages.onboarding.rule}`;
 	} else if (node === "conversion") {
 		campaigns = Object.values(stages.conversion.sub).flatMap((s) => s.campaigns || []);
 		scope = "conversion";
@@ -237,6 +238,11 @@ const JourneyNodePanel: React.FC<Props> = ({ data, node, highlightCampaigns, onL
 			{ key: "sin_campania", label: "Sin campaña", kind: "fuga", description: "", count: s.sin_campania ?? 0 },
 		];
 		reasons = s.reasons || null;
+		if (s.rule?.text) {
+			note = `Regla del hub: ${s.rule.text}${
+				s.rule.active ? "" : ". Esta regla está inactiva: el hub no asigna usuarios a esta subetapa."
+			}`;
+		}
 	} else if (node === "contenido") {
 		campaigns = [...data.lane.contenido, ...data.lane.servicio];
 		note =
