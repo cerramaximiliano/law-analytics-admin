@@ -173,6 +173,7 @@ const JourneyMap: React.FC<Props> = ({ data, selected, highlight, onSelect }) =>
 		label: sub[k]?.label || k,
 		value: `${fmt(stages.counts.conversion?.sub?.[k] ?? sub[k]?.total)} · ${fmt(sub[k]?.en_campania)} en campaña`,
 		sinCampania: sub[k]?.sin_campania,
+		inactive: sub[k]?.rule?.active === false,
 		color: SUB_COLORS[i % SUB_COLORS.length],
 	}));
 
