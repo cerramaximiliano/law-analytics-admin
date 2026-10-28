@@ -54,6 +54,7 @@ import {
 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
+import { clickableProps } from "utils/a11y";
 import FolderInactivityService, {
 	FolderInactivityItem,
 	FolderInactivitySummaryResponse,
@@ -167,13 +168,13 @@ const SummaryCard: React.FC<SummaryCardProps> = ({ title, icon, counts, type, on
 							<Grid item xs={6} key={item.status}>
 								<Tooltip title={`Filtrar por ${getStatusLabel(item.status)}`}>
 									<Box
-										onClick={() => onFilterClick(type, item.status)}
+										{...clickableProps(() => onFilterClick(type, item.status))}
 										sx={{
 											p: 1,
 											borderRadius: 1,
 											bgcolor: alpha(item.color, 0.1),
 											cursor: "pointer",
-											transition: "all 0.2s",
+											transition: "background-color 0.2s, transform 0.2s",
 											"&:hover": {
 												bgcolor: alpha(item.color, 0.2),
 												transform: "scale(1.02)",
@@ -717,6 +718,7 @@ const FolderInactivity = ({ embedded }: { embedded?: boolean }) => {
 								fullWidth
 								size="small"
 								placeholder="Buscar carpeta…"
+								inputProps={{ "aria-label": "Buscar carpeta" }}
 								value={search}
 								onChange={(e) => setSearch(e.target.value)}
 								onKeyDown={handleSearchKeyDown}
@@ -845,7 +847,12 @@ const FolderInactivity = ({ embedded }: { embedded?: boolean }) => {
 									</TableRow>
 								) : (
 									folders.map((folder) => (
-										<TableRow key={folder._id} hover sx={{ cursor: "pointer" }} onClick={() => handleViewDetail(folder)}>
+										<TableRow
+											key={folder._id}
+											hover
+											sx={{ cursor: "pointer" }}
+											{...clickableProps(() => handleViewDetail(folder), { asRow: true })}
+										>
 											<TableCell>
 												<Box>
 													<Typography variant="body2" fontWeight={500}>

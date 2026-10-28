@@ -67,6 +67,7 @@ import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import { COL_SM, COL_MD, COL_LG } from "utils/responsiveColumns";
 import { getPolicy } from "utils/campaignCoordination";
+import { formatPercent } from "utils/format";
 
 // Extend dayjs with timezone support
 dayjs.extend(utc);
@@ -713,7 +714,7 @@ const MailingCampaigns = () => {
 								InputProps={{
 									endAdornment: (
 										<InputAdornment position="end">
-											<IconButton onClick={handleApplySearch} edge="end">
+											<IconButton onClick={handleApplySearch} edge="end" aria-label="Buscar">
 												<SearchNormal1 size={18} />
 											</IconButton>
 										</InputAdornment>
@@ -848,13 +849,13 @@ const MailingCampaigns = () => {
 									const typeLabel = getTypeLabel(campaign.type);
 									const openRate =
 										campaign.metrics?.opens > 0 && campaign.metrics?.totalEmailsSent > 0
-											? ((campaign.metrics.opens / campaign.metrics.totalEmailsSent) * 100).toFixed(1)
-											: "0";
+											? (campaign.metrics.opens / campaign.metrics.totalEmailsSent) * 100
+											: 0;
 									const isEditable = campaign.status !== "completed" && campaign.status !== "archived";
 									// Bajas atribuidas a la campaña (link de baja del email) sobre contactos alcanzados
 									const unsubscribes = campaign.metrics?.unsubscribes || 0;
 									const reached = campaign.metrics?.totalContacts || 0;
-									const unsubscribeRate = unsubscribes > 0 && reached > 0 ? ((unsubscribes / reached) * 100).toFixed(1) : null;
+									const unsubscribeRate = unsubscribes > 0 && reached > 0 ? (unsubscribes / reached) * 100 : null;
 
 									return (
 										<React.Fragment key={campaign._id}>
@@ -907,17 +908,17 @@ const MailingCampaigns = () => {
 														</Typography>
 													)}
 												</TableCell>
-												<TableCell align="right" sx={COL_MD}>{`${openRate}%`}</TableCell>
+												<TableCell align="right" sx={COL_MD}>{formatPercent(openRate, 1)}</TableCell>
 												<TableCell align="right" sx={COL_MD}>
 													{unsubscribes > 0 ? (
 														<Tooltip
 															title={
-																unsubscribeRate ? `${unsubscribeRate}% de los contactos alcanzados` : "Bajas atribuidas a esta campaña"
+																unsubscribeRate ? `${formatPercent(unsubscribeRate, 1)} de los contactos alcanzados` : "Bajas atribuidas a esta campaña"
 															}
 														>
-															<Typography variant="body2" color={unsubscribeRate && Number(unsubscribeRate) >= 3 ? "error" : "textPrimary"}>
+															<Typography variant="body2" color={unsubscribeRate && unsubscribeRate >= 3 ? "error" : "textPrimary"}>
 																{unsubscribes}
-																{unsubscribeRate ? ` (${unsubscribeRate}%)` : ""}
+																{unsubscribeRate ? ` (${formatPercent(unsubscribeRate, 1)})` : ""}
 															</Typography>
 														</Tooltip>
 													) : (
@@ -1052,7 +1053,7 @@ const MailingCampaigns = () => {
 										Tasa de apertura promedio
 									</Typography>
 									<Typography variant="h4" sx={{ fontVariantNumeric: "tabular-nums", color: BRAND_BLUE }}>
-										{`${stats.averageOpenRate.toFixed(1)}%`}
+										{formatPercent(stats.averageOpenRate, 1)}
 									</Typography>
 								</Box>
 								<Box>

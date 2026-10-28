@@ -57,13 +57,14 @@ import {
 	type PromocionResumen,
 	type SocialPost,
 } from "api/socialPosts";
+import { formatNumber, formatPercent } from "utils/format";
 
 const ars = (n?: number | null) =>
 	n === null || n === undefined ? "—" : `ARS ${Number(n).toLocaleString("es-AR", { maximumFractionDigits: 0 })}`;
 const fecha = (iso?: string | null) => (iso ? new Date(iso).toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit" }) : "—");
 const num = (n?: number | null) => (n === null || n === undefined ? "—" : Number(n).toLocaleString("es-AR"));
 const dec = (n?: number | null, d = 1) => (n === null || n === undefined ? "—" : Number(n).toLocaleString("es-AR", { maximumFractionDigits: d }));
-const pct = (n?: number | null) => (n === null || n === undefined ? "—" : `${(n * 100).toFixed(2)} %`);
+const pct = (n?: number | null) => (n === null || n === undefined ? "—" : formatPercent(n * 100, 2));
 /** "1 d 12 h" / "9 h" a partir de horas corridas. */
 const duracion = (horas?: number | null) => {
 	if (horas === null || horas === undefined) return "—";
@@ -240,7 +241,7 @@ const PromocionesMeta = () => {
 										<Fragment key={`${it._id}-${it.pieza || "post"}`}>
 											<TableRow hover>
 												<TableCell padding="checkbox">
-													<IconButton size="small" onClick={() => abrirDetalle(it._id)}>
+													<IconButton aria-label={abierto === it._id ? "Ocultar detalle" : "Ver detalle"} size="small" onClick={() => abrirDetalle(it._id)}>
 														{abierto === it._id ? <ArrowUp2 size={16} /> : <ArrowDown2 size={16} />}
 													</IconButton>
 												</TableCell>
@@ -439,7 +440,7 @@ const PromocionesMeta = () => {
 												<TableCell align="right">
 													{m?.avgWatchMs ? (
 														<Tooltip title={`Tiempo total de visualización: ${(m.totalWatchMs || 0) / 1000 | 0} s`}>
-															<span>{(m.avgWatchMs / 1000).toFixed(1)} s prom.</span>
+															<span>{formatNumber(m.avgWatchMs / 1000, 1)} s prom.</span>
 														</Tooltip>
 													) : (
 														"—"

@@ -420,7 +420,7 @@ const WorkerPipelineTab = () => {
 														autoFocus
 														disabled={saving}
 														type="number"
-														inputProps={{ min: v.min, max: v.max, step: v.type === "float" ? 0.1 : 1 }}
+														inputProps={{ min: v.min, max: v.max, step: v.type === "float" ? 0.1 : 1, "aria-label": v.label }}
 														sx={{ width: 120, "& input": { fontFamily: "monospace", fontSize: "0.85rem" } }}
 													/>
 													{v.suffix && (

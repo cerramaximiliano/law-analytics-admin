@@ -43,6 +43,7 @@ import ContactDetailModal from "./ContactDetailModal";
 import EditContactModal from "./EditContactModal";
 import MainCard from "components/MainCard";
 import ScrollX from "components/ScrollX";
+import { formatPercent } from "utils/format";
 
 interface RemoveCampaignContactsDialogProps {
 	open: boolean;
@@ -683,12 +684,13 @@ const CampaignContactsList = ({ campaign, open, onClose, onContactsChange }: Cam
 										variant="outlined"
 										size="small"
 										placeholder="Buscar contactos por nombre, email…"
+										inputProps={{ "aria-label": "Buscar contactos por nombre o email" }}
 										value={searchTerm}
 										onChange={(e) => setSearchTerm(e.target.value)}
 										onKeyPress={(e) => e.key === "Enter" && handleSearch()}
 										InputProps={{
 											endAdornment: (
-												<IconButton onClick={handleSearch} edge="end" size="small">
+												<IconButton aria-label="Buscar" onClick={handleSearch} edge="end" size="small">
 													<SearchNormal1 size={18} />
 												</IconButton>
 											),
@@ -831,10 +833,10 @@ const CampaignContactsList = ({ campaign, open, onClose, onContactsChange }: Cam
 																	)}
 																</TableCell>
 																<TableCell>
-																	{contact.metrics?.openRate !== undefined ? `${(contact.metrics.openRate * 100).toFixed(1)}%` : "N/A"}
+																	{contact.metrics?.openRate !== undefined ? formatPercent(contact.metrics.openRate * 100) : "N/A"}
 																</TableCell>
 																<TableCell>
-																	{contact.metrics?.clickRate !== undefined ? `${(contact.metrics.clickRate * 100).toFixed(1)}%` : "N/A"}
+																	{contact.metrics?.clickRate !== undefined ? formatPercent(contact.metrics.clickRate * 100) : "N/A"}
 																</TableCell>
 																<TableCell align="center">
 																	<Box sx={{ display: "flex", justifyContent: "center", gap: 0.5 }}>

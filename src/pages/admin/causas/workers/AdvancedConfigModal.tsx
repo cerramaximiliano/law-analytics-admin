@@ -440,7 +440,12 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 										InputProps={{
 											endAdornment: (
 												<InputAdornment position="end">
-													<IconButton onClick={() => toggleShowApiKey("twocaptcha")} edge="end" size="small">
+													<IconButton
+														onClick={() => toggleShowApiKey("twocaptcha")}
+														edge="end"
+														size="small"
+														aria-label={showApiKeys.twocaptcha ? "Ocultar API key de 2Captcha" : "Mostrar API key de 2Captcha"}
+													>
 														{showApiKeys.twocaptcha ? <EyeSlash size={20} /> : <Eye size={20} />}
 													</IconButton>
 												</InputAdornment>
@@ -480,7 +485,12 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 										InputProps={{
 											endAdornment: (
 												<InputAdornment position="end">
-													<IconButton onClick={() => toggleShowApiKey("capsolver")} edge="end" size="small">
+													<IconButton
+														onClick={() => toggleShowApiKey("capsolver")}
+														edge="end"
+														size="small"
+														aria-label={showApiKeys.capsolver ? "Ocultar API key de CapSolver" : "Mostrar API key de CapSolver"}
+													>
 														{showApiKeys.capsolver ? <EyeSlash size={20} /> : <Eye size={20} />}
 													</IconButton>
 												</InputAdornment>
@@ -520,7 +530,12 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 										InputProps={{
 											endAdornment: (
 												<InputAdornment position="end">
-													<IconButton onClick={() => toggleShowApiKey("captchaai")} edge="end" size="small">
+													<IconButton
+														onClick={() => toggleShowApiKey("captchaai")}
+														edge="end"
+														size="small"
+														aria-label={showApiKeys.captchaai ? "Ocultar API key de CaptchaAI" : "Mostrar API key de CaptchaAI"}
+													>
 														{showApiKeys.captchaai ? <EyeSlash size={20} /> : <Eye size={20} />}
 													</IconButton>
 												</InputAdornment>
@@ -692,7 +707,7 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 													type="number"
 													value={probeData.threshold_str}
 													onChange={(e) => setProbeData((p) => ({ ...p, threshold_str: e.target.value }))}
-													inputProps={{ min: 1 }}
+													inputProps={{ "aria-label": "Umbral de no-encontrados consecutivos", min: 1 }}
 													helperText="El worker sondea cuando acumula esta cantidad de not-founds seguidos (default: 50)"
 													sx={{ maxWidth: 200 }}
 												/>
@@ -703,6 +718,7 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 													Offsets de sondeo (separados por coma)
 												</Typography>
 												<TextField
+													inputProps={{ "aria-label": "Offsets de sondeo" }}
 													fullWidth
 													value={probeData.probe_offsets_str}
 													onChange={(e) => setProbeData((p) => ({ ...p, probe_offsets_str: e.target.value }))}
@@ -719,7 +735,7 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 													type="number"
 													value={probeData.check_interval_hours_str}
 													onChange={(e) => setProbeData((p) => ({ ...p, check_interval_hours_str: e.target.value }))}
-													inputProps={{ min: 0.5, step: 0.5 }}
+													inputProps={{ "aria-label": "Horas de pausa al detectar frontera real", min: 0.5, step: 0.5 }}
 													helperText="Tiempo que el worker espera antes de reintentar tras detectar la frontera (default: 6)"
 													sx={{ maxWidth: 200 }}
 												/>

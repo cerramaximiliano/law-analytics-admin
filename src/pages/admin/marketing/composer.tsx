@@ -40,6 +40,7 @@ import EmailLogsService from "api/emailLogs";
 import { EmailLog } from "types/email-log";
 import { BRAND_BLUE } from "themes/dashboardTokens";
 import ConfirmDialog from "components/admin/ConfirmDialog";
+import { useTabIndexParam } from "hooks/useTabParam";
 
 const SENDERS = [
 	{ value: "cuentas", label: "Cuentas (cuentas@lawanalytics.app)" },
@@ -55,9 +56,11 @@ const DEFAULT_SIGNATURE = "Saludos cordiales,\nMaximiliano — Equipo Law||Analy
 
 const fmtDate = (d?: string | null) => (d ? new Date(d).toLocaleString("es-AR") : "—");
 
+const TAB_SLUGS = ["componer", "borradores", "enviados"] as const;
+
 const EmailComposer = () => {
 	const { enqueueSnackbar } = useSnackbar();
-	const [tab, setTab] = useState(0);
+	const [tab, setTab] = useTabIndexParam("tab", TAB_SLUGS);
 
 	// Estado de composición
 	const [from, setFrom] = useState<"cuentas" | "soporte">("cuentas");
@@ -364,6 +367,7 @@ const EmailComposer = () => {
 											{...params}
 											label="Destinatarios"
 											placeholder="Buscar usuario/contacto o escribir un email"
+											inputProps={{ ...params.inputProps, spellCheck: false }}
 											helperText={
 												invalidRecipients.length > 0
 													? `Hay ${invalidRecipients.length} email(s) inválido(s)`

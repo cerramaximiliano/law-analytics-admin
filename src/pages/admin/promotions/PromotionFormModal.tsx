@@ -1000,6 +1000,7 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 										<TextField
 											{...params}
 											label="Buscar usuarios por email o nombre"
+											inputProps={{ ...params.inputProps, spellCheck: false }}
 											placeholder={pendingTargetUsers.length === 0 ? "Escribí al menos 2 caracteres…" : ""}
 											helperText={
 												loadingTargetUsers
@@ -1080,6 +1081,7 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 											<TextField
 												{...params}
 												label="Buscar contactos por email o nombre"
+												inputProps={{ ...params.inputProps, spellCheck: false }}
 												placeholder={pendingTargetContacts.length === 0 ? "Escribí al menos 2 caracteres…" : ""}
 												helperText={
 													pendingTargetContacts.length > 0

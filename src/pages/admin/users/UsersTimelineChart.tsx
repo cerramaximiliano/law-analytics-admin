@@ -9,6 +9,7 @@ import "dayjs/locale/es";
 import { XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend, Area, AreaChart } from "recharts";
 import adminAxios from "utils/adminAxios";
 import { BRAND_BLUE } from "themes/dashboardTokens";
+import { formatDate, formatNumber } from "utils/format";
 
 // Colors are now derived from the theme inside the component
 
@@ -176,8 +177,7 @@ const UsersTimelineChart: React.FC = () => {
 			return dateStr.replace("-W", " S");
 		}
 		// Day format: show day/month
-		const date = dayjs(dateStr);
-		return date.format("DD/MM");
+		return formatDate(dateStr, "dayMonth");
 	};
 
 	// Get granularity label
@@ -275,7 +275,7 @@ const UsersTimelineChart: React.FC = () => {
 					<Grid item xs={12} sm={6} md={3}>
 						<StatCard
 							title={`Promedio por ${getGranularityLabel()}`}
-							value={summary?.avgPerPeriod?.toFixed(1) || "0"}
+							value={summary?.avgPerPeriod != null ? formatNumber(summary.avgPerPeriod, 1) : "0"}
 							icon={<Chart1 size={20} />}
 							color={COLORS.neutral.main}
 							loading={loading}

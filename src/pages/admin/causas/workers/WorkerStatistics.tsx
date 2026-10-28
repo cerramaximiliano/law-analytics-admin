@@ -803,7 +803,15 @@ const WorkerStatistics: React.FC = () => {
 													<React.Fragment key={fuero.fuero}>
 														<TableRow hover sx={{ cursor: "pointer" }} onClick={() => handleFueroExpand(fuero.fuero)}>
 															<TableCell>
-																<IconButton size="small">
+																<IconButton
+																	size="small"
+																	aria-label={expandedFuero === fuero.fuero ? `Contraer ${fuero.fuero}` : `Expandir ${fuero.fuero}`}
+																	aria-expanded={expandedFuero === fuero.fuero}
+																	onClick={(e) => {
+																		e.stopPropagation();
+																		handleFueroExpand(fuero.fuero);
+																	}}
+																>
 																	{expandedFuero === fuero.fuero ? <ArrowUp2 size={16} /> : <ArrowDown2 size={16} />}
 																</IconButton>
 															</TableCell>

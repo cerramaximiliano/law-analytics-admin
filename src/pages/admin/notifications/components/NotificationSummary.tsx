@@ -12,7 +12,7 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers";
 import { BRAND_BLUE } from "themes/dashboardTokens";
-import { formatDate } from "utils/format";
+import { formatDate, formatPercent } from "utils/format";
 
 const NotificationSummary = () => {
 	const theme = useTheme();
@@ -269,7 +269,7 @@ const NotificationSummary = () => {
 									/>
 								</Box>
 								<Typography variant="body2" sx={{ fontWeight: 500, fontVariantNumeric: "tabular-nums" }}>
-									{((summary.data.alerts.delivered / summary.data.alerts.total) * 100).toFixed(1)}%
+									{formatPercent((summary.data.alerts.delivered / summary.data.alerts.total) * 100, 1)}
 								</Typography>
 							</Box>
 						</Box>
@@ -290,7 +290,7 @@ const NotificationSummary = () => {
 									cx="50%"
 									cy="50%"
 									labelLine={false}
-									label={({ name, percent }: any) => `${name}: ${((percent || 0) * 100).toFixed(0)}%`}
+									label={({ name, percent }: any) => `${name}: ${formatPercent((percent || 0) * 100, 0)}`}
 									outerRadius={80}
 									fill="#8884d8"
 									dataKey="value"

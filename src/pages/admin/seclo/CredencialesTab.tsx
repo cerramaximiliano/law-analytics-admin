@@ -118,6 +118,7 @@ export default function CredencialesTab() {
 				<TextField
 					size="small"
 					placeholder="Buscar usuario…"
+					inputProps={{ "aria-label": "Buscar usuario" }}
 					value={search}
 					onChange={(e) => setSearch(e.target.value)}
 					onKeyDown={(e) => e.key === "Enter" && handleSearch()}
@@ -390,7 +391,7 @@ export default function CredencialesTab() {
 													sx={{ fontFamily: "monospace", fontSize: 13, mt: 0.25 }}
 													endAdornment={
 														<InputAdornment position="end">
-															<IconButton size="small" onClick={() => setShowPassword((p) => !p)} edge="end">
+															<IconButton aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"} size="small" onClick={() => setShowPassword((p) => !p)} edge="end">
 																{showPassword ? <EyeSlash size={16} /> : <Eye size={16} />}
 															</IconButton>
 														</InputAdornment>

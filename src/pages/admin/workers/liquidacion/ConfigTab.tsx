@@ -21,6 +21,8 @@ import { ArrowDown2, Refresh2, Setting2 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import LiquidacionWorkerConfigService, { FullDoc, LiquidacionConfig, UpdateSettingsPayload } from "api/liquidacionWorkerConfig";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
+import ConfirmDialog from "components/admin/ConfirmDialog";
+import { formatNumber } from "utils/format";
 
 interface Props {
 	doc: FullDoc | null;
@@ -51,6 +53,7 @@ export default function ConfigTab({ doc, loading, onSaved }: Props) {
 	const { enqueueSnackbar } = useSnackbar();
 	const [saving, setSaving] = useState(false);
 	const [resetting, setResetting] = useState(false);
+	const [confirmResetOpen, setConfirmResetOpen] = useState(false);
 	const [form, setForm] = useState<LiquidacionConfig | null>(null);
 
 	useEffect(() => {
@@ -120,11 +123,11 @@ export default function ConfigTab({ doc, loading, onSaved }: Props) {
 	};
 
 	const handleReset = async () => {
-		if (!window.confirm("Resetear toda la configuración a defaults? Se conservan el estado actual y las alertas.")) return;
 		setResetting(true);
 		try {
 			await LiquidacionWorkerConfigService.resetToDefaults();
 			enqueueSnackbar("Configuración reseteada a defaults", { variant: "success" });
+			setConfirmResetOpen(false);
 			onSaved();
 		} catch (err: any) {
 			enqueueSnackbar(err?.response?.data?.message || "Error en reset", { variant: "error" });
@@ -482,7 +485,7 @@ export default function ConfigTab({ doc, loading, onSaved }: Props) {
 							<strong>Tasa efectiva contra PJN:</strong> <code>concurrency × (1000 / (downloadAvg + requestDelayMs))</code>. Con
 							concurrency={form.pdfProcessor.concurrency} y requestDelayMs=
 							{form.pdfProcessor.requestDelayMs}ms (asumiendo ~500ms download), tasa ≈{" "}
-							<strong>{((form.pdfProcessor.concurrency * 1000) / (500 + form.pdfProcessor.requestDelayMs)).toFixed(1)} req/s</strong>.
+							<strong>{formatNumber((form.pdfProcessor.concurrency * 1000) / (500 + form.pdfProcessor.requestDelayMs), 1)} req/s</strong>.
 						</Alert>
 					</Stack>
 				</AccordionDetails>
@@ -529,7 +532,7 @@ export default function ConfigTab({ doc, loading, onSaved }: Props) {
 			</Accordion>
 
 			<Stack direction="row" spacing={2} justifyContent="flex-end" flexWrap="wrap" useFlexGap>
-				<Button variant="outlined" color="warning" onClick={handleReset} disabled={resetting || saving} startIcon={<Refresh2 size={16} />}>
+				<Button variant="outlined" color="warning" onClick={() => setConfirmResetOpen(true)} disabled={resetting || saving} startIcon={<Refresh2 size={16} />}>
 					{resetting ? "Reseteando…" : "Reset a defaults"}
 				</Button>
 				<Button
@@ -545,6 +548,17 @@ export default function ConfigTab({ doc, loading, onSaved }: Props) {
 					{saving ? "Guardando…" : "Guardar configuración"}
 				</Button>
 			</Stack>
+
+			<ConfirmDialog
+				open={confirmResetOpen}
+				title="¿Resetear la configuración del worker de liquidaciones a defaults?"
+				description="Se conservan el estado actual y las alertas."
+				confirmLabel="Resetear"
+				confirmColor="warning"
+				loading={resetting}
+				onConfirm={handleReset}
+				onClose={() => !resetting && setConfirmResetOpen(false)}
+			/>
 		</Stack>
 	);
 }

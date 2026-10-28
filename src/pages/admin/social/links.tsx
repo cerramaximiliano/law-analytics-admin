@@ -263,10 +263,10 @@ const LinksBio = () => {
 										{link.insignia === "google-play" && <Chip size="small" variant="outlined" label="Insignia Google Play" />}
 									</Stack>
 									<Stack direction="row" sx={{ flexShrink: 0 }}>
-										<IconButton size="small" onClick={() => abrirEditor(link)}>
+										<IconButton aria-label="Editar link" size="small" onClick={() => abrirEditor(link)}>
 											<Edit2 size={17} />
 										</IconButton>
-										<IconButton size="small" color="error" onClick={() => setAEliminar(link)}>
+										<IconButton aria-label="Eliminar link" size="small" color="error" onClick={() => setAEliminar(link)}>
 											<Trash size={17} />
 										</IconButton>
 									</Stack>

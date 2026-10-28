@@ -119,7 +119,7 @@ const FolderDetalleModal = ({ open, onClose, folder }: FolderDetalleModalProps) 
 								<Copy size={18} />
 							</IconButton>
 						</Tooltip>
-						<IconButton onClick={onClose} size="small">
+						<IconButton onClick={onClose} size="small" aria-label="Cerrar">
 							<CloseCircle size={20} />
 						</IconButton>
 					</Stack>

@@ -62,6 +62,7 @@ import MainCard from "components/MainCard";
 import ImageActions from "components/ImageActions";
 import CopyButton from "components/CopyButton";
 import { fetchImageBlob } from "utils/imageActions";
+import { clickableProps } from "utils/a11y";
 import DailySyncPanel from "components/pjn/DailySyncPanel";
 import CrossViewLinks from "components/admin/CrossViewLink";
 import pjnCredentialsService, {
@@ -1120,6 +1121,8 @@ const CredencialesPJN = () => {
 									size="small"
 									label="Buscar usuario"
 									placeholder="Nombre o email…"
+									autoComplete="off"
+									inputProps={{ spellCheck: false }}
 									value={searchText}
 									onChange={(e) => setSearchText(e.target.value)}
 									onKeyPress={(e) => e.key === "Enter" && handleSearch()}
@@ -2468,6 +2471,8 @@ const CredencialesPJN = () => {
 								size="small"
 								label="Filtrar por email destinatario"
 								placeholder="Ej: usuario@mail.com"
+								autoComplete="off"
+								inputProps={{ spellCheck: false }}
 								value={emailLogsUserFilter}
 								onChange={(e) => setEmailLogsUserFilter(e.target.value)}
 								onKeyPress={(e) => {
@@ -2961,12 +2966,14 @@ const CredencialesPJN = () => {
 																	component="img"
 																	src={err.screenshotUrl}
 																	alt="screenshot del login"
-																	onClick={() =>
-																		setScreenshotLightbox({
-																			url: err.screenshotUrl as string,
-																			label: `login-error ${err.timestamp || ""}`.trim(),
-																		})
-																	}
+																	{...clickableProps(
+																		() =>
+																			setScreenshotLightbox({
+																				url: err.screenshotUrl as string,
+																				label: `login-error ${err.timestamp || ""}`.trim(),
+																			}),
+																		{ label: "Ampliar screenshot del login" },
+																	)}
 																	sx={{
 																		width: 72,
 																		height: 44,

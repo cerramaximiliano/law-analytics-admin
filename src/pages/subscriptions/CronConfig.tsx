@@ -404,6 +404,8 @@ const CronConfigPage = () => {
 										fullWidth
 										label="Tu Email (Admin)"
 										type="email"
+										autoComplete="email"
+										inputProps={{ spellCheck: false }}
 										value={adminEmail}
 										onChange={(e) => setAdminEmail(e.target.value)}
 										placeholder="admin@lawanalytics.app"
@@ -457,6 +459,8 @@ const CronConfigPage = () => {
 										fullWidth
 										label="Tu Email (Admin)"
 										type="email"
+										autoComplete="email"
+										inputProps={{ spellCheck: false }}
 										value={adminEmail}
 										onChange={(e) => setAdminEmail(e.target.value)}
 										placeholder="admin@lawanalytics.app"

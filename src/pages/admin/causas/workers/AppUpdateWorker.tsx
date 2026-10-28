@@ -298,6 +298,7 @@ const AppUpdateWorker = () => {
 									<TableCell>
 										{isEditing ? (
 											<TextField
+												inputProps={{ "aria-label": "Worker ID" }}
 												size="small"
 												value={editValues.worker_id || ""}
 												onChange={(e) => setEditValues({ ...editValues, worker_id: e.target.value })}
@@ -320,6 +321,7 @@ const AppUpdateWorker = () => {
 									<TableCell align="center">
 										{isEditing ? (
 											<TextField
+												inputProps={{ "aria-label": "Tamaño de lote" }}
 												size="small"
 												type="number"
 												value={editValues.batch_size || ""}

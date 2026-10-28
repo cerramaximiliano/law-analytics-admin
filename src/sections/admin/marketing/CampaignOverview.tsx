@@ -21,6 +21,7 @@ import {
 	EmailBreakdown,
 	SchedulerFrequencyConfig,
 } from "types/campaign";
+import { formatPercent } from "utils/format";
 
 const fmt = (n: number) => n.toLocaleString("es-AR");
 const DAY_NAMES = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
@@ -103,7 +104,7 @@ export const CampaignKpis: React.FC<{
 }> = ({ campaign, summary, flow }) => {
 	const theme = useTheme();
 	const s = summary;
-	const pct = (v?: number) => `${(v ?? 0).toFixed(1)}%`;
+	const pct = (v?: number) => formatPercent(v ?? 0);
 	const cards = [
 		{
 			label: "Inscriptos activos",
@@ -171,7 +172,7 @@ export const CampaignFunnel: React.FC<{ audience: CampaignAudienceStats | null; 
 			clicks: b?.clicks ?? 0,
 		};
 	});
-	const rate = (a: number, b: number) => (b > 0 ? ` (${((a / b) * 100).toFixed(1)}%)` : "");
+	const rate = (a: number, b: number) => (b > 0 ? ` (${formatPercent((a / b) * 100)})` : "");
 	return (
 		<TableContainer component={Paper} variant="outlined">
 			<Table size="small">

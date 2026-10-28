@@ -851,6 +851,9 @@ const CampaignEmailModal = ({ open, onClose, onSuccess, campaign, email, mode }:
 										id="sender.email"
 										name="sender.email"
 										label="Email del remitente"
+										type="email"
+										autoComplete="off"
+										inputProps={{ spellCheck: false }}
 										value={formik.values.sender?.email || ""}
 										onChange={formik.handleChange}
 										sx={{ mb: 2 }}
@@ -861,6 +864,9 @@ const CampaignEmailModal = ({ open, onClose, onSuccess, campaign, email, mode }:
 										id="replyTo"
 										name="replyTo"
 										label="Email de respuesta (Reply-To)"
+										type="email"
+										autoComplete="off"
+										inputProps={{ spellCheck: false }}
 										value={formik.values.replyTo || ""}
 										onChange={formik.handleChange}
 										sx={{ mb: 2 }}
@@ -1082,6 +1088,7 @@ const CampaignEmailModal = ({ open, onClose, onSuccess, campaign, email, mode }:
 															<Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
 																<Typography variant="subtitle2">Variante {index + 1}</Typography>
 																<IconButton
+																	aria-label="Eliminar variante"
 																	color="error"
 																	onClick={() => handleRemoveVariation(index)}
 																	disabled={abTestingVariations.length <= 1}

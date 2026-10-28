@@ -39,6 +39,7 @@ import {
 import { CloseCircle, CloseSquare, TickCircle, ArrowDown2, ArrowUp2, Copy, Edit, Save2, Lock1, Repeat } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { BRAND_BLUE, STALE_AMBER } from "themes/dashboardTokens";
+import { formatNumber } from "utils/format";
 
 interface CausaDetalleModalPjMendozaProps {
 	open: boolean;
@@ -274,7 +275,7 @@ const CausaDetalleModalPjMendoza = ({ open, onClose, causa, onCausaUpdated }: Ca
 				{stats.count !== undefined && (
 					<Chip icon={<Repeat size={14} />} label={`${stats.count} actualizaciones`} size="small" variant="outlined" />
 				)}
-				{stats.avgMs !== undefined && <Chip label={`Promedio: ${(stats.avgMs / 1000).toFixed(1)}s`} size="small" variant="outlined" />}
+				{stats.avgMs !== undefined && <Chip label={`Promedio: ${formatNumber(stats.avgMs / 1000, 1)} s`} size="small" variant="outlined" />}
 				{stats.newMovs !== undefined && stats.newMovs > 0 && (
 					<Chip label={`+${stats.newMovs} movimientos`} size="small" color="success" variant="outlined" />
 				)}
@@ -531,6 +532,7 @@ const CausaDetalleModalPjMendoza = ({ open, onClose, causa, onCausaUpdated }: Ca
 								</Typography>
 								{isEditing ? (
 									<TextField
+										inputProps={{ "aria-label": "Carátula" }}
 										fullWidth
 										size="small"
 										value={editedCausa.caratula || ""}
@@ -548,6 +550,7 @@ const CausaDetalleModalPjMendoza = ({ open, onClose, causa, onCausaUpdated }: Ca
 								</Typography>
 								{isEditing ? (
 									<TextField
+										inputProps={{ "aria-label": "Juzgado" }}
 										fullWidth
 										size="small"
 										value={editedCausa.juzgado || ""}
@@ -622,6 +625,7 @@ const CausaDetalleModalPjMendoza = ({ open, onClose, causa, onCausaUpdated }: Ca
 								</Typography>
 								{isEditing ? (
 									<TextField
+										inputProps={{ "aria-label": "Objeto" }}
 										fullWidth
 										size="small"
 										value={editedCausa.objeto || ""}
@@ -639,6 +643,7 @@ const CausaDetalleModalPjMendoza = ({ open, onClose, causa, onCausaUpdated }: Ca
 								</Typography>
 								{isEditing ? (
 									<TextField
+										inputProps={{ "aria-label": "Estado Expediente" }}
 										fullWidth
 										size="small"
 										value={editedCausa.estado || ""}
@@ -707,6 +712,7 @@ const CausaDetalleModalPjMendoza = ({ open, onClose, causa, onCausaUpdated }: Ca
 								</Typography>
 								{isEditing ? (
 									<TextField
+										inputProps={{ "aria-label": "Última Actualización" }}
 										fullWidth
 										type="datetime-local"
 										size="small"
@@ -725,6 +731,7 @@ const CausaDetalleModalPjMendoza = ({ open, onClose, causa, onCausaUpdated }: Ca
 								</Typography>
 								{isEditing ? (
 									<TextField
+										inputProps={{ "aria-label": "Último Movimiento" }}
 										fullWidth
 										type="date"
 										size="small"

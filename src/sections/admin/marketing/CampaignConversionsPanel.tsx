@@ -25,9 +25,10 @@ import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxi
 import { CampaignService } from "store/reducers/campaign";
 import { CampaignConversionsService } from "api/campaignConversions";
 import { CampaignConversionItem, CampaignConversions, ConversionUserJourney } from "types/campaign";
+import { formatPercent } from "utils/format";
 
 const fmt = (n: number) => n.toLocaleString("es-AR");
-const pctOf = (n: number, total: number) => (total > 0 ? `${((n / total) * 100).toFixed(1)}%` : "0%");
+const pctOf = (n: number, total: number) => formatPercent(total > 0 ? (n / total) * 100 : 0);
 const dateFmt = (iso?: string | null) => (iso ? new Date(iso).toLocaleDateString("es-AR") : "—");
 const CHUNK = 500;
 
@@ -224,6 +225,7 @@ const CampaignConversionsPanel: React.FC<{ campaignId: string }> = ({ campaignId
 					Convertidos ({fmt(filtered.length)})
 				</Typography>
 				<TextField
+					inputProps={{ "aria-label": "Buscar por nombre o correo" }}
 					size="small"
 					placeholder="Buscar por nombre o correo"
 					value={search}

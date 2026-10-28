@@ -45,6 +45,7 @@ import RagWorkersService, {
 	S3Averages,
 	ErrorRates,
 } from "api/ragWorkers";
+import { formatBytes as formatBytesIntl, formatPercent } from "utils/format";
 
 // ── Formatting helpers ──────────────────────────────────────────────────────
 
@@ -60,12 +61,7 @@ const formatMs = (ms: number): string => {
 	return `${Math.round(ms)}ms`;
 };
 
-const formatBytes = (bytes: number): string => {
-	if (bytes >= 1_073_741_824) return `${(bytes / 1_073_741_824).toFixed(1)} GB`;
-	if (bytes >= 1_048_576) return `${(bytes / 1_048_576).toFixed(1)} MB`;
-	if (bytes >= 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-	return `${bytes} B`;
-};
+const formatBytes = (bytes: number): string => formatBytesIntl(bytes);
 
 // ── Stage colors ────────────────────────────────────────────────────────────
 
@@ -475,9 +471,7 @@ const ThroughputSection: React.FC<{
 	theme: any;
 }> = ({ throughput, queueStats, theme }) => {
 	const failRate =
-		throughput.jobsCompleted + throughput.jobsFailed > 0
-			? ((throughput.jobsFailed / (throughput.jobsCompleted + throughput.jobsFailed)) * 100).toFixed(1)
-			: "0";
+		throughput.jobsCompleted + throughput.jobsFailed > 0 ? (throughput.jobsFailed / (throughput.jobsCompleted + throughput.jobsFailed)) * 100 : 0;
 
 	const items = [
 		{ label: "Docs/dia", value: formatNumber(throughput.docsPerDay) },
@@ -490,7 +484,7 @@ const ThroughputSection: React.FC<{
 			value: formatNumber(throughput.jobsFailed),
 			color: throughput.jobsFailed > 0 ? "error.main" : "text.secondary",
 		},
-		{ label: "Tasa de fallo", value: `${failRate}%`, color: parseFloat(failRate) > 5 ? "error.main" : "text.secondary" },
+		{ label: "Tasa de fallo", value: formatPercent(failRate), color: failRate > 5 ? "error.main" : "text.secondary" },
 		{ label: "Queue wait avg", value: formatMs(queueStats.avgWaitMs) },
 		{ label: "Intentos avg", value: queueStats.avgAttempts.toFixed(2) },
 		{ label: "Dias con datos", value: throughput.days.toString() },

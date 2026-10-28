@@ -699,6 +699,7 @@ const ScrapingWorker = () => {
 											</Typography>
 											<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
 												<TextField
+													inputProps={{ "aria-label": "Buscar por Worker ID" }}
 													size="small"
 													placeholder="Buscar por Worker ID"
 													value={workerIdInput}
@@ -749,7 +750,7 @@ const ScrapingWorker = () => {
 												useFlexGap
 											>
 												<FormControl size="small" sx={{ minWidth: { xs: "100%", sm: 140 } }}>
-													<Select value={fueroFilter} onChange={(e) => handleFueroFilterChange(e.target.value)} displayEmpty>
+													<Select inputProps={{ "aria-label": "Fuero" }} value={fueroFilter} onChange={(e) => handleFueroFilterChange(e.target.value)} displayEmpty>
 														<MenuItem value="TODOS">Todos los Fueros</MenuItem>
 														{FUERO_OPTIONS.map((option) => (
 															<MenuItem key={option.value} value={option.value}>
@@ -759,7 +760,7 @@ const ScrapingWorker = () => {
 													</Select>
 												</FormControl>
 												<FormControl size="small" sx={{ minWidth: { xs: "100%", sm: 120 } }}>
-													<Select value={yearFilter} onChange={(e) => handleYearFilterChange(e.target.value)} displayEmpty>
+													<Select inputProps={{ "aria-label": "Año" }} value={yearFilter} onChange={(e) => handleYearFilterChange(e.target.value)} displayEmpty>
 														<MenuItem value="TODOS">Todos los Años</MenuItem>
 														{YEAR_OPTIONS.map((year) => (
 															<MenuItem key={year} value={year}>
@@ -769,7 +770,7 @@ const ScrapingWorker = () => {
 													</Select>
 												</FormControl>
 												<FormControl size="small" sx={{ minWidth: { xs: "100%", sm: 130 } }}>
-													<Select value={progresoFilter} onChange={(e) => handleProgresoFilterChange(e.target.value)} displayEmpty>
+													<Select inputProps={{ "aria-label": "Progreso" }} value={progresoFilter} onChange={(e) => handleProgresoFilterChange(e.target.value)} displayEmpty>
 														<MenuItem value="TODOS">Progreso</MenuItem>
 														<MenuItem value="completo">
 															<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
@@ -786,7 +787,7 @@ const ScrapingWorker = () => {
 													</Select>
 												</FormControl>
 												<FormControl size="small" sx={{ minWidth: { xs: "100%", sm: 120 } }}>
-													<Select value={estadoFilter} onChange={(e) => handleEstadoFilterChange(e.target.value)} displayEmpty>
+													<Select inputProps={{ "aria-label": "Estado" }} value={estadoFilter} onChange={(e) => handleEstadoFilterChange(e.target.value)} displayEmpty>
 														<MenuItem value="TODOS">Estado</MenuItem>
 														<MenuItem value="activo">
 															<Stack direction="row" spacing={1} alignItems="center">
@@ -1118,6 +1119,7 @@ const ScrapingWorker = () => {
 														<TableCell>
 															{isEditing ? (
 																<TextField
+																	inputProps={{ "aria-label": "Worker ID" }}
 																	size="small"
 																	value={editValues.worker_id || ""}
 																	onChange={(e) => setEditValues({ ...editValues, worker_id: e.target.value })}
@@ -1142,6 +1144,7 @@ const ScrapingWorker = () => {
 															{isEditing ? (
 																<FormControl size="small" fullWidth>
 																	<Select
+																		inputProps={{ "aria-label": "Fuero" }}
 																		value={editValues.fuero || ""}
 																		onChange={(e) => setEditValues({ ...editValues, fuero: e.target.value })}
 																	>
@@ -1160,6 +1163,7 @@ const ScrapingWorker = () => {
 															{isEditing ? (
 																<Stack spacing={1}>
 																	<TextField
+																		inputProps={{ "aria-label": "Número" }}
 																		size="small"
 																		type="number"
 																		value={editValues.number || ""}
@@ -1168,6 +1172,7 @@ const ScrapingWorker = () => {
 																		placeholder="Número"
 																	/>
 																	<TextField
+																		inputProps={{ "aria-label": "Año" }}
 																		size="small"
 																		type="number"
 																		value={editValues.year || ""}
@@ -1191,6 +1196,7 @@ const ScrapingWorker = () => {
 															{isEditing ? (
 																<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 																	<TextField
+																		inputProps={{ "aria-label": "Inicio del rango" }}
 																		size="small"
 																		type="number"
 																		value={editValues.range_start || ""}
@@ -1202,6 +1208,7 @@ const ScrapingWorker = () => {
 																		-
 																	</Typography>
 																	<TextField
+																		inputProps={{ "aria-label": "Fin del rango" }}
 																		size="small"
 																		type="number"
 																		value={editValues.range_end || ""}
@@ -1411,6 +1418,7 @@ const ScrapingWorker = () => {
 																			<IconButton
 																				size="small"
 																				color="error"
+																				aria-label="Eliminar configuración"
 																				onClick={() => handleOpenDeleteDialog(config)}
 																				disabled={config.enabled}
 																			>

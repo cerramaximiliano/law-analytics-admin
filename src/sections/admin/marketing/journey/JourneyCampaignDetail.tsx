@@ -144,7 +144,7 @@ const JourneyCampaignDetail: React.FC<Props> = ({ campaign: c, period, onClose }
 						<Chip size="small" variant="outlined" label={`${c.tipo}${c.subtipo ? ` · ${c.subtipo}` : ""}`} />
 						<Chip size="small" variant="outlined" label={`Período: ${PERIOD_LABEL[period]}`} />
 					</Box>
-					<IconButton onClick={onClose} size="small">
+					<IconButton aria-label="Cerrar" onClick={onClose} size="small">
 						<CloseCircle variant="Bold" />
 					</IconButton>
 				</Box>

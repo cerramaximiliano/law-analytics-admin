@@ -378,6 +378,7 @@ const VerificationWorker = () => {
 									<TableCell>
 										{isEditing ? (
 											<TextField
+												inputProps={{ "aria-label": "Worker ID" }}
 												size="small"
 												value={editValues.worker_id || ""}
 												onChange={(e) => setEditValues({ ...editValues, worker_id: e.target.value })}
@@ -393,6 +394,7 @@ const VerificationWorker = () => {
 										{isEditing ? (
 											<FormControl size="small" fullWidth>
 												<Select
+													inputProps={{ "aria-label": "Modo de verificación" }}
 													value={editValues.verification_mode || ""}
 													onChange={(e) => setEditValues({ ...editValues, verification_mode: e.target.value })}
 												>
@@ -410,6 +412,7 @@ const VerificationWorker = () => {
 									<TableCell align="center">
 										{isEditing ? (
 											<TextField
+												inputProps={{ "aria-label": "Tamaño de lote" }}
 												size="small"
 												type="number"
 												value={editValues.batch_size || ""}
@@ -424,6 +427,7 @@ const VerificationWorker = () => {
 										{isEditing ? (
 											<FormControl size="small" sx={{ minWidth: 120 }}>
 												<Select
+													inputProps={{ "aria-label": "Proveedor de captcha" }}
 													value={editValues.captcha?.defaultProvider || config.captcha?.defaultProvider || "2captcha"}
 													onChange={(e) =>
 														setEditValues({

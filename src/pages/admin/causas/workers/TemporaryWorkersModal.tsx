@@ -27,6 +27,7 @@ import { useTheme } from "@mui/material/styles";
 import { Trash, Refresh, Warning2 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { WorkersService, WorkerConfig } from "api/workers";
+import ConfirmDialog from "components/admin/ConfirmDialog";
 
 interface TemporaryWorkersModalProps {
 	open: boolean;
@@ -42,6 +43,8 @@ const TemporaryWorkersModal: React.FC<TemporaryWorkersModalProps> = ({ open, onC
 	const [deletingAll, setDeletingAll] = useState(false);
 	const [temporaryWorkers, setTemporaryWorkers] = useState<WorkerConfig[]>([]);
 	const [selectedIds, setSelectedIds] = useState<string[]>([]);
+	const [workerToDelete, setWorkerToDelete] = useState<WorkerConfig | null>(null);
+	const [confirmDeleteSelected, setConfirmDeleteSelected] = useState(false);
 
 	// Obtener el ID real del documento
 	const getConfigId = (config: WorkerConfig): string => {
@@ -178,6 +181,7 @@ const TemporaryWorkersModal: React.FC<TemporaryWorkersModalProps> = ({ open, onC
 	};
 
 	return (
+		<>
 		<Dialog open={open} onClose={handleClose} maxWidth="lg" fullWidth>
 			<DialogTitle sx={{ pb: 1.5 }}>
 				<Stack direction="row" alignItems="center" spacing={1.25}>
@@ -207,7 +211,7 @@ const TemporaryWorkersModal: React.FC<TemporaryWorkersModalProps> = ({ open, onC
 									color="error"
 									size="small"
 									startIcon={deletingAll ? <CircularProgress size={16} /> : <Trash size={16} />}
-									onClick={handleDeleteSelected}
+									onClick={() => setConfirmDeleteSelected(true)}
 									disabled={deletingAll}
 								>
 									Eliminar seleccionados ({selectedIds.length})
@@ -321,7 +325,8 @@ const TemporaryWorkersModal: React.FC<TemporaryWorkersModalProps> = ({ open, onC
 														<IconButton
 															size="small"
 															color="error"
-															onClick={() => handleDelete(config)}
+															aria-label="Eliminar worker temporario"
+															onClick={() => setWorkerToDelete(config)}
 															disabled={deleting === configId || deletingAll}
 														>
 															{deleting === configId ? <CircularProgress size={16} /> : <Trash size={16} />}
@@ -343,6 +348,28 @@ const TemporaryWorkersModal: React.FC<TemporaryWorkersModalProps> = ({ open, onC
 				</Button>
 			</DialogActions>
 		</Dialog>
+		<ConfirmDialog
+			open={!!workerToDelete}
+			title={`¿Eliminar el worker temporario ${workerToDelete?.worker_id || "sin nombre"}?`}
+			confirmLabel="Eliminar"
+			onConfirm={() => {
+				const config = workerToDelete;
+				setWorkerToDelete(null);
+				if (config) handleDelete(config);
+			}}
+			onClose={() => setWorkerToDelete(null)}
+		/>
+		<ConfirmDialog
+			open={confirmDeleteSelected}
+			title={`¿Eliminar ${selectedIds.length} worker(s) temporario(s) seleccionado(s)?`}
+			confirmLabel="Eliminar"
+			onConfirm={() => {
+				setConfirmDeleteSelected(false);
+				handleDeleteSelected();
+			}}
+			onClose={() => setConfirmDeleteSelected(false)}
+		/>
+		</>
 	);
 };
 

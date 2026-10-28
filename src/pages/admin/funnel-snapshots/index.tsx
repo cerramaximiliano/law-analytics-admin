@@ -26,12 +26,13 @@ import { Refresh, ArrowDown2, Calendar, Chart, InfoCircle } from "iconsax-react"
 import MainCard from "components/MainCard";
 import FunnelSnapshotsService, { FunnelSnapshot } from "api/funnelSnapshots";
 import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER, headerBorder } from "themes/dashboardTokens";
+import { formatPercent } from "utils/format";
 
 // ==============================|| HELPERS ||============================== //
 
 const fmtPercent = (n: number | null | undefined): string => {
 	if (n == null) return "—";
-	return `${(n * 100).toFixed(2)}%`;
+	return formatPercent(n * 100, 2);
 };
 
 const fmtDate = (iso?: string): string => {

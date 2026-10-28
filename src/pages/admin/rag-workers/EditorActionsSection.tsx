@@ -381,7 +381,7 @@ const ActionDialog = ({ open, initial, onClose, onSave, saving }: ActionDialogPr
 							fullWidth
 							value={form.prompt}
 							onChange={(e) => set("prompt", e.target.value)}
-							inputProps={{ maxLength: 4000 }}
+							inputProps={{ maxLength: 4000, "aria-label": "Prompt" }}
 							placeholder="Ej: Mejorá la redacción del siguiente texto: {{text}}"
 							helperText={
 								<Stack direction="row" justifyContent="space-between">
@@ -456,7 +456,7 @@ const ActionDialog = ({ open, initial, onClose, onSave, saving }: ActionDialogPr
 									fullWidth
 									value={form.systemPromptOverride ?? ""}
 									onChange={(e) => set("systemPromptOverride", e.target.value || null)}
-									inputProps={{ maxLength: 8000 }}
+									inputProps={{ maxLength: 8000, "aria-label": "System prompt de la acción" }}
 									helperText={`${(form.systemPromptOverride ?? "").length}/8000 — Reemplaza el system prompt global para esta acción`}
 									sx={{ "& textarea": { fontFamily: "monospace", fontSize: "0.82rem" } }}
 								/>

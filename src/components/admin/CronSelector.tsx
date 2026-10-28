@@ -122,6 +122,7 @@ const CronSelector: React.FC<CronSelectorProps> = ({
 					value={value}
 					onChange={(e) => onChange(e.target.value)}
 					placeholder="ej: 0 */4 * * *"
+					inputProps={{ "aria-label": "Expresión cron personalizada" }}
 					InputProps={{ sx: { fontFamily: "monospace" } }}
 					helperText="Formato: min · hora · día-mes · mes · día-semana (5 campos)"
 				/>

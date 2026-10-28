@@ -39,6 +39,7 @@ import {
 	McpUsageSummaryData,
 	McpUsageTimeseriesItem,
 } from "types/mcpUsage";
+import { formatPercent } from "utils/format";
 
 // Rango en días, en la URL (?dias=30) para que la vista sea compartible.
 // 90 = TTL de McpUsageEvent: más atrás no hay datos.
@@ -61,7 +62,7 @@ const PROVIDER_COLOR: Record<McpProvider, "primary" | "success" | "default" | "w
 const nf = new Intl.NumberFormat("es-AR");
 const fmtNum = (n: number | null | undefined) => (n === null || n === undefined ? "—" : nf.format(n));
 const fmtMs = (n: number | null | undefined) => (n === null || n === undefined ? "—" : `${nf.format(Math.round(n))} ms`);
-const fmtPct = (part: number, total: number) => (total ? `${((part / total) * 100).toFixed(1)}%` : "—");
+const fmtPct = (part: number, total: number) => (total ? formatPercent((part / total) * 100, 1) : "—");
 const fmtDateTime = (iso: string | null | undefined) =>
 	iso ? new Date(iso).toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short", timeZone: "America/Argentina/Buenos_Aires" }) : "—";
 // "2026-09-03" → "03/09" para el eje X.

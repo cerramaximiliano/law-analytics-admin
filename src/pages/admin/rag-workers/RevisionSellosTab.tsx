@@ -50,6 +50,7 @@ import RagRevisionService, {
 	SelloEtiqueta,
 } from "api/ragRevision";
 import PdfPaginaRecuadros, { Recuadro } from "components/PdfPaginaRecuadros";
+import ConfirmDialog from "components/admin/ConfirmDialog";
 
 const ACCIONES: Array<[Accion, string]> = [
 	["entrega", "Entrega (notificó)"],
@@ -242,6 +243,7 @@ const RevisionSellosTab = () => {
 	const [guardando, setGuardando] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [aviso, setAviso] = useState<string | null>(null);
+	const [confirmarSinRecuadro, setConfirmarSinRecuadro] = useState(false);
 
 	useEffect(() => {
 		RagRevisionService.lotes()
@@ -318,10 +320,19 @@ const RevisionSellosTab = () => {
 			},
 		}));
 
-	const guardar = async () => {
+	const guardar = () => {
 		if (!et || !casoId) return;
 		const faltanRecuadros = et.sellos.some((s) => !s.recuadro);
-		if (faltanRecuadros && !window.confirm("Hay sellos sin recuadro. ¿Guardar igual?")) return;
+		if (faltanRecuadros) {
+			setConfirmarSinRecuadro(true);
+			return;
+		}
+		guardarConfirmado();
+	};
+
+	const guardarConfirmado = async () => {
+		setConfirmarSinRecuadro(false);
+		if (!et || !casoId) return;
 		setGuardando(true);
 		setError(null);
 		try {
@@ -789,6 +800,15 @@ const RevisionSellosTab = () => {
 					</Grid>
 				)}
 			</Stack>
+
+			<ConfirmDialog
+				open={confirmarSinRecuadro}
+				title="Hay sellos sin recuadro. ¿Guardar igual?"
+				confirmLabel="Guardar igual"
+				confirmColor="warning"
+				onConfirm={guardarConfirmado}
+				onClose={() => setConfirmarSinRecuadro(false)}
+			/>
 		</Box>
 	);
 };

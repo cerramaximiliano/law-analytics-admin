@@ -52,6 +52,7 @@ import RagExtraccionService, {
 } from "api/ragExtraccion";
 import { headerBorder } from "themes/dashboardTokens";
 import PdfCanvasViewer from "components/PdfCanvasViewer";
+import { clickableProps } from "utils/a11y";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -1506,7 +1507,7 @@ const ExtraccionTab = () => {
 								const f = it.ficha || {};
 								const rn = f.resultadoNotificacion;
 								return (
-									<TableRow key={it._id} hover sx={{ cursor: "pointer" }} onClick={() => setAbierto(it._id)}>
+									<TableRow key={it._id} hover sx={{ cursor: "pointer" }} {...clickableProps(() => setAbierto(it._id), { asRow: true })}>
 										<TableCell sx={{ whiteSpace: "nowrap" }}>{fmtFecha(it.fecha)}</TableCell>
 										{esDiligenciadas ? (
 											<>

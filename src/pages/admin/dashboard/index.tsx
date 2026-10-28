@@ -77,6 +77,7 @@ import PendingWorkWidget from "./PendingWorkWidget";
 import CollapsibleSection from "./CollapsibleSection";
 import SectionNav from "./SectionNav";
 import CoverageSummary from "./CoverageSummary";
+import { clickableProps } from "utils/a11y";
 
 // Theme-aware color helper - maps semantic roles to MUI theme palette tokens
 // Usage: const COLORS = getThemeColors(theme) inside any component with useTheme()
@@ -327,16 +328,7 @@ interface PrimaryKPICardProps {
 const PrimaryKPICard: React.FC<PrimaryKPICardProps> = ({ title, value, icon, valueColor, prefix, loading, infoKey, linkTo, onClick }) => {
 	const theme = useTheme();
 	const isDark = theme.palette.mode === "dark";
-	const navigate = useNavigate();
 	const isClickable = linkTo || onClick;
-
-	const handleClick = () => {
-		if (onClick) {
-			onClick();
-		} else if (linkTo) {
-			navigate(linkTo);
-		}
-	};
 
 	const formattedValue = prefix
 		? value.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -345,20 +337,9 @@ const PrimaryKPICard: React.FC<PrimaryKPICardProps> = ({ title, value, icon, val
 	return (
 		<Paper
 			elevation={0}
-			onClick={isClickable ? handleClick : undefined}
-			role={isClickable ? "button" : undefined}
-			tabIndex={isClickable ? 0 : undefined}
-			onKeyDown={
-				isClickable
-					? (e) => {
-							if (e.key === "Enter" || e.key === " ") {
-								e.preventDefault();
-								handleClick();
-							}
-					  }
-					: undefined
-			}
+			{...(onClick ? clickableProps(onClick) : linkTo ? { component: RouterLink, to: linkTo } : {})}
 			sx={{
+				textDecoration: "none",
 				p: { xs: 1.5, sm: 2.5 },
 				borderRadius: 2,
 				bgcolor: theme.palette.background.paper,
@@ -519,18 +500,14 @@ interface ChartCardProps {
 const ChartCard: React.FC<ChartCardProps> = ({ title, icon, children, linkTo, height = 280, mobileHeight }) => {
 	const theme = useTheme();
 	const isDark = theme.palette.mode === "dark";
-	const navigate = useNavigate();
-
-	const handleClick = () => {
-		if (linkTo) {
-			navigate(linkTo);
-		}
-	};
 
 	return (
 		<Paper
 			elevation={0}
+			{...(linkTo ? { component: RouterLink, to: linkTo } : {})}
 			sx={{
+				display: "block",
+				textDecoration: "none",
 				p: { xs: 1.5, sm: 2.5 },
 				borderRadius: 2,
 				bgcolor: theme.palette.background.paper,
@@ -546,7 +523,6 @@ const ChartCard: React.FC<ChartCardProps> = ({ title, icon, children, linkTo, he
 					},
 				}),
 			}}
-			onClick={linkTo ? handleClick : undefined}
 		>
 			<Box
 				sx={{
@@ -627,22 +603,15 @@ interface GroupedCardProps {
 const GroupedCard: React.FC<GroupedCardProps> = ({ title, icon, children, linkTo, onClick }) => {
 	const theme = useTheme();
 	const isDark = theme.palette.mode === "dark";
-	const navigate = useNavigate();
 	const isClickable = linkTo || onClick;
-
-	const handleClick = () => {
-		if (onClick) {
-			onClick();
-		} else if (linkTo) {
-			navigate(linkTo);
-		}
-	};
 
 	return (
 		<Paper
 			elevation={0}
-			onClick={isClickable ? handleClick : undefined}
+			{...(onClick ? clickableProps(onClick) : linkTo ? { component: RouterLink, to: linkTo } : {})}
 			sx={{
+				display: "block",
+				textDecoration: "none",
 				p: { xs: 1.5, sm: 2.5 },
 				borderRadius: 2,
 				bgcolor: theme.palette.background.paper,
@@ -696,7 +665,6 @@ interface StatStripItem {
 const StatStrip: React.FC<{ items: StatStripItem[] }> = ({ items }) => {
 	const theme = useTheme();
 	const isDark = theme.palette.mode === "dark";
-	const navigate = useNavigate();
 
 	return (
 		<Paper
@@ -712,8 +680,11 @@ const StatStrip: React.FC<{ items: StatStripItem[] }> = ({ items }) => {
 			{items.map((item, index) => (
 				<Box
 					key={item.label}
-					onClick={item.linkTo ? () => navigate(item.linkTo!) : undefined}
+					{...(item.linkTo ? { component: RouterLink, to: item.linkTo } : {})}
 					sx={{
+						display: "block",
+						textDecoration: "none",
+						color: "inherit",
 						flex: "1 1 0",
 						minWidth: { xs: "50%", sm: "20%" },
 						py: { xs: 1.5, sm: 2 },

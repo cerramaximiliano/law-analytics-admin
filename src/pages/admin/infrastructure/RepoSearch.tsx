@@ -189,6 +189,7 @@ export default function RepoSearch({ boxes, onPick }: { boxes: InfraBox[]; onPic
 					{...params}
 					size="small"
 					placeholder={`Buscar dónde corre un repo, proceso, host o IP — ${repos} repos en ${boxes.length} boxes`}
+					inputProps={{ ...params.inputProps, "aria-label": "Buscar dónde corre un repo, proceso, host o IP" }}
 					InputProps={{
 						...params.InputProps,
 						startAdornment: (

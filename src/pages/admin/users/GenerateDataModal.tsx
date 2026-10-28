@@ -237,7 +237,7 @@ const GenerateDataModal: React.FC<GenerateDataModalProps> = ({ user, open, onClo
 					<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
 						Generar datos · {user.name}
 					</Typography>
-					<IconButton onClick={onClose} size="small" sx={{ mr: -0.5 }}>
+					<IconButton aria-label="Cerrar" onClick={onClose} size="small" sx={{ mr: -0.5 }}>
 						<CloseCircle size={20} />
 					</IconButton>
 				</Stack>

@@ -66,6 +66,7 @@ import type {
 import CreateSolicitudModal from "./CreateSolicitudModal";
 import SecloContactDialog from "./SecloContactDialog";
 import { TIMEZONE_OPTIONS, detectBrowserTimezone, wallClockToUtc, utcToWallClock } from "utils/seclo-scheduling";
+import { clickableProps } from "utils/a11y";
 
 type ScheduledFilter = "all" | "only-scheduled" | "only-immediate";
 type SortField = "createdAt" | "scheduledAt";
@@ -427,6 +428,7 @@ function FolderPickerDialog({
 					fullWidth
 					size="small"
 					placeholder="Buscar carpeta…"
+					inputProps={{ "aria-label": "Buscar carpeta" }}
 					value={search}
 					onChange={(e) => setSearch(e.target.value)}
 					onKeyDown={(e) => e.key === "Enter" && doSearch(search)}
@@ -453,7 +455,7 @@ function FolderPickerDialog({
 								cursor: "pointer",
 								"&:hover": { bgcolor: "action.hover" },
 							}}
-							onClick={() => onSelect(f)}
+							{...clickableProps(() => onSelect(f))}
 						>
 							<Typography variant="body2" fontWeight={600}>
 								{f.folderName}
@@ -1652,6 +1654,7 @@ export default function SolicitudesTab() {
 				<TextField
 					size="small"
 					placeholder="Buscar usuario…"
+					inputProps={{ "aria-label": "Buscar usuario" }}
 					value={search}
 					onChange={(e) => setSearch(e.target.value)}
 					onKeyDown={(e) => e.key === "Enter" && handleSearch()}

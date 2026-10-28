@@ -79,7 +79,7 @@ const FilaJurisdiccion = ({ fila, sincronizando, onSync }: FilaProps) => {
 		<>
 			<TableRow hover sx={{ "& > td": { borderBottom: abierta ? "none" : undefined } }}>
 				<TableCell padding="checkbox">
-					<IconButton size="small" onClick={toggle}>
+					<IconButton aria-label={abierta ? "Contraer fila" : "Expandir fila"} aria-expanded={abierta} size="small" onClick={toggle}>
 						{abierta ? <ArrowDown2 size={16} /> : <ArrowRight2 size={16} />}
 					</IconButton>
 				</TableCell>

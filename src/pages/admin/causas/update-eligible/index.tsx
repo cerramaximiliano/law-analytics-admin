@@ -407,6 +407,7 @@ const CausasUpdateEligiblePage = () => {
 					<TextField
 						size="small"
 						placeholder="Buscar por número o carátula"
+						inputProps={{ "aria-label": "Buscar por número o carátula" }}
 						value={searchInput}
 						onChange={(e) => setSearchInput(e.target.value)}
 						onKeyDown={(e) => e.key === "Enter" && handleSearch()}
@@ -419,6 +420,7 @@ const CausasUpdateEligiblePage = () => {
 							endAdornment: search && (
 								<IconButton
 									size="small"
+									aria-label="Limpiar búsqueda"
 									onClick={() => {
 										setSearch("");
 										setSearchInput("");

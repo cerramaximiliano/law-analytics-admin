@@ -7,6 +7,7 @@ import { alpha, styled } from "@mui/material/styles";
 import { useRequestQueueRefresh } from "hooks/useRequestQueueRefresh";
 import { LIVE_GREEN, STALE_AMBER, LIVE_PULSE_KEYFRAMES } from "themes/dashboardTokens";
 import CronHealthService, { CronHealthItem, CronHealthStatus } from "api/cronHealth";
+import { formatNumber } from "utils/format";
 
 // Types
 interface ServiceStatus {
@@ -310,7 +311,7 @@ const ServerStatus = () => {
 		if (ageHours == null) return "nunca corrió";
 		if (ageHours < 1) return `hace ${Math.round(ageHours * 60)} min`;
 		if (ageHours < 48) return `hace ${Math.round(ageHours)}h`;
-		return `hace ${(ageHours / 24).toFixed(1)}d`;
+		return `hace ${formatNumber(ageHours / 24, 1)}d`;
 	};
 
 	const handleRefresh = () => {

@@ -37,8 +37,8 @@ import MainCard from "components/MainCard";
 import CopyButton from "components/CopyButton";
 import EmailFunnelsService, { EmailFunnelSource, FunnelTopUser } from "api/emailFunnels";
 import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER, PRO_TEAL } from "themes/dashboardTokens";
-import dayjs from "utils/dayjs-config";
-import { formatDate } from "utils/format";
+import { formatDate, formatPercent } from "utils/format";
+import { clickableProps } from "utils/a11y";
 
 const SOURCE_COLOR: Record<string, string> = {
 	movimientos: BRAND_BLUE,
@@ -47,7 +47,7 @@ const SOURCE_COLOR: Record<string, string> = {
 	postal: STALE_AMBER,
 };
 
-const pct = (n: number, base: number): string | null => (base > 0 ? `${Math.round((n / base) * 100)}%` : null);
+const pct = (n: number, base: number): string | null => (base > 0 ? formatPercent((n / base) * 100, 0) : null);
 
 /** Una etapa del embudo. `valor === null` = no instrumentada, no cero. */
 const Etapa = ({
@@ -105,7 +105,8 @@ const SourceCard = ({ f, activa, onClick }: { f: EmailFunnelSource; activa: bool
 	const color = SOURCE_COLOR[f.key] || BRAND_BLUE;
 	return (
 		<Box
-			onClick={onClick}
+			{...clickableProps(onClick)}
+			aria-pressed={activa}
 			sx={{
 				p: 2,
 				height: "100%",
@@ -326,8 +327,9 @@ const EmailFunnels: React.FC = () => {
 												{!f.tracking.apertura && "Esta fuente no tiene píxel de apertura. "}
 												{!f.tracking.conversion && "No mide si el usuario terminó entrando a la app. "}
 												{f.desdeClicks &&
-													`Los clicks se registran desde el ${dayjs(f.desdeClicks).format(
-														"DD/MM/YY",
+													`Los clicks se registran desde el ${formatDate(
+														f.desdeClicks,
+														"dateShort",
 													)}: antes hay envíos sin datos de click. `}
 												Las etapas sin instrumentar se muestran como “s/d” para no confundirlas con un cero real.
 											</Typography>

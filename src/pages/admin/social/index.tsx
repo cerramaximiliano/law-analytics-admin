@@ -73,6 +73,7 @@ import {
 // project imports
 import MainCard from "components/MainCard";
 import { useTabIndexParam } from "hooks/useTabParam";
+import { clickableProps } from "utils/a11y";
 import MetaPublicarPanel from "./MetaPublicarPanel";
 import {
 	guardarMediaPost,
@@ -116,6 +117,7 @@ import {
 	downloadVideo,
 	updatePost,
 } from "api/socialPosts";
+import { formatBytes, formatNumber } from "utils/format";
 
 // ==============================|| HELPERS ||============================== //
 
@@ -285,7 +287,7 @@ const CamposPlantilla = ({
 											<Typography variant="caption" color="text.secondary">
 												{i + 1}
 											</Typography>
-											<IconButton
+											<IconButton aria-label="Eliminar fila"
 												size="small"
 												disabled={filas.length <= min}
 												onClick={() =>
@@ -788,7 +790,7 @@ const SocialStudio = () => {
 				duracionSeg: duracionVideo ? Number(duracionVideo) : undefined,
 			});
 			setVideo(r);
-			enqueueSnackbar(`Video listo: ${r.frames} frames en ${(r.ms / 1000).toFixed(0)}s`, { variant: "success" });
+			enqueueSnackbar(`Video listo: ${r.frames} frames en ${formatNumber(r.ms / 1000, 0)}s`, { variant: "success" });
 		} catch (err: any) {
 			const data = err?.response?.data;
 			if (data?.validationErrors?.length) setWarnings(data.validationErrors);
@@ -1489,7 +1491,7 @@ const SocialStudio = () => {
 														<MenuItem value="">Sin intro</MenuItem>
 														{clips.map((c) => (
 															<MenuItem key={c.id} value={c.id}>
-																{c.label} · {(c.duracionMs / 1000).toFixed(1)}s
+																{c.label} · {formatNumber(c.duracionMs / 1000, 1)}s
 															</MenuItem>
 														))}
 													</Select>
@@ -1500,7 +1502,7 @@ const SocialStudio = () => {
 														<MenuItem value="">Sin cierre</MenuItem>
 														{clips.map((c) => (
 															<MenuItem key={c.id} value={c.id}>
-																{c.label} · {(c.duracionMs / 1000).toFixed(1)}s
+																{c.label} · {formatNumber(c.duracionMs / 1000, 1)}s
 															</MenuItem>
 														))}
 													</Select>
@@ -1557,7 +1559,7 @@ const SocialStudio = () => {
 												/>
 												<Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mt: 0.5 }}>
 													<Typography variant="caption" color="text.secondary">
-														{video.width}×{video.height} · {(video.duracionMs / 1000).toFixed(1)}s · {(video.bytes / 1024).toFixed(0)} KB
+														{video.width}×{video.height} · {formatNumber(video.duracionMs / 1000, 1)}s · {formatBytes(video.bytes, 0)}
 													</Typography>
 													<Button
 														size="small"
@@ -1804,7 +1806,7 @@ const SocialStudio = () => {
 																component="img"
 																src={p.mediaResumen.previewUrl}
 																alt=""
-																onClick={() => handleVerPiezas(p)}
+																{...clickableProps(() => handleVerPiezas(p))}
 																sx={{
 																	width: 48,
 																	height: 64,
@@ -1814,7 +1816,7 @@ const SocialStudio = () => {
 																	borderColor: "divider",
 																	display: "block",
 																	cursor: "pointer",
-																	transition: "all 0.2s ease",
+																	transition: "border-color 0.2s ease, transform 0.2s ease",
 																	"&:hover": { borderColor: "primary.main", transform: "scale(1.06)" },
 																}}
 															/>
@@ -1822,7 +1824,7 @@ const SocialStudio = () => {
 													) : p.mediaResumen?.video ? (
 														<Tooltip title="Ver el video guardado">
 															<Box
-																onClick={() => handleVerPiezas(p)}
+																{...clickableProps(() => handleVerPiezas(p))}
 																sx={{
 																	cursor: "pointer",
 																	width: 48,
@@ -1918,7 +1920,7 @@ const SocialStudio = () => {
 															<Copy size={16} />
 														</IconButton>
 													</Tooltip>
-													<IconButton size="small" color="error" onClick={() => setABorrar(p)}>
+													<IconButton aria-label="Eliminar publicación" size="small" color="error" onClick={() => setABorrar(p)}>
 														<Trash size={16} />
 													</IconButton>
 												</TableCell>
@@ -1972,8 +1974,8 @@ const SocialStudio = () => {
 								sx={{ width: "100%", display: "block", borderRadius: 1, bgcolor: "#000" }}
 							/>
 							<Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
-								{videoPost.video.width}×{videoPost.video.height} · {(videoPost.video.duracionMs / 1000).toFixed(1)}s ·{" "}
-								{(videoPost.video.bytes / 1024).toFixed(0)} KB · animación: {videoPost.video.animacion}
+								{videoPost.video.width}×{videoPost.video.height} · {formatNumber(videoPost.video.duracionMs / 1000, 1)}s ·{" "}
+								{formatBytes(videoPost.video.bytes, 0)} · animación: {videoPost.video.animacion}
 							</Typography>
 						</Box>
 					)}
@@ -2102,7 +2104,7 @@ const SocialStudio = () => {
 													<Typography variant="caption" color="text.secondary">
 														{info ? `${info.width}×${info.height} · ` : ""}
 														{imgs.length} imagen{imgs.length > 1 ? "es" : ""} ·{" "}
-														{pesoKb >= 1024 ? `${(pesoKb / 1024).toFixed(1)} MB` : `${Math.round(pesoKb)} KB`}
+														{formatBytes(pesoKb * 1024)}
 													</Typography>
 												);
 											})()}
@@ -2149,8 +2151,8 @@ const SocialStudio = () => {
 							{piezas.video && (
 								<Box>
 									<Typography variant="subtitle2" sx={{ mb: 1 }}>
-										Video {piezas.video.duracionMs ? `· ${(piezas.video.duracionMs / 1000).toFixed(1)}s` : ""}{" "}
-										{piezas.video.bytes ? `· ${(piezas.video.bytes / 1048576).toFixed(1)} MB` : ""}
+										Video {piezas.video.duracionMs ? `· ${formatNumber(piezas.video.duracionMs / 1000, 1)}s` : ""}{" "}
+										{piezas.video.bytes ? `· ${formatBytes(piezas.video.bytes)}` : ""}
 									</Typography>
 									<Box
 										component="video"

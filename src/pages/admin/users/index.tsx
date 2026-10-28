@@ -758,6 +758,7 @@ const UsersList = () => {
 						<TextField
 							size="small"
 							placeholder="Buscar por nombre, email o ID…"
+							inputProps={{ "aria-label": "Buscar por nombre, email o ID", spellCheck: false }}
 							value={searchText}
 							onChange={handleSearchChange}
 							onKeyPress={handleSearchKeyPress}
@@ -770,7 +771,7 @@ const UsersList = () => {
 								),
 								endAdornment: searchText && (
 									<InputAdornment position="end">
-										<IconButton size="small" onClick={() => setSearchText("")}>
+										<IconButton aria-label="Limpiar búsqueda" size="small" onClick={() => setSearchText("")}>
 											<CloseCircle size={16} />
 										</IconButton>
 									</InputAdornment>
@@ -986,7 +987,7 @@ const UsersList = () => {
 															>
 																{(user._id || user.id || "").slice(0, 8)}…
 															</Typography>
-															<IconButton size="small" onClick={() => handleCopyId(user._id || user.id || "")} sx={{ p: 0.25 }}>
+															<IconButton aria-label="Copiar ID" size="small" onClick={() => handleCopyId(user._id || user.id || "")} sx={{ p: 0.25 }}>
 																{copiedId === (user._id || user.id) ? <CopySuccess size={14} color="green" /> : <Copy size={14} />}
 															</IconButton>
 														</Stack>

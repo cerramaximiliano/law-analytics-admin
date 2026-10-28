@@ -163,7 +163,7 @@ const CausaEditModal = ({ open, onClose, causa, causaType, folderId, onCausaUpda
 								<Copy size={18} />
 							</IconButton>
 						</Tooltip>
-						<IconButton onClick={onClose} size="small">
+						<IconButton onClick={onClose} size="small" aria-label="Cerrar">
 							<CloseCircle size={20} />
 						</IconButton>
 					</Stack>

@@ -236,6 +236,7 @@ const WhatsAppInstancesCard = () => {
 										<FormControl size="small" variant="standard">
 											<Select
 												value={i.status}
+												inputProps={{ "aria-label": `Estado de ${i.name}` }}
 												disabled={busyName === i.name}
 												onChange={(e) => patch(i.name, { status: e.target.value as WhatsAppInstanceStatus })}
 												sx={{ fontSize: "0.8rem", color: STATUS_COLOR(i.status, theme), fontWeight: 600 }}

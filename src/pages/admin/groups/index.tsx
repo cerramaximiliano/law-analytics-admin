@@ -340,6 +340,7 @@ export default function GroupsPage() {
 					<TextField
 						size="small"
 						placeholder="Buscar por nombre o email del owner…"
+						inputProps={{ "aria-label": "Buscar por nombre o email del owner" }}
 						value={searchInput}
 						onChange={(e) => setSearchInput(e.target.value)}
 						InputProps={{

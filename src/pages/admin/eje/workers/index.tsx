@@ -69,6 +69,7 @@ import configEje, {
 	IEffectiveSchedule,
 	IWorkerSchedule,
 } from "api/configEje";
+import { formatNumber, formatPercent } from "utils/format";
 
 // ========== INTERFACES ==========
 
@@ -1079,11 +1080,11 @@ const EjeWorkersConfig: React.FC = () => {
 									<Typography variant="h4" sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums", color: "info.main" }}>
 										{(workersData?.managerState.systemResources?.cpuUsage || 0) * 100 < 1
 											? "<1"
-											: ((workersData?.managerState.systemResources?.cpuUsage || 0) * 100).toFixed(0)}
+											: formatNumber((workersData?.managerState.systemResources?.cpuUsage || 0) * 100, 0)}
 										%
 									</Typography>
 									<Typography variant="body2" color="text.secondary" sx={{ letterSpacing: 0.2, fontVariantNumeric: "tabular-nums" }}>
-										CPU / Memoria: {((workersData?.managerState.systemResources?.memoryUsage || 0) * 100).toFixed(0)}%
+										CPU / Memoria: {formatPercent((workersData?.managerState.systemResources?.memoryUsage || 0) * 100, 0)}
 									</Typography>
 								</Box>
 								<Cpu size={32} color={theme.palette.info.main} />
@@ -1512,7 +1513,7 @@ const EjeWorkersConfig: React.FC = () => {
 													<Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.5 }}>
 														<Typography variant="body2">CPU</Typography>
 														<Typography variant="body2">
-															{((workersData?.managerState.systemResources?.cpuUsage || 0) * 100).toFixed(1)}%
+															{formatPercent((workersData?.managerState.systemResources?.cpuUsage || 0) * 100, 1)}
 														</Typography>
 													</Box>
 													<LinearProgress
@@ -1530,7 +1531,7 @@ const EjeWorkersConfig: React.FC = () => {
 													<Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.5 }}>
 														<Typography variant="body2">Memoria</Typography>
 														<Typography variant="body2">
-															{((workersData?.managerState.systemResources?.memoryUsage || 0) * 100).toFixed(1)}%
+															{formatPercent((workersData?.managerState.systemResources?.memoryUsage || 0) * 100, 1)}
 														</Typography>
 													</Box>
 													<LinearProgress
@@ -1565,12 +1566,12 @@ const EjeWorkersConfig: React.FC = () => {
 													<TableBody>
 														<TableRow>
 															<TableCell>Umbral CPU</TableCell>
-															<TableCell align="right">{((workersData?.globalSettings?.cpuThreshold || 0.75) * 100).toFixed(0)}%</TableCell>
+															<TableCell align="right">{formatPercent((workersData?.globalSettings?.cpuThreshold || 0.75) * 100, 0)}</TableCell>
 														</TableRow>
 														<TableRow>
 															<TableCell>Umbral Memoria</TableCell>
 															<TableCell align="right">
-																{((workersData?.globalSettings?.memoryThreshold || 0.8) * 100).toFixed(0)}%
+																{formatPercent((workersData?.globalSettings?.memoryThreshold || 0.8) * 100, 0)}
 															</TableCell>
 														</TableRow>
 														<TableRow>
@@ -1708,7 +1709,7 @@ const EjeWorkersConfig: React.FC = () => {
 												<Box sx={{ display: "flex", justifyContent: "space-between" }}>
 													<Typography variant="body2">Tasa de éxito:</Typography>
 													<Typography variant="body2" fontWeight="bold">
-														{summaryStats.processed > 0 ? ((summaryStats.success / summaryStats.processed) * 100).toFixed(1) : 0}%
+														{formatPercent(summaryStats.processed > 0 ? (summaryStats.success / summaryStats.processed) * 100 : 0, 1)}
 													</Typography>
 												</Box>
 											</Stack>

@@ -26,6 +26,7 @@ import { Refresh } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import RagWorkersService, { IndexationSummary, IndexationCausa, IndexationActivity, ActiveCausa, StageBreakdown } from "api/ragWorkers";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
+import { clickableProps } from "utils/a11y";
 
 type FilterType = "all" | "indexed" | "outdated" | "pending" | "error" | "never";
 
@@ -271,7 +272,8 @@ const ProcessingMonitor: React.FC = () => {
 						bgcolor: alpha(theme.palette.info.main, 0.04),
 						cursor: !detailed ? "pointer" : undefined,
 					}}
-					onClick={!detailed ? () => setExpandedId(isExpanded ? null : causa.ragIndexId) : undefined}
+					{...(!detailed ? clickableProps(() => setExpandedId(isExpanded ? null : causa.ragIndexId)) : {})}
+					aria-expanded={!detailed ? isExpanded : undefined}
 				>
 					<Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1}>
 						<Typography variant="caption" fontWeight={600} noWrap sx={{ flex: 1, minWidth: 0 }} title={causa.caratula}>
@@ -478,7 +480,8 @@ const ProcessingMonitor: React.FC = () => {
 											cursor: "pointer",
 											"&:hover": { bgcolor: alpha(theme.palette.grey[500], 0.08) },
 										}}
-										onClick={() => setExpandedId(expandedId === "__waiting__" ? null : "__waiting__")}
+										{...clickableProps(() => setExpandedId(expandedId === "__waiting__" ? null : "__waiting__"))}
+										aria-expanded={expandedId === "__waiting__"}
 									>
 										<Stack direction="row" justifyContent="space-between" alignItems="center">
 											<Typography variant="caption" fontWeight={600} color="text.secondary">

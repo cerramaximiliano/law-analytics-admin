@@ -36,6 +36,8 @@ import HcRelevamientoService, {
 import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER, headerBorder } from "themes/dashboardTokens";
 import { COLOR_ESTADO, ComponenteChip, EstadoChip, ROJO, fmtFechaHora, fmtNum, headSx } from "./comun";
 import AnexoDrawer from "./AnexoDrawer";
+import { clickableProps } from "utils/a11y";
+import { formatPercent } from "utils/format";
 
 const COMPONENTES_PROGRAMA: Componente[] = ["sumatoria", "W", "PBU", "PC", "PAP"];
 const ESTADOS = ["cerrado", "abierto", "explicado", "insumo", "error_motor", "sin_comparables", "fuera_de_alcance"];
@@ -147,7 +149,7 @@ export default function BlueCorpTab() {
 	const u = resumen?.ultima;
 	const pe = u?.porEstado || {};
 	const conFad = (u?.evaluados || 0) - (u?.porCausa?.["sin FAD leída"] || 0) - (u?.porCausa?.["sin tiempos de servicio"] || 0);
-	const pct = (n: number, d: number) => (d > 0 ? `${((n / d) * 100).toFixed(0)} %` : "—");
+	const pct = (n: number, d: number) => (d > 0 ? formatPercent((n / d) * 100, 0) : "—");
 	const ayuda = VISTAS.find((x) => x.v === vista)?.ayuda;
 
 	return (
@@ -314,7 +316,7 @@ export default function BlueCorpTab() {
 									<TableRow
 										key={d._id}
 										hover
-										onClick={() => setSeleccion(d._id)}
+										{...clickableProps(() => setSeleccion(d._id), { asRow: true })}
 										sx={{ cursor: "pointer", "&:hover": { bgcolor: alpha(BRAND_BLUE, isDark ? 0.06 : 0.03) } }}
 									>
 										<TableCell sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>{d.fadMes || "—"}</TableCell>

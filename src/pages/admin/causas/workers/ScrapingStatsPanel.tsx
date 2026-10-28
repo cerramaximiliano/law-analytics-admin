@@ -365,6 +365,7 @@ const ScrapingStatsPanel: React.FC = () => {
 
 						{viewMode === "day" && (
 							<TextField
+								inputProps={{ "aria-label": "Día" }}
 								type="date"
 								size="small"
 								value={selectedDate}
@@ -375,6 +376,7 @@ const ScrapingStatsPanel: React.FC = () => {
 						)}
 						{viewMode === "month" && (
 							<TextField
+								inputProps={{ "aria-label": "Mes" }}
 								type="month"
 								size="small"
 								value={selectedMonth}

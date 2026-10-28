@@ -579,7 +579,12 @@ const JudicialMovementsConfig: React.FC<JudicialMovementsConfigProps> = ({ secti
 								<Clock size={20} />
 								<Typography variant="h6">Programación de horarios</Typography>
 							</Stack>
-							<IconButton size="small" onClick={() => handleToggleSection("schedule")}>
+							<IconButton
+								size="small"
+								onClick={() => handleToggleSection("schedule")}
+								aria-label={expandedSections.schedule ? "Contraer sección" : "Expandir sección"}
+								aria-expanded={expandedSections.schedule}
+							>
 								{expandedSections.schedule ? <ArrowUp2 /> : <ArrowDown2 />}
 							</IconButton>
 						</Stack>
@@ -679,7 +684,12 @@ const JudicialMovementsConfig: React.FC<JudicialMovementsConfigProps> = ({ secti
 								<ChartSquare size={20} />
 								<Typography variant="h6">Límites y restricciones</Typography>
 							</Stack>
-							<IconButton size="small" onClick={() => handleToggleSection("limits")}>
+							<IconButton
+								size="small"
+								onClick={() => handleToggleSection("limits")}
+								aria-label={expandedSections.limits ? "Contraer sección" : "Expandir sección"}
+								aria-expanded={expandedSections.limits}
+							>
 								{expandedSections.limits ? <ArrowUp2 /> : <ArrowDown2 />}
 							</IconButton>
 						</Stack>
@@ -793,7 +803,12 @@ const JudicialMovementsConfig: React.FC<JudicialMovementsConfigProps> = ({ secti
 									variant="outlined"
 								/>
 							</Stack>
-							<IconButton size="small" onClick={() => handleToggleSection("planBanner")}>
+							<IconButton
+								size="small"
+								onClick={() => handleToggleSection("planBanner")}
+								aria-label={expandedSections.planBanner ? "Contraer sección" : "Expandir sección"}
+								aria-expanded={expandedSections.planBanner}
+							>
 								{expandedSections.planBanner ? <ArrowUp2 /> : <ArrowDown2 />}
 							</IconButton>
 						</Stack>
@@ -912,7 +927,12 @@ const JudicialMovementsConfig: React.FC<JudicialMovementsConfigProps> = ({ secti
 									variant="outlined"
 								/>
 							</Stack>
-							<IconButton size="small" onClick={() => handleToggleSection("featureBanner")}>
+							<IconButton
+								size="small"
+								onClick={() => handleToggleSection("featureBanner")}
+								aria-label={expandedSections.featureBanner ? "Contraer sección" : "Expandir sección"}
+								aria-expanded={expandedSections.featureBanner}
+							>
 								{expandedSections.featureBanner ? <ArrowUp2 /> : <ArrowDown2 />}
 							</IconButton>
 						</Stack>
@@ -1018,7 +1038,12 @@ const JudicialMovementsConfig: React.FC<JudicialMovementsConfigProps> = ({ secti
 									variant="outlined"
 								/>
 							</Stack>
-							<IconButton size="small" onClick={() => handleToggleSection("googleCalendarBanner")}>
+							<IconButton
+								size="small"
+								onClick={() => handleToggleSection("googleCalendarBanner")}
+								aria-label={expandedSections.googleCalendarBanner ? "Contraer sección" : "Expandir sección"}
+								aria-expanded={expandedSections.googleCalendarBanner}
+							>
 								{expandedSections.googleCalendarBanner ? <ArrowUp2 /> : <ArrowDown2 />}
 							</IconButton>
 						</Stack>
@@ -1125,7 +1150,12 @@ const JudicialMovementsConfig: React.FC<JudicialMovementsConfigProps> = ({ secti
 									variant="outlined"
 								/>
 							</Stack>
-							<IconButton size="small" onClick={() => handleToggleSection("optionsBanner")}>
+							<IconButton
+								size="small"
+								onClick={() => handleToggleSection("optionsBanner")}
+								aria-label={expandedSections.optionsBanner ? "Contraer sección" : "Expandir sección"}
+								aria-expanded={expandedSections.optionsBanner}
+							>
 								{expandedSections.optionsBanner ? <ArrowUp2 /> : <ArrowDown2 />}
 							</IconButton>
 						</Stack>
@@ -1186,7 +1216,12 @@ const JudicialMovementsConfig: React.FC<JudicialMovementsConfigProps> = ({ secti
 									variant="outlined"
 								/>
 							</Stack>
-							<IconButton size="small" onClick={() => handleToggleSection("bannerPolicy")}>
+							<IconButton
+								size="small"
+								onClick={() => handleToggleSection("bannerPolicy")}
+								aria-label={expandedSections.bannerPolicy ? "Contraer sección" : "Expandir sección"}
+								aria-expanded={expandedSections.bannerPolicy}
+							>
 								{expandedSections.bannerPolicy ? <ArrowUp2 /> : <ArrowDown2 />}
 							</IconButton>
 						</Stack>
@@ -1270,7 +1305,12 @@ const JudicialMovementsConfig: React.FC<JudicialMovementsConfigProps> = ({ secti
 									variant="outlined"
 								/>
 							</Stack>
-							<IconButton size="small" onClick={() => handleToggleSection("postal")}>
+							<IconButton
+								size="small"
+								onClick={() => handleToggleSection("postal")}
+								aria-label={expandedSections.postal ? "Contraer sección" : "Expandir sección"}
+								aria-expanded={expandedSections.postal}
+							>
 								{expandedSections.postal ? <ArrowUp2 /> : <ArrowDown2 />}
 							</IconButton>
 						</Stack>
@@ -1341,6 +1381,7 @@ const JudicialMovementsConfig: React.FC<JudicialMovementsConfigProps> = ({ secti
 											)
 										}
 										placeholder="vacío = usa ADMIN_EMAIL del servicio"
+										inputProps={{ spellCheck: false }}
 										helperText="Emails que reciben la alerta y el aviso de recuperación"
 										fullWidth
 										disabled={config.postalNotifications?.adminAlerts?.enabled === false}
@@ -1361,7 +1402,12 @@ const JudicialMovementsConfig: React.FC<JudicialMovementsConfigProps> = ({ secti
 								<RefreshCircle size={20} />
 								<Typography variant="h6">Configuración de reintentos</Typography>
 							</Stack>
-							<IconButton size="small" onClick={() => handleToggleSection("retry")}>
+							<IconButton
+								size="small"
+								onClick={() => handleToggleSection("retry")}
+								aria-label={expandedSections.retry ? "Contraer sección" : "Expandir sección"}
+								aria-expanded={expandedSections.retry}
+							>
 								{expandedSections.retry ? <ArrowUp2 /> : <ArrowDown2 />}
 							</IconButton>
 						</Stack>
@@ -1422,7 +1468,12 @@ const JudicialMovementsConfig: React.FC<JudicialMovementsConfigProps> = ({ secti
 								<Setting2 size={20} />
 								<Typography variant="h6">Configuración de contenido</Typography>
 							</Stack>
-							<IconButton size="small" onClick={() => handleToggleSection("content")}>
+							<IconButton
+								size="small"
+								onClick={() => handleToggleSection("content")}
+								aria-label={expandedSections.content ? "Contraer sección" : "Expandir sección"}
+								aria-expanded={expandedSections.content}
+							>
 								{expandedSections.content ? <ArrowUp2 /> : <ArrowDown2 />}
 							</IconButton>
 						</Stack>
@@ -1486,7 +1537,12 @@ const JudicialMovementsConfig: React.FC<JudicialMovementsConfigProps> = ({ secti
 								<Filter size={20} />
 								<Typography variant="h6">Filtros</Typography>
 							</Stack>
-							<IconButton size="small" onClick={() => handleToggleSection("filters")}>
+							<IconButton
+								size="small"
+								onClick={() => handleToggleSection("filters")}
+								aria-label={expandedSections.filters ? "Contraer sección" : "Expandir sección"}
+								aria-expanded={expandedSections.filters}
+							>
 								{expandedSections.filters ? <ArrowUp2 /> : <ArrowDown2 />}
 							</IconButton>
 						</Stack>
@@ -1548,7 +1604,12 @@ const JudicialMovementsConfig: React.FC<JudicialMovementsConfigProps> = ({ secti
 								<Setting2 size={20} />
 								<Typography variant="h6">Políticas de movimientos por worker</Typography>
 							</Stack>
-							<IconButton size="small" onClick={() => handleToggleSection("policies")}>
+							<IconButton
+								size="small"
+								onClick={() => handleToggleSection("policies")}
+								aria-label={expandedSections.policies ? "Contraer sección" : "Expandir sección"}
+								aria-expanded={expandedSections.policies}
+							>
 								{expandedSections.policies ? <ArrowUp2 /> : <ArrowDown2 />}
 							</IconButton>
 						</Stack>
@@ -1568,7 +1629,12 @@ const JudicialMovementsConfig: React.FC<JudicialMovementsConfigProps> = ({ secti
 								<Archive size={20} />
 								<Typography variant="h6">Retención de datos</Typography>
 							</Stack>
-							<IconButton size="small" onClick={() => handleToggleSection("dataRetention")}>
+							<IconButton
+								size="small"
+								onClick={() => handleToggleSection("dataRetention")}
+								aria-label={expandedSections.dataRetention ? "Contraer sección" : "Expandir sección"}
+								aria-expanded={expandedSections.dataRetention}
+							>
 								{expandedSections.dataRetention ? <ArrowUp2 /> : <ArrowDown2 />}
 							</IconButton>
 						</Stack>
@@ -1667,7 +1733,12 @@ const JudicialMovementsConfig: React.FC<JudicialMovementsConfigProps> = ({ secti
 								<Link21 size={20} />
 								<Typography variant="h6">Endpoints y URL</Typography>
 							</Stack>
-							<IconButton size="small" onClick={() => handleToggleSection("endpoints")}>
+							<IconButton
+								size="small"
+								onClick={() => handleToggleSection("endpoints")}
+								aria-label={expandedSections.endpoints ? "Contraer sección" : "Expandir sección"}
+								aria-expanded={expandedSections.endpoints}
+							>
 								{expandedSections.endpoints ? <ArrowUp2 /> : <ArrowDown2 />}
 							</IconButton>
 						</Stack>

@@ -49,6 +49,7 @@ import {
 } from "types/onboarding";
 import { useSnackbar } from "notistack";
 import { useTabIndexParam } from "hooks/useTabParam";
+import { formatPercent } from "utils/format";
 
 // Slugs del tab en la URL; el orden fija el índice de cada <Tab>.
 const TAB_SLUGS = ["resumen", "eventos", "estancados", "reset"] as const;
@@ -687,7 +688,7 @@ const OnboardingAnalytics: React.FC = () => {
 														<TableCell align="right">{row.createdFolder}</TableCell>
 														<TableCell align="right">
 															<Chip
-																label={`${row.count > 0 ? ((row.createdFolder / row.count) * 100).toFixed(1) : 0}%`}
+																label={formatPercent(row.count > 0 ? (row.createdFolder / row.count) * 100 : 0, 1)}
 																size="small"
 																color={
 																	row.count > 0 && (row.createdFolder / row.count) * 100 > 50
@@ -1045,6 +1046,7 @@ const OnboardingAnalytics: React.FC = () => {
 							fullWidth
 							size="small"
 							placeholder="Buscar por email o nombre (mín. 2 caracteres)…"
+							inputProps={{ "aria-label": "Buscar por email o nombre", spellCheck: false }}
 							value={searchQuery}
 							onChange={(e) => setSearchQuery(e.target.value)}
 							InputProps={{

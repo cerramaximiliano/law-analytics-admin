@@ -36,6 +36,7 @@ import { CausasEjeService, CausaEje, WorkerStatsResponse, EligibilityStatsRespon
 import { Refresh, Eye, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, TickCircle, CloseSquare, Lock1, Repeat } from "iconsax-react";
 import CausaDetalleModalEje from "./CausaDetalleModalEje";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
+import { formatPercent } from "utils/format";
 
 // Helper para formatear fechas
 const formatDate = (date: { $date: string } | string | undefined): string => {
@@ -707,7 +708,7 @@ const CarpetasVerificadasEje = () => {
 											</Tooltip>
 										</Stack>
 									</Stack>
-									<Tooltip title={`${eligibilityStats.coveragePercent.toFixed(1)}% de documentos elegibles actualizados hoy`}>
+									<Tooltip title={`${formatPercent(eligibilityStats.coveragePercent, 1)} de documentos elegibles actualizados hoy`}>
 										<LinearProgress
 											variant="determinate"
 											value={eligibilityStats.coveragePercent}
@@ -728,7 +729,7 @@ const CarpetasVerificadasEje = () => {
 										/>
 									</Tooltip>
 									<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5, textAlign: "right" }}>
-										{eligibilityStats.coveragePercent.toFixed(1)}% cobertura
+										{formatPercent(eligibilityStats.coveragePercent, 1)} cobertura
 									</Typography>
 								</Box>
 							) : (

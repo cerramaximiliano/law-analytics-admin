@@ -48,6 +48,8 @@ import TrialsService, {
 	GetTrialSubscriptionsParams,
 	GetGracePeriodsParams,
 } from "api/trials";
+import { formatDate as formatDateUtil } from "utils/format";
+import { useTabIndexParam } from "hooks/useTabParam";
 
 dayjs.extend(relativeTime);
 dayjs.locale("es");
@@ -69,7 +71,7 @@ const PLAN_COLOR: Record<string, "default" | "primary" | "warning"> = {
 	premium: "warning",
 };
 
-const formatDate = (d: string | null | undefined) => (d ? dayjs(d).format("DD/MM/YYYY") : "—");
+const formatDate = (d: string | null | undefined) => (d ? formatDateUtil(d) : "—");
 
 const getDaysUrgency = (days: number | null): TrialUrgency => {
 	if (days === null) return "unknown";
@@ -398,7 +400,7 @@ const GraceTab = ({ testMode }: { testMode: boolean }) => {
 													sx={{ width: 120 }}
 													InputProps={{
 														endAdornment: <InputAdornment position="end">días</InputAdornment>,
-														inputProps: { min: 1 },
+														inputProps: { min: 1, "aria-label": `Días de gracia: ${field.label}` },
 													}}
 												/>
 												<Button size="small" variant="contained" onClick={handleGraceSave} disabled={savingGrace}>
@@ -879,7 +881,7 @@ const TrialsTab = ({ testMode }: { testMode: boolean }) => {
 													sx={{ width: 120 }}
 													InputProps={{
 														endAdornment: <InputAdornment position="end">días</InputAdornment>,
-														inputProps: { min: 0 },
+														inputProps: { min: 0, "aria-label": `Días de prueba: ${plan.displayName}` },
 													}}
 												/>
 												<Button size="small" variant="contained" onClick={handleSave} disabled={saving}>
@@ -1085,8 +1087,10 @@ const TrialsTab = ({ testMode }: { testMode: boolean }) => {
 
 // ── Página principal ──────────────────────────────────────────────────────────
 
+const TAB_SLUGS = ["periodos-de-gracia", "periodos-de-prueba"] as const;
+
 const Trials = () => {
-	const [tab, setTab] = useState(0);
+	const [tab, setTab] = useTabIndexParam("tab", TAB_SLUGS);
 	const [testMode, setTestMode] = useState(false);
 	const [refreshKey, setRefreshKey] = useState(0);
 

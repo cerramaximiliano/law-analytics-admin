@@ -158,7 +158,7 @@ const InfolegNormasPage = () => {
 		<MainCard
 			title="Normas InfoLeg"
 			secondary={
-				<IconButton size="small" onClick={fetchNormas} disabled={loading}>
+				<IconButton size="small" onClick={fetchNormas} disabled={loading} aria-label="Actualizar normas">
 					<Refresh size={18} />
 				</IconButton>
 			}
@@ -171,6 +171,7 @@ const InfolegNormasPage = () => {
 							fullWidth
 							size="small"
 							placeholder="Buscar por ID, número o título…"
+							inputProps={{ "aria-label": "Buscar por ID, número o título" }}
 							value={search}
 							onChange={(e) => applyFilter(() => setSearch(e.target.value))}
 							InputProps={{

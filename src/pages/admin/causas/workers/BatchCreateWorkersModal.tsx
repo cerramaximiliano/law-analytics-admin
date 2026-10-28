@@ -283,6 +283,7 @@ const BatchCreateWorkersModal: React.FC<BatchCreateWorkersModalProps> = ({ open,
 												<TableCell>{index + 1}</TableCell>
 												<TableCell>
 													<TextField
+														inputProps={{ "aria-label": `Inicio del rango ${index + 1}` }}
 														type="number"
 														size="small"
 														value={range.start}
@@ -292,6 +293,7 @@ const BatchCreateWorkersModal: React.FC<BatchCreateWorkersModalProps> = ({ open,
 												</TableCell>
 												<TableCell>
 													<TextField
+														inputProps={{ "aria-label": `Fin del rango ${index + 1}` }}
 														type="number"
 														size="small"
 														value={range.end}

@@ -55,12 +55,12 @@ import {
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import PdfTemplatesAdminService, { PdfTemplate, PdfTemplateStats, PdfField } from "api/pdfTemplatesAdmin";
-import dayjs from "dayjs";
+import { formatDateTime } from "utils/format";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-const formatDate = (d?: string) => (d ? dayjs(d).format("DD/MM/YYYY HH:mm") : "-");
+const formatDate = (d?: string) => (d ? formatDateTime(d) : "-");
 
 const CATEGORY_LABELS: Record<string, string> = {
 	postal: "Postal",
@@ -780,6 +780,7 @@ const PdfTemplatesPage: React.FC = () => {
 				<TextField
 					size="small"
 					placeholder="Buscar nombre, slug…"
+					inputProps={{ "aria-label": "Buscar nombre, slug" }}
 					value={searchInput}
 					onChange={(e) => setSearchInput(e.target.value)}
 					onKeyPress={(e) => e.key === "Enter" && handleSearch()}
@@ -792,7 +793,7 @@ const PdfTemplatesPage: React.FC = () => {
 						),
 						endAdornment: searchInput && (
 							<InputAdornment position="end">
-								<IconButton size="small" onClick={handleClearSearch}>
+								<IconButton size="small" onClick={handleClearSearch} aria-label="Limpiar búsqueda">
 									<CloseCircle size={14} />
 								</IconButton>
 							</InputAdornment>

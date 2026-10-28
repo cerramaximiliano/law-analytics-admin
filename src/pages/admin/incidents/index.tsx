@@ -29,6 +29,7 @@ import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import { LIVE_GREEN, STALE_AMBER } from "themes/dashboardTokens";
 import IncidentsService, { Incident, IncidentSeverity, IncidentStatus, IncidentSource } from "api/incidents";
+import { clickableProps } from "utils/a11y";
 
 // Vista de detalle del registro de incidentes.
 //
@@ -384,7 +385,8 @@ const IncidentsPage = () => {
 								spacing={1.5}
 								alignItems="center"
 								sx={{ px: 2, py: 1.25, cursor: "pointer" }}
-								onClick={() => setAbierto(esta ? null : i._id)}
+								{...clickableProps(() => setAbierto(esta ? null : i._id))}
+								aria-expanded={esta}
 							>
 								{/* Los resueltos no llevan casilla: no hay acción en lote que
 								    tenga sentido sobre ellos. stopPropagation para que marcar

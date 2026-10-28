@@ -30,6 +30,7 @@ import { useSnackbar } from "notistack";
 import LiquidacionWorkerConfigService, { DocumentsListParams, LiquidacionDocListItem, Regimen } from "api/liquidacionWorkerConfig";
 import DocumentDetailDrawer from "./DocumentDetailDrawer";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
+import { clickableProps } from "utils/a11y";
 
 const PDF_STATUSES = ["pending", "downloading", "parsed", "extracted", "ocr_needed", "failed", "not_pdf"];
 const SECTION_MIXES = ["HC+HR+RET", "HR+RET", "HC+HR", "HC+RET", "HC", "HR", "RET", "COVER", "NONE"];
@@ -147,6 +148,7 @@ export default function DocumentsTab() {
 			<Paper variant="outlined" sx={{ p: 2, borderColor: headerBorder(isDark), borderRadius: 1.5 }}>
 				<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap alignItems="center">
 					<TextField
+						inputProps={{ "aria-label": "Buscar carátula" }}
 						size="small"
 						placeholder="Buscar carátula…"
 						value={caratulaQuery}
@@ -322,7 +324,7 @@ export default function DocumentsTab() {
 												transition: "background-color 150ms ease",
 												"&:hover": { bgcolor: alpha(BRAND_BLUE, isDark ? 0.06 : 0.03) },
 											}}
-											onClick={() => handleOpenDetail(d._id)}
+											{...clickableProps(() => handleOpenDetail(d._id), { asRow: true })}
 										>
 											<TableCell sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>{fmtDate(d.movFecha)}</TableCell>
 											<TableCell>

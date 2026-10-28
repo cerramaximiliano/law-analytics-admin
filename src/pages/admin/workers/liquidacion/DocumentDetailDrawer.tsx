@@ -4,6 +4,7 @@ import { ArrowRight2, CloseCircle, DocumentText, ExportSquare, Folder2 } from "i
 import { useSnackbar } from "notistack";
 import LiquidacionWorkerConfigService, { CausaOrigen, LiquidacionDocDetail } from "api/liquidacionWorkerConfig";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
+import { formatNumber } from "utils/format";
 
 interface Props {
 	docId: string | null;
@@ -134,7 +135,7 @@ export default function DocumentDetailDrawer({ docId, open, onClose }: Props) {
 							Detalle de liquidación
 						</Typography>
 					</Stack>
-					<IconButton
+					<IconButton aria-label="Cerrar"
 						onClick={onClose}
 						size="small"
 						sx={{
@@ -281,7 +282,7 @@ export default function DocumentDetailDrawer({ docId, open, onClose }: Props) {
 													sx={{ fontFamily: "monospace" }}
 												/>
 												<Typography variant="caption" color="text.secondary">
-													conf: {s.confidence?.toFixed(2)}
+													conf: {formatNumber(s.confidence, 2)}
 												</Typography>
 											</Stack>
 											{s.markers && s.markers.length > 0 && (

@@ -39,6 +39,7 @@ import MarketingQuickNav from "components/admin/marketing/MarketingQuickNav";
 import { SuppressionService } from "store/reducers/campaign";
 import { SuppressedEmail, SuppressionSyncResults } from "types/suppression";
 import { BRAND_BLUE, LIVE_GREEN, LIVE_PULSE_KEYFRAMES } from "themes/dashboardTokens";
+import { formatNumber } from "utils/format";
 
 // icons
 import { Refresh, SearchNormal1, Warning2, TickCircle, CloseCircle, ArrowRotateLeft } from "iconsax-react";
@@ -407,7 +408,7 @@ const MarketingSuppression = () => {
 						{syncResults.contactsNotFound > 0 && ` ${syncResults.contactsNotFound} no encontrados en la base de datos.`}
 					</Typography>
 					<Typography variant="caption" color="text.secondary">
-						Duración: {(syncResults.duration / 1000).toFixed(1)}s
+						Duración: {formatNumber(syncResults.duration / 1000, 1)} s
 					</Typography>
 				</Alert>
 			)}
@@ -424,6 +425,8 @@ const MarketingSuppression = () => {
 				<TextField
 					size="small"
 					placeholder="Buscar email…"
+					inputProps={{ "aria-label": "Buscar email", spellCheck: false }}
+					autoComplete="off"
 					value={searchTerm}
 					onChange={handleSearchChange}
 					InputProps={{

@@ -57,6 +57,7 @@ import { enqueueSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import ImageActions from "components/ImageActions";
 import CopyButton from "components/CopyButton";
+import { clickableProps } from "utils/a11y";
 import { useTabParam, useTabIndexParam } from "hooks/useTabParam";
 import { AddCircle } from "iconsax-react";
 import scbaCredentialsService, {
@@ -988,6 +989,9 @@ const CredencialesSCBA = () => {
 										size="small"
 										label="Filtrar por email destinatario"
 										placeholder="Ej: usuario@mail.com"
+										type="email"
+										autoComplete="off"
+										inputProps={{ spellCheck: false }}
 										value={emailLogsUserFilter}
 										onChange={(e) => setEmailLogsUserFilter(e.target.value)}
 										onKeyPress={(e) => {
@@ -1857,9 +1861,10 @@ const CredencialesSCBA = () => {
 											p.url ? (
 												<Box
 													key={p.page}
-													onClick={() =>
-														setSnapshotPreview({ url: p.url as string, label: `${snap.date} — página ${p.page}`, s3Key: p.s3Key })
-													}
+													{...clickableProps(
+														() => setSnapshotPreview({ url: p.url as string, label: `${snap.date} — página ${p.page}`, s3Key: p.s3Key }),
+														{ label: `Ver página ${p.page}` },
+													)}
 													sx={{
 														cursor: "pointer",
 														border: (t) => `1px solid ${t.palette.divider}`,

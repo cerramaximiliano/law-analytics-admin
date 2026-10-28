@@ -246,7 +246,7 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({ open, onClose
 						<Typography variant="h5">Detalles de la Campaña</Typography>
 					</Grid>
 					<Grid item>
-						<IconButton onClick={onClose} size="small">
+						<IconButton aria-label="Cerrar" onClick={onClose} size="small">
 							<CloseCircle variant="Bold" />
 						</IconButton>
 					</Grid>

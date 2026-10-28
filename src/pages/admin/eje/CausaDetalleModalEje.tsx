@@ -527,6 +527,7 @@ const CausaDetalleModalEje = ({ open, onClose, causa, onCausaUpdated }: CausaDet
 									<TextField
 										fullWidth
 										size="small"
+										inputProps={{ "aria-label": "Carátula" }}
 										value={editedCausa.caratula || ""}
 										onChange={(e) => setEditedCausa({ ...editedCausa, caratula: e.target.value })}
 										sx={{ mt: 0.5 }}
@@ -544,6 +545,7 @@ const CausaDetalleModalEje = ({ open, onClose, causa, onCausaUpdated }: CausaDet
 									<TextField
 										fullWidth
 										size="small"
+										inputProps={{ "aria-label": "Juzgado" }}
 										value={editedCausa.juzgado || ""}
 										onChange={(e) => setEditedCausa({ ...editedCausa, juzgado: e.target.value })}
 										sx={{ mt: 0.5 }}
@@ -588,6 +590,7 @@ const CausaDetalleModalEje = ({ open, onClose, causa, onCausaUpdated }: CausaDet
 									<TextField
 										fullWidth
 										size="small"
+										inputProps={{ "aria-label": "Objeto" }}
 										value={editedCausa.objeto || ""}
 										onChange={(e) => setEditedCausa({ ...editedCausa, objeto: e.target.value })}
 										sx={{ mt: 0.5 }}
@@ -605,6 +608,7 @@ const CausaDetalleModalEje = ({ open, onClose, causa, onCausaUpdated }: CausaDet
 									<TextField
 										fullWidth
 										size="small"
+										inputProps={{ "aria-label": "Estado del expediente" }}
 										value={editedCausa.estado || ""}
 										onChange={(e) => setEditedCausa({ ...editedCausa, estado: e.target.value })}
 										sx={{ mt: 0.5 }}
@@ -649,6 +653,7 @@ const CausaDetalleModalEje = ({ open, onClose, causa, onCausaUpdated }: CausaDet
 										fullWidth
 										type="datetime-local"
 										size="small"
+										inputProps={{ "aria-label": "Última actualización" }}
 										value={toDateTimeLocal(editedCausa.lastUpdate || causa.lastUpdate)}
 										onChange={(e) => setEditedCausa({ ...editedCausa, lastUpdate: e.target.value })}
 										sx={{ mt: 0.5 }}
@@ -667,6 +672,7 @@ const CausaDetalleModalEje = ({ open, onClose, causa, onCausaUpdated }: CausaDet
 										fullWidth
 										type="date"
 										size="small"
+										inputProps={{ "aria-label": "Último movimiento" }}
 										value={toDateLocal(editedCausa.ultimoMovimiento || causa.ultimoMovimiento)}
 										onChange={(e) => setEditedCausa({ ...editedCausa, ultimoMovimiento: e.target.value })}
 										sx={{ mt: 0.5 }}

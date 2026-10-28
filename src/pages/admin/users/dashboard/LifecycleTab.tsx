@@ -537,6 +537,7 @@ const LifecycleTab: React.FC = () => {
 						size="small"
 						displayEmpty
 						value={actionsFilter}
+						inputProps={{ "aria-label": "Filtrar acciones" }}
 						onChange={(e) => {
 							setActionsPage(0);
 							setActionsFilter(e.target.value);

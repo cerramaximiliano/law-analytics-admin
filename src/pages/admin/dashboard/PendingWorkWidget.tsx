@@ -8,6 +8,7 @@ import FeedbackService, { UserFeedback } from "api/feedback";
 import { AdminTask } from "types/admin-task";
 import { useSnackbar } from "notistack";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
+import { clickableProps } from "utils/a11y";
 
 // ----------------------------------------------------------------------
 // Pendientes del equipo: tareas próximas a vencer (o vencidas), consultas de
@@ -208,7 +209,7 @@ const PendingWorkWidget: React.FC = () => {
 							return (
 								<Box
 									key={r.key}
-									onClick={() => navigate(linkTo)}
+									{...clickableProps(() => navigate(linkTo))}
 									sx={{
 										display: "flex",
 										alignItems: "center",

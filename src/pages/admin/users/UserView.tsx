@@ -44,6 +44,7 @@ import DeleteUserDialog from "./DeleteUserDialog";
 import EditUserModal from "./EditUserModal";
 import UserResourcesTab from "./UserResourcesTab";
 import { formatCurrency } from "utils/formatCurrency";
+import { formatNumber } from "utils/format";
 
 // assets
 import {
@@ -970,9 +971,9 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 
 				let message = `Almacenamiento sincronizado para ${response.data?.user?.email || "el usuario"}`;
 				if (response.data?.changed) {
-					message += `. Antes: ${beforeMB.toFixed(2)} MB, Después: ${afterMB.toFixed(2)} MB (${
+					message += `. Antes: ${formatNumber(beforeMB, 2)} MB, Después: ${formatNumber(afterMB, 2)} MB (${
 						difference > 0 ? "+" : ""
-					}${difference.toFixed(2)} MB)`;
+					}${formatNumber(difference, 2)} MB)`;
 				}
 
 				storeDispatch(
@@ -1423,7 +1424,7 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 												)}
 											</Box>
 											{!isEditingGracePeriod && (
-												<IconButton size="small" onClick={() => setIsEditingGracePeriod(true)} sx={{ ml: 1 }}>
+												<IconButton aria-label="Editar período de gracia" size="small" onClick={() => setIsEditingGracePeriod(true)} sx={{ ml: 1 }}>
 													<Edit2 size={16} />
 												</IconButton>
 											)}
@@ -1900,7 +1901,7 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 											</Box>
 											{!event.allDay && (
 												<Typography variant="caption" color="textSecondary">
-													{new Date(event.start).toLocaleTimeString([], {
+													{new Date(event.start).toLocaleTimeString("es-AR", {
 														hour: "2-digit",
 														minute: "2-digit",
 													})}

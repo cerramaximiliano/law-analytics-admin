@@ -1,5 +1,5 @@
 import { Fragment, useState, useEffect, useMemo, useCallback, useRef } from "react";
-import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { Link as RouterLink, useParams, useSearchParams } from "react-router-dom";
 import {
 	Box,
 	Card,
@@ -54,6 +54,8 @@ import EtapaAnotacionesService, {
 	EstadoAnotacion,
 } from "api/etapaAnotaciones";
 import { BRAND_BLUE } from "themes/dashboardTokens";
+import { clickableProps } from "utils/a11y";
+import ConfirmDialog from "components/admin/ConfirmDialog";
 import Autocomplete from "@mui/material/Autocomplete";
 import {
 	ACCIONES_REQUERIDAS,
@@ -120,7 +122,6 @@ const ESTADO_COLOR: Record<EstadoAnotacion, "default" | "warning" | "info" | "su
 const EtiquetadoEditor = () => {
 	const { fuero, id } = useParams<{ fuero: string; id: string }>();
 	const [searchParams, setSearchParams] = useSearchParams();
-	const navigate = useNavigate();
 	const { enqueueSnackbar } = useSnackbar();
 	const theme = useTheme();
 	const isDark = theme.palette.mode === "dark";
@@ -159,6 +160,7 @@ const EtiquetadoEditor = () => {
 	const [notasCausa, setNotasCausa] = useState("");
 	const [estado, setEstado] = useState<EstadoAnotacion>("pendiente");
 	const [guardando, setGuardando] = useState(false);
+	const [confirmarLimpiar, setConfirmarLimpiar] = useState(false);
 	// Modo de anotación: "libre" (todas las dimensiones) o una dimensión foco
 	const [modo, setModo] = useState<"libre" | DimKey | "actoProcesal" | "decisiones" | "cargas">("libre");
 	// Cuerpos traídos bajo demanda, por idx de movimiento
@@ -790,7 +792,7 @@ const EtiquetadoEditor = () => {
 
 	const limpiarTodo = async () => {
 		if (!fuero || !id) return;
-		if (!window.confirm("¿Borrar TODAS las anotaciones de esta causa?")) return;
+		setConfirmarLimpiar(false);
 		setGuardando(true);
 		try {
 			const resp = await EtapaAnotacionesService.guardar(fuero, id, { limpiarTodo: true, estado: "pendiente", baseUpdatedAt });
@@ -865,7 +867,7 @@ const EtiquetadoEditor = () => {
 		<MainCard
 			title={
 				<Stack direction="row" alignItems="center" spacing={1.5} flexWrap="wrap">
-					<IconButton size="small" onClick={() => navigate("/admin/causas/etiquetado")}>
+					<IconButton aria-label="Volver al listado" size="small" component={RouterLink} to="/admin/causas/etiquetado">
 						<ArrowLeft size={18} />
 					</IconButton>
 					<Typography variant="h5">
@@ -939,7 +941,13 @@ const EtiquetadoEditor = () => {
 					<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 						<Tooltip title="Borrar todas las anotaciones de la causa">
 							<span>
-								<IconButton size="small" color="error" disabled={guardando} onClick={limpiarTodo}>
+								<IconButton
+									aria-label="Borrar todas las anotaciones de la causa"
+									size="small"
+									color="error"
+									disabled={guardando}
+									onClick={() => setConfirmarLimpiar(true)}
+								>
 									<Trash size={18} />
 								</IconButton>
 							</span>
@@ -1094,7 +1102,7 @@ const EtiquetadoEditor = () => {
 									<Box
 										key={m.idx}
 										id={`mov-${m.idx}`}
-										onClick={() => {
+										{...clickableProps(() => {
 											if (vinculando !== null && vinculando !== m.idx) {
 												// Copia la anotación del original y marca la réplica
 												const src = anotaciones[String(vinculando)];
@@ -1116,7 +1124,7 @@ const EtiquetadoEditor = () => {
 												return;
 											}
 											setSeleccionado(m.idx);
-										}}
+										})}
 										sx={{
 											px: 1,
 											py: 0.6,
@@ -1125,6 +1133,7 @@ const EtiquetadoEditor = () => {
 											cursor: "pointer",
 											borderLeft: `4px solid ${sel ? BRAND_BLUE : anotado ? theme.palette.success.main : "transparent"}`,
 											outline: sel ? `1.5px solid ${alpha(BRAND_BLUE, 0.6)}` : "none",
+											"&:focus-visible": { outline: `2px solid ${theme.palette.primary.main}`, outlineOffset: 2 },
 											bgcolor: sel
 												? alpha(BRAND_BLUE, isDark ? 0.2 : 0.1)
 												: esResol
@@ -1403,6 +1412,7 @@ const EtiquetadoEditor = () => {
 									<Tooltip title="Limpiar anotaciones de este movimiento">
 										<span>
 											<IconButton
+												aria-label="Limpiar anotaciones de este movimiento"
 												size="small"
 												color="error"
 												disabled={!Object.keys(aSel).length}
@@ -1458,7 +1468,7 @@ const EtiquetadoEditor = () => {
 													</Typography>
 												)}
 												<Box
-													onClick={() => setModo(d as any)}
+													{...clickableProps(() => setModo(d as any))}
 													sx={{
 														px: 0.75,
 														py: 0.1,
@@ -1579,7 +1589,11 @@ const EtiquetadoEditor = () => {
 												value={aSel.actoProcesal || null}
 												onChange={(_e, v) => aplicarActo(mSel.idx, v)}
 												renderInput={(params) => (
-													<TextField {...params} placeholder="Buscar acto… (corre traslado, homologa, resuelve fondo…)" />
+													<TextField
+														{...params}
+														inputProps={{ ...params.inputProps, "aria-label": "Acto procesal" }}
+														placeholder="Buscar acto… (corre traslado, homologa, resuelve fondo…)"
+													/>
 												)}
 												sx={{ flex: 1, maxWidth: 460 }}
 											/>
@@ -1828,11 +1842,18 @@ const EtiquetadoEditor = () => {
 															nuevas[di] = { ...nuevas[di], objetoDecidido: v ? normalizarObjetoDecidido(v) : "" };
 															setDecisiones(mSel.idx, nuevas);
 														}}
-														renderInput={(params) => <TextField {...params} placeholder="objeto decidido… (elegí o escribí uno nuevo)" />}
+														renderInput={(params) => (
+															<TextField
+																{...params}
+																inputProps={{ ...params.inputProps, "aria-label": "Objeto decidido" }}
+																placeholder="objeto decidido… (elegí o escribí uno nuevo)"
+															/>
+														)}
 													/>
 												</Grid>
 												<Grid item xs={9} sm={3}>
 													<Select
+														inputProps={{ "aria-label": "Resultado de la decisión" }}
 														fullWidth
 														size="small"
 														displayEmpty
@@ -1871,6 +1892,7 @@ const EtiquetadoEditor = () => {
 														fullWidth
 														size="small"
 														placeholder="detalle (orden causado, por mitades, 70/30…)"
+														inputProps={{ "aria-label": "Detalle de la decisión" }}
 														value={dec.detalle || ""}
 														onChange={(ev) => {
 															const nuevas = [...(aSel.decisiones || [])];
@@ -1881,6 +1903,7 @@ const EtiquetadoEditor = () => {
 												</Grid>
 												<Grid item xs={3} sm={1}>
 													<IconButton
+														aria-label="Eliminar decisión"
 														size="small"
 														color="error"
 														onClick={() =>
@@ -1983,6 +2006,7 @@ const EtiquetadoEditor = () => {
 													</Grid>
 													<Grid item xs={4} sm={1.3}>
 														<Select
+															inputProps={{ "aria-label": "Unidad del plazo" }}
 															fullWidth
 															size="small"
 															value={carga.plazo?.unidad || "dias"}
@@ -1995,6 +2019,7 @@ const EtiquetadoEditor = () => {
 													</Grid>
 													<Grid item xs={4} sm={1.4}>
 														<Select
+															inputProps={{ "aria-label": "Tipo de plazo" }}
 															fullWidth
 															size="small"
 															value={carga.plazo?.tipo || "procesales"}
@@ -2015,6 +2040,7 @@ const EtiquetadoEditor = () => {
 													</Grid>
 													<Grid item xs={2} sm={1}>
 														<IconButton
+															aria-label="Eliminar carga"
 															size="small"
 															color="error"
 															onClick={() =>
@@ -2082,6 +2108,7 @@ const EtiquetadoEditor = () => {
 										{!esMovil && (
 											<Grid item xs={12} sm={3}>
 												<Select
+													inputProps={{ "aria-label": "Copiar anotación de otro movimiento" }}
 													fullWidth
 													size="small"
 													displayEmpty
@@ -2267,12 +2294,13 @@ const EtiquetadoEditor = () => {
 									marcarDirty("__notas__");
 								}}
 								placeholder="Observaciones generales, criterios aplicados, dudas para verificación…"
+								inputProps={{ "aria-label": "Notas de la causa" }}
 							/>
 						</Card>
 					)}
 					<Divider sx={{ my: 2 }} />
 					<Stack direction="row" spacing={1} justifyContent="flex-end" flexWrap="wrap" useFlexGap>
-						<Button size="small" color="error" variant="text" disabled={guardando} onClick={limpiarTodo}>
+						<Button size="small" color="error" variant="text" disabled={guardando} onClick={() => setConfirmarLimpiar(true)}>
 							Limpiar todo
 						</Button>
 						<Button size="small" variant="outlined" disabled={guardando || dirty.size === 0} onClick={() => guardar()}>
@@ -2305,7 +2333,7 @@ const EtiquetadoEditor = () => {
 							borderTop: `1px solid ${theme.palette.divider}`,
 						}}
 					>
-						<IconButton size="small" onClick={() => irA(-1)}>
+						<IconButton aria-label="Movimiento anterior" size="small" onClick={() => irA(-1)}>
 							<ArrowLeft2 size={22} />
 						</IconButton>
 						<Button
@@ -2317,7 +2345,7 @@ const EtiquetadoEditor = () => {
 								{numeroVisible(mSel.idx)}/{movimientosVisibles.length} · {mSel.detalle.slice(0, 42)}
 							</Typography>
 						</Button>
-						<IconButton size="small" onClick={() => irA(1)}>
+						<IconButton aria-label="Movimiento siguiente" size="small" onClick={() => irA(1)}>
 							<ArrowRight2 size={22} />
 						</IconButton>
 						<Button size="small" variant="contained" disabled={guardando || dirty.size === 0} onClick={() => guardar()}>
@@ -2391,7 +2419,7 @@ const EtiquetadoEditor = () => {
 								<Typography variant="caption" color="text.secondary">
 									Paso {Math.min(pasoTarjeta, PASOS_TARJETA.length - 1) + 1} / {PASOS_TARJETA.length}
 								</Typography>
-								<IconButton size="small" onClick={() => setTarjetaAbierta(false)}>
+								<IconButton aria-label="Cerrar" size="small" onClick={() => setTarjetaAbierta(false)}>
 									<CloseCircle size={18} />
 								</IconButton>
 							</Stack>
@@ -2413,7 +2441,14 @@ const EtiquetadoEditor = () => {
 											aplicarActo(mSel.idx, v);
 											if (v) avanzarTarjeta();
 										}}
-										renderInput={(params) => <TextField {...params} autoFocus placeholder="Buscar acto…" />}
+										renderInput={(params) => (
+											<TextField
+												{...params}
+												inputProps={{ ...params.inputProps, "aria-label": "Acto procesal" }}
+												autoFocus
+												placeholder="Buscar acto…"
+											/>
+										)}
 									/>
 									{Object.keys(sugerencias).length > 0 && (
 										<Button
@@ -2468,11 +2503,18 @@ const EtiquetadoEditor = () => {
 													nuevas[di] = { ...nuevas[di], objetoDecidido: v ? normalizarObjetoDecidido(v) : "" };
 													setDecisiones(mSel.idx, nuevas);
 												}}
-												renderInput={(params) => <TextField {...params} placeholder="objeto decidido…" />}
+												renderInput={(params) => (
+													<TextField
+														{...params}
+														inputProps={{ ...params.inputProps, "aria-label": "Objeto decidido" }}
+														placeholder="objeto decidido…"
+													/>
+												)}
 											/>
 											<TextField
 												size="small"
 												placeholder="detalle (orden causado, por mitades…)"
+												inputProps={{ "aria-label": "Detalle de la decisión" }}
 												value={dec.detalle || ""}
 												onChange={(ev2) => {
 													const nuevas = [...(aSel.decisiones || [])];
@@ -2482,6 +2524,7 @@ const EtiquetadoEditor = () => {
 											/>
 											<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
 												<Select
+													inputProps={{ "aria-label": "Resultado de la decisión" }}
 													fullWidth
 													size="small"
 													displayEmpty
@@ -2515,6 +2558,7 @@ const EtiquetadoEditor = () => {
 														))}
 												</Select>
 												<IconButton
+													aria-label="Eliminar decisión"
 													size="small"
 													color="error"
 													onClick={() =>
@@ -2592,6 +2636,7 @@ const EtiquetadoEditor = () => {
 														}
 													/>
 													<Select
+														inputProps={{ "aria-label": "Unidad del plazo" }}
 														size="small"
 														value={carga.plazo?.unidad || "dias"}
 														onChange={(ev) => carga.plazo && actualizar({ plazo: { ...carga.plazo, unidad: ev.target.value as any } })}
@@ -2601,6 +2646,7 @@ const EtiquetadoEditor = () => {
 														<MenuItem value="meses">meses</MenuItem>
 													</Select>
 													<Select
+														inputProps={{ "aria-label": "Tipo de plazo" }}
 														size="small"
 														value={carga.plazo?.tipo || "procesales"}
 														onChange={(ev) => carga.plazo && actualizar({ plazo: { ...carga.plazo, tipo: ev.target.value as any } })}
@@ -2618,6 +2664,7 @@ const EtiquetadoEditor = () => {
 														onChange={(ev) => actualizar({ apercibimiento: ev.target.value })}
 													/>
 													<IconButton
+														aria-label="Eliminar carga"
 														size="small"
 														color="error"
 														onClick={() =>
@@ -2676,7 +2723,7 @@ const EtiquetadoEditor = () => {
 												direction="row"
 												spacing={1}
 												alignItems="baseline"
-												onClick={() => irAPasoTarjeta(dim)}
+												{...clickableProps(() => irAPasoTarjeta(dim))}
 												sx={{
 													py: 0.35,
 													px: 0.75,
@@ -2705,10 +2752,10 @@ const EtiquetadoEditor = () => {
 										);
 									})}
 									<Stack direction="row" spacing={1.5} sx={{ py: 0.35, px: 0.75 }}>
-										<Typography variant="caption" sx={{ color: "text.secondary" }} onClick={() => irAPasoTarjeta("decisiones")}>
+										<Typography variant="caption" sx={{ color: "text.secondary", cursor: "pointer" }} {...clickableProps(() => irAPasoTarjeta("decisiones"))}>
 											Decisiones: {(aSel.decisiones || []).length}
 										</Typography>
-										<Typography variant="caption" sx={{ color: "text.secondary" }} onClick={() => irAPasoTarjeta("cargas")}>
+										<Typography variant="caption" sx={{ color: "text.secondary", cursor: "pointer" }} {...clickableProps(() => irAPasoTarjeta("cargas"))}>
 											Cargas: {(aSel.cargas || []).length}
 										</Typography>
 									</Stack>
@@ -2832,6 +2879,14 @@ const EtiquetadoEditor = () => {
 					</Box>
 				</Dialog>
 			)}
+			<ConfirmDialog
+				open={confirmarLimpiar}
+				title="¿Borrar todas las anotaciones de esta causa?"
+				confirmLabel="Borrar anotaciones"
+				loading={guardando}
+				onConfirm={limpiarTodo}
+				onClose={() => setConfirmarLimpiar(false)}
+			/>
 		</MainCard>
 	);
 };

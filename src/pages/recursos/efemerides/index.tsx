@@ -27,6 +27,7 @@ import {
 
 // project
 import MainCard from "components/MainCard";
+import ConfirmDialog from "components/admin/ConfirmDialog";
 import { useSnackbar } from "notistack";
 
 // icons
@@ -212,6 +213,8 @@ const Efemerides = () => {
 		esNueva: true,
 	});
 	const { enqueueSnackbar } = useSnackbar();
+	const [efToDelete, setEfToDelete] = useState<Efemeride | null>(null);
+	const [eliminando, setEliminando] = useState(false);
 
 	const cargar = useCallback(async () => {
 		try {
@@ -238,13 +241,16 @@ const Efemerides = () => {
 	};
 
 	const borrar = async (ef: Efemeride) => {
-		if (!window.confirm(`¿Eliminar "${ef.titulo}"? Los posts ya creados no se borran.`)) return;
+		setEliminando(true);
 		try {
 			await eliminarEfemeride(ef._id);
 			enqueueSnackbar("Efeméride eliminada", { variant: "success" });
+			setEfToDelete(null);
 			cargar();
 		} catch {
 			enqueueSnackbar("No se pudo eliminar", { variant: "error" });
+		} finally {
+			setEliminando(false);
 		}
 	};
 
@@ -317,7 +323,7 @@ const Efemerides = () => {
 											</IconButton>
 										</Tooltip>
 										<Tooltip title="Eliminar">
-											<IconButton size="small" color="error" onClick={() => borrar(ef)}>
+											<IconButton size="small" color="error" onClick={() => setEfToDelete(ef)}>
 												<Trash size={16} />
 											</IconButton>
 										</Tooltip>
@@ -347,6 +353,16 @@ const Efemerides = () => {
 					setEditor((e) => ({ ...e, abierto: false }));
 					cargar();
 				}}
+			/>
+
+			<ConfirmDialog
+				open={!!efToDelete}
+				title={`¿Eliminar "${efToDelete?.titulo ?? ""}"?`}
+				description="Los posts ya creados no se borran."
+				confirmLabel="Eliminar"
+				loading={eliminando}
+				onConfirm={() => efToDelete && borrar(efToDelete)}
+				onClose={() => !eliminando && setEfToDelete(null)}
 			/>
 		</MainCard>
 	);

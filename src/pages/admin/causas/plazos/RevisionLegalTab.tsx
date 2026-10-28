@@ -44,6 +44,7 @@ import {
 	RevisionStats,
 	RevisionVeredicto,
 } from "api/plazos";
+import { clickableProps } from "utils/a11y";
 
 // Revisión legal de los plazos calculados (fase F0 de "plazos automáticos para usuarios").
 // Un abogado revisa una muestra estratificada y deja su veredicto; la precisión por estrato
@@ -534,7 +535,7 @@ export default function RevisionLegalTab() {
 										</TableRow>
 								  ))
 								: items.map((it) => (
-										<TableRow key={it._id} hover sx={{ cursor: "pointer" }} onClick={() => setAbierto(it._id)}>
+										<TableRow key={it._id} hover sx={{ cursor: "pointer" }} {...clickableProps(() => setAbierto(it._id), { asRow: true })}>
 											<TableCell sx={{ maxWidth: 260 }}>
 												<Typography variant="caption">{it.estrato}</Typography>
 											</TableCell>

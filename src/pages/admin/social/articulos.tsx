@@ -54,6 +54,7 @@ import { CloseCircle, Edit2, ExportSquare, Eye, Refresh, Trash } from "iconsax-r
 
 // project imports
 import MainCard from "components/MainCard";
+import { clickableProps } from "utils/a11y";
 import {
 	EducativoArticulo,
 	EstadoArticulo,
@@ -172,7 +173,7 @@ const VistaPreviaArticulo = ({
 		<DialogTitle>
 			<Stack direction="row" alignItems="center" justifyContent="space-between">
 				<Typography variant="h5">Vista previa</Typography>
-				<IconButton onClick={onClose}>
+				<IconButton aria-label="Cerrar" onClick={onClose}>
 					<CloseCircle />
 				</IconButton>
 			</Stack>
@@ -360,7 +361,7 @@ const EditorArticulo = ({ id, onClose, onChanged }: { id: string; onClose: () =>
 							</Typography>
 						)}
 					</Stack>
-					<IconButton onClick={onClose}>
+					<IconButton aria-label="Cerrar" onClick={onClose}>
 						<CloseCircle />
 					</IconButton>
 				</Stack>
@@ -748,7 +749,7 @@ const ArticulosBlog = () => {
 							{articulos.map((art) => (
 								<Box
 									key={art._id}
-									onClick={() => setAbierto(art._id)}
+									{...clickableProps(() => setAbierto(art._id))}
 									sx={{
 										p: 1.5,
 										borderRadius: 1.5,
@@ -773,7 +774,7 @@ const ArticulosBlog = () => {
 											{art.jurisprudencia?.length ? ` · ${art.jurisprudencia.length} fallos` : ""}
 										</Typography>
 										<Stack direction="row" sx={{ flexShrink: 0 }}>
-											<IconButton
+											<IconButton aria-label="Vista previa del artículo"
 												size="small"
 												onClick={(e) => {
 													e.stopPropagation();
@@ -782,7 +783,7 @@ const ArticulosBlog = () => {
 											>
 												<Eye size={17} />
 											</IconButton>
-											<IconButton
+											<IconButton aria-label="Editar artículo"
 												size="small"
 												onClick={(e) => {
 													e.stopPropagation();
@@ -812,7 +813,7 @@ const ArticulosBlog = () => {
 								</TableHead>
 								<TableBody>
 									{articulos.map((art) => (
-										<TableRow key={art._id} hover sx={{ cursor: "pointer" }} onClick={() => setAbierto(art._id)}>
+										<TableRow key={art._id} hover sx={{ cursor: "pointer" }} {...clickableProps(() => setAbierto(art._id), { asRow: true })}>
 											<TableCell sx={{ maxWidth: 380 }}>
 												<Typography variant="subtitle2" noWrap title={art.titulo}>
 													{art.titulo}

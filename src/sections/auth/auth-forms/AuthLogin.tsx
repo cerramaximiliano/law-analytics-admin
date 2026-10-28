@@ -238,6 +238,7 @@ const AuthLogin = ({ forgot, isGoogleLoading = false, onLoadingChange }: AuthLog
 											error={Boolean(touched.email && errors.email)}
 											disabled={isAnyFormLoading}
 											autoComplete="email"
+											inputProps={{ spellCheck: false }}
 											onKeyDown={(e) => {
 												// Prevent form submission on Enter in input fields
 												if (e.key === "Enter") {

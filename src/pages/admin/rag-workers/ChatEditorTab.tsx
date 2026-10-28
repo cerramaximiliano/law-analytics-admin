@@ -364,6 +364,7 @@ const ChatEditorTab = () => {
 												value={currentValue}
 												onChange={(e) => handleSelectChange(v, e.target.value as string | number)}
 												disabled={saving}
+												inputProps={{ "aria-label": v.label }}
 												sx={{ fontFamily: "monospace", fontSize: "0.85rem" }}
 											>
 												{v.options!.map((opt) => (
@@ -393,7 +394,7 @@ const ChatEditorTab = () => {
 												autoFocus
 												disabled={saving}
 												type="number"
-												inputProps={{ min: v.min, max: v.max, step: v.type === "float" ? 0.1 : 1 }}
+												inputProps={{ min: v.min, max: v.max, step: v.type === "float" ? 0.1 : 1, "aria-label": v.label }}
 												sx={{ width: 120, "& input": { fontFamily: "monospace", fontSize: "0.85rem" } }}
 											/>
 											{v.suffix && (
@@ -520,7 +521,7 @@ const ChatEditorTab = () => {
 							value={promptDraft}
 							onChange={(e) => setPromptDraft(e.target.value)}
 							disabled={savingPrompt}
-							inputProps={{ maxLength: 8000 }}
+							inputProps={{ maxLength: 8000, "aria-label": "System prompt" }}
 							sx={{ "& textarea": { fontFamily: "monospace", fontSize: "0.82rem" } }}
 							helperText={`${promptDraft.length} / 8000 caracteres`}
 						/>

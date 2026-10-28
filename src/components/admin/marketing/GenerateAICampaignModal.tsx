@@ -43,6 +43,7 @@ import {
 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import mktAxios from "utils/mktAxios";
+import { clickableProps } from "utils/a11y";
 import emailTemplateImagesService, { EmailTemplateImage } from "api/emailTemplateImages";
 
 const CAMPAIGN_TIMEOUT_MS = 120000;
@@ -543,6 +544,7 @@ const GenerateAICampaignModal = ({ open, onClose, onCampaignSaved }: Props) => {
 											<TextField
 												size="small"
 												placeholder="key (ej: discountCode)"
+												inputProps={{ "aria-label": "Nombre de la variable" }}
 												value={v.key}
 												onChange={(e) =>
 													setCampaignVariables((prev) => prev.map((p, i) => (i === idx ? { ...p, key: e.target.value } : p)))
@@ -553,6 +555,7 @@ const GenerateAICampaignModal = ({ open, onClose, onCampaignSaved }: Props) => {
 											<TextField
 												size="small"
 												placeholder="value (ej: BF25)"
+												inputProps={{ "aria-label": "Valor de la variable" }}
 												value={v.value}
 												onChange={(e) =>
 													setCampaignVariables((prev) => prev.map((p, i) => (i === idx ? { ...p, value: e.target.value } : p)))
@@ -561,6 +564,7 @@ const GenerateAICampaignModal = ({ open, onClose, onCampaignSaved }: Props) => {
 												sx={{ flex: 1 }}
 											/>
 											<IconButton
+												aria-label="Quitar variable"
 												size="small"
 												onClick={() => setCampaignVariables((prev) => prev.filter((_, i) => i !== idx))}
 												disabled={busy}
@@ -579,7 +583,8 @@ const GenerateAICampaignModal = ({ open, onClose, onCampaignSaved }: Props) => {
 									alignItems="center"
 									justifyContent="space-between"
 									sx={{ cursor: "pointer" }}
-									onClick={() => setImagesExpanded((v) => !v)}
+									{...clickableProps(() => setImagesExpanded((v) => !v))}
+									aria-expanded={imagesExpanded}
 								>
 									<Stack direction="row" spacing={1} alignItems="center">
 										<Image size={16} color={theme.palette.text.secondary} />
@@ -609,7 +614,8 @@ const GenerateAICampaignModal = ({ open, onClose, onCampaignSaved }: Props) => {
 																	component="img"
 																	src={img.url}
 																	alt={img.name || ""}
-																	onClick={() => toggleLibraryImage(img)}
+																	{...clickableProps(() => toggleLibraryImage(img))}
+																	aria-pressed={selected}
 																	sx={{
 																		width: 56,
 																		height: 56,
@@ -795,6 +801,7 @@ const GenerateAICampaignModal = ({ open, onClose, onCampaignSaved }: Props) => {
 														<Tooltip title="Mover arriba">
 															<span>
 																<IconButton
+																	aria-label="Mover arriba"
 																	size="small"
 																	onClick={() => moveEmail(emailTab, emailTab - 1)}
 																	disabled={busy || emailTab === 0}
@@ -806,6 +813,7 @@ const GenerateAICampaignModal = ({ open, onClose, onCampaignSaved }: Props) => {
 														<Tooltip title="Mover abajo">
 															<span>
 																<IconButton
+																	aria-label="Mover abajo"
 																	size="small"
 																	onClick={() => moveEmail(emailTab, emailTab + 1)}
 																	disabled={busy || emailTab === emails.length - 1}
@@ -899,6 +907,7 @@ const GenerateAICampaignModal = ({ open, onClose, onCampaignSaved }: Props) => {
 													multiline
 													rows={2}
 													placeholder="Ej: hacé el subject más corto y cambiá el CTA a verde"
+													inputProps={{ "aria-label": "Instrucciones para refinar el email" }}
 													value={refinePrompts[emailTab] || ""}
 													onChange={(e) => setRefinePrompts((prev) => ({ ...prev, [emailTab]: e.target.value }))}
 													disabled={busy}
@@ -954,6 +963,7 @@ const GenerateAICampaignModal = ({ open, onClose, onCampaignSaved }: Props) => {
 											)}
 											{previewMode === "htmlEdit" && (
 												<TextField
+													inputProps={{ "aria-label": "HTML del email" }}
 													multiline
 													fullWidth
 													minRows={16}
@@ -985,6 +995,7 @@ const GenerateAICampaignModal = ({ open, onClose, onCampaignSaved }: Props) => {
 													disabled={busy}
 													variant="outlined"
 													placeholder="(sin versión de texto plano)"
+													inputProps={{ "aria-label": "Versión de texto plano" }}
 													InputProps={{
 														sx: {
 															fontFamily: "monospace",

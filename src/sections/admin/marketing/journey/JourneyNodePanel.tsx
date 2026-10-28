@@ -18,6 +18,7 @@ import {
 import { JourneyBucket, JourneyCampaign, JourneyLeakItem, JourneyMapData, JourneyReason, JourneyService } from "api/journey";
 import { JourneyNodeId } from "./JourneyMap";
 import JourneyAccumulated from "./JourneyAccumulated";
+import { clickableProps } from "utils/a11y";
 
 const fmt = (n: number | undefined | null) => (n === undefined || n === null ? "—" : n.toLocaleString("es-AR"));
 const STATUS_LABEL: Record<string, string> = { active: "Activa", paused: "Pausada", draft: "Borrador" };
@@ -33,7 +34,7 @@ const CampaignCard: React.FC<{ c: JourneyCampaign; highlighted: boolean; onOpen?
 }) => (
 	<Paper
 		variant="outlined"
-		onClick={onOpen ? () => onOpen(c._id) : undefined}
+		{...(onOpen ? clickableProps(() => onOpen(c._id)) : {})}
 		sx={{
 			p: 1.5,
 			mb: 1,

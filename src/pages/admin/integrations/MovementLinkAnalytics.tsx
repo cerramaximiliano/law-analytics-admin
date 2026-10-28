@@ -55,6 +55,7 @@ import {
 } from "types/movementLinkAnalytics";
 import { useSnackbar } from "notistack";
 import { useTabIndexParam } from "hooks/useTabParam";
+import { formatPercent } from "utils/format";
 
 // Slugs del tab en la URL; el orden fija el índice de cada <Tab>.
 const TAB_SLUGS = ["resumen", "usuarios", "eventos", "preview"] as const;
@@ -854,7 +855,7 @@ const FunnelStep: React.FC<FunnelStepProps> = ({ label, value, max, color }) => 
 			<Stack direction="row" justifyContent="space-between" alignItems="baseline" sx={{ mb: 0.5 }}>
 				<Typography sx={{ fontSize: "0.88rem", fontWeight: 600 }}>{label}</Typography>
 				<Stack direction="row" spacing={1} alignItems="baseline">
-					<Typography sx={{ fontSize: "0.72rem", color: "text.secondary" }}>{max > 0 ? `${pct.toFixed(0)}%` : ""}</Typography>
+					<Typography sx={{ fontSize: "0.72rem", color: "text.secondary" }}>{max > 0 ? formatPercent(pct, 0) : ""}</Typography>
 					<Typography sx={{ fontSize: "1.05rem", fontWeight: 700, color, fontVariantNumeric: "tabular-nums" }}>{value}</Typography>
 				</Stack>
 			</Stack>

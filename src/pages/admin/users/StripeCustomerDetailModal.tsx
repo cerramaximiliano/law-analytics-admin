@@ -124,7 +124,7 @@ const StripeCustomerDetailModal: React.FC<StripeCustomerDetailModalProps> = ({ o
 							sx={{ borderRadius: 0.75, fontWeight: 500 }}
 						/>
 					</Stack>
-					<IconButton onClick={onClose} size="small" sx={{ mr: -0.5 }}>
+					<IconButton aria-label="Cerrar" onClick={onClose} size="small" sx={{ mr: -0.5 }}>
 						<CloseCircle size={20} />
 					</IconButton>
 				</Stack>

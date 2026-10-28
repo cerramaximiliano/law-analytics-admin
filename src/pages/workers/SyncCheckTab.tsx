@@ -47,6 +47,8 @@ import { useSnackbar } from "notistack";
 import { alpha } from "@mui/material/styles";
 import MEVWorkersService, { SyncCheckConfig, NavigationCodeDoc, ScreenshotInfo } from "api/workersMEV";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
+import { clickableProps } from "utils/a11y";
+import { formatNumber } from "utils/format";
 
 const DAY_LABELS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
 
@@ -355,7 +357,7 @@ const SyncCheckTab = () => {
 	const formatDuration = (ms?: number | null) => {
 		if (!ms) return "-";
 		if (ms < 1000) return `${ms}ms`;
-		if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
+		if (ms < 60000) return `${formatNumber(ms / 1000, 1)}s`;
 		return `${Math.floor(ms / 60000)}m ${Math.round((ms % 60000) / 1000)}s`;
 	};
 
@@ -402,7 +404,7 @@ const SyncCheckTab = () => {
 						justifyContent="space-between"
 						alignItems="center"
 						sx={{ cursor: "pointer" }}
-						onClick={() => setDocsOpen(!docsOpen)}
+						{...clickableProps(() => setDocsOpen(!docsOpen))}
 					>
 						<Stack direction="row" spacing={1} alignItems="center">
 							<InfoCircle size={20} />
@@ -798,7 +800,7 @@ pm2 save`}
 							justifyContent="space-between"
 							alignItems="center"
 							sx={{ cursor: "pointer" }}
-							onClick={() => setReportOpen(!reportOpen)}
+							{...clickableProps(() => setReportOpen(!reportOpen))}
 						>
 							<Typography variant="h6">Detalle del último reporte</Typography>
 							{reportOpen ? <ArrowUp2 size={20} /> : <ArrowDown2 size={20} />}
@@ -841,7 +843,7 @@ pm2 save`}
 																	<TableRow
 																		hover
 																		sx={{ cursor: j.organismos ? "pointer" : "default" }}
-																		onClick={() => j.organismos && setExpandedJurIdx(expandedJurIdx === i ? null : i)}
+																		{...(j.organismos ? clickableProps(() => setExpandedJurIdx(expandedJurIdx === i ? null : i), { asRow: true }) : {})}
 																	>
 																		<TableCell>
 																			{j.organismos && (expandedJurIdx === i ? <ArrowUp2 size={14} /> : <ArrowDown2 size={14} />)}
@@ -1030,11 +1032,11 @@ pm2 save`}
 						justifyContent="space-between"
 						alignItems="center"
 						sx={{ cursor: "pointer" }}
-						onClick={() => {
+						{...clickableProps(() => {
 							const newOpen = !explorerOpen;
 							setExplorerOpen(newOpen);
 							if (newOpen) loadExplorerData();
-						}}
+						})}
 					>
 						<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
 							<SearchNormal1 size={20} />
@@ -1184,7 +1186,7 @@ pm2 save`}
 							justifyContent="space-between"
 							alignItems="center"
 							sx={{ cursor: "pointer" }}
-							onClick={() => setHistoryOpen(!historyOpen)}
+							{...clickableProps(() => setHistoryOpen(!historyOpen))}
 						>
 							<Typography variant="h6">Historial de reportes ({config.report_history.length})</Typography>
 							{historyOpen ? <ArrowUp2 size={20} /> : <ArrowDown2 size={20} />}
@@ -1211,7 +1213,7 @@ pm2 save`}
 													<TableRow
 														hover
 														sx={{ cursor: "pointer", "& > *": { borderBottom: expandedHistoryIdx === idx ? "unset" : undefined } }}
-														onClick={() => setExpandedHistoryIdx(expandedHistoryIdx === idx ? null : idx)}
+														{...clickableProps(() => setExpandedHistoryIdx(expandedHistoryIdx === idx ? null : idx), { asRow: true })}
 													>
 														<TableCell>{expandedHistoryIdx === idx ? <ArrowUp2 size={16} /> : <ArrowDown2 size={16} />}</TableCell>
 														<TableCell sx={{ fontVariantNumeric: "tabular-nums" }}>{formatDate(entry.date)}</TableCell>

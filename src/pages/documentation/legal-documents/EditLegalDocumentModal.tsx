@@ -233,7 +233,7 @@ const EditLegalDocumentModal: React.FC<EditLegalDocumentModalProps> = ({ open, o
 					<Typography variant="h5" sx={{ fontWeight: 600, letterSpacing: "-0.01em" }}>
 						{isCreate ? "Nuevo documento legal" : "Editar documento legal"}
 					</Typography>
-					<IconButton onClick={onClose} color="error">
+					<IconButton aria-label="Cerrar" onClick={onClose} color="error">
 						<CloseCircle size={24} />
 					</IconButton>
 				</Stack>
@@ -340,6 +340,7 @@ const EditLegalDocumentModal: React.FC<EditLegalDocumentModalProps> = ({ open, o
 							Introducción
 						</Typography>
 						<TextField
+							inputProps={{ "aria-label": "Introducción" }}
 							fullWidth
 							multiline
 							rows={3}
@@ -388,13 +389,13 @@ const EditLegalDocumentModal: React.FC<EditLegalDocumentModalProps> = ({ open, o
 											Sección {section.order}
 										</Typography>
 										<Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
-											<IconButton size="small" onClick={() => handleMoveSection(index, "up")} disabled={index === 0}>
+											<IconButton aria-label="Subir sección" size="small" onClick={() => handleMoveSection(index, "up")} disabled={index === 0}>
 												<ArrowUp2 size={16} />
 											</IconButton>
-											<IconButton size="small" onClick={() => handleMoveSection(index, "down")} disabled={index === sections.length - 1}>
+											<IconButton aria-label="Bajar sección" size="small" onClick={() => handleMoveSection(index, "down")} disabled={index === sections.length - 1}>
 												<ArrowDown2 size={16} />
 											</IconButton>
-											<IconButton size="small" color="error" onClick={() => handleRemoveSection(index)}>
+											<IconButton aria-label="Eliminar sección" size="small" color="error" onClick={() => handleRemoveSection(index)}>
 												<Trash size={16} />
 											</IconButton>
 										</Stack>
@@ -479,6 +480,7 @@ const EditLegalDocumentModal: React.FC<EditLegalDocumentModalProps> = ({ open, o
 							Conclusión
 						</Typography>
 						<TextField
+							inputProps={{ "aria-label": "Conclusión" }}
 							fullWidth
 							multiline
 							rows={3}
@@ -525,6 +527,8 @@ const EditLegalDocumentModal: React.FC<EditLegalDocumentModalProps> = ({ open, o
 									fullWidth
 									label="Email"
 									type="email"
+									autoComplete="email"
+									inputProps={{ spellCheck: false }}
 									value={companyDetails.email}
 									onChange={(e) => handleCompanyDetailChange("email", e.target.value)}
 								/>

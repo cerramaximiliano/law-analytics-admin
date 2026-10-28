@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Box, Tab, Tabs, Typography, Grid, Card, CardContent, Skeleton } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import { People, DocumentText, TickCircle, CloseCircle, Clock } from "iconsax-react";
@@ -6,6 +6,7 @@ import { useDispatch, useSelector } from "store";
 import { fetchSecloStats } from "store/reducers/seclo";
 import SolicitudesTab from "./SolicitudesTab";
 import CredencialesTab from "./CredencialesTab";
+import { useTabIndexParam } from "hooks/useTabParam";
 
 // ── Tarjeta de estadística ────────────────────────────────────────────────────
 
@@ -15,6 +16,8 @@ interface StatCardProps {
 	icon: React.ReactNode;
 	color: string;
 }
+
+const TAB_SLUGS = ["solicitudes", "credenciales"] as const;
 
 function StatCard({ label, value, icon, color }: StatCardProps) {
 	return (
@@ -70,7 +73,7 @@ function StatCard({ label, value, icon, color }: StatCardProps) {
 export default function SecloPage() {
 	const dispatch = useDispatch();
 	const { stats } = useSelector((s) => s.seclo);
-	const [activeTab, setActiveTab] = useState(0);
+	const [activeTab, setActiveTab] = useTabIndexParam("tab", TAB_SLUGS);
 
 	useEffect(() => {
 		dispatch(fetchSecloStats());

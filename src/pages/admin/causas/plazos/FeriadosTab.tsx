@@ -43,6 +43,7 @@ import {
 	BloqueDiff,
 	FeriadoJudicial,
 } from "api/plazos";
+import { clickableProps } from "utils/a11y";
 
 const TIPOS = [
 	"feriado_nacional",
@@ -625,7 +626,7 @@ function CalendarioMes({
 							}
 						>
 							<Box
-								onClick={() => onElegir(f, principal || null)}
+								{...clickableProps(() => onElegir(f, principal || null))}
 								sx={{
 									cursor: "pointer",
 									minHeight: 54,

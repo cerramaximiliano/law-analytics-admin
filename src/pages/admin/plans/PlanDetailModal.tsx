@@ -80,7 +80,7 @@ const PlanDetailModal = ({ open, onClose, plan }: PlanDetailModalProps) => {
 			<DialogTitle sx={{ pb: 1.5 }}>
 				<Box display="flex" justifyContent="space-between" alignItems="center">
 					<Typography variant="h4">Detalles del plan · {plan.displayName}</Typography>
-					<IconButton onClick={onClose} size="small">
+					<IconButton aria-label="Cerrar" onClick={onClose} size="small">
 						<CloseCircle />
 					</IconButton>
 				</Box>

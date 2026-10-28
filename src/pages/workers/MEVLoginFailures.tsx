@@ -193,6 +193,7 @@ const MEVCredentials = () => {
 												Pegá el path/URL de recuperación que llegó al email de MEV:
 											</Typography>
 											<TextField
+												inputProps={{ "aria-label": "URL de recuperación" }}
 												size="small"
 												fullWidth
 												placeholder="https://mev.scba.gov.ar/..."

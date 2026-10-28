@@ -37,6 +37,7 @@ import EnhancedTablePagination from "components/EnhancedTablePagination";
 import CopyButton from "components/CopyButton";
 import dayjs from "dayjs";
 import "dayjs/locale/es";
+import { formatDate as formatDisplayDate, formatDateTime } from "utils/format";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import CrossViewLinks from "components/admin/CrossViewLink";
@@ -48,6 +49,7 @@ import pjnCredentialsService, {
 	CausaStateEvent,
 } from "api/pjnCredentials";
 import { Refresh, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, Repeat, Eye, Gallery, UserSquare } from "iconsax-react";
+import { clickableProps } from "utils/a11y";
 import CausaUserViewDialog from "./CausaUserViewDialog";
 
 dayjs.locale("es");
@@ -365,7 +367,7 @@ const CausasSyncCredentials = () => {
 
 	const formatDate = (date: string | null | undefined): string => {
 		if (!date) return "—";
-		return dayjs(date).format("DD/MM/YYYY");
+		return formatDisplayDate(date);
 	};
 
 	const handleOpenJson = async (causa: SyncedCausa) => {
@@ -503,14 +505,15 @@ const CausasSyncCredentials = () => {
 							<Grid item xs={12} sm={6} md={2.4}>
 								<Tooltip title="Causas cuya ÚLTIMA actualización falló (el error se limpia solo cuando el worker vuelve a actualizarlas con éxito). Click para ver/ocultar el listado.">
 									<Card
-										onClick={toggleConErroresFilter}
+										{...clickableProps(toggleConErroresFilter)}
+										aria-pressed={conErroresFilter}
 										sx={{
 											cursor: "pointer",
 											backgroundColor: "warning.lighter",
 											border: 2,
 											borderColor: conErroresFilter ? "warning.dark" : "warning.main",
 											boxShadow: conErroresFilter ? 3 : 0,
-											transition: "all 0.2s ease",
+											transition: "box-shadow 0.2s ease, border-color 0.2s ease",
 											"&:hover": { boxShadow: 2 },
 										}}
 									>
@@ -533,14 +536,15 @@ const CausasSyncCredentials = () => {
 							<Grid item xs={12} sm={6} md={2.4}>
 								<Tooltip title="Causas cuyo movimiento más reciente tiene fecha de HOY: novedad judicial real del día (distinto de 'chequeada hoy'). Click para ver/ocultar el listado.">
 									<Card
-										onClick={toggleMovHoyFilter}
+										{...clickableProps(toggleMovHoyFilter)}
+										aria-pressed={movHoyFilter}
 										sx={{
 											cursor: "pointer",
 											backgroundColor: "success.lighter",
 											border: 2,
 											borderColor: movHoyFilter ? "success.dark" : "success.main",
 											boxShadow: movHoyFilter ? 3 : 0,
-											transition: "all 0.2s ease",
+											transition: "box-shadow 0.2s ease, border-color 0.2s ease",
 											"&:hover": { boxShadow: 2 },
 										}}
 									>
@@ -561,14 +565,15 @@ const CausasSyncCredentials = () => {
 							<Grid item xs={12} sm={6} md={2.4}>
 								<Tooltip title="Privadas sin credencial activa (deshabilitada/inválida o removida del sync) — no actualizables por pjn-mis-causas. Click para ver/ocultar el listado.">
 									<Card
-										onClick={toggleNoActFilter}
+										{...clickableProps(toggleNoActFilter)}
+										aria-pressed={noActFilter}
 										sx={{
 											cursor: "pointer",
 											backgroundColor: "error.lighter",
 											border: 2,
 											borderColor: noActFilter ? "error.dark" : "error.main",
 											boxShadow: noActFilter ? 3 : 0,
-											transition: "all 0.2s ease",
+											transition: "box-shadow 0.2s ease, border-color 0.2s ease",
 											"&:hover": { boxShadow: 2 },
 										}}
 									>
@@ -921,6 +926,7 @@ const CausasSyncCredentials = () => {
 													<Tooltip title="Vista del usuario — cómo se ve esta causa en la lista y el detalle de cada usuario vinculado">
 														<span>
 															<IconButton
+																aria-label="Vista del usuario"
 																size="small"
 																disabled={!causa.collection}
 																onClick={() => setUserView({ open: true, collection: causa.collection || null, causaId: causa._id })}
@@ -959,7 +965,7 @@ const CausasSyncCredentials = () => {
 				<DialogTitle>
 					<Stack direction="row" alignItems="center" justifyContent="space-between">
 						<Typography variant="h6">JSON — {`${selectedCausa?.number ?? ""}/${selectedCausa?.year ?? ""}`}</Typography>
-						<IconButton onClick={handleCloseJson} size="small">
+						<IconButton aria-label="Cerrar" onClick={handleCloseJson} size="small">
 							<CloseCircle size={20} />
 						</IconButton>
 					</Stack>
@@ -1001,7 +1007,7 @@ const CausasSyncCredentials = () => {
 				<DialogTitle>
 					<Stack direction="row" alignItems="center" justifyContent="space-between">
 						<Typography variant="h6">Capturas — {`${screenshotCausa?.number ?? ""}/${screenshotCausa?.year ?? ""}`}</Typography>
-						<IconButton onClick={handleCloseScreenshots} size="small">
+						<IconButton aria-label="Cerrar" onClick={handleCloseScreenshots} size="small">
 							<CloseCircle size={20} />
 						</IconButton>
 					</Stack>
@@ -1108,7 +1114,7 @@ const CausasSyncCredentials = () => {
 										variant="caption"
 										sx={{ fontFamily: "monospace", whiteSpace: "nowrap", pt: 0.4, color: "text.secondary", minWidth: 130 }}
 									>
-										{dayjs(ev.at).format("DD/MM/YYYY HH:mm")}
+										{formatDateTime(ev.at)}
 									</Typography>
 									<Chip
 										label={EVENT_TIPO_LABELS[ev.tipo] || ev.tipo}

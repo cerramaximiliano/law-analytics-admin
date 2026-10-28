@@ -40,8 +40,9 @@ import MainCard from "components/MainCard";
 import CopyButton from "components/CopyButton";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 import ScraperService, { PostalTracking, PostalTrackingStats, PostalTrackingFilters } from "api/scraperService";
-import dayjs from "dayjs";
 import { COL_SM, COL_MD, COL_LG } from "utils/responsiveColumns";
+import { clickableProps } from "utils/a11y";
+import { formatDate as formatDateIntl } from "utils/format";
 
 const PROCESSING_STATUS_CONFIG: Record<string, { color: "default" | "warning" | "info" | "success" | "error"; label: string }> = {
 	pending: { color: "warning", label: "Pendiente" },
@@ -93,7 +94,7 @@ const getClosureInfo = (
 
 const formatDate = (dateString?: string) => {
 	if (!dateString) return "-";
-	return dayjs(dateString).format("DD/MM/YYYY HH:mm");
+	return formatDateIntl(dateString, "dateTime");
 };
 
 const PostalTrackingPage = () => {
@@ -562,6 +563,7 @@ const PostalTrackingPage = () => {
 								fullWidth
 								size="small"
 								placeholder="Buscar por número, estado…"
+								inputProps={{ "aria-label": "Buscar por número, estado" }}
 								value={searchTerm}
 								onChange={(e) => {
 									setSearchTerm(e.target.value);
@@ -708,7 +710,7 @@ const PostalTrackingPage = () => {
 										key={tracking._id}
 										hover
 										selected={selectedIds.has(tracking._id)}
-										onClick={() => handleOpenDetail(tracking)}
+										{...clickableProps(() => handleOpenDetail(tracking), { asRow: true })}
 										sx={{ cursor: "pointer" }}
 									>
 										<TableCell padding="checkbox" onClick={(e) => e.stopPropagation()}>

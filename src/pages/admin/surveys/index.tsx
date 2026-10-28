@@ -51,6 +51,7 @@ import {
 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
+import ConfirmDialog from "components/admin/ConfirmDialog";
 import SurveyAdminService, {
 	Survey,
 	SurveyFilters,
@@ -61,6 +62,7 @@ import SurveyAdminService, {
 	QuestionType,
 	SurveyReportResponse,
 } from "api/surveys";
+import { formatNumber } from "utils/format";
 
 const STATUS_CONFIG: Record<SurveyStatus, { color: "warning" | "info" | "success" | "default" | "error"; label: string }> = {
 	draft: { color: "default", label: "Borrador" },
@@ -153,6 +155,7 @@ const SurveysAdminPage = () => {
 	const [busy, setBusy] = useState(false);
 
 	const [deleteOpen, setDeleteOpen] = useState(false);
+	const [forceDeleteMsg, setForceDeleteMsg] = useState<string | null>(null);
 	const [selected, setSelected] = useState<Survey | null>(null);
 
 	const [reportOpen, setReportOpen] = useState(false);
@@ -332,14 +335,13 @@ const SurveysAdminPage = () => {
 			const res = await SurveyAdminService.remove(selected._id, force);
 			enqueueSnackbar(res.message || "Encuesta eliminada", { variant: "success" });
 			setDeleteOpen(false);
+			setForceDeleteMsg(null);
 			setSelected(null);
 			fetchList();
 		} catch (e: any) {
 			const msg: string = e?.response?.data?.message || e?.message || "Error al eliminar";
 			if (msg.includes("respuestas") && !force) {
-				if (window.confirm(`${msg}\n\n¿Eliminar de todos modos? (No se borran las respuestas)`)) {
-					await handleDelete(true);
-				}
+				setForceDeleteMsg(msg);
 			} else {
 				enqueueSnackbar(msg, { variant: "error" });
 			}
@@ -432,6 +434,7 @@ const SurveysAdminPage = () => {
 								fullWidth
 								size="small"
 								placeholder="Buscar por título o slug…"
+								inputProps={{ "aria-label": "Buscar por título o slug" }}
 								value={searchTerm}
 								onChange={(e) => {
 									setSearchTerm(e.target.value);
@@ -718,13 +721,13 @@ const SurveysAdminPage = () => {
 												Pregunta {idx + 1}
 											</Typography>
 											<Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
-												<IconButton size="small" onClick={() => moveQuestion(idx, -1)} disabled={idx === 0}>
+												<IconButton aria-label="Subir pregunta" size="small" onClick={() => moveQuestion(idx, -1)} disabled={idx === 0}>
 													<ArrowUp2 size={14} />
 												</IconButton>
-												<IconButton size="small" onClick={() => moveQuestion(idx, 1)} disabled={idx === (form.questions || []).length - 1}>
+												<IconButton aria-label="Bajar pregunta" size="small" onClick={() => moveQuestion(idx, 1)} disabled={idx === (form.questions || []).length - 1}>
 													<ArrowDown2 size={14} />
 												</IconButton>
-												<IconButton size="small" color="error" onClick={() => removeQuestion(idx)}>
+												<IconButton aria-label="Eliminar pregunta" size="small" color="error" onClick={() => removeQuestion(idx)}>
 													<Trash size={14} />
 												</IconButton>
 											</Stack>
@@ -827,6 +830,7 @@ const SurveysAdminPage = () => {
 																<TextField
 																	size="small"
 																	placeholder="value"
+																	inputProps={{ "aria-label": "Valor de la opción" }}
 																	value={opt.value}
 																	onChange={(e) => updateOption(idx, oIdx, { value: e.target.value })}
 																	sx={{ width: 140 }}
@@ -834,11 +838,12 @@ const SurveysAdminPage = () => {
 																<TextField
 																	size="small"
 																	placeholder="Etiqueta visible"
+																	inputProps={{ "aria-label": "Etiqueta visible" }}
 																	value={opt.label}
 																	onChange={(e) => updateOption(idx, oIdx, { label: e.target.value })}
 																	fullWidth
 																/>
-																<IconButton size="small" color="error" onClick={() => removeOption(idx, oIdx)}>
+																<IconButton aria-label="Eliminar opción" size="small" color="error" onClick={() => removeOption(idx, oIdx)}>
 																	<Trash size={14} />
 																</IconButton>
 															</Stack>
@@ -885,6 +890,16 @@ const SurveysAdminPage = () => {
 				</DialogActions>
 			</Dialog>
 
+			<ConfirmDialog
+				open={forceDeleteMsg !== null}
+				title={`¿Eliminar "${selected?.title ?? ""}" de todos modos?`}
+				description={`${forceDeleteMsg ?? ""} No se borran las respuestas.`}
+				confirmLabel="Eliminar igual"
+				loading={busy}
+				onConfirm={() => handleDelete(true)}
+				onClose={() => setForceDeleteMsg(null)}
+			/>
+
 			{/* Report */}
 			<Dialog open={reportOpen} onClose={() => setReportOpen(false)} maxWidth="md" fullWidth>
 				<DialogTitle>Reporte · {selected?.title}</DialogTitle>
@@ -927,7 +942,7 @@ const SurveysAdminPage = () => {
 										<Box mt={1}>
 											{q.avg !== null && q.avg !== undefined && (
 												<Typography variant="body2">
-													Promedio: <strong>{q.avg.toFixed(2)}</strong>
+													Promedio: <strong>{formatNumber(q.avg, 2)}</strong>
 												</Typography>
 											)}
 											{q.distribution && (

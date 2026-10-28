@@ -49,6 +49,7 @@ import { useSnackbar } from "notistack";
 import TargetUsersManager from "./TargetUsersManager";
 import LaunchCampaignTab from "./LaunchCampaignTab";
 import CopyButton from "components/CopyButton";
+import { formatNumber } from "utils/format";
 
 interface TabPanelProps {
 	children?: React.ReactNode;
@@ -506,7 +507,7 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 					<Grid item xs={6} sm={3}>
 						<Paper variant="outlined" sx={{ p: 2, textAlign: "center" }}>
 							<Typography variant="h3" color="success.main">
-								${discount.stats.totalAmountSaved.toFixed(2)}
+								${formatNumber(discount.stats.totalAmountSaved, 2)}
 							</Typography>
 							<Typography variant="body2" color="textSecondary">
 								Total Ahorrado
@@ -811,7 +812,7 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 										</TableCell>
 										<TableCell>{formatShortDate(item.redeemedAt)}</TableCell>
 										<TableCell>{item.planId || "-"}</TableCell>
-										<TableCell align="right">${item.amountSaved?.toFixed(2) || "0.00"}</TableCell>
+										<TableCell align="right">${formatNumber(item.amountSaved || 0, 2)}</TableCell>
 									</TableRow>
 								))}
 							</TableBody>
@@ -937,7 +938,7 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 										<Typography variant="body2" fontWeight={600} color="primary">
 											{(stripeInfo as any).coupon.percent_off
 												? `${(stripeInfo as any).coupon.percent_off}%`
-												: `$${((stripeInfo as any).coupon.amount_off / 100).toFixed(2)}`}
+												: `$${formatNumber((stripeInfo as any).coupon.amount_off / 100, 2)}`}
 										</Typography>
 									</Box>
 									<Box display="flex" justifyContent="space-between">
@@ -1103,7 +1104,7 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 						<Typography variant="h4">Detalle de promoción</Typography>
 						<Chip label={status.label} color={status.color} size="small" sx={{ borderRadius: 0.75 }} />
 					</Stack>
-					<IconButton onClick={onClose} size="small">
+					<IconButton aria-label="Cerrar" onClick={onClose} size="small">
 						<CloseCircle />
 					</IconButton>
 				</Stack>
@@ -1117,7 +1118,7 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 								<Typography variant="h3" sx={{ fontFamily: "monospace" }}>
 									{discount.code}
 								</Typography>
-								<IconButton size="small" onClick={handleCopyCode} title="Copiar código">
+								<IconButton aria-label="Copiar código" size="small" onClick={handleCopyCode} title="Copiar código">
 									<Copy size={18} />
 								</IconButton>
 							</Stack>

@@ -50,6 +50,7 @@ import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import { WorkersService, EmailVerificationConfig } from "api/workers";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
+import { formatPercent } from "utils/format";
 
 const EmailVerificationWorker = () => {
 	const theme = useTheme();
@@ -611,7 +612,7 @@ const EmailVerificationWorker = () => {
 										Tasa de Éxito
 									</Typography>
 									<Typography variant="h4" color={successRate >= 80 ? "success.main" : successRate >= 50 ? "warning.main" : "error.main"}>
-										{successRate.toFixed(1)}%
+										{formatPercent(successRate, 1)}
 									</Typography>
 								</Paper>
 							</Grid>

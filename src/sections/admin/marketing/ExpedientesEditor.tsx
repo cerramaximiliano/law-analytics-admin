@@ -238,6 +238,7 @@ const ExpedientesEditor: React.FC<ExpedientesEditorProps> = ({ contact, onSaved 
 									</TableCell>
 									<TableCell sx={{ minWidth: 190 }}>
 										<TextField
+											inputProps={{ "aria-label": `Colección de ${row.expediente}` }}
 											select
 											fullWidth
 											size="small"

@@ -28,6 +28,7 @@ import { useSnackbar } from "notistack";
 import RagWorkersService, { IndexationCausa, CausaSummaryData } from "api/ragWorkers";
 import { getAuthToken, refreshAuthToken } from "utils/ragAxios";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
+import { clickableProps } from "utils/a11y";
 
 const RAG_URL = import.meta.env.VITE_RAG_URL || "http://localhost:5005";
 
@@ -118,6 +119,7 @@ const CausaSelector: React.FC<{ onSelect: (causa: IndexationCausa) => void }> = 
 			<TextField
 				size="small"
 				placeholder="Buscar por carátula…"
+				inputProps={{ "aria-label": "Buscar por carátula" }}
 				value={search}
 				onChange={(e) => setSearch(e.target.value)}
 				InputProps={{
@@ -165,7 +167,7 @@ const CausaSelector: React.FC<{ onSelect: (causa: IndexationCausa) => void }> = 
 							</TableRow>
 						) : (
 							filtered.map((c) => (
-								<TableRow key={`${c.causaType}-${c.causaId}`} hover sx={{ cursor: "pointer" }} onClick={() => onSelect(c)}>
+								<TableRow key={`${c.causaType}-${c.causaId}`} hover sx={{ cursor: "pointer" }} {...clickableProps(() => onSelect(c), { asRow: true })}>
 									<TableCell sx={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={c.caratula}>
 										<Typography variant="caption" noWrap>
 											{c.caratula || "-"}
@@ -507,12 +509,13 @@ const ChatInterface: React.FC<{ causa: IndexationCausa; onBack: () => void }> = 
 					maxRows={4}
 					size="small"
 					placeholder="Escribe tu mensaje…"
+					inputProps={{ "aria-label": "Mensaje" }}
 					value={input}
 					onChange={(e) => setInput(e.target.value)}
 					onKeyDown={handleKeyDown}
 					disabled={streaming}
 				/>
-				<IconButton
+				<IconButton aria-label="Enviar mensaje"
 					color="primary"
 					onClick={sendMessage}
 					disabled={!input.trim() || streaming}
@@ -859,7 +862,8 @@ const MessageBubble: React.FC<{ message: ChatMessage; theme: any; onRetry: (msgI
 					<Box sx={{ mt: 1 }}>
 						<Box
 							sx={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 0.5 }}
-							onClick={() => setMetadataOpen(!metadataOpen)}
+							{...clickableProps(() => setMetadataOpen(!metadataOpen))}
+							aria-expanded={metadataOpen}
 						>
 							<InfoCircle size={12} color={theme.palette.text.disabled} />
 							<Typography variant="caption" color="text.disabled" sx={{ fontSize: "0.65rem" }}>

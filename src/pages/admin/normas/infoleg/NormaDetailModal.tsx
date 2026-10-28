@@ -124,7 +124,7 @@ const NormaDetailModal = ({ infolegId, open, onClose }: NormaDetailModalProps) =
 								</IconButton>
 							</Tooltip>
 						)}
-						<IconButton size="small" onClick={onClose}>
+						<IconButton size="small" onClick={onClose} aria-label="Cerrar">
 							<CloseCircle size={20} />
 						</IconButton>
 					</Stack>

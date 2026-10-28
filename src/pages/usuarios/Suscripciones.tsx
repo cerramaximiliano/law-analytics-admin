@@ -751,7 +751,7 @@ const Suscripciones = () => {
 				<DialogTitle>
 					<Stack direction="row" justifyContent="space-between" alignItems="center">
 						<Typography variant="h5">Detalles de Suscripción</Typography>
-						<IconButton onClick={handleCloseDialog} size="small">
+						<IconButton aria-label="Cerrar" onClick={handleCloseDialog} size="small">
 							<CloseSquare size={20} />
 						</IconButton>
 					</Stack>
@@ -1872,7 +1872,7 @@ const Suscripciones = () => {
 				<DialogTitle>
 					<Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" useFlexGap>
 						<Typography variant="h5">Actualizar Fecha de Gracia</Typography>
-						<IconButton onClick={handleCloseUpdateDialog} size="small">
+						<IconButton aria-label="Cerrar" onClick={handleCloseUpdateDialog} size="small">
 							<CloseSquare size={20} />
 						</IconButton>
 					</Stack>
@@ -1938,6 +1938,8 @@ const Suscripciones = () => {
 							fullWidth
 							label="Tu Email (Admin)"
 							type="email"
+							autoComplete="email"
+							inputProps={{ spellCheck: false }}
 							value={adminEmail}
 							onChange={(e) => setAdminEmail(e.target.value)}
 							placeholder="admin@lawanalytics.app"
@@ -2007,7 +2009,7 @@ const Suscripciones = () => {
 						<Typography variant="h5" color="warning.main">
 							Dar de Baja Suscripción
 						</Typography>
-						<IconButton onClick={handleCloseCancelDialog} size="small">
+						<IconButton aria-label="Cerrar" onClick={handleCloseCancelDialog} size="small">
 							<CloseSquare size={20} />
 						</IconButton>
 					</Stack>
@@ -2075,6 +2077,7 @@ const Suscripciones = () => {
 								Motivo (para auditoría)
 							</Typography>
 							<TextField
+								inputProps={{ "aria-label": "Motivo (para auditoría)" }}
 								fullWidth
 								size="small"
 								placeholder="Ej: Solicitud del usuario vía soporte"
@@ -2114,7 +2117,7 @@ const Suscripciones = () => {
 						<Typography variant="h5" color="error">
 							Confirmar Reseteo de Suscripción
 						</Typography>
-						<IconButton onClick={handleCloseResetDialog} size="small">
+						<IconButton aria-label="Cerrar" onClick={handleCloseResetDialog} size="small">
 							<CloseSquare size={20} />
 						</IconButton>
 					</Stack>
@@ -2239,7 +2242,7 @@ const Suscripciones = () => {
 				<DialogTitle>
 					<Stack direction="row" justifyContent="space-between" alignItems="center">
 						<Typography variant="h5">Sincronizar con Stripe</Typography>
-						<IconButton onClick={handleCloseSyncDialog} size="small">
+						<IconButton aria-label="Cerrar" onClick={handleCloseSyncDialog} size="small">
 							<CloseSquare size={20} />
 						</IconButton>
 					</Stack>
@@ -2300,7 +2303,7 @@ const Suscripciones = () => {
 							<Typography variant="subtitle2" fontWeight="bold" gutterBottom>
 								Modo de Stripe a Sincronizar
 							</Typography>
-							<TextField select fullWidth value={syncMode} onChange={(e) => setSyncMode(e.target.value as "test" | "live")} size="small">
+							<TextField inputProps={{ "aria-label": "Modo de Stripe a sincronizar" }} select fullWidth value={syncMode} onChange={(e) => setSyncMode(e.target.value as "test" | "live")} size="small">
 								<MenuItem value="live">🟢 LIVE (Producción)</MenuItem>
 								<MenuItem value="test">🟡 TEST (Pruebas)</MenuItem>
 							</TextField>

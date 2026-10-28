@@ -35,6 +35,7 @@ import InfrastructureService, { InfraBox, getBoxState } from "api/infrastructure
 import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER, headerBorder, navHoverBg } from "themes/dashboardTokens";
 import BoxPanel from "./BoxPanel";
 import FailoverPanel from "./FailoverPanel";
+import { clickableProps } from "utils/a11y";
 
 // Orden de los grupos en la vista general: primero lo que sostiene al resto.
 // Al cambiar de pestaña a mano se limpia el repo resaltado: llegaste al box
@@ -93,7 +94,7 @@ const BoxCard = ({ box, onOpen }: { box: InfraBox; onOpen: () => void }) => {
 	return (
 		<Paper
 			variant="outlined"
-			onClick={onOpen}
+			{...clickableProps(onOpen)}
 			sx={{
 				p: 2,
 				height: "100%",

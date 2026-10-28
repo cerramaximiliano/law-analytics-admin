@@ -315,6 +315,7 @@ const StuckDocumentsWorker = () => {
 								</Typography>
 								{editing ? (
 									<TextField
+										inputProps={{ "aria-label": "Cron schedule" }}
 										size="small"
 										value={editValues.schedule?.cronPattern ?? config?.schedule?.cronPattern ?? ""}
 										onChange={(e) =>
@@ -345,7 +346,7 @@ const StuckDocumentsWorker = () => {
 										type="number"
 										value={editValues.batch_size ?? config?.batch_size ?? 3}
 										onChange={(e) => setEditValues({ ...editValues, batch_size: parseInt(e.target.value) })}
-										inputProps={{ min: 1, max: 10 }}
+										inputProps={{ "aria-label": "Batch size", min: 1, max: 10 }}
 									/>
 								) : (
 									<>
@@ -368,7 +369,7 @@ const StuckDocumentsWorker = () => {
 										type="number"
 										value={editValues.lock_timeout_minutes ?? config?.lock_timeout_minutes ?? 20}
 										onChange={(e) => setEditValues({ ...editValues, lock_timeout_minutes: parseInt(e.target.value) })}
-										inputProps={{ min: 5, max: 60 }}
+										inputProps={{ "aria-label": "Lock timeout", min: 5, max: 60 }}
 									/>
 								) : (
 									<>
@@ -413,7 +414,7 @@ const StuckDocumentsWorker = () => {
 												schedule: { ...editValues.schedule, workingHoursStart: parseInt(e.target.value) } as any,
 											})
 										}
-										inputProps={{ min: 0, max: 23 }}
+										inputProps={{ "aria-label": "Hora inicio", min: 0, max: 23 }}
 									/>
 								) : (
 									<Typography variant="body2">{config?.schedule?.workingHoursStart || 8}:00</Typography>
@@ -436,7 +437,7 @@ const StuckDocumentsWorker = () => {
 												schedule: { ...editValues.schedule, workingHoursEnd: parseInt(e.target.value) } as any,
 											})
 										}
-										inputProps={{ min: 0, max: 24 }}
+										inputProps={{ "aria-label": "Hora fin", min: 0, max: 24 }}
 									/>
 								) : (
 									<Typography variant="body2">{config?.schedule?.workingHoursEnd || 22}:00</Typography>

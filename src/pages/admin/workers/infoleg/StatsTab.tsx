@@ -22,7 +22,7 @@ import { useSnackbar } from "notistack";
 import InfolegService from "api/infolegService";
 import type { InfolegStats } from "types/infoleg";
 import { headerBorder } from "themes/dashboardTokens";
-import { formatDate } from "utils/format";
+import { formatDate, formatPercent } from "utils/format";
 
 const TIPO_LABELS: Record<string, string> = {
 	ley: "Ley",
@@ -136,7 +136,7 @@ const StatsTab = () => {
 
 	if (!stats) return null;
 
-	const pctScraped = stats.totals.total > 0 ? ((stats.totals.scraped / stats.totals.total) * 100).toFixed(1) : "0";
+	const pctScraped = formatPercent(stats.totals.total > 0 ? (stats.totals.scraped / stats.totals.total) * 100 : 0, 1);
 
 	return (
 		<Stack spacing={3}>
@@ -150,7 +150,7 @@ const StatsTab = () => {
 						<StatCard
 							label="Total scrapeado"
 							value={stats.totals.scraped}
-							sub={`${pctScraped}% del total`}
+							sub={`${pctScraped} del total`}
 							color="success"
 							icon={<TickCircle size={22} />}
 						/>

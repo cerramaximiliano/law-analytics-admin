@@ -36,6 +36,7 @@ import { ContactsProcessStatus } from "types/campaign-contacts-status";
 import { CampaignService } from "store/reducers/campaign";
 // import { MarketingContactService } from "store/reducers/marketing-contacts";
 import { SegmentService } from "store/reducers/segments";
+import { clickableProps } from "utils/a11y";
 
 interface TabPanelProps {
 	children?: React.ReactNode;
@@ -598,12 +599,13 @@ const CampaignContactsModal = ({ campaign, open, onClose, onContactsChange }: Ca
 											variant="outlined"
 											size="small"
 											placeholder="Buscar contactos por nombre, email…"
+											inputProps={{ "aria-label": "Buscar contactos por nombre o email" }}
 											value={contactSearch}
 											onChange={(e) => setContactSearch(e.target.value)}
 											onKeyPress={(e) => e.key === "Enter" && handleContactSearch()}
 											InputProps={{
 												endAdornment: (
-													<IconButton onClick={handleContactSearch} edge="end" size="small">
+													<IconButton aria-label="Buscar contactos" onClick={handleContactSearch} edge="end" size="small">
 														<SearchNormal1 size={18} />
 													</IconButton>
 												),
@@ -693,7 +695,7 @@ const CampaignContactsModal = ({ campaign, open, onClose, onContactsChange }: Ca
 													<Box
 														key={contact._id}
 														p={2}
-														onClick={() => canAddContacts && contact._id && toggleContactSelection(contact._id)}
+														{...(canAddContacts && contact._id ? clickableProps(() => contact._id && toggleContactSelection(contact._id)) : {})}
 														sx={{
 															cursor: canAddContacts ? "pointer" : "not-allowed",
 															opacity: canAddContacts ? 1 : 0.6,
@@ -758,12 +760,13 @@ const CampaignContactsModal = ({ campaign, open, onClose, onContactsChange }: Ca
 											variant="outlined"
 											size="small"
 											placeholder="Buscar segmentos por nombre…"
+											inputProps={{ "aria-label": "Buscar segmentos por nombre" }}
 											value={segmentSearch}
 											onChange={(e) => setSegmentSearch(e.target.value)}
 											onKeyPress={(e) => e.key === "Enter" && handleSegmentSearch()}
 											InputProps={{
 												endAdornment: (
-													<IconButton onClick={handleSegmentSearch} edge="end" size="small">
+													<IconButton aria-label="Buscar segmentos" onClick={handleSegmentSearch} edge="end" size="small">
 														<SearchNormal1 size={18} />
 													</IconButton>
 												),

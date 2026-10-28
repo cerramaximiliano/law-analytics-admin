@@ -26,6 +26,7 @@ import { useSnackbar } from "notistack";
 import { getNotificaciones, getNotificacion, getPlazosBase, reprocessNotificacion, reprocessParsed, PlazoNotificacion } from "api/plazos";
 import { useQueryParam } from "hooks/useTabParam";
 import { FuenteChips, UsuariosChips } from "./plazosCeldas";
+import { clickableProps } from "utils/a11y";
 
 const STATUS_COLOR: Record<string, "default" | "success" | "warning" | "error" | "info" | "primary"> = {
 	computed: "success",
@@ -432,7 +433,7 @@ export default function NotificacionesTab() {
 										key={r._id}
 										hover
 										sx={{ cursor: "pointer" }}
-										onClick={() => (esUsuarios ? setPlazoParam(r._id) : setDetalleId(r._id))}
+										{...clickableProps(() => (esUsuarios ? setPlazoParam(r._id) : setDetalleId(r._id)), { asRow: true })}
 									>
 										<TableCell>{day(r.detectedAt)}</TableCell>
 										<TableCell>

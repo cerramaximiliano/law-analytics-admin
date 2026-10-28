@@ -930,7 +930,7 @@ const SegmentFormModal: React.FC<SegmentFormModalProps> = ({ open, onClose, onSa
 						<Typography variant="h5">{isEditMode ? "Editar Segmento" : "Crear Nuevo Segmento"}</Typography>
 					</Grid>
 					<Grid item>
-						<IconButton onClick={onClose} size="small">
+						<IconButton aria-label="Cerrar" onClick={onClose} size="small">
 							<CloseCircle variant="Bold" />
 						</IconButton>
 					</Grid>
@@ -1187,7 +1187,7 @@ const SegmentFormModal: React.FC<SegmentFormModalProps> = ({ open, onClose, onSa
 												</Grid>
 
 												<Grid item xs={12} md={1}>
-													<IconButton color="error" onClick={() => handleRemoveFilter(index)} disabled={filters.length === 1 || saving}>
+													<IconButton aria-label="Eliminar filtro" color="error" onClick={() => handleRemoveFilter(index)} disabled={filters.length === 1 || saving}>
 														<Trash size={18} />
 													</IconButton>
 												</Grid>

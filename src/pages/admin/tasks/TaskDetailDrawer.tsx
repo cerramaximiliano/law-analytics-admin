@@ -443,6 +443,7 @@ const TaskDetailDrawer: React.FC<TaskDetailDrawerProps> = ({
 											multiline
 											maxRows={5}
 											placeholder="Agregar un comentario…"
+											inputProps={{ "aria-label": "Agregar un comentario" }}
 											value={commentText}
 											onChange={(e) => setCommentText(e.target.value)}
 											onKeyDown={(e) => {

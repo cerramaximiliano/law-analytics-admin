@@ -52,7 +52,13 @@ const ImageActions: React.FC<ImageActionsProps> = ({ getBlob, label, variant = "
 				{showCopy && (
 					<Tooltip title="Copiar imagen" placement="top">
 						<span>
-							<IconButton size="small" sx={{ p: 0.25 }} disabled={busy !== null} onClick={(e) => run("copy", e)}>
+							<IconButton
+								aria-label="Copiar imagen"
+								size="small"
+								sx={{ p: 0.25 }}
+								disabled={busy !== null}
+								onClick={(e) => run("copy", e)}
+							>
 								{busy === "copy" ? <CircularProgress size={12} /> : <Copy size={13} />}
 							</IconButton>
 						</span>
@@ -60,7 +66,13 @@ const ImageActions: React.FC<ImageActionsProps> = ({ getBlob, label, variant = "
 				)}
 				<Tooltip title="Descargar imagen" placement="top">
 					<span>
-						<IconButton size="small" sx={{ p: 0.25 }} disabled={busy !== null} onClick={(e) => run("download", e)}>
+						<IconButton
+							aria-label="Descargar imagen"
+							size="small"
+							sx={{ p: 0.25 }}
+							disabled={busy !== null}
+							onClick={(e) => run("download", e)}
+						>
 							{busy === "download" ? <CircularProgress size={12} /> : <DocumentDownload size={13} />}
 						</IconButton>
 					</span>

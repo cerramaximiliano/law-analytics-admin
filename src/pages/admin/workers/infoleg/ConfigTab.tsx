@@ -271,7 +271,16 @@ const ConfigTab = () => {
 				{emailEnabled && (
 					<Grid container spacing={2}>
 						<Grid item xs={12} sm={8}>
-							<TextField fullWidth label="Email destinatario" size="small" value={emailTo} onChange={(e) => setEmailTo(e.target.value)} />
+							<TextField
+								fullWidth
+								label="Email destinatario"
+								type="email"
+								autoComplete="email"
+								inputProps={{ spellCheck: false }}
+								size="small"
+								value={emailTo}
+								onChange={(e) => setEmailTo(e.target.value)}
+							/>
 						</Grid>
 						<Grid item xs={12} sm={4}>
 							<TextField

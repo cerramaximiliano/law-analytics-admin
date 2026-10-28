@@ -30,6 +30,8 @@ import UpdateMovimientosService, { UpdateMovimientosWorkerConfig, UpdateMovimien
 import WorkerControlPanel from "components/WorkerControlPanel";
 import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER, headerBorder } from "themes/dashboardTokens";
 import { useTabParam } from "hooks/useTabParam";
+import { clickableProps } from "utils/a11y";
+import { formatPercent } from "utils/format";
 
 const FUERO_LABELS: Record<string, string> = { CIV: "Civil", CNT: "Trabajo", CSS: "Seg. Social", COM: "Comercial" };
 const ALL_FUEROS = ["CIV", "CNT", "CSS", "COM"];
@@ -531,11 +533,11 @@ function EstadoSection({ r, manager }: { r: Resumen; manager: UpdateMovimientosM
 									component="span"
 									sx={{ fontWeight: 700, color: recursos.cpuUsage > (cfg?.cpuThreshold ?? 0.75) ? "error.main" : "success.main" }}
 								>
-									{(recursos.cpuUsage * 100).toFixed(1)}%
+									{formatPercent(recursos.cpuUsage * 100, 1)}
 								</Box>
 								<Box component="span" sx={{ color: "text.secondary" }}>
 									{" "}
-									/ tope {((cfg?.cpuThreshold ?? 0.75) * 100).toFixed(0)}%
+									/ tope {formatPercent((cfg?.cpuThreshold ?? 0.75) * 100, 0)}
 								</Box>
 							</Typography>
 							<Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>
@@ -544,11 +546,11 @@ function EstadoSection({ r, manager }: { r: Resumen; manager: UpdateMovimientosM
 									component="span"
 									sx={{ fontWeight: 700, color: recursos.memoryUsage > (cfg?.memoryThreshold ?? 0.8) ? "error.main" : "success.main" }}
 								>
-									{(recursos.memoryUsage * 100).toFixed(1)}%
+									{formatPercent(recursos.memoryUsage * 100, 1)}
 								</Box>
 								<Box component="span" sx={{ color: "text.secondary" }}>
 									{" "}
-									/ tope {((cfg?.memoryThreshold ?? 0.8) * 100).toFixed(0)}%
+									/ tope {formatPercent((cfg?.memoryThreshold ?? 0.8) * 100, 0)}
 								</Box>
 							</Typography>
 							<Typography variant="body2" color="text.secondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
@@ -679,8 +681,8 @@ function ManagerSection({
 						<b>{fmtNum(cfg.scaleDownThreshold ?? 10)}</b> baja a <b>{cfg.minWorkers ?? 0}</b>.
 					</Typography>
 					<Typography variant="body2">
-						No escala si la CPU supera <b>{((cfg.cpuThreshold ?? 0.75) * 100).toFixed(0)}%</b> o la memoria{" "}
-						<b>{((cfg.memoryThreshold ?? 0.8) * 100).toFixed(0)}%</b>. {sinVentana ? "Corre sin corte" : "Solo corre"}:{" "}
+						No escala si la CPU supera <b>{formatPercent((cfg.cpuThreshold ?? 0.75) * 100, 0)}</b> o la memoria{" "}
+						<b>{formatPercent((cfg.memoryThreshold ?? 0.8) * 100, 0)}</b>. {sinVentana ? "Corre sin corte" : "Solo corre"}:{" "}
 						<b>{describeVentana(cfg.workStartHour ?? 0, cfg.workEndHour ?? 24, cfg.workDays ?? [1, 2, 3, 4, 5])}</b>.
 					</Typography>
 					<Typography variant="body2" color="text.secondary">
@@ -736,6 +738,7 @@ function ManagerSection({
 				<Box sx={{ px: 2, pb: 1 }}>
 					<Campo label="Escalar arriba" ayuda="Cuando la cola supera esta cantidad de causas, va al máximo de instancias">
 						<TextField
+							inputProps={{ "aria-label": "Escalar arriba" }}
 							fullWidth
 							type="number"
 							value={cfg.scaleThreshold ?? 100}
@@ -745,6 +748,7 @@ function ManagerSection({
 					</Campo>
 					<Campo label="Bajar al mínimo" ayuda="Cuando la cola baja de esta cantidad, vuelve al mínimo de instancias">
 						<TextField
+							inputProps={{ "aria-label": "Bajar al mínimo" }}
 							fullWidth
 							type="number"
 							value={cfg.scaleDownThreshold ?? 10}
@@ -759,7 +763,7 @@ function ManagerSection({
 							value={cfg.maxWorkers ?? 3}
 							onChange={(e) => patch("maxWorkers", parseInt(e.target.value, 10))}
 							size="small"
-							inputProps={{ min: 1, max: 10 }}
+							inputProps={{ "aria-label": "Instancias máximas", min: 1, max: 10 }}
 						/>
 					</Campo>
 					<Campo label="Instancias mínimas" ayuda="0 apaga el fuero fuera de la ventana de trabajo" ultimo>
@@ -769,7 +773,7 @@ function ManagerSection({
 							value={cfg.minWorkers ?? 0}
 							onChange={(e) => patch("minWorkers", parseInt(e.target.value, 10))}
 							size="small"
-							inputProps={{ min: 0, max: 10 }}
+							inputProps={{ "aria-label": "Instancias mínimas", min: 0, max: 10 }}
 						/>
 					</Campo>
 				</Box>
@@ -785,6 +789,7 @@ function ManagerSection({
 						ayuda={`Milisegundos entre ciclos de scaling — ahora ${Math.round((cfg.checkInterval ?? 60000) / 1000)} s`}
 					>
 						<TextField
+							inputProps={{ "aria-label": "Intervalo de chequeo" }}
 							fullWidth
 							type="number"
 							value={cfg.checkInterval ?? 60000}
@@ -794,7 +799,7 @@ function ManagerSection({
 					</Campo>
 					<Campo
 						label="Tope de CPU"
-						ayuda={`De 0 a 1. No escala por encima — ahora ${((manager.currentState?.resources?.cpuUsage ?? 0) * 100).toFixed(1)}%`}
+						ayuda={`De 0 a 1. No escala por encima — ahora ${formatPercent((manager.currentState?.resources?.cpuUsage ?? 0) * 100, 1)}`}
 					>
 						<TextField
 							fullWidth
@@ -802,12 +807,12 @@ function ManagerSection({
 							value={cfg.cpuThreshold ?? 0.75}
 							onChange={(e) => patch("cpuThreshold", parseFloat(e.target.value))}
 							size="small"
-							inputProps={{ min: 0, max: 1, step: 0.05 }}
+							inputProps={{ "aria-label": "Tope de CPU", min: 0, max: 1, step: 0.05 }}
 						/>
 					</Campo>
 					<Campo
 						label="Tope de memoria"
-						ayuda={`De 0 a 1. No escala por encima — ahora ${((manager.currentState?.resources?.memoryUsage ?? 0) * 100).toFixed(1)}%`}
+						ayuda={`De 0 a 1. No escala por encima — ahora ${formatPercent((manager.currentState?.resources?.memoryUsage ?? 0) * 100, 1)}`}
 						ultimo
 					>
 						<TextField
@@ -816,7 +821,7 @@ function ManagerSection({
 							value={cfg.memoryThreshold ?? 0.8}
 							onChange={(e) => patch("memoryThreshold", parseFloat(e.target.value))}
 							size="small"
-							inputProps={{ min: 0, max: 1, step: 0.05 }}
+							inputProps={{ "aria-label": "Tope de memoria", min: 0, max: 1, step: 0.05 }}
 						/>
 					</Campo>
 				</Box>
@@ -834,7 +839,7 @@ function ManagerSection({
 							value={cfg.workStartHour ?? 7}
 							onChange={(e) => patch("workStartHour", parseInt(e.target.value, 10))}
 							size="small"
-							inputProps={{ min: 0, max: 23 }}
+							inputProps={{ "aria-label": "Hora de inicio", min: 0, max: 23 }}
 						/>
 					</Campo>
 					<Campo label="Hora de fin" ayuda="Exclusiva. 24 = sin corte">
@@ -844,7 +849,7 @@ function ManagerSection({
 							value={cfg.workEndHour ?? 23}
 							onChange={(e) => patch("workEndHour", parseInt(e.target.value, 10))}
 							size="small"
-							inputProps={{ min: 0, max: 24 }}
+							inputProps={{ "aria-label": "Hora de fin", min: 0, max: 24 }}
 						/>
 					</Campo>
 					<Campo label="Días" ayuda="En los días apagados no corre ningún worker" ancho={280}>
@@ -1037,7 +1042,7 @@ function WorkerCard({ fila, onSaved }: { fila: Resumen["porFuero"][number]; onSa
 				direction="row"
 				alignItems="center"
 				spacing={0.75}
-				onClick={() => setAjustesAbiertos((v) => !v)}
+				{...clickableProps(() => setAjustesAbiertos((v) => !v))} aria-expanded={ajustesAbiertos}
 				sx={{ px: 2, py: 1, cursor: "pointer", color: "text.secondary", "&:hover": { bgcolor: alpha(BRAND_BLUE, 0.04) } }}
 			>
 				{ajustesAbiertos ? <ArrowUp2 size={14} /> : <ArrowDown2 size={14} />}

@@ -43,9 +43,10 @@ import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import PostalWorkersFlow from "../flujos/PostalWorkersFlow";
 import ScraperService, { ScraperConfig, ScraperJob, ScraperRun, ScraperJobStats, ScraperRunStats } from "api/scraperService";
-import dayjs from "dayjs";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
 import CrossViewLinks from "components/admin/CrossViewLink";
+import { clickableProps } from "utils/a11y";
+import { formatDate as formatDateIntl } from "utils/format";
 
 interface TabPanelProps {
 	children?: React.ReactNode;
@@ -76,7 +77,7 @@ const RUN_STATUS_CONFIG: Record<string, { color: "default" | "warning" | "info" 
 
 const formatDate = (dateString?: string) => {
 	if (!dateString) return "-";
-	return dayjs(dateString).format("DD/MM/YYYY HH:mm:ss");
+	return formatDateIntl(dateString, "dateTimeSeconds");
 };
 
 const formatDuration = (ms?: number) => {
@@ -1085,7 +1086,7 @@ const RunsTab = () => {
 							</TableRow>
 						) : (
 							runs.map((run) => (
-								<TableRow key={run._id} hover sx={{ cursor: "pointer" }} onClick={() => handleViewDetail(run)}>
+								<TableRow key={run._id} hover sx={{ cursor: "pointer" }} {...clickableProps(() => handleViewDetail(run), { asRow: true })}>
 									<TableCell>
 										<Typography variant="body2" fontWeight={500} sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>
 											{run.workerId}

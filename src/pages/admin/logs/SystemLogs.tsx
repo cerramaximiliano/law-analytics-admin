@@ -91,7 +91,7 @@ function LogRow({ log }: { log: LogEntry }) {
 				</TableCell>
 				<TableCell sx={{ width: 30 }}>
 					{canExpand && (
-						<IconButton size="small" sx={{ p: 0.25 }}>
+						<IconButton size="small" sx={{ p: 0.25 }} aria-label={expanded ? "Contraer detalle" : "Expandir detalle"} aria-expanded={expanded}>
 							{expanded ? <ArrowUp2 size={12} /> : <ArrowDown2 size={12} />}
 						</IconButton>
 					)}

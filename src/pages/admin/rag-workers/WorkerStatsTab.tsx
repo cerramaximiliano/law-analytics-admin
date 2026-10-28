@@ -24,6 +24,7 @@ import { Refresh } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import RagWorkersService, { StatsResponse, WorkerStats, DailyStatsEntry } from "api/ragWorkers";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
+import { formatPercent } from "utils/format";
 
 const WORKER_LABELS: Record<string, string> = {
 	indexCausa: "Index Causa",
@@ -222,7 +223,7 @@ const WorkerStatsCard: React.FC<WorkerStatsCardProps> = ({ worker, theme }) => {
 	const w = worker;
 	const label = WORKER_LABELS[w.workerName] || w.workerName;
 	const totalJobs = w.jobsCompleted + w.jobsFailed;
-	const successRate = totalJobs > 0 ? ((w.jobsCompleted / totalJobs) * 100).toFixed(1) : "0";
+	const successRate = totalJobs > 0 ? (w.jobsCompleted / totalJobs) * 100 : 0;
 
 	return (
 		<Box
@@ -244,7 +245,7 @@ const WorkerStatsCard: React.FC<WorkerStatsCardProps> = ({ worker, theme }) => {
 				<Stack direction="row" spacing={1}>
 					<Chip label={`${w.jobsCompleted} completados`} size="small" color="success" variant="outlined" />
 					{w.jobsFailed > 0 && <Chip label={`${w.jobsFailed} fallidos`} size="small" color="error" variant="outlined" />}
-					<Chip label={`${successRate}% exito`} size="small" variant="outlined" />
+					<Chip label={`${formatPercent(successRate)} exito`} size="small" variant="outlined" />
 				</Stack>
 			</Stack>
 

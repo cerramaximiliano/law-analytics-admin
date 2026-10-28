@@ -58,6 +58,7 @@ import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import { ExpensesService, Expense, ExpenseType, CreateExpenseData } from "api/expenses";
 import OpenAIService, { OpenAIBalanceResponse } from "api/openai";
+import { formatDate as formatDateAR, formatNumber } from "utils/format";
 
 // Status colors and labels
 const STATUS_CONFIG: Record<string, { color: "success" | "warning" | "error" | "default"; label: string }> = {
@@ -389,7 +390,7 @@ const ExpensesPage = () => {
 
 	// Format date
 	const formatDate = (dateString: string) => {
-		return dayjs(dateString).format("DD/MM/YYYY");
+		return formatDateAR(dateString);
 	};
 
 	// Get type label
@@ -574,7 +575,7 @@ const ExpensesPage = () => {
 										<Skeleton variant="text" width={80} height={32} />
 									) : (
 										<Typography variant="h5" color="primary" sx={{ fontVariantNumeric: "tabular-nums", mt: 0.5 }}>
-											${openaiBalance?.initialBalance?.toFixed(2) || "0.00"}
+											${formatNumber(openaiBalance?.initialBalance ?? 0, 2)}
 										</Typography>
 									)}
 								</Box>
@@ -588,7 +589,7 @@ const ExpensesPage = () => {
 										<Skeleton variant="text" width={80} height={32} />
 									) : (
 										<Typography variant="h5" color="error.main" sx={{ fontVariantNumeric: "tabular-nums", mt: 0.5 }}>
-											${openaiBalance?.totalCosts?.toFixed(2) || "0.00"}
+											${formatNumber(openaiBalance?.totalCosts ?? 0, 2)}
 										</Typography>
 									)}
 								</Box>
@@ -606,7 +607,7 @@ const ExpensesPage = () => {
 											color={openaiBalance?.estimatedBalance && openaiBalance.estimatedBalance > 0 ? "success.main" : "warning.main"}
 											sx={{ fontVariantNumeric: "tabular-nums", mt: 0.5 }}
 										>
-											${openaiBalance?.estimatedBalance?.toFixed(2) || "0.00"}
+											${formatNumber(openaiBalance?.estimatedBalance ?? 0, 2)}
 										</Typography>
 									)}
 								</Box>
@@ -620,7 +621,7 @@ const ExpensesPage = () => {
 										<Skeleton variant="text" width={120} height={32} />
 									) : (
 										<Typography variant="body1" sx={{ fontVariantNumeric: "tabular-nums", mt: 0.5 }}>
-											{openaiBalance?.lastSyncAt ? dayjs(openaiBalance.lastSyncAt).format("DD/MM/YYYY HH:mm") : "Nunca"}
+											{openaiBalance?.lastSyncAt ? formatDateAR(openaiBalance.lastSyncAt, "dateTime") : "Nunca"}
 										</Typography>
 									)}
 								</Box>
@@ -708,6 +709,7 @@ const ExpensesPage = () => {
 									fullWidth
 									size="small"
 									placeholder="Buscar…"
+									inputProps={{ "aria-label": "Buscar gastos" }}
 									value={searchTerm}
 									onChange={(e) => {
 										setSearchTerm(e.target.value);

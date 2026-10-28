@@ -700,7 +700,7 @@ export default function GroupDetailModal({ open, onClose, groupId, onStatusChang
 							</Stack>
 						)}
 					</Stack>
-					<IconButton onClick={onClose} size="small">
+					<IconButton onClick={onClose} size="small" aria-label="Cerrar">
 						<CloseCircle size={20} />
 					</IconButton>
 				</Stack>

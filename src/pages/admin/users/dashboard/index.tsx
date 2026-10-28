@@ -408,7 +408,13 @@ const UsersDashboard: React.FC = () => {
 			}
 			secondary={
 				<Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" useFlexGap>
-					<Select size="small" value={windowDays} onChange={(e) => setWindowDays(Number(e.target.value))} sx={{ minWidth: 120 }}>
+					<Select
+						size="small"
+						value={windowDays}
+						onChange={(e) => setWindowDays(Number(e.target.value))}
+						inputProps={{ "aria-label": "Ventana de tiempo" }}
+						sx={{ minWidth: 120 }}
+					>
 						<MenuItem value={7}>Últimos 7 días</MenuItem>
 						<MenuItem value={30}>Últimos 30 días</MenuItem>
 						<MenuItem value={90}>Últimos 90 días</MenuItem>

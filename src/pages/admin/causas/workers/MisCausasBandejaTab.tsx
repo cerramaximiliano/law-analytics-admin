@@ -163,6 +163,8 @@ const MisCausasBandejaTab: React.FC = () => {
 										{...params}
 										size="small"
 										label="Emails de prueba"
+										type="email"
+										inputProps={{ ...params.inputProps, spellCheck: false }}
 										placeholder="Agregar email + Enter"
 										helperText="Con el worker deshabilitado, procesa SOLO estos emails (pruebas controladas)."
 									/>

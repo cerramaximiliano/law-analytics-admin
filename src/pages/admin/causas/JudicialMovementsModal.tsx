@@ -15,7 +15,6 @@ import {
 	Typography,
 	Chip,
 	Box,
-	Link,
 	Stack,
 	Alert,
 	CircularProgress,
@@ -164,7 +163,7 @@ const JudicialMovementsModal = ({ open, onClose, movements, loading, error, onMo
 					<Typography variant="h5" sx={{ letterSpacing: "-0.01em" }}>
 						Notificaciones de movimientos judiciales
 					</Typography>
-					<IconButton onClick={onClose} size="small">
+					<IconButton onClick={onClose} size="small" aria-label="Cerrar">
 						<CloseCircle />
 					</IconButton>
 				</Box>
@@ -284,11 +283,17 @@ const JudicialMovementsModal = ({ open, onClose, movements, loading, error, onMo
 												</TableCell>
 												<TableCell align="center">
 													{movement.movimiento.url ? (
-														<Link href={movement.movimiento.url} target="_blank" rel="noopener noreferrer">
-															<IconButton size="small" color="primary">
-																<LinkIcon size={18} />
-															</IconButton>
-														</Link>
+														<IconButton
+															component="a"
+															href={movement.movimiento.url}
+															target="_blank"
+															rel="noopener noreferrer"
+															size="small"
+															color="primary"
+															aria-label="Abrir documento del movimiento"
+														>
+															<LinkIcon size={18} />
+														</IconButton>
 													) : (
 														<Typography variant="caption" color="text.secondary">
 															N/A

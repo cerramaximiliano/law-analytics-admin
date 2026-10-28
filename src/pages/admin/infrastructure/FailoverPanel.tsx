@@ -28,6 +28,7 @@ import { Refresh, Cloud, Cpu, Activity, Timer1, Warning2 } from "iconsax-react";
 import MainCard from "components/MainCard";
 import { FailoverService, FailoverStatus, FailoverHistoryEntry } from "api/workers";
 import { LIVE_GREEN, STALE_AMBER, LIVE_PULSE_KEYFRAMES } from "themes/dashboardTokens";
+import { formatNumber } from "utils/format";
 
 /** Box donde corre hoy el manager que sostiene el heartbeat. */
 const PRIMARY_BOX = "worker-cloud-02";
@@ -71,11 +72,11 @@ function truncateArn(arn: string): string {
 }
 
 function estimateCost(activatedAt: string | null, taskCount: number): string {
-	if (!activatedAt) return "$0.00";
+	if (!activatedAt) return `$${formatNumber(0, 2)}`;
 	const hours = (Date.now() - new Date(activatedAt).getTime()) / 3600000;
 	// cloud-manager: $0.016/h, cada worker task: $0.064/h
 	const cost = 0.016 * hours + 0.064 * taskCount * hours;
-	return `$${cost.toFixed(2)}`;
+	return `$${formatNumber(cost, 2)}`;
 }
 
 const liveDot = (color: string) => (

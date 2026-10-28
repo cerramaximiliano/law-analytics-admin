@@ -36,6 +36,7 @@ import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import ScrollX from "components/ScrollX";
 import TableSkeleton from "components/UI/TableSkeleton";
+import ConfirmDialog from "components/admin/ConfirmDialog";
 import {
 	deleteUserGrant,
 	getUserGrants,
@@ -77,6 +78,8 @@ const FeatureGrantsPage: React.FC = () => {
 
 	// Modal de "agregar grant a un user nuevo"
 	const [addOpen, setAddOpen] = useState(false);
+	const [grantToDelete, setGrantToDelete] = useState<{ userId: string; userLabel: string; feature: KnownFeature } | null>(null);
+	const [deletingGrant, setDeletingGrant] = useState(false);
 	const [lookupUserId, setLookupUserId] = useState("");
 	const [lookingUp, setLookingUp] = useState(false);
 
@@ -155,13 +158,16 @@ const FeatureGrantsPage: React.FC = () => {
 	};
 
 	const handleDelete = async (userId: string, feature: KnownFeature) => {
-		if (!window.confirm(`¿Eliminar el grant ${feature} del user ${userId}?`)) return;
 		try {
+			setDeletingGrant(true);
 			await deleteUserGrant(userId, feature);
 			enqueueSnackbar("Grant eliminado", { variant: "success" });
+			setGrantToDelete(null);
 			await fetchList();
 		} catch (err: any) {
 			enqueueSnackbar(err.response?.data?.message || "Error al eliminar", { variant: "error" });
+		} finally {
+			setDeletingGrant(false);
 		}
 	};
 
@@ -197,7 +203,7 @@ const FeatureGrantsPage: React.FC = () => {
 			title="Feature Grants (manual bypass de plan/addon)"
 			secondary={
 				<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-					<IconButton onClick={fetchList} title="Refrescar">
+					<IconButton aria-label="Refrescar" onClick={fetchList} title="Refrescar">
 						<Refresh size={18} />
 					</IconButton>
 					<Button variant="contained" startIcon={<Add size={16} />} onClick={handleAddNew}>
@@ -303,7 +309,11 @@ const FeatureGrantsPage: React.FC = () => {
 																	</IconButton>
 																</Tooltip>
 																<Tooltip title={`Eliminar ${f}`}>
-																	<IconButton size="small" color="error" onClick={() => handleDelete(u._id, f)}>
+																	<IconButton
+																		size="small"
+																		color="error"
+																		onClick={() => setGrantToDelete({ userId: u._id, userLabel: u.email || u._id, feature: f })}
+																	>
 																		<Trash size={16} />
 																	</IconButton>
 																</Tooltip>
@@ -351,7 +361,7 @@ const FeatureGrantsPage: React.FC = () => {
 							autoFocus
 							InputProps={{
 								endAdornment: lookupUserId && (
-									<IconButton size="small" onClick={() => setLookupUserId("")}>
+									<IconButton aria-label="Limpiar ID de usuario" size="small" onClick={() => setLookupUserId("")}>
 										<CloseCircle size={16} />
 									</IconButton>
 								),
@@ -431,6 +441,16 @@ const FeatureGrantsPage: React.FC = () => {
 					</Button>
 				</DialogActions>
 			</Dialog>
+
+			<ConfirmDialog
+				open={Boolean(grantToDelete)}
+				title={grantToDelete ? `¿Eliminar el grant ${grantToDelete.feature} de ${grantToDelete.userLabel}?` : ""}
+				description="El usuario vuelve a depender de su plan y addons para acceder a la feature."
+				confirmLabel="Eliminar grant"
+				loading={deletingGrant}
+				onConfirm={() => grantToDelete && handleDelete(grantToDelete.userId, grantToDelete.feature)}
+				onClose={() => setGrantToDelete(null)}
+			/>
 		</MainCard>
 	);
 };

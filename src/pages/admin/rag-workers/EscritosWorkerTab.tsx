@@ -49,6 +49,7 @@ import WorkerScopeAlert from "components/admin/WorkerScopeAlert";
 import CronSelector from "components/admin/CronSelector";
 import { useTabParam } from "hooks/useTabParam";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
+import { formatPercent } from "utils/format";
 
 // ── Constantes ───────────────────────────────────────────────────────────────
 
@@ -1006,6 +1007,7 @@ function BusquedaSection() {
 				minRows={2}
 				maxRows={5}
 				placeholder="Ej: responsabilidad objetiva del empleador por accidente de trabajo…"
+				inputProps={{ "aria-label": "Consulta de búsqueda" }}
 				value={query}
 				onChange={(e) => setQuery(e.target.value)}
 				onKeyDown={(e) => {
@@ -1014,7 +1016,7 @@ function BusquedaSection() {
 				InputProps={{
 					endAdornment: (
 						<InputAdornment position="end" sx={{ alignSelf: "flex-end", mb: 1 }}>
-							<IconButton onClick={search} disabled={loading || query.trim().length < 3} color="primary">
+							<IconButton aria-label="Buscar" onClick={search} disabled={loading || query.trim().length < 3} color="primary">
 								<SearchNormal1 size={20} />
 							</IconButton>
 						</InputAdornment>
@@ -1293,7 +1295,7 @@ const EscritosWorkerTab: React.FC = () => {
 											Fullness
 										</Typography>
 										<Typography variant="body2" fontWeight={600}>
-											{(pineconeStats.indexStats.indexFullness * 100).toFixed(2)}%
+											{formatPercent(pineconeStats.indexStats.indexFullness * 100, 2)}
 										</Typography>
 									</Box>
 								)}

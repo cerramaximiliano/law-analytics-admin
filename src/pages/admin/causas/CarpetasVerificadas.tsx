@@ -30,7 +30,7 @@ import { useSnackbar } from "notistack";
 import MainCard from "components/MainCard";
 import CausasService, { Causa } from "api/causas";
 import { Refresh, Eye, SearchNormal1, CloseCircle, ArrowUp, ArrowDown, Edit2 } from "iconsax-react";
-import { useNavigate } from "react-router-dom";
+import { Link as RouterLink } from "react-router-dom";
 import EtapaAnotacionesService, { EstadoAnotacion } from "api/etapaAnotaciones";
 import CausaDetalleModal from "./CausaDetalleModal";
 import { BRAND_BLUE, headerBorder } from "themes/dashboardTokens";
@@ -85,7 +85,6 @@ const CarpetasVerificadas = () => {
 	const [loadingDetail, setLoadingDetail] = useState(false);
 
 	// Etiquetado de dataset (cola de anotación experta)
-	const navigate = useNavigate();
 	const [membership, setMembership] = useState<Record<string, { estado: EstadoAnotacion; motivo: string }>>({});
 
 	// Cargar causas verificadas
@@ -528,7 +527,8 @@ const CarpetasVerificadas = () => {
 															<IconButton
 																size="small"
 																color={membership[getId(causa._id)] ? "success" : "default"}
-																onClick={() => navigate(`/admin/causas/etiquetado/${causa.fuero || "CIV"}/${getId(causa._id)}`)}
+																component={RouterLink}
+																to={`/admin/causas/etiquetado/${causa.fuero || "CIV"}/${getId(causa._id)}`}
 																sx={{
 																	transition: "background-color 200ms ease, transform 200ms ease",
 																	"&:hover": { bgcolor: alpha(BRAND_BLUE, 0.12), transform: "translateY(-1px)" },

@@ -31,6 +31,7 @@ import { SegmentService } from "store/reducers/segments";
 import TableSkeleton from "components/UI/TableSkeleton";
 import { useSnackbar } from "notistack";
 import ContactDetailModal from "./ContactDetailModal";
+import ConfirmDialog from "components/admin/ConfirmDialog";
 
 interface SegmentContactsModalProps {
 	open: boolean;
@@ -74,6 +75,7 @@ const SegmentContactsModal: React.FC<SegmentContactsModalProps> = ({ open, onClo
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [removingContactId, setRemovingContactId] = useState<string | null>(null);
+	const [contactToRemove, setContactToRemove] = useState<MarketingContact | null>(null);
 
 	// Estado para el modal de detalles del contacto
 	const [detailModalOpen, setDetailModalOpen] = useState(false);
@@ -231,7 +233,7 @@ const SegmentContactsModal: React.FC<SegmentContactsModalProps> = ({ open, onClo
 						<Typography variant="h5">Contactos del Segmento</Typography>
 					</Grid>
 					<Grid item>
-						<IconButton onClick={onClose} size="small">
+						<IconButton aria-label="Cerrar" onClick={onClose} size="small">
 							<CloseCircle variant="Bold" />
 						</IconButton>
 					</Grid>
@@ -346,7 +348,7 @@ const SegmentContactsModal: React.FC<SegmentContactsModalProps> = ({ open, onClo
 																	<IconButton
 																		size="small"
 																		color="error"
-																		onClick={() => handleRemoveContact(contact._id || "")}
+																		onClick={() => setContactToRemove(contact)}
 																		disabled={removingContactId !== null}
 																	>
 																		{removingContactId === contact._id ? (
@@ -422,6 +424,21 @@ const SegmentContactsModal: React.FC<SegmentContactsModalProps> = ({ open, onClo
 
 			{/* Modal de detalles del contacto */}
 			<ContactDetailModal open={detailModalOpen} onClose={handleCloseDetailModal} contactId={selectedContactId} />
+
+			<ConfirmDialog
+				open={contactToRemove !== null}
+				title={`¿Quitar a ${contactToRemove?.email || "este contacto"} del segmento?`}
+				description="El contacto se quita de la lista del segmento; no se elimina de la base de contactos."
+				confirmLabel="Quitar del segmento"
+				confirmColor="error"
+				loading={removingContactId !== null}
+				onConfirm={async () => {
+					if (!contactToRemove) return;
+					await handleRemoveContact(contactToRemove._id || "");
+					setContactToRemove(null);
+				}}
+				onClose={() => setContactToRemove(null)}
+			/>
 		</Dialog>
 	);
 };

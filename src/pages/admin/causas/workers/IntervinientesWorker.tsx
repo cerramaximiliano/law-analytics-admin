@@ -490,6 +490,7 @@ const IntervinientesWorker = () => {
 								</Typography>
 								{editing ? (
 									<TextField
+										inputProps={{ "aria-label": "Cron schedule" }}
 										size="small"
 										value={editValues.schedule?.cronExpression ?? config?.schedule?.cronExpression ?? ""}
 										onChange={(e) =>
@@ -520,7 +521,7 @@ const IntervinientesWorker = () => {
 										type="number"
 										value={editValues.batch_size ?? config?.batch_size ?? 5}
 										onChange={(e) => setEditValues({ ...editValues, batch_size: parseInt(e.target.value) })}
-										inputProps={{ min: 1, max: 20 }}
+										inputProps={{ "aria-label": "Batch size", min: 1, max: 20 }}
 									/>
 								) : (
 									<>
@@ -603,7 +604,7 @@ const IntervinientesWorker = () => {
 												schedule: { ...editValues.schedule, workStartHour: parseInt(e.target.value) } as any,
 											})
 										}
-										inputProps={{ min: 0, max: 23 }}
+										inputProps={{ "aria-label": "Hora inicio", min: 0, max: 23 }}
 									/>
 								) : (
 									<Typography variant="body2">{config?.schedule?.workStartHour || 8}:00</Typography>
@@ -626,7 +627,7 @@ const IntervinientesWorker = () => {
 												schedule: { ...editValues.schedule, workEndHour: parseInt(e.target.value) } as any,
 											})
 										}
-										inputProps={{ min: 0, max: 24 }}
+										inputProps={{ "aria-label": "Hora fin", min: 0, max: 24 }}
 									/>
 								) : (
 									<Typography variant="body2">{config?.schedule?.workEndHour || 22}:00</Typography>
@@ -1165,6 +1166,7 @@ const IntervinientesWorker = () => {
 						<Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ sm: "center" }} justifyContent="space-between">
 							<Stack direction={{ xs: "column", sm: "row" }} spacing={2} flex={1}>
 								<TextField
+									inputProps={{ "aria-label": "Buscar por email o nombre" }}
 									size="small"
 									placeholder="Buscar por email o nombre…"
 									value={usersSearch}
@@ -1587,7 +1589,7 @@ const IntervinientesWorker = () => {
 																borderRadius: 0.5,
 																minWidth: 8,
 																cursor: "pointer",
-																transition: "all 0.2s",
+																transition: "background-color 0.2s",
 																"&:hover": {
 																	backgroundColor: theme.palette.primary.main,
 																},

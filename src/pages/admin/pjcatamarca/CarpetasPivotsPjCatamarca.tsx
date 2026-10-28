@@ -569,7 +569,13 @@ const CarpetasPivotsPjCatamarca = () => {
 												<>
 													<TableRow key={id} hover sx={{ cursor: "pointer" }} onClick={() => toggleRowExpansion(id)}>
 														<TableCell>
-															<IconButton size="small">{isExpanded ? <ArrowUp2 size={18} /> : <ArrowDown2 size={18} />}</IconButton>
+															<IconButton
+																size="small"
+																aria-label={isExpanded ? "Contraer opciones" : "Expandir opciones"}
+																aria-expanded={isExpanded}
+															>
+																{isExpanded ? <ArrowUp2 size={18} /> : <ArrowDown2 size={18} />}
+															</IconButton>
 														</TableCell>
 														<TableCell>
 															<Typography variant="body2" fontWeight="bold" sx={{ fontFamily: "monospace" }}>

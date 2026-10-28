@@ -45,6 +45,8 @@ import {
 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import mktAxios from "utils/mktAxios";
+import { clickableProps } from "utils/a11y";
+import ConfirmDialog from "components/admin/ConfirmDialog";
 import emailTemplateImagesService, { EmailTemplateImage } from "api/emailTemplateImages";
 
 // Categorías válidas según el enum del schema EmailTemplate en la-marketing-service
@@ -132,6 +134,7 @@ const GenerateAITemplateModal = ({ open, onClose, onTemplateSaved, sourceTemplat
 	const [library, setLibrary] = useState<EmailTemplateImage[]>([]);
 	const [libraryLoading, setLibraryLoading] = useState(false);
 	const [libraryLoaded, setLibraryLoaded] = useState(false);
+	const [imageToDelete, setImageToDelete] = useState<EmailTemplateImage | null>(null);
 
 	// ── Generation state ─────────────────────────────────────────────────────
 	const [generating, setGenerating] = useState(false);
@@ -360,9 +363,15 @@ const GenerateAITemplateModal = ({ open, onClose, onTemplateSaved, sourceTemplat
 		}
 	};
 
-	const deleteFromLibrary = async (img: EmailTemplateImage) => {
+	const deleteFromLibrary = (img: EmailTemplateImage) => {
 		if (busy) return;
-		if (!window.confirm(`¿Eliminar "${img.name || img.url}" de la biblioteca? Esto no afecta a los templates ya guardados.`)) return;
+		setImageToDelete(img);
+	};
+
+	const confirmDeleteFromLibrary = async () => {
+		const img = imageToDelete;
+		if (!img) return;
+		setImageToDelete(null);
 		try {
 			await emailTemplateImagesService.remove(img._id);
 			setLibrary((prev) => prev.filter((i) => i._id !== img._id));
@@ -530,7 +539,8 @@ const GenerateAITemplateModal = ({ open, onClose, onTemplateSaved, sourceTemplat
 									alignItems="center"
 									justifyContent="space-between"
 									sx={{ cursor: "pointer" }}
-									onClick={() => setImagesExpanded((v) => !v)}
+									{...clickableProps(() => setImagesExpanded((v) => !v))}
+									aria-expanded={imagesExpanded}
 								>
 									<Stack direction="row" spacing={1} alignItems="center">
 										<Image size={16} color={theme.palette.text.secondary} />
@@ -594,7 +604,8 @@ const GenerateAITemplateModal = ({ open, onClose, onTemplateSaved, sourceTemplat
 																		component="img"
 																		src={img.url}
 																		alt={img.name || ""}
-																		onClick={() => toggleLibraryImage(img)}
+																		{...clickableProps(() => toggleLibraryImage(img))}
+																		aria-pressed={selected}
 																		sx={{
 																			width: 64,
 																			height: 64,
@@ -604,7 +615,7 @@ const GenerateAITemplateModal = ({ open, onClose, onTemplateSaved, sourceTemplat
 																			border: 2,
 																			borderColor: selected ? "primary.main" : "divider",
 																			opacity: busy ? 0.5 : 1,
-																			transition: "all 0.15s",
+																			transition: "border-color 0.15s, opacity 0.15s",
 																			"&:hover": { borderColor: busy ? "divider" : "primary.light" },
 																		}}
 																		onError={(e: any) => {
@@ -633,6 +644,7 @@ const GenerateAITemplateModal = ({ open, onClose, onTemplateSaved, sourceTemplat
 																		</Box>
 																	)}
 																	<IconButton
+																		aria-label="Eliminar imagen de la biblioteca"
 																		size="small"
 																		onClick={(e) => {
 																			e.stopPropagation();
@@ -717,6 +729,7 @@ const GenerateAITemplateModal = ({ open, onClose, onTemplateSaved, sourceTemplat
 																		size="small"
 																		fullWidth
 																		placeholder="URL de la imagen (https://...)"
+																		inputProps={{ "aria-label": "URL de la imagen" }}
 																		value={img.url}
 																		onChange={(e) =>
 																			setAdditionalImages((prev) => prev.map((p, i) => (i === idx ? { ...p, url: e.target.value } : p)))
@@ -727,6 +740,7 @@ const GenerateAITemplateModal = ({ open, onClose, onTemplateSaved, sourceTemplat
 																		size="small"
 																		fullWidth
 																		placeholder="Descripción (qué muestra, para qué se usa)"
+																		inputProps={{ "aria-label": "Descripción de la imagen" }}
 																		value={img.description}
 																		onChange={(e) =>
 																			setAdditionalImages((prev) =>
@@ -757,6 +771,7 @@ const GenerateAITemplateModal = ({ open, onClose, onTemplateSaved, sourceTemplat
 																	/>
 																</Stack>
 																<IconButton
+																	aria-label="Quitar imagen adicional"
 																	size="small"
 																	onClick={() => setAdditionalImages((prev) => prev.filter((_, i) => i !== idx))}
 																	disabled={busy}
@@ -1053,6 +1068,14 @@ const GenerateAITemplateModal = ({ open, onClose, onTemplateSaved, sourceTemplat
 					{saving ? "Guardando…" : "Guardar plantilla"}
 				</Button>
 			</DialogActions>
+			<ConfirmDialog
+				open={imageToDelete !== null}
+				title={`¿Eliminar "${imageToDelete?.name || imageToDelete?.url || ""}" de la biblioteca?`}
+				description="Esto no afecta a los templates ya guardados."
+				confirmLabel="Eliminar"
+				onConfirm={confirmDeleteFromLibrary}
+				onClose={() => setImageToDelete(null)}
+			/>
 		</Dialog>
 	);
 };

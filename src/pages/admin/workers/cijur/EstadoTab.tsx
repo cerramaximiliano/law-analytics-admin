@@ -5,6 +5,7 @@ import { Box, Chip, LinearProgress, Paper, Stack, Tooltip, Typography, alpha, us
 import { InfoCircle, Warning2 } from "iconsax-react";
 import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER, PRO_TEAL } from "themes/dashboardTokens";
 import { CijurProgressResponse } from "api/cijur";
+import { formatNumber } from "utils/format";
 
 const COLOR_CANAL: Record<string, string> = {
 	PROVINCIAL: PRO_TEAL,
@@ -62,7 +63,7 @@ export default function EstadoTab({ progress }: { progress: CijurProgressRespons
 				</Paper>
 				<Paper variant="outlined" sx={{ p: 1.5, borderRadius: 2, minWidth: 130 }}>
 					<Typography variant="h4" fontWeight={700} sx={{ fontVariantNumeric: "tabular-nums" }}>
-						{(totales.chars / 1e6).toFixed(2)}M
+						{formatNumber(totales.chars / 1e6, 2)}M
 					</Typography>
 					<Typography variant="caption" color="text.secondary">
 						caracteres de sentencias
@@ -126,7 +127,7 @@ export default function EstadoTab({ progress }: { progress: CijurProgressRespons
 
 							<Stack direction="row" spacing={2} sx={{ mt: 1.2 }} flexWrap="wrap">
 								<Typography variant="caption" color="text.secondary">
-									{(c.chars / 1e6).toFixed(2)}M caracteres
+									{formatNumber(c.chars / 1e6, 2)}M caracteres
 								</Typography>
 								<Typography variant="caption" color="text.secondary">
 									{c.conVoces} con voces

@@ -20,6 +20,7 @@ import {
 import { Refresh, TickCircle, Warning2, CloseCircle, Minus } from "iconsax-react";
 import { WorkersService, CoverageMatrixData, MatrixYear, PeriodoEstado } from "api/workers";
 import { FUEROS_CON_SCRAPING } from "utils/fueros";
+import { clickableProps } from "utils/a11y";
 
 // ─── Alcance ──────────────────────────────────────────────────────────────────
 // Del catálogo compartido. Se muestran solo los fueros con workers: el resto
@@ -86,7 +87,7 @@ const Celda: React.FC<{ a: MatrixYear; fuero: string; onClick: () => void; activ
 	return (
 		<Tooltip title={detalle} arrow placement="top">
 			<Box
-				onClick={onClick}
+				{...clickableProps(onClick)}
 				sx={{
 					bgcolor: e.bg,
 					color: e.fg,

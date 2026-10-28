@@ -152,6 +152,9 @@ const WhatsAppConversationsCard = () => {
 				<TextField
 					size="small"
 					label="Email del usuario"
+					type="email"
+					autoComplete="off"
+					inputProps={{ spellCheck: false }}
 					value={email}
 					onChange={(e) => setEmail(e.target.value)}
 					onKeyDown={(e) => e.key === "Enter" && load()}

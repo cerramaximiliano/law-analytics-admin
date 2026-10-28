@@ -174,7 +174,12 @@ const LinkExistingConfigModal: React.FC<LinkExistingConfigModalProps> = ({ open,
 											return (
 												<TableRow key={getId(config._id)} hover onClick={() => handleToggle(getId(config._id))} sx={{ cursor: "pointer" }}>
 													<TableCell padding="checkbox">
-														<Checkbox checked={selected.includes(getId(config._id))} />
+														<Checkbox
+															checked={selected.includes(getId(config._id))}
+															onClick={(e) => e.stopPropagation()}
+															onChange={() => handleToggle(getId(config._id))}
+															inputProps={{ "aria-label": "Seleccionar configuración" }}
+														/>
 													</TableCell>
 													<TableCell>
 														<Typography variant="body2" fontFamily="monospace" fontSize="0.75rem">

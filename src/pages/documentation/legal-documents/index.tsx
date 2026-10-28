@@ -462,7 +462,7 @@ const LegalDocumentsPage = () => {
 										</Stack>
 									</Box>
 								</Stack>
-								<IconButton onClick={handleCloseViewDialog} color="error">
+								<IconButton aria-label="Cerrar" onClick={handleCloseViewDialog} color="error">
 									<CloseCircle size={24} />
 								</IconButton>
 							</Stack>

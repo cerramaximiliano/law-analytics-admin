@@ -364,6 +364,7 @@ const Etapas = () => {
 					<TextField
 						size="small"
 						placeholder="Buscar por carátula…"
+						inputProps={{ "aria-label": "Buscar por carátula" }}
 						value={searchInput}
 						onChange={(e) => {
 							setPage(0);

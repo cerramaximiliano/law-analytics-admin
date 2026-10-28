@@ -79,6 +79,8 @@ import {
 } from "types/ga4-analytics";
 import { useSnackbar } from "notistack";
 import { SearchNormal1 } from "iconsax-react";
+import { formatPercent } from "utils/format";
+import { useTabIndexParam } from "hooks/useTabParam";
 
 // Documentación de métricas
 const METRIC_DESCRIPTIONS: Record<string, { title: string; description: string; interpretation: string }> = {
@@ -340,6 +342,8 @@ const a11yProps = (index: number) => ({
 	id: `ga4-tab-${index}`,
 	"aria-controls": `ga4-tabpanel-${index}`,
 });
+
+const TAB_SLUGS = ["resumen", "landing-y-salida", "rutas", "embudos", "eventos"] as const;
 
 // Color palette — alineada con design tokens del ecosistema (BRAND_BLUE, LIVE_GREEN, STALE_AMBER)
 const COLORS = {
@@ -659,7 +663,7 @@ const GA4Dashboard = () => {
 	const [funnelData, setFunnelData] = useState<GA4CustomFunnelData | null>(null);
 	const [period, setPeriod] = useState<GA4PeriodOption>("30d");
 	const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-	const [tabValue, setTabValue] = useState(0);
+	const [tabValue, setTabValue] = useTabIndexParam("tab", TAB_SLUGS);
 	// Funnel builder state
 	const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
 	const [selectedPredefinedFunnel, setSelectedPredefinedFunnel] = useState<string>("");
@@ -734,14 +738,6 @@ const GA4Dashboard = () => {
 
 	const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
 		setTabValue(newValue);
-		// Cargar datos de navegación cuando se cambia a esas tabs
-		if ((newValue === 1 || newValue === 2) && !navData) {
-			fetchNavData();
-		}
-		// Cargar eventos cuando se cambia al tab de funnels o event explorer
-		if ((newValue === 3 || newValue === 4) && !eventsData) {
-			fetchEventsData();
-		}
 	};
 
 	const fetchEventsData = useCallback(async () => {
@@ -758,6 +754,18 @@ const GA4Dashboard = () => {
 			setFunnelLoading(false);
 		}
 	}, [period, enqueueSnackbar]);
+
+	// La tab vive en la URL: los datos de cada una se cargan al entrar, también por link directo.
+	useEffect(() => {
+		// Datos de navegación para Landing & Exit Pages y Path Analysis
+		if ((tabValue === 1 || tabValue === 2) && !navData) {
+			fetchNavData();
+		}
+		// Eventos para Funnel Builder y Event Explorer
+		if ((tabValue === 3 || tabValue === 4) && !eventsData) {
+			fetchEventsData();
+		}
+	}, [tabValue]);
 
 	const generateFunnel = useCallback(async () => {
 		if (selectedEvents.length < 2) {
@@ -1028,7 +1036,7 @@ const GA4Dashboard = () => {
 					<Grid item xs={12} sm={6} md={3}>
 						<MetricCard
 							title="Tasa de Rebote"
-							value={`${((data?.overview.bounceRate || 0) * 100).toFixed(1)}%`}
+							value={formatPercent((data?.overview.bounceRate || 0) * 100, 1)}
 							icon={<ArrowRight size={20} />}
 							loading={loading}
 							color={theme.palette.warning.main}
@@ -1421,7 +1429,7 @@ const GA4Dashboard = () => {
 													<TableCell align="right">
 														<Chip
 															size="small"
-															label={`${((page?.bounceRate ?? 0) * 100).toFixed(1)}%`}
+															label={formatPercent((page?.bounceRate ?? 0) * 100, 1)}
 															color={(page?.bounceRate ?? 0) < 0.4 ? "success" : (page?.bounceRate ?? 0) < 0.6 ? "warning" : "error"}
 															sx={{ minWidth: 60 }}
 														/>
@@ -1475,7 +1483,7 @@ const GA4Dashboard = () => {
 													<TableCell align="right">
 														<Chip
 															size="small"
-															label={`${((page?.exitRate ?? 0) * 100).toFixed(1)}%`}
+															label={formatPercent((page?.exitRate ?? 0) * 100, 1)}
 															color={(page?.exitRate ?? 0) < 0.3 ? "success" : (page?.exitRate ?? 0) < 0.5 ? "warning" : "error"}
 															sx={{ minWidth: 60 }}
 														/>
@@ -1876,7 +1884,7 @@ const GA4Dashboard = () => {
 															</Typography>
 														</Box>
 													</Box>
-													<IconButton size="small" onClick={() => handleRemoveEvent(index)} color="error">
+													<IconButton size="small" aria-label="Quitar evento" onClick={() => handleRemoveEvent(index)} color="error">
 														<Trash size={16} />
 													</IconButton>
 												</Paper>

@@ -1069,6 +1069,7 @@ const AlertManagement = () => {
 						<TextField
 							fullWidth
 							placeholder="Buscar por nombre, email o rol…"
+							inputProps={{ "aria-label": "Buscar por nombre, email o rol" }}
 							value={searchTerm}
 							onChange={(e) => setSearchTerm(e.target.value)}
 							InputProps={{
@@ -1127,7 +1128,7 @@ const AlertManagement = () => {
 													selected={isSelected}
 												>
 													<TableCell padding="checkbox">
-														<Checkbox checked={isSelected} />
+														<Checkbox checked={isSelected} inputProps={{ "aria-label": `Seleccionar ${user.name || user.email || "usuario"}` }} />
 													</TableCell>
 													<TableCell>{user.name || "Sin nombre"}</TableCell>
 													<TableCell>{user.email || "Sin email"}</TableCell>

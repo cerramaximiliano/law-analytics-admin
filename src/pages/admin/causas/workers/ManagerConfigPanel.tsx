@@ -602,7 +602,7 @@ const ManagerConfigPanel: React.FC = () => {
 										Historial ({history.stats.snapshotCount} snapshots)
 									</Typography>
 									<FormControl size="small" sx={{ minWidth: 100 }}>
-										<Select value={hoursBack} onChange={(e) => setHoursBack(e.target.value as number)}>
+										<Select inputProps={{ "aria-label": "Horas de historial" }} value={hoursBack} onChange={(e) => setHoursBack(e.target.value as number)}>
 											<MenuItem value={6}>6h</MenuItem>
 											<MenuItem value={12}>12h</MenuItem>
 											<MenuItem value={24}>24h</MenuItem>

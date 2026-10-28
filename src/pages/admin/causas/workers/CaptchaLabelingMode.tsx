@@ -245,7 +245,7 @@ const CaptchaLabelingMode = ({ open, onClose }: Props) => {
 							{hechas} etiquetadas · {pendientesTotal} pendientes
 						</Typography>
 					</Box>
-					<IconButton onClick={() => onClose(hechas)} size="large">
+					<IconButton onClick={() => onClose(hechas)} size="large" aria-label="Cerrar">
 						<CloseCircle size={24} />
 					</IconButton>
 				</Stack>
@@ -315,6 +315,7 @@ const CaptchaLabelingMode = ({ open, onClose }: Props) => {
 									}}
 									size="small"
 									title={`Lupa ${zoom}x (Z)`}
+									aria-label={`Lupa ${zoom}x (Z)`}
 									sx={{
 										position: "absolute",
 										top: 4,
@@ -353,6 +354,7 @@ const CaptchaLabelingMode = ({ open, onClose }: Props) => {
 							disabled={guardando}
 							// El teclado numérico del móvil aparece con esto.
 							inputProps={{
+								"aria-label": "Dígitos del captcha",
 								inputMode: "numeric",
 								pattern: "[0-9]*",
 								maxLength: 4,

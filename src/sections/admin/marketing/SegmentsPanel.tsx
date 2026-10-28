@@ -323,7 +323,7 @@ const SegmentsPanel = () => {
 							InputProps={{
 								endAdornment: (
 									<InputAdornment position="end">
-										<IconButton onClick={handleApplySearch} edge="end">
+										<IconButton aria-label="Buscar" onClick={handleApplySearch} edge="end">
 											<SearchNormal1 size={18} />
 										</IconButton>
 									</InputAdornment>

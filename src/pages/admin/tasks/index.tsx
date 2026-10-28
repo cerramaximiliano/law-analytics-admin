@@ -78,6 +78,7 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/es";
 import { formatDate } from "utils/format";
+import { clickableProps } from "utils/a11y";
 
 dayjs.extend(relativeTime);
 dayjs.locale("es");
@@ -450,7 +451,7 @@ const AdminTasks: React.FC = () => {
 						),
 						endAdornment: searchInput && (
 							<InputAdornment position="end">
-								<IconButton size="small" onClick={handleClearSearch}>
+								<IconButton aria-label="Limpiar búsqueda" size="small" onClick={handleClearSearch}>
 									<CloseCircle size={16} />
 								</IconButton>
 							</InputAdornment>
@@ -558,7 +559,7 @@ const AdminTasks: React.FC = () => {
 					</>
 				)}
 
-				<IconButton
+				<IconButton aria-label="Actualizar tareas"
 					onClick={() => {
 						fetchTasks();
 						fetchStats();
@@ -650,7 +651,7 @@ const AdminTasks: React.FC = () => {
 									key={task._id}
 									hover
 									selected={selectedIds.includes(task._id)}
-									onClick={() => handleOpenDetail(task)}
+									{...clickableProps(() => handleOpenDetail(task), { asRow: true })}
 									sx={{ cursor: "pointer" }}
 								>
 									<TableCell padding="checkbox" onClick={(e) => e.stopPropagation()}>

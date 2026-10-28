@@ -1778,6 +1778,7 @@ const EmailTemplates = () => {
 							value={filter}
 							onChange={handleFilterChange}
 							placeholder="Buscar por nombre, asunto o descripción"
+							inputProps={{ "aria-label": "Buscar por nombre, asunto o descripción" }}
 							size="small"
 							InputProps={{
 								startAdornment: (
@@ -2442,6 +2443,7 @@ const EmailTemplates = () => {
 														size="small"
 														fullWidth
 														placeholder="Buscar en el código HTML…"
+														inputProps={{ "aria-label": "Buscar en el código HTML" }}
 														value={viewHtmlSearchQuery}
 														onChange={(e) => setViewHtmlSearchQuery(e.target.value)}
 														onKeyDown={(e) => {
@@ -2840,6 +2842,7 @@ const EmailTemplates = () => {
 															size="small"
 															fullWidth
 															placeholder="Buscar en el código HTML…"
+															inputProps={{ "aria-label": "Buscar en el código HTML" }}
 															value={htmlSearchQuery}
 															onChange={(e) => setHtmlSearchQuery(e.target.value)}
 															onKeyPress={(e) => {
@@ -3039,6 +3042,9 @@ const EmailTemplates = () => {
 								<Grid item xs={12}>
 									<TextField
 										label="Email del destinatario"
+										type="email"
+										autoComplete="email"
+										inputProps={{ spellCheck: false }}
 										fullWidth
 										value={emailData.email}
 										onChange={handleEmailChange}

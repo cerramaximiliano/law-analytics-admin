@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useCallback, MouseEvent } from "react";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 import {
 	Box,
 	Card,
@@ -29,6 +29,7 @@ import {
 } from "@mui/material";
 import EnhancedTablePagination from "components/EnhancedTablePagination";
 import MainCard from "components/MainCard";
+import { clickableProps } from "utils/a11y";
 import { Edit2, Refresh } from "iconsax-react";
 import EtapaAnotacionesService, { EstadoAnotacion, ItemCola } from "api/etapaAnotaciones";
 import { BRAND_BLUE } from "themes/dashboardTokens";
@@ -115,7 +116,7 @@ const EtiquetadoDataset = () => {
 		<MainCard
 			title="Etiquetado de dataset — etapas procesales"
 			secondary={
-				<IconButton size="small" onClick={tab === 0 ? cargar : cargarCobertura}>
+				<IconButton aria-label="Actualizar" size="small" onClick={tab === 0 ? cargar : cargarCobertura}>
 					<Refresh size={18} />
 				</IconButton>
 			}
@@ -246,7 +247,8 @@ const EtiquetadoDataset = () => {
 												size="small"
 												variant="text"
 												sx={{ py: 0, minWidth: 0 }}
-												onClick={() => navigate(`/admin/causas/etiquetado/${sug.fuero}/${sug.causaId}`)}
+												component={RouterLink}
+												to={`/admin/causas/etiquetado/${sug.fuero}/${sug.causaId}`}
 											>
 												Abrir
 											</Button>
@@ -342,7 +344,7 @@ const EtiquetadoDataset = () => {
 												key={item._id}
 												hover
 												sx={{ cursor: "pointer", "&:hover": { bgcolor: alpha(BRAND_BLUE, isDark ? 0.06 : 0.03) } }}
-												onClick={() => navigate(`/admin/causas/etiquetado/${item.fuero}/${item.causaId}`)}
+												{...clickableProps(() => navigate(`/admin/causas/etiquetado/${item.fuero}/${item.causaId}`), { asRow: true })}
 											>
 												<TableCell>
 													<Chip size="small" variant="outlined" label={item.fuero} />
@@ -421,10 +423,9 @@ const EtiquetadoDataset = () => {
 														<IconButton
 															size="small"
 															color="primary"
-															onClick={(e) => {
-																e.stopPropagation();
-																navigate(`/admin/causas/etiquetado/${item.fuero}/${item.causaId}`);
-															}}
+															component={RouterLink}
+															to={`/admin/causas/etiquetado/${item.fuero}/${item.causaId}`}
+															onClick={(e: MouseEvent) => e.stopPropagation()}
 														>
 															<Edit2 size={17} />
 														</IconButton>

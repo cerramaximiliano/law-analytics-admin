@@ -4,6 +4,7 @@ import { DocumentUpload } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import HcRelevamientoService, { Carga, ESTADO_CARGA_LABEL } from "api/hcRelevamiento";
 import { EstadoChip, fmtFechaHora } from "./comun";
+import { formatBytes } from "utils/format";
 
 const MAX_MB = 30;
 const ACEPTA = "application/pdf,image/jpeg,image/png";
@@ -119,8 +120,7 @@ export function ListaCargas({ cargas, isDark, onAbrir }: ListaProps) {
 				<Stack key={c._id} direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
 					<EstadoChip estado={c.estado} isDark={isDark} label={ESTADO_CARGA_LABEL[c.estado] || c.estado} />
 					<Typography variant="caption" color="text.secondary">
-						{fmtFechaHora(c.subidoEn)} · {c.tipo.replace("application/", "").replace("image/", "")} · {(c.bytes / 1024 / 1024).toFixed(1)}{" "}
-						MB
+						{fmtFechaHora(c.subidoEn)} · {c.tipo.replace("application/", "").replace("image/", "")} · {formatBytes(c.bytes)}
 						{c.resultado
 							? ` · ${c.resultado.hojasSica || 0} hojas SICA, ${c.resultado.detalleBeneficio || 0} constancias${
 									c.resultado.calidadOk !== undefined ? ` (${c.resultado.calidadOk} con lectura completa)` : ""

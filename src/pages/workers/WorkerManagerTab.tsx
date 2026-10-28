@@ -39,6 +39,7 @@ import MEVWorkersService, {
 	MEVManagerAlert,
 	MEVManagerStatsEntry,
 } from "api/workersMEV";
+import { formatPercent } from "utils/format";
 
 // Tab Panel
 interface TabPanelProps {
@@ -318,7 +319,7 @@ export default function WorkerManagerTab() {
 								Recursos
 							</Typography>
 							<Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>
-								CPU: {((status.systemResources?.cpuUsage || 0) * 100).toFixed(0)}% | RAM: {status.systemResources?.freeMemoryMB || 0}/
+								CPU: {formatPercent((status.systemResources?.cpuUsage || 0) * 100, 0)} | RAM: {status.systemResources?.freeMemoryMB || 0}/
 								{status.systemResources?.totalMemoryMB || 0} MB
 							</Typography>
 						</Grid>
@@ -430,7 +431,7 @@ export default function WorkerManagerTab() {
 							<TextField
 								size="small"
 								type="number"
-								inputProps={{ min: 0, max: 1, step: 0.05 }}
+								inputProps={{ "aria-label": "Umbral de CPU", min: 0, max: 1, step: 0.05 }}
 								value={(editConfig as any)?.cpuThreshold ?? 0.75}
 								onChange={(e) => updateNestedConfig("cpuThreshold", parseFloat(e.target.value) || 0.75)}
 								sx={{ width: 80 }}
@@ -477,6 +478,7 @@ export default function WorkerManagerTab() {
 									{["minWorkers", "maxWorkers", "scaleThreshold", "scaleDownThreshold", "docsPerWorker"].map((field) => (
 										<TableCell key={field} align="center">
 											<TextField
+												inputProps={{ "aria-label": `${field} (${type})` }}
 												size="small"
 												type="number"
 												sx={{ width: 70 }}
@@ -489,7 +491,7 @@ export default function WorkerManagerTab() {
 										<TextField
 											size="small"
 											type="number"
-											inputProps={{ min: 0, max: 23 }}
+											inputProps={{ "aria-label": `Hora de inicio (${type})`, min: 0, max: 23 }}
 											sx={{ width: 70 }}
 											value={(editConfig as any)?.workStartHour?.[type] ?? ""}
 											onChange={(e) => updateNestedConfig(`workStartHour.${type}`, parseInt(e.target.value) || 0)}
@@ -499,7 +501,7 @@ export default function WorkerManagerTab() {
 										<TextField
 											size="small"
 											type="number"
-											inputProps={{ min: 0, max: 24 }}
+											inputProps={{ "aria-label": `Hora de fin (${type})`, min: 0, max: 24 }}
 											sx={{ width: 70 }}
 											value={(editConfig as any)?.workEndHour?.[type] ?? ""}
 											onChange={(e) => updateNestedConfig(`workEndHour.${type}`, parseInt(e.target.value) || 0)}

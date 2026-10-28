@@ -791,7 +791,15 @@ const CoveragePanel: React.FC = () => {
 												>
 													<TableCell padding="checkbox">
 														{hasData && (
-															<IconButton size="small" tabIndex={-1}>
+															<IconButton
+																size="small"
+																aria-label={expanded ? `Contraer año ${y}` : `Expandir año ${y}`}
+																aria-expanded={expanded}
+																onClick={(e) => {
+																	e.stopPropagation();
+																	toggleYearExpanded(y);
+																}}
+															>
 																{expanded ? <ArrowUp2 size={14} /> : <ArrowDown2 size={14} />}
 															</IconButton>
 														)}

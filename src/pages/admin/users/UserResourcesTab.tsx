@@ -36,6 +36,7 @@ import {
 import ragAxios from "utils/ragAxios";
 import CopyButton from "components/CopyButton";
 import { BRAND_BLUE } from "themes/dashboardTokens";
+import { formatNumber, formatPercent } from "utils/format";
 
 interface AiUsageRow {
 	_id: string;
@@ -595,7 +596,7 @@ const UserResourcesTab: React.FC<UserResourcesTabProps> = ({ userId }) => {
 											color={current.remaining === 0 ? theme.palette.error.main : theme.palette.success.main}
 										/>
 										<StatCard label="Tokens" value={current.tokensTotal.toLocaleString("es-AR")} color={theme.palette.secondary.main} />
-										<StatCard label="Costo USD" value={`$${current.costUsd.toFixed(4)}`} color={theme.palette.warning.main} />
+										<StatCard label="Costo USD" value={`$${formatNumber(current.costUsd, 4)}`} color={theme.palette.warning.main} />
 									</Stack>
 									{!isUnlimited && (
 										<Box>
@@ -604,7 +605,7 @@ const UserResourcesTab: React.FC<UserResourcesTabProps> = ({ userId }) => {
 													Uso mensual
 												</Typography>
 												<Typography variant="caption" color="textSecondary">
-													{pct.toFixed(0)}%
+													{formatPercent(pct, 0)}
 												</Typography>
 											</Stack>
 											<LinearProgress
@@ -667,7 +668,7 @@ const UserResourcesTab: React.FC<UserResourcesTabProps> = ({ userId }) => {
 													<Typography variant="caption">{row.tokensOutput.toLocaleString("es-AR")}</Typography>
 												</TableCell>
 												<TableCell align="right">
-													<Typography variant="caption">${row.costUsd.toFixed(4)}</Typography>
+													<Typography variant="caption">${formatNumber(row.costUsd, 4)}</Typography>
 												</TableCell>
 												<TableCell>
 													<Typography variant="caption">
