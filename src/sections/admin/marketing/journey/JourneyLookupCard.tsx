@@ -129,7 +129,15 @@ const JourneyLookupCard: React.FC<{ data: JourneyLookup }> = ({ data }) => {
 								<Typography variant="subtitle2">{ev.name}</Typography>
 								<Chip
 									size="small"
-									label={ev.enrolled ? "Inscripto" : ev.matches ? "Cumple, falta que lo inscriba la sincronización" : "No cumple"}
+									label={
+										ev.enrolled
+											? "Inscripto"
+											: ev.matches
+											? ev.acceptsNew
+												? "Cumple, falta que lo inscriba la sincronización"
+												: "Cumple, pero la campaña ya no inscribe nuevos"
+											: "No cumple"
+									}
 									sx={{ bgcolor: ev.enrolled ? "#86efac" : ev.matches ? "#fde047" : "#fca5a5", color: DARK, fontWeight: 600 }}
 								/>
 							</Box>

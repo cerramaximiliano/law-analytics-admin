@@ -32,6 +32,9 @@ const CampaignCard: React.FC<{ c: JourneyCampaign; highlighted: boolean }> = ({ 
 			<Chip size="small" label={STATUS_LABEL[c.status]} sx={{ bgcolor: STATUS_BG[c.status], color: DARK, fontWeight: 600 }} />
 			{c.subtipo && <Chip size="small" variant="outlined" label={c.subtipo} />}
 			<Chip size="small" variant="outlined" label={c.syncWithSegment ? "Sincroniza" : "Sin sincronizar"} />
+			{c.status === "active" && !c.acceptsNew && (
+				<Chip size="small" label="Ya no inscribe nuevos" sx={{ bgcolor: "#fde047", color: DARK, fontWeight: 600 }} />
+			)}
 		</Box>
 		<Typography variant="caption" color="textSecondary" display="block" sx={{ mt: 0.5 }}>
 			{c.steps} pasos · {fmt(c.active)} inscriptos activos · segmento{" "}
@@ -124,7 +127,9 @@ const LeakTable: React.FC<{ scope: string; bucket: string; onLookup: (contactId:
 							<TableRow key={r.contactId} hover>
 								<TableCell>{r.email}</TableCell>
 								<TableCell>{r.closest || "—"}</TableCell>
-								<TableCell>{r.failing.length ? r.failing.join(" + ") : "Cumple: falta que la sincronización lo inscriba"}</TableCell>
+								<TableCell>
+									{r.reason || (r.failing.length ? r.failing.join(" + ") : "Cumple: falta que la sincronización lo inscriba")}
+								</TableCell>
 								<TableCell>
 									<Button size="small" onClick={() => onLookup(r.contactId)}>
 										Ver recorrido

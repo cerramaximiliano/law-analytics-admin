@@ -9,6 +9,7 @@ export interface JourneyCampaign {
 	tipo: string;
 	subtipo: string | null;
 	syncWithSegment: boolean;
+	acceptsNew: boolean;
 	dailyLimit: number;
 	steps: number;
 	segment: { _id: string; name: string; size: number | null; calculatedAt: string | null } | null;
@@ -70,6 +71,7 @@ export interface JourneyLeakItem {
 	etapa: string | null;
 	closest: string | null;
 	failing: string[];
+	reason: string | null;
 }
 
 export interface JourneyLookup {
@@ -104,6 +106,7 @@ export interface JourneyLookup {
 		subtipo: string | null;
 		matches: boolean;
 		enrolled: boolean;
+		acceptsNew: boolean;
 		filters: Array<{ text: string; ok: boolean }>;
 		nextStepFilter: string[] | null;
 	}>;
