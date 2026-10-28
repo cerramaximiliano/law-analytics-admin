@@ -130,7 +130,21 @@ export interface JourneyV2 {
 	>;
 }
 
+export interface JourneyCheck {
+	key: string;
+	title: string;
+	count: number;
+	status: "ok" | "alert" | "error";
+	sample: string[];
+	sampleKind: "contactId" | "campaignId" | null;
+	action: string;
+	note?: string;
+	details?: Array<Record<string, unknown>>;
+}
+
 export interface JourneyMapData {
+	checks?: JourneyCheck[];
+	checksAlerts?: number;
 	v2?: JourneyV2 | null;
 	v2Error?: string | null;
 	generatedAt: string;

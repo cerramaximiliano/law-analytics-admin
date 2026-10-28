@@ -18,6 +18,7 @@ import MainCard from "components/MainCard";
 import MarketingQuickNav from "components/admin/marketing/MarketingQuickNav";
 import { JourneyLookup, JourneyMapData, JourneyPeriod, JourneyService } from "api/journey";
 import JourneyCampaignDetail from "sections/admin/marketing/journey/JourneyCampaignDetail";
+import JourneyChecks from "sections/admin/marketing/journey/JourneyChecks";
 import JourneyHistorial from "sections/admin/marketing/journey/JourneyHistorial";
 import JourneyStrategy from "sections/admin/marketing/journey/JourneyStrategy";
 import { PERIOD_LABEL } from "sections/admin/marketing/journey/journeyFormat";
@@ -179,6 +180,17 @@ const Recorrido = () => {
 										</Button>
 									))}
 							</Alert>
+						)}
+
+						{data.checks && data.checks.length > 0 && (
+							<JourneyChecks
+								checks={data.checks}
+								onLookup={(id) => {
+									setQuery(id);
+									runLookup(id);
+								}}
+								onOpenCampaign={setOpenCampaign}
+							/>
 						)}
 
 						<JourneyMap data={data} selected={selected} highlight={highlight} onSelect={setSelected} />
