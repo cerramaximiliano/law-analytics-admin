@@ -531,7 +531,7 @@ const ConfiguracionTab = () => {
 								color="primary.main"
 								sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.01em" }}
 							>
-								{config.estadisticas?.totalCodigosRastreados?.toLocaleString() || 0}
+								{config.estadisticas?.totalCodigosRastreados?.toLocaleString("es-AR") || 0}
 							</Typography>
 							<Typography variant="caption" color="text.secondary">
 								Total rastreados
@@ -545,7 +545,7 @@ const ConfiguracionTab = () => {
 								color="success.main"
 								sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.01em" }}
 							>
-								{config.estadisticas?.codigosValidosEncontrados?.toLocaleString() || 0}
+								{config.estadisticas?.codigosValidosEncontrados?.toLocaleString("es-AR") || 0}
 							</Typography>
 							<Typography variant="caption" color="text.secondary">
 								PDFs válidos encontrados

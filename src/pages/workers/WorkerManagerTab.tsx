@@ -293,7 +293,7 @@ export default function WorkerManagerTab() {
 								Ciclos totales
 							</Typography>
 							<Typography variant="body2" sx={{ fontWeight: 500, fontVariantNumeric: "tabular-nums" }}>
-								{status.cycleCount?.toLocaleString() || 0}
+								{status.cycleCount?.toLocaleString("es-AR") || 0}
 							</Typography>
 						</Grid>
 						<Grid item xs={6} sm={3}>
@@ -382,7 +382,7 @@ export default function WorkerManagerTab() {
 													color={pending > 0 ? "warning.main" : "text.secondary"}
 													sx={{ fontVariantNumeric: "tabular-nums" }}
 												>
-													{pending.toLocaleString()}
+													{pending.toLocaleString("es-AR")}
 												</Typography>
 											</TableCell>
 											<TableCell align="center" sx={{ fontVariantNumeric: "tabular-nums" }}>

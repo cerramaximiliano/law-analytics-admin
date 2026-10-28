@@ -32,6 +32,7 @@ import dayjs from "utils/dayjs-config";
 import { JURISDICTION_LOGOS } from "assets/images/logos/jurisdictions";
 import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER } from "themes/dashboardTokens";
 import pjnCredentialsService, { CausaUserViewData, CausaUserViewEntry, UserViewGate } from "api/pjnCredentials";
+import { formatDateTime } from "utils/format";
 
 /**
  * Réplica visual de lo que el USUARIO ve para una causa PJN en su app:
@@ -826,7 +827,7 @@ const Section = ({ title, hint, children }: { title: string; hint?: string; chil
 	</Stack>
 );
 
-const fmt = (d?: string | null) => (d ? dayjs(d).format("DD/MM/YYYY HH:mm") : "—");
+const fmt = (d?: string | null) => (d ? formatDateTime(d) : "—");
 const flag = (v: unknown) => (v === undefined || v === null ? "—" : String(v));
 
 export function EntryPanel({ entry }: { entry: CausaUserViewEntry }) {

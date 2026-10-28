@@ -26,6 +26,7 @@ import WebhooksService, { WebhooksStatus } from "api/webhooks";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/es";
+import { formatDate, formatDateTime } from "utils/format";
 
 dayjs.extend(relativeTime);
 dayjs.locale("es");
@@ -410,7 +411,7 @@ const StripeWebhooks = () => {
 											<TableCell>
 												<Stack direction="row" spacing={1} alignItems="center">
 													<Calendar size={16} />
-													<Typography variant="body2">{dayjs(webhook.created).format("DD/MM/YYYY HH:mm")}</Typography>
+													<Typography variant="body2">{formatDateTime(webhook.created)}</Typography>
 												</Stack>
 												<Typography variant="caption" color="text.secondary">
 													{dayjs(webhook.created).fromNow()}
@@ -467,7 +468,7 @@ const StripeWebhooks = () => {
 				{/* Footer con timestamp */}
 				<Box>
 					<Typography variant="caption" color="text.secondary">
-						Última actualización: {dayjs(data.timestamp).format("DD/MM/YYYY HH:mm:ss")}
+						Última actualización: {formatDate(data.timestamp, "dateTimeSeconds")}
 					</Typography>
 				</Box>
 			</Stack>

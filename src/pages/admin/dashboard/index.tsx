@@ -237,7 +237,7 @@ const CustomChartTooltip: React.FC<CustomTooltipProps> = ({ active, payload }) =
 				}}
 			>
 				<Typography variant="body2" sx={{ fontWeight: 600, color: payload[0].payload.color }}>
-					{payload[0].name}: {payload[0].value.toLocaleString()}
+					{payload[0].name}: {payload[0].value.toLocaleString("es-AR")}
 				</Typography>
 			</Paper>
 		);
@@ -340,7 +340,7 @@ const PrimaryKPICard: React.FC<PrimaryKPICardProps> = ({ title, value, icon, val
 
 	const formattedValue = prefix
 		? value.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-		: value.toLocaleString();
+		: value.toLocaleString("es-AR");
 
 	return (
 		<Paper
@@ -605,7 +605,7 @@ const StatsLegend: React.FC<StatsLegendProps> = ({ items, loading }) => {
 								variant="h6"
 								sx={{ fontWeight: 600, color: item.color, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
 							>
-								{item.value.toLocaleString()}
+								{item.value.toLocaleString("es-AR")}
 							</Typography>
 						)}
 					</Box>
@@ -739,7 +739,7 @@ const StatStrip: React.FC<{ items: StatStripItem[] }> = ({ items }) => {
 								lineHeight: 1.2,
 							}}
 						>
-							{item.value.toLocaleString()}
+							{item.value.toLocaleString("es-AR")}
 						</Typography>
 					)}
 					<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.25 }}>
@@ -792,7 +792,7 @@ const CredentialsStat: React.FC<{ count: number; tooltip: string }> = ({ count, 
 					variant="h5"
 					sx={{ fontWeight: 700, lineHeight: 1, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums", color: LIVE_GREEN }}
 				>
-					{count.toLocaleString()}
+					{count.toLocaleString("es-AR")}
 				</Typography>
 				<Typography variant="caption" color="text.secondary">
 					credenciales válidas
@@ -1367,7 +1367,7 @@ const AdminDashboard = () => {
 							<Chip
 								size="small"
 								icon={<Clock size={14} />}
-								label={`${new Date(lastUpdated).toLocaleString("es-ES")}`}
+								label={`${new Date(lastUpdated).toLocaleString("es-AR")}`}
 								variant="outlined"
 								sx={{
 									borderRadius: 1.5,
@@ -1516,20 +1516,20 @@ const AdminDashboard = () => {
 												(pjsaltaStats?.status.valid || 0) +
 												(pjcatamarcaStats?.status.valid || 0) +
 												(pjmendozaStats?.status.valid || 0)
-											).toLocaleString()}
+											).toLocaleString("es-AR")}
 										</Typography>
 										<Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap", gridColumn: "1 / -1", mt: { xs: 1, sm: 0 } }}>
 											{[
-												{ label: `PJN ${(data?.folders.pjn?.verified || 0).toLocaleString()}`, to: "/admin/causas/verified-app" },
-												{ label: `MEV ${(data?.folders.mev?.verified || 0).toLocaleString()}`, to: "/admin/mev/verified-app" },
-												{ label: `EJE ${(ejeStats?.status.valid || 0).toLocaleString()}`, to: "/admin/eje/verified-app" },
-												{ label: `Salta ${(pjsaltaStats?.status.valid || 0).toLocaleString()}`, to: "/admin/pjsalta/verified-app" },
+												{ label: `PJN ${(data?.folders.pjn?.verified || 0).toLocaleString("es-AR")}`, to: "/admin/causas/verified-app" },
+												{ label: `MEV ${(data?.folders.mev?.verified || 0).toLocaleString("es-AR")}`, to: "/admin/mev/verified-app" },
+												{ label: `EJE ${(ejeStats?.status.valid || 0).toLocaleString("es-AR")}`, to: "/admin/eje/verified-app" },
+												{ label: `Salta ${(pjsaltaStats?.status.valid || 0).toLocaleString("es-AR")}`, to: "/admin/pjsalta/verified-app" },
 												{
-													label: `Catamarca ${(pjcatamarcaStats?.status.valid || 0).toLocaleString()}`,
+													label: `Catamarca ${(pjcatamarcaStats?.status.valid || 0).toLocaleString("es-AR")}`,
 													to: "/admin/pjcatamarca/verified-app",
 												},
 												{
-													label: `Mendoza ${(pjmendozaStats?.status.valid || 0).toLocaleString()}`,
+													label: `Mendoza ${(pjmendozaStats?.status.valid || 0).toLocaleString("es-AR")}`,
 													to: "/admin/pjmendoza/verified-app",
 												},
 											].map((chip) => (
@@ -2042,7 +2042,7 @@ const AdminDashboard = () => {
 													variant="h5"
 													sx={{ fontWeight: 700, color: COLORS.success.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
 												>
-													{eligibilityStats.updatedToday.toLocaleString()}
+													{eligibilityStats.updatedToday.toLocaleString("es-AR")}
 												</Typography>
 												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													Actualizados hoy
@@ -2058,7 +2058,7 @@ const AdminDashboard = () => {
 													{(
 														eligibilityStats.pendingToday ??
 														eligibilityStats.eligible - eligibilityStats.updatedToday - eligibilityStats.eligibleWithErrors
-													).toLocaleString()}
+													).toLocaleString("es-AR")}
 												</Typography>
 												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													Pendientes hoy
@@ -2071,7 +2071,7 @@ const AdminDashboard = () => {
 													variant="h5"
 													sx={{ fontWeight: 700, color: COLORS.error.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
 												>
-													{eligibilityStats.eligibleWithErrors.toLocaleString()}
+													{eligibilityStats.eligibleWithErrors.toLocaleString("es-AR")}
 												</Typography>
 												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													Con errores
@@ -2081,7 +2081,7 @@ const AdminDashboard = () => {
 										<Grid item xs={3}>
 											<Box sx={{ textAlign: "center" }}>
 												<Typography variant="h5" sx={{ fontWeight: 700, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>
-													{eligibilityStats.eligible.toLocaleString()}
+													{eligibilityStats.eligible.toLocaleString("es-AR")}
 												</Typography>
 												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													Total elegibles
@@ -2211,7 +2211,7 @@ const AdminDashboard = () => {
 													variant="h5"
 													sx={{ fontWeight: 700, color: COLORS.success.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
 												>
-													{mevEligibilityStats.updatedToday.toLocaleString()}
+													{mevEligibilityStats.updatedToday.toLocaleString("es-AR")}
 												</Typography>
 												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													Actualizados hoy
@@ -2227,7 +2227,7 @@ const AdminDashboard = () => {
 													{(
 														mevEligibilityStats.pendingToday ??
 														mevEligibilityStats.eligible - mevEligibilityStats.updatedToday - mevEligibilityStats.eligibleWithErrors
-													).toLocaleString()}
+													).toLocaleString("es-AR")}
 												</Typography>
 												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													Pendientes hoy
@@ -2240,7 +2240,7 @@ const AdminDashboard = () => {
 													variant="h5"
 													sx={{ fontWeight: 700, color: COLORS.error.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
 												>
-													{mevEligibilityStats.eligibleWithErrors.toLocaleString()}
+													{mevEligibilityStats.eligibleWithErrors.toLocaleString("es-AR")}
 												</Typography>
 												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													Con errores
@@ -2253,7 +2253,7 @@ const AdminDashboard = () => {
 													variant="h5"
 													sx={{ fontWeight: 700, color: COLORS.neutral.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
 												>
-													{mevEligibilityStats.eligible.toLocaleString()}
+													{mevEligibilityStats.eligible.toLocaleString("es-AR")}
 												</Typography>
 												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													Total elegibles
@@ -2269,7 +2269,7 @@ const AdminDashboard = () => {
 											<Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 0.5, mt: 1.5, cursor: "help" }}>
 												<LockSlash size={13} color={COLORS.neutral.main} />
 												<Typography variant="caption" color="text.secondary">
-													<strong>{(mevEligibilityStats.noCredential ?? 0).toLocaleString()}</strong> sin credencial (no actualizables)
+													<strong>{(mevEligibilityStats.noCredential ?? 0).toLocaleString("es-AR")}</strong> sin credencial (no actualizables)
 												</Typography>
 											</Box>
 										</Tooltip>
@@ -2396,7 +2396,7 @@ const AdminDashboard = () => {
 													variant="h5"
 													sx={{ fontWeight: 700, color: COLORS.success.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
 												>
-													{ejeEligibilityStats.actualizadosHoy.toLocaleString()}
+													{ejeEligibilityStats.actualizadosHoy.toLocaleString("es-AR")}
 												</Typography>
 												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													Actualizados hoy
@@ -2409,7 +2409,7 @@ const AdminDashboard = () => {
 													variant="h5"
 													sx={{ fontWeight: 700, color: COLORS.warning.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
 												>
-													{ejeEligibilityStats.pendientesHoy.toLocaleString()}
+													{ejeEligibilityStats.pendientesHoy.toLocaleString("es-AR")}
 												</Typography>
 												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													Pendientes hoy
@@ -2422,7 +2422,7 @@ const AdminDashboard = () => {
 													variant="h5"
 													sx={{ fontWeight: 700, color: COLORS.success.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
 												>
-													{ejeEligibilityStats.totalElegibles.toLocaleString()}
+													{ejeEligibilityStats.totalElegibles.toLocaleString("es-AR")}
 												</Typography>
 												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													Total elegibles
@@ -2435,7 +2435,7 @@ const AdminDashboard = () => {
 													variant="h5"
 													sx={{ fontWeight: 700, color: COLORS.neutral.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
 												>
-													{ejeEligibilityStats.noElegibles.toLocaleString()}
+													{ejeEligibilityStats.noElegibles.toLocaleString("es-AR")}
 												</Typography>
 												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													No elegibles
@@ -2572,7 +2572,7 @@ const AdminDashboard = () => {
 													variant="h5"
 													sx={{ fontWeight: 700, color: COLORS.success.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
 												>
-													{pjsaltaEligibilityStats.actualizadosHoy.toLocaleString()}
+													{pjsaltaEligibilityStats.actualizadosHoy.toLocaleString("es-AR")}
 												</Typography>
 												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													Actualizados hoy
@@ -2585,7 +2585,7 @@ const AdminDashboard = () => {
 													variant="h5"
 													sx={{ fontWeight: 700, color: COLORS.warning.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
 												>
-													{pjsaltaEligibilityStats.pendientesHoy.toLocaleString()}
+													{pjsaltaEligibilityStats.pendientesHoy.toLocaleString("es-AR")}
 												</Typography>
 												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													Pendientes hoy
@@ -2598,7 +2598,7 @@ const AdminDashboard = () => {
 													variant="h5"
 													sx={{ fontWeight: 700, color: COLORS.success.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
 												>
-													{pjsaltaEligibilityStats.totalElegibles.toLocaleString()}
+													{pjsaltaEligibilityStats.totalElegibles.toLocaleString("es-AR")}
 												</Typography>
 												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													Total elegibles
@@ -2611,7 +2611,7 @@ const AdminDashboard = () => {
 													variant="h5"
 													sx={{ fontWeight: 700, color: COLORS.neutral.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
 												>
-													{pjsaltaEligibilityStats.noElegibles.toLocaleString()}
+													{pjsaltaEligibilityStats.noElegibles.toLocaleString("es-AR")}
 												</Typography>
 												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													No elegibles
@@ -2748,7 +2748,7 @@ const AdminDashboard = () => {
 													variant="h5"
 													sx={{ fontWeight: 700, color: COLORS.success.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
 												>
-													{pjcatamarcaEligibilityStats.actualizadosHoy.toLocaleString()}
+													{pjcatamarcaEligibilityStats.actualizadosHoy.toLocaleString("es-AR")}
 												</Typography>
 												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													Actualizados hoy
@@ -2761,7 +2761,7 @@ const AdminDashboard = () => {
 													variant="h5"
 													sx={{ fontWeight: 700, color: COLORS.warning.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
 												>
-													{pjcatamarcaEligibilityStats.pendientesHoy.toLocaleString()}
+													{pjcatamarcaEligibilityStats.pendientesHoy.toLocaleString("es-AR")}
 												</Typography>
 												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													Pendientes hoy
@@ -2774,7 +2774,7 @@ const AdminDashboard = () => {
 													variant="h5"
 													sx={{ fontWeight: 700, color: COLORS.success.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
 												>
-													{pjcatamarcaEligibilityStats.totalElegibles.toLocaleString()}
+													{pjcatamarcaEligibilityStats.totalElegibles.toLocaleString("es-AR")}
 												</Typography>
 												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													Total elegibles
@@ -2787,7 +2787,7 @@ const AdminDashboard = () => {
 													variant="h5"
 													sx={{ fontWeight: 700, color: COLORS.neutral.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
 												>
-													{pjcatamarcaEligibilityStats.noElegibles.toLocaleString()}
+													{pjcatamarcaEligibilityStats.noElegibles.toLocaleString("es-AR")}
 												</Typography>
 												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													No elegibles
@@ -2924,7 +2924,7 @@ const AdminDashboard = () => {
 													variant="h5"
 													sx={{ fontWeight: 700, color: COLORS.success.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
 												>
-													{pjmendozaEligibilityStats.actualizadosHoy.toLocaleString()}
+													{pjmendozaEligibilityStats.actualizadosHoy.toLocaleString("es-AR")}
 												</Typography>
 												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													Actualizados hoy
@@ -2937,7 +2937,7 @@ const AdminDashboard = () => {
 													variant="h5"
 													sx={{ fontWeight: 700, color: COLORS.warning.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
 												>
-													{pjmendozaEligibilityStats.pendientesHoy.toLocaleString()}
+													{pjmendozaEligibilityStats.pendientesHoy.toLocaleString("es-AR")}
 												</Typography>
 												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													Pendientes hoy
@@ -2950,7 +2950,7 @@ const AdminDashboard = () => {
 													variant="h5"
 													sx={{ fontWeight: 700, color: COLORS.success.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
 												>
-													{pjmendozaEligibilityStats.totalElegibles.toLocaleString()}
+													{pjmendozaEligibilityStats.totalElegibles.toLocaleString("es-AR")}
 												</Typography>
 												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													Total elegibles
@@ -2963,7 +2963,7 @@ const AdminDashboard = () => {
 													variant="h5"
 													sx={{ fontWeight: 700, color: COLORS.neutral.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
 												>
-													{pjmendozaEligibilityStats.noElegibles.toLocaleString()}
+													{pjmendozaEligibilityStats.noElegibles.toLocaleString("es-AR")}
 												</Typography>
 												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													No elegibles
@@ -3103,7 +3103,7 @@ const AdminDashboard = () => {
 													variant="h5"
 													sx={{ fontWeight: 700, color: COLORS.warning.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
 												>
-													{stuckDocumentsStats.pending.total.toLocaleString()}
+													{stuckDocumentsStats.pending.total.toLocaleString("es-AR")}
 												</Typography>
 												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													Pendientes
@@ -3116,7 +3116,7 @@ const AdminDashboard = () => {
 													variant="h5"
 													sx={{ fontWeight: 700, color: COLORS.success.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
 												>
-													{stuckDocumentsStats.totals.fixed.toLocaleString()}
+													{stuckDocumentsStats.totals.fixed.toLocaleString("es-AR")}
 												</Typography>
 												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													Reparados
@@ -3129,7 +3129,7 @@ const AdminDashboard = () => {
 													variant="h5"
 													sx={{ fontWeight: 700, color: COLORS.error.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
 												>
-													{stuckDocumentsStats.totals.failed.toLocaleString()}
+													{stuckDocumentsStats.totals.failed.toLocaleString("es-AR")}
 												</Typography>
 												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													Fallidos
@@ -3139,7 +3139,7 @@ const AdminDashboard = () => {
 										<Grid item xs={3}>
 											<Box sx={{ textAlign: "center" }}>
 												<Typography variant="h5" sx={{ fontWeight: 700, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>
-													{stuckDocumentsStats.totals.processed.toLocaleString()}
+													{stuckDocumentsStats.totals.processed.toLocaleString("es-AR")}
 												</Typography>
 												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
 													Total procesados
@@ -3341,8 +3341,8 @@ const AdminDashboard = () => {
 												}}
 											/>
 											<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.25 }}>
-												{b.updatedToday.toLocaleString()}/{b.total.toLocaleString()} actualizadas hoy
-												{b.pending > 0 ? ` · ${b.pending.toLocaleString()} pendientes` : ""}
+												{b.updatedToday.toLocaleString("es-AR")}/{b.total.toLocaleString("es-AR")} actualizadas hoy
+												{b.pending > 0 ? ` · ${b.pending.toLocaleString("es-AR")} pendientes` : ""}
 												{b.withErrors > 0 && (
 													<Box
 														component="span"
@@ -3357,7 +3357,7 @@ const AdminDashboard = () => {
 															"&:hover": { textDecoration: "underline" },
 														}}
 													>
-														{` · ${b.withErrors.toLocaleString()} con errores`}
+														{` · ${b.withErrors.toLocaleString("es-AR")} con errores`}
 													</Box>
 												)}
 											</Typography>
@@ -3593,7 +3593,7 @@ const AdminDashboard = () => {
 												}}
 											/>
 											<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.25 }}>
-												{b.updatedToday.toLocaleString()}/{b.total.toLocaleString()} actualizadas hoy
+												{b.updatedToday.toLocaleString("es-AR")}/{b.total.toLocaleString("es-AR")} actualizadas hoy
 												{b.withErrors > 0 ? ` · ${b.withErrors} con errores` : ""}
 											</Typography>
 										</Box>
@@ -3737,7 +3737,7 @@ const AdminDashboard = () => {
 											<Grid item xs={7}>
 												<DonutChart
 													data={subscriptionPlanData}
-													centerValue={(data?.subscriptions.live?.total || 0).toLocaleString()}
+													centerValue={(data?.subscriptions.live?.total || 0).toLocaleString("es-AR")}
 													centerLabel="live"
 												/>
 											</Grid>
@@ -3820,7 +3820,7 @@ const AdminDashboard = () => {
 														variant="h5"
 														sx={{ fontWeight: 600, color: COLORS.neutral.main, fontSize: { xs: "1rem", sm: "1.25rem" } }}
 													>
-														{(data?.subscriptions.test?.byPlan?.free || 0).toLocaleString()}
+														{(data?.subscriptions.test?.byPlan?.free || 0).toLocaleString("es-AR")}
 													</Typography>
 												)}
 												<Typography variant="caption" color="textSecondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" } }}>
@@ -3837,7 +3837,7 @@ const AdminDashboard = () => {
 														variant="h5"
 														sx={{ fontWeight: 600, color: COLORS.neutral.main, fontSize: { xs: "1rem", sm: "1.25rem" } }}
 													>
-														{(data?.subscriptions.test?.byPlan?.standard || 0).toLocaleString()}
+														{(data?.subscriptions.test?.byPlan?.standard || 0).toLocaleString("es-AR")}
 													</Typography>
 												)}
 												<Typography variant="caption" color="textSecondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" } }}>
@@ -3854,7 +3854,7 @@ const AdminDashboard = () => {
 														variant="h5"
 														sx={{ fontWeight: 600, color: COLORS.neutral.main, fontSize: { xs: "1rem", sm: "1.25rem" } }}
 													>
-														{(data?.subscriptions.test?.byPlan?.pro || 0).toLocaleString()}
+														{(data?.subscriptions.test?.byPlan?.pro || 0).toLocaleString("es-AR")}
 													</Typography>
 												)}
 												<Typography variant="caption" color="textSecondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" } }}>
@@ -3871,7 +3871,7 @@ const AdminDashboard = () => {
 														variant="h5"
 														sx={{ fontWeight: 600, color: COLORS.neutral.main, fontSize: { xs: "1rem", sm: "1.25rem" } }}
 													>
-														{(data?.subscriptions.test?.byPlan?.premium || 0).toLocaleString()}
+														{(data?.subscriptions.test?.byPlan?.premium || 0).toLocaleString("es-AR")}
 													</Typography>
 												)}
 												<Typography variant="caption" color="textSecondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" } }}>
@@ -3892,11 +3892,11 @@ const AdminDashboard = () => {
 										}}
 									>
 										<Typography variant="body2" color="textSecondary" sx={{ fontSize: { xs: "0.7rem", sm: "0.875rem" } }}>
-											Total: <strong>{(data?.subscriptions.test?.total || 0).toLocaleString()}</strong>
+											Total: <strong>{(data?.subscriptions.test?.total || 0).toLocaleString("es-AR")}</strong>
 										</Typography>
 										<Typography variant="body2" color="textSecondary" sx={{ fontSize: { xs: "0.7rem", sm: "0.875rem" } }}>
 											Activas:{" "}
-											<strong style={{ color: COLORS.warning.main }}>{(data?.subscriptions.test?.active || 0).toLocaleString()}</strong>
+											<strong style={{ color: COLORS.warning.main }}>{(data?.subscriptions.test?.active || 0).toLocaleString("es-AR")}</strong>
 										</Typography>
 									</Box>
 								</Paper>
@@ -3938,7 +3938,7 @@ const AdminDashboard = () => {
 														variant="h4"
 														sx={{ fontWeight: 600, fontSize: { xs: "1.25rem", sm: "1.5rem" }, fontVariantNumeric: "tabular-nums" }}
 													>
-														{(data?.subscriptions.live?.total || 0).toLocaleString()}
+														{(data?.subscriptions.live?.total || 0).toLocaleString("es-AR")}
 													</Typography>
 												)}
 												<Typography variant="caption" color="textSecondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" } }}>
@@ -3955,7 +3955,7 @@ const AdminDashboard = () => {
 														variant="h4"
 														sx={{ fontWeight: 600, color: COLORS.success.main, fontSize: { xs: "1.25rem", sm: "1.5rem" } }}
 													>
-														{(data?.subscriptions.live?.active || 0).toLocaleString()}
+														{(data?.subscriptions.live?.active || 0).toLocaleString("es-AR")}
 													</Typography>
 												)}
 												<Typography variant="caption" color="textSecondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" } }}>
@@ -4054,7 +4054,7 @@ const AdminDashboard = () => {
 													fontVariantNumeric: "tabular-nums",
 												}}
 											>
-												{(data?.folders.pjn?.total || 0).toLocaleString()}
+												{(data?.folders.pjn?.total || 0).toLocaleString("es-AR")}
 											</Typography>
 										)}
 										<Typography variant="body2" color="textSecondary" sx={{ fontSize: { xs: "0.7rem", sm: "0.875rem" } }}>
@@ -4063,13 +4063,13 @@ const AdminDashboard = () => {
 									</Box>
 									<Box sx={{ display: "flex", gap: { xs: 1, sm: 2 }, mt: 1, flexWrap: "wrap" }}>
 										<Typography variant="caption" sx={{ color: COLORS.success.main, fontSize: { xs: "0.65rem", sm: "0.75rem" } }}>
-											✓ {(data?.folders.pjn?.verified || 0).toLocaleString()}
+											✓ {(data?.folders.pjn?.verified || 0).toLocaleString("es-AR")}
 										</Typography>
 										<Typography variant="caption" sx={{ color: COLORS.neutral.main, fontSize: { xs: "0.65rem", sm: "0.75rem" } }}>
-											○ {(data?.folders.pjn?.nonVerified || 0).toLocaleString()}
+											○ {(data?.folders.pjn?.nonVerified || 0).toLocaleString("es-AR")}
 										</Typography>
 										<Typography variant="caption" sx={{ color: COLORS.warning.main, fontSize: { xs: "0.65rem", sm: "0.75rem" } }}>
-											◇ {(data?.folders.pjn?.pending || 0).toLocaleString()}
+											◇ {(data?.folders.pjn?.pending || 0).toLocaleString("es-AR")}
 										</Typography>
 									</Box>
 								</Paper>
@@ -4111,7 +4111,7 @@ const AdminDashboard = () => {
 													fontVariantNumeric: "tabular-nums",
 												}}
 											>
-												{(data?.folders.mev?.total || 0).toLocaleString()}
+												{(data?.folders.mev?.total || 0).toLocaleString("es-AR")}
 											</Typography>
 										)}
 										<Typography variant="body2" color="textSecondary" sx={{ fontSize: { xs: "0.7rem", sm: "0.875rem" } }}>
@@ -4120,13 +4120,13 @@ const AdminDashboard = () => {
 									</Box>
 									<Box sx={{ display: "flex", gap: { xs: 1, sm: 2 }, mt: 1, flexWrap: "wrap" }}>
 										<Typography variant="caption" sx={{ color: COLORS.success.main, fontSize: { xs: "0.65rem", sm: "0.75rem" } }}>
-											✓ {(data?.folders.mev?.verified || 0).toLocaleString()}
+											✓ {(data?.folders.mev?.verified || 0).toLocaleString("es-AR")}
 										</Typography>
 										<Typography variant="caption" sx={{ color: COLORS.neutral.main, fontSize: { xs: "0.65rem", sm: "0.75rem" } }}>
-											○ {(data?.folders.mev?.nonVerified || 0).toLocaleString()}
+											○ {(data?.folders.mev?.nonVerified || 0).toLocaleString("es-AR")}
 										</Typography>
 										<Typography variant="caption" sx={{ color: COLORS.warning.main, fontSize: { xs: "0.65rem", sm: "0.75rem" } }}>
-											◇ {(data?.folders.mev?.pending || 0).toLocaleString()}
+											◇ {(data?.folders.mev?.pending || 0).toLocaleString("es-AR")}
 										</Typography>
 									</Box>
 								</Paper>
@@ -4154,7 +4154,7 @@ const AdminDashboard = () => {
 													<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
 												) : (
 													<Typography variant="h4" sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
-														{(data?.marketing.campaigns.total || 0).toLocaleString()}
+														{(data?.marketing.campaigns.total || 0).toLocaleString("es-AR")}
 													</Typography>
 												)}
 												<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.25 }}>
@@ -4171,7 +4171,7 @@ const AdminDashboard = () => {
 													<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
 												) : (
 													<Typography variant="h4" sx={{ fontWeight: 600, color: COLORS.success.main }}>
-														{(data?.marketing.campaigns.active || 0).toLocaleString()}
+														{(data?.marketing.campaigns.active || 0).toLocaleString("es-AR")}
 													</Typography>
 												)}
 												<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.25 }}>
@@ -4188,7 +4188,7 @@ const AdminDashboard = () => {
 													<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
 												) : (
 													<Typography variant="h4" sx={{ fontWeight: 600, color: COLORS.primary.light }}>
-														{(data?.marketing.campaigns.scheduled || 0).toLocaleString()}
+														{(data?.marketing.campaigns.scheduled || 0).toLocaleString("es-AR")}
 													</Typography>
 												)}
 												<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.25 }}>
@@ -4254,7 +4254,7 @@ const AdminDashboard = () => {
 											<Grid item xs={6}>
 												<DonutChart
 													data={segmentsData}
-													centerValue={(data?.marketing.segments.total || 0).toLocaleString()}
+													centerValue={(data?.marketing.segments.total || 0).toLocaleString("es-AR")}
 													centerLabel="segmentos"
 												/>
 											</Grid>
@@ -4281,7 +4281,7 @@ const AdminDashboard = () => {
 									) : (
 										<Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%" }}>
 											<Typography variant="h4" sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
-												{(data?.marketing.segments.total || 0).toLocaleString()}
+												{(data?.marketing.segments.total || 0).toLocaleString("es-AR")}
 											</Typography>
 											<Typography variant="body2" color="textSecondary">
 												Total segmentos

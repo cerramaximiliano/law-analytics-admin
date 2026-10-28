@@ -254,7 +254,7 @@ const CampaignSendStatsModal: React.FC<CampaignSendStatsModalProps> = ({ open, o
 
 	const formatDate = (dateString: string) => {
 		const date = new Date(dateString);
-		return date.toLocaleDateString("es-ES", {
+		return date.toLocaleDateString("es-AR", {
 			day: "2-digit",
 			month: "short",
 			timeZone: "UTC",

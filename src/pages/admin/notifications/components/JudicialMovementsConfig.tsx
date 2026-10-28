@@ -532,7 +532,7 @@ const JudicialMovementsConfig: React.FC<JudicialMovementsConfigProps> = ({ secti
 										Total notificaciones enviadas
 									</Typography>
 									<Typography variant="body2" sx={{ fontWeight: 500, fontVariantNumeric: "tabular-nums" }}>
-										{config.stats.totalNotificationsSent.toLocaleString()}
+										{config.stats.totalNotificationsSent.toLocaleString("es-AR")}
 									</Typography>
 								</Grid>
 								<Grid item xs={12} sm={4}>
@@ -540,7 +540,7 @@ const JudicialMovementsConfig: React.FC<JudicialMovementsConfigProps> = ({ secti
 										Total movimientos procesados
 									</Typography>
 									<Typography variant="body2" sx={{ fontWeight: 500, fontVariantNumeric: "tabular-nums" }}>
-										{config.stats.totalMovementsProcessed.toLocaleString()}
+										{config.stats.totalMovementsProcessed.toLocaleString("es-AR")}
 									</Typography>
 								</Grid>
 							</Grid>

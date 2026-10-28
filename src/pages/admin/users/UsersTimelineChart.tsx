@@ -95,7 +95,7 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon, color, loading 
 						<Skeleton variant="text" width={60} height={28} />
 					) : (
 						<Typography variant="h5" fontWeight={600} sx={{ color, fontVariantNumeric: "tabular-nums" }}>
-							{typeof value === "number" ? value.toLocaleString() : value}
+							{typeof value === "number" ? value.toLocaleString("es-AR") : value}
 						</Typography>
 					)}
 				</Box>
@@ -355,7 +355,7 @@ const UsersTimelineChart: React.FC = () => {
 											borderRadius: 8,
 											fontVariantNumeric: "tabular-nums",
 										}}
-										formatter={(value: number, name: string) => [value.toLocaleString(), name === "cumulative" ? "Acumulado" : "Nuevos"]}
+										formatter={(value: number, name: string) => [value.toLocaleString("es-AR"), name === "cumulative" ? "Acumulado" : "Nuevos"]}
 										labelFormatter={(label) => `Fecha: ${formatXAxisDate(label)}`}
 									/>
 									<Legend formatter={(value) => (value === "cumulative" ? "Acumulado" : "Nuevos registros")} />

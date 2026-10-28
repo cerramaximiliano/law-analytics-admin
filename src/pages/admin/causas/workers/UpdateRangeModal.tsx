@@ -148,7 +148,7 @@ const UpdateRangeModal: React.FC<UpdateRangeModalProps> = ({ open, onClose, onSu
 									Rango
 								</Typography>
 								<Typography variant="body2" fontWeight={600} sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.01em" }}>
-									{worker.range_start?.toLocaleString()} - {worker.range_end?.toLocaleString()}
+									{worker.range_start?.toLocaleString("es-AR")} - {worker.range_end?.toLocaleString("es-AR")}
 								</Typography>
 							</Box>
 							<Box>
@@ -156,7 +156,7 @@ const UpdateRangeModal: React.FC<UpdateRangeModalProps> = ({ open, onClose, onSu
 									Número actual
 								</Typography>
 								<Typography variant="body2" fontWeight={600} sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.01em" }}>
-									{worker.number?.toLocaleString()}
+									{worker.number?.toLocaleString("es-AR")}
 								</Typography>
 							</Box>
 							<Box>
@@ -228,7 +228,7 @@ const UpdateRangeModal: React.FC<UpdateRangeModalProps> = ({ open, onClose, onSu
 
 					{rangeStart > 0 && rangeEnd > rangeStart && (
 						<Typography variant="caption" color="text.secondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
-							Total expedientes en nuevo rango: {(rangeEnd - rangeStart).toLocaleString()}
+							Total expedientes en nuevo rango: {(rangeEnd - rangeStart).toLocaleString("es-AR")}
 						</Typography>
 					)}
 
@@ -259,7 +259,7 @@ const UpdateRangeModal: React.FC<UpdateRangeModalProps> = ({ open, onClose, onSu
 												</TableCell>
 												<TableCell>
 													<Typography variant="body2" fontSize="0.75rem">
-														{entry.range_start?.toLocaleString()} - {entry.range_end?.toLocaleString()}
+														{entry.range_start?.toLocaleString("es-AR")} - {entry.range_end?.toLocaleString("es-AR")}
 													</Typography>
 												</TableCell>
 												<TableCell>
@@ -269,12 +269,12 @@ const UpdateRangeModal: React.FC<UpdateRangeModalProps> = ({ open, onClose, onSu
 												</TableCell>
 												<TableCell>
 													<Typography variant="body2" fontSize="0.75rem">
-														{entry.documentsProcessed?.toLocaleString() || "-"}
+														{entry.documentsProcessed?.toLocaleString("es-AR") || "-"}
 													</Typography>
 												</TableCell>
 												<TableCell>
 													<Typography variant="body2" fontSize="0.75rem">
-														{entry.documentsFound?.toLocaleString() || "-"}
+														{entry.documentsFound?.toLocaleString("es-AR") || "-"}
 													</Typography>
 												</TableCell>
 												<TableCell>
@@ -282,7 +282,7 @@ const UpdateRangeModal: React.FC<UpdateRangeModalProps> = ({ open, onClose, onSu
 														{entry.completedAt
 															? new Date(
 																	typeof entry.completedAt === "string" ? entry.completedAt : (entry.completedAt as any).$date,
-															  ).toLocaleDateString()
+															  ).toLocaleDateString("es-AR")
 															: "-"}
 													</Typography>
 												</TableCell>

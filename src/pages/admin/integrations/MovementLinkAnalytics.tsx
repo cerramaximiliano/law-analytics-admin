@@ -726,9 +726,9 @@ const MovementLinkAnalytics: React.FC = () => {
 												</Stack>
 											</TableCell>
 											<TableCell>
-												<Typography variant="body2">{new Date(u.last_activity).toLocaleDateString()}</Typography>
+												<Typography variant="body2">{new Date(u.last_activity).toLocaleDateString("es-AR")}</Typography>
 												<Typography variant="caption" color="text.secondary">
-													{new Date(u.last_activity).toLocaleTimeString()}
+													{new Date(u.last_activity).toLocaleTimeString("es-AR")}
 												</Typography>
 											</TableCell>
 										</TableRow>
@@ -817,9 +817,9 @@ const MovementLinkAnalytics: React.FC = () => {
 												</Stack>
 											</TableCell>
 											<TableCell>
-												<Typography variant="body2">{new Date(ev.ts).toLocaleDateString()}</Typography>
+												<Typography variant="body2">{new Date(ev.ts).toLocaleDateString("es-AR")}</Typography>
 												<Typography variant="caption" color="text.secondary">
-													{new Date(ev.ts).toLocaleTimeString()}
+													{new Date(ev.ts).toLocaleTimeString("es-AR")}
 												</Typography>
 											</TableCell>
 										</TableRow>

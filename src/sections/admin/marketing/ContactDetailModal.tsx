@@ -273,7 +273,7 @@ const ContactDetailModal: React.FC<ContactDetailModalProps> = ({ open, onClose, 
 	// Format date helper
 	const formatDate = (dateString?: string | Date) => {
 		if (!dateString) return "-";
-		return new Date(dateString).toLocaleDateString("es-ES", {
+		return new Date(dateString).toLocaleDateString("es-AR", {
 			year: "numeric",
 			month: "long",
 			day: "numeric",

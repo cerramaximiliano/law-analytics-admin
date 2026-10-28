@@ -23,6 +23,7 @@ import { useSnackbar } from "notistack";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import MEVWorkersService, { JurisdictionStatusDoc, JurisdictionStatusSummary } from "api/workersMEV";
+import { formatDate } from "utils/format";
 
 dayjs.extend(relativeTime);
 
@@ -243,7 +244,7 @@ export default function JurisdictionStatusTab() {
 										/>
 									</TableCell>
 									<TableCell>
-										<Tooltip title={s.lastCheckedAt ? dayjs(s.lastCheckedAt).format("DD/MM/YYYY HH:mm:ss") : ""}>
+										<Tooltip title={s.lastCheckedAt ? formatDate(s.lastCheckedAt, "dateTimeSeconds") : ""}>
 											<span>{formatRelative(s.lastCheckedAt)}</span>
 										</Tooltip>
 									</TableCell>

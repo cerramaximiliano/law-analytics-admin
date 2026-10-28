@@ -882,10 +882,10 @@ const CampaignEmailList = ({ campaign, open, onClose }: CampaignEmailListProps) 
 																							<Divider sx={{ my: 1 }} />
 																							<Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
 																								<Typography variant="caption" color="textSecondary">
-																									Creado: {email.createdAt ? new Date(email.createdAt).toLocaleString("es-ES") : "N/A"}
+																									Creado: {email.createdAt ? new Date(email.createdAt).toLocaleString("es-AR") : "N/A"}
 																								</Typography>
 																								<Typography variant="caption" color="textSecondary">
-																									Actualizado: {email.updatedAt ? new Date(email.updatedAt).toLocaleString("es-ES") : "N/A"}
+																									Actualizado: {email.updatedAt ? new Date(email.updatedAt).toLocaleString("es-AR") : "N/A"}
 																								</Typography>
 																							</Box>
 																						</Grid>

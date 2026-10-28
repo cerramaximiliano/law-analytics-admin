@@ -28,11 +28,11 @@ import {
 	DialogActions,
 } from "@mui/material";
 import { Trash, Eye } from "iconsax-react";
-import dayjs from "utils/dayjs-config";
 import CopyButton from "components/CopyButton";
 import { fetchStripeCustomers, deleteStripeCustomer } from "store/reducers/stripe-subscriptions";
 import { StripeCustomer } from "types/stripe-subscription";
 import StripeCustomerDetailModal from "./StripeCustomerDetailModal";
+import { formatDate } from "utils/format";
 
 const StripeSubscriptionsTable = () => {
 	const dispatch = useDispatch();
@@ -393,7 +393,7 @@ const StripeSubscriptionsTable = () => {
 									</Typography>
 								</TableCell>
 								<TableCell>
-									<Typography variant="caption">{dayjs(customer.created).format("DD/MM/YYYY")}</Typography>
+									<Typography variant="caption">{formatDate(customer.created)}</Typography>
 								</TableCell>
 								<TableCell align="center">
 									<Typography variant="body2">{customer.totalSubscriptions}</Typography>

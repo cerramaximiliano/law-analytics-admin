@@ -876,7 +876,7 @@ const GenerateAITemplateModal = ({ open, onClose, onTemplateSaved, sourceTemplat
 
 							{usage && (
 								<Typography variant="caption" color="text.secondary">
-									Tokens usados: {usage.total_tokens?.toLocaleString() || "?"} (prompt: {usage.prompt_tokens}, completion:{" "}
+									Tokens usados: {usage.total_tokens?.toLocaleString("es-AR") || "?"} (prompt: {usage.prompt_tokens}, completion:{" "}
 									{usage.completion_tokens})
 								</Typography>
 							)}

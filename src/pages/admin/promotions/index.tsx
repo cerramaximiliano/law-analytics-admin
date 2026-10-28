@@ -539,7 +539,7 @@ const PromotionsManagement = () => {
 															<Stack direction="row" spacing={0.5} alignItems="center" justifyContent="center">
 																<People size={14} color={theme.palette.primary.main} />
 																<Typography variant="body2" fontWeight={600}>
-																	{audience.eligibleCount.toLocaleString()}
+																	{audience.eligibleCount.toLocaleString("es-AR")}
 																</Typography>
 															</Stack>
 														</Tooltip>

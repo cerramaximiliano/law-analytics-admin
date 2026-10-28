@@ -171,7 +171,7 @@ const CoverageBar: React.FC<{ data: ScrapingCoverageData; compact?: boolean }> =
 		<Box>
 			{!compact && (
 				<Typography variant="caption" color="text.secondary" gutterBottom>
-					Cobertura visual (1 — {maxRange.toLocaleString()})
+					Cobertura visual (1 — {maxRange.toLocaleString("es-AR")})
 				</Typography>
 			)}
 			<Box
@@ -189,7 +189,7 @@ const CoverageBar: React.FC<{ data: ScrapingCoverageData; compact?: boolean }> =
 					const widthPct = ((seg.end - seg.start + 1) / maxRange) * 100;
 					const label = `${
 						seg.type === "covered" ? "Cubierto" : seg.type === "gap-free" ? "Sin cubrir" : "Asignado"
-					}: ${seg.start.toLocaleString()} — ${seg.end.toLocaleString()}`;
+					}: ${seg.start.toLocaleString("es-AR")} — ${seg.end.toLocaleString("es-AR")}`;
 					return (
 						<Tooltip key={i} title={label} arrow>
 							<Box
@@ -289,7 +289,7 @@ const AssignDialog: React.FC<{
 										Nuevo rango
 									</Typography>
 									<Typography variant="body2" fontFamily="monospace" fontWeight={600}>
-										{range.start.toLocaleString()} — {range.end.toLocaleString()}
+										{range.start.toLocaleString("es-AR")} — {range.end.toLocaleString("es-AR")}
 									</Typography>
 								</Box>
 								<Box>
@@ -297,14 +297,14 @@ const AssignDialog: React.FC<{
 										Tamaño
 									</Typography>
 									<Typography variant="body2" fontWeight={600}>
-										{(range.end - range.start + 1).toLocaleString()}
+										{(range.end - range.start + 1).toLocaleString("es-AR")}
 									</Typography>
 								</Box>
 							</Stack>
 						</CardContent>
 					</Card>
 					<Alert severity="info" variant="outlined">
-						El rango del worker se reasignará y comenzará a procesar desde <strong>{range.start.toLocaleString()}</strong>. El historial
+						El rango del worker se reasignará y comenzará a procesar desde <strong>{range.start.toLocaleString("es-AR")}</strong>. El historial
 						anterior se conserva.
 					</Alert>
 					<FormControlLabel
@@ -553,7 +553,7 @@ const CoveragePanel: React.FC = () => {
 							year: y,
 							range: { start: gap.start, end: gap.end },
 							score: gap.size,
-							description: `Brecha de ${gap.size.toLocaleString()} registros en ${f} ${y}`,
+							description: `Brecha de ${gap.size.toLocaleString("es-AR")} registros en ${f} ${y}`,
 						});
 					}
 				}
@@ -644,7 +644,7 @@ const CoveragePanel: React.FC = () => {
 			if (enableWorker) {
 				await WorkersService.updateScrapingConfig(workerId, { enabled: true });
 			}
-			enqueueSnackbar(`Worker reasignado: ${f} ${y} — ${range.start.toLocaleString()} a ${range.end.toLocaleString()}`, {
+			enqueueSnackbar(`Worker reasignado: ${f} ${y} — ${range.start.toLocaleString("es-AR")} a ${range.end.toLocaleString("es-AR")}`, {
 				variant: "success",
 			});
 			setAssignDialog(emptyAssignDialog);
@@ -657,7 +657,7 @@ const CoveragePanel: React.FC = () => {
 			const detail = conflicting
 				? ` — conflicto con: ${conflicting.nombre || conflicting.id} (${conflicting.fuero} ${
 						conflicting.year
-				  }, ${conflicting.range_start?.toLocaleString()}–${conflicting.range_end?.toLocaleString()})`
+				  }, ${conflicting.range_start?.toLocaleString("es-AR")}–${conflicting.range_end?.toLocaleString("es-AR")})`
 				: "";
 			enqueueSnackbar(`${apiMessage}${detail}`, { variant: "error", style: { maxWidth: 600 } });
 			setAssignDialog((prev) => ({ ...prev, loading: false }));
@@ -846,11 +846,11 @@ const CoveragePanel: React.FC = () => {
 													<TableCell align="right">
 														{real && (
 															<Tooltip
-																title={`${real.validas.toLocaleString()} expedientes de ${real.barridos.toLocaleString()} números`}
+																title={`${real.validas.toLocaleString("es-AR")} expedientes de ${real.barridos.toLocaleString("es-AR")} números`}
 																arrow
 															>
 																<Box>
-																	<Typography variant="body2">{real.barridos.toLocaleString()}</Typography>
+																	<Typography variant="body2">{real.barridos.toLocaleString("es-AR")}</Typography>
 																	<Typography variant="caption" color="text.secondary">
 																		{real.densidad}% útil
 																	</Typography>
@@ -861,7 +861,7 @@ const CoveragePanel: React.FC = () => {
 													<TableCell align="right">
 														{real && (
 															<Typography variant="body2" color={real.frontera > 0 ? "text.primary" : "text.disabled"}>
-																{real.frontera > 0 ? real.frontera.toLocaleString() : "—"}
+																{real.frontera > 0 ? real.frontera.toLocaleString("es-AR") : "—"}
 															</Typography>
 														)}
 													</TableCell>
@@ -872,7 +872,7 @@ const CoveragePanel: React.FC = () => {
 																color={faltan > 0 ? "error.main" : "success.main"}
 																fontWeight={faltan > 0 ? 700 : 400}
 															>
-																{faltan > 0 ? faltan.toLocaleString() : "cerrado"}
+																{faltan > 0 ? faltan.toLocaleString("es-AR") : "cerrado"}
 															</Typography>
 														)}
 													</TableCell>
@@ -933,17 +933,17 @@ const CoveragePanel: React.FC = () => {
 																					</>
 																				) : real.faltanHastaObjetivo > 0 ? (
 																					<>
-																						Faltan <strong>{real.faltanHastaObjetivo.toLocaleString()}</strong> números hasta{" "}
-																						{real.objetivo.toLocaleString()} (frontera {real.frontera.toLocaleString()} + margen de
-																						confirmación). Se barrieron {real.barridos.toLocaleString()} con {real.validas.toLocaleString()}{" "}
+																						Faltan <strong>{real.faltanHastaObjetivo.toLocaleString("es-AR")}</strong> números hasta{" "}
+																						{real.objetivo.toLocaleString("es-AR")} (frontera {real.frontera.toLocaleString("es-AR")} + margen de
+																						confirmación). Se barrieron {real.barridos.toLocaleString("es-AR")} con {real.validas.toLocaleString("es-AR")}{" "}
 																						expedientes ({real.densidad}%).
 																						{real.sueltos > 0 &&
-																							` Además hay ${real.sueltos.toLocaleString()} números sueltos sin barrer: son del retry-worker, no de un rango.`}
+																							` Además hay ${real.sueltos.toLocaleString("es-AR")} números sueltos sin barrer: son del retry-worker, no de un rango.`}
 																					</>
 																				) : (
 																					<>
-																						Año <strong>cerrado</strong>: barrido completo hasta {real.topeBarrido.toLocaleString()}, con la
-																						frontera de expedientes reales en {real.frontera.toLocaleString()}. Más allá no hay nada que
+																						Año <strong>cerrado</strong>: barrido completo hasta {real.topeBarrido.toLocaleString("es-AR")}, con la
+																						frontera de expedientes reales en {real.frontera.toLocaleString("es-AR")}. Más allá no hay nada que
 																						encontrar.
 																					</>
 																				)}
@@ -959,8 +959,8 @@ const CoveragePanel: React.FC = () => {
 																				{real.workers.map((w) => (
 																					<Tooltip
 																						key={w.worker_id}
-																						title={`${w.range_start.toLocaleString()} — ${w.range_end.toLocaleString()} | posición: ${
-																							w.current?.toLocaleString() ?? "—"
+																						title={`${w.range_start.toLocaleString("es-AR")} — ${w.range_end.toLocaleString("es-AR")} | posición: ${
+																							w.current?.toLocaleString("es-AR") ?? "—"
 																						} | ${ESTADO_LABEL[w.estado]}`}
 																						arrow
 																					>
@@ -1015,16 +1015,16 @@ const CoveragePanel: React.FC = () => {
 																									>
 																										<TableCell>
 																											<Typography variant="body2" fontFamily="monospace">
-																												{gap.start.toLocaleString()}
+																												{gap.start.toLocaleString("es-AR")}
 																											</Typography>
 																										</TableCell>
 																										<TableCell>
 																											<Typography variant="body2" fontFamily="monospace">
-																												{gap.end.toLocaleString()}
+																												{gap.end.toLocaleString("es-AR")}
 																											</Typography>
 																										</TableCell>
 																										<TableCell align="right">
-																											<Typography variant="body2">{gap.size.toLocaleString()}</Typography>
+																											<Typography variant="body2">{gap.size.toLocaleString("es-AR")}</Typography>
 																										</TableCell>
 																										<TableCell align="center">
 																											{gap.assigned ? (
@@ -1244,16 +1244,16 @@ const CoveragePanel: React.FC = () => {
 													</TableCell>
 													<TableCell align="right">
 														<Typography variant="body2" fontFamily="monospace">
-															{gg.gap.start.toLocaleString()}
+															{gg.gap.start.toLocaleString("es-AR")}
 														</Typography>
 													</TableCell>
 													<TableCell align="right">
 														<Typography variant="body2" fontFamily="monospace">
-															{gg.gap.end.toLocaleString()}
+															{gg.gap.end.toLocaleString("es-AR")}
 														</Typography>
 													</TableCell>
 													<TableCell align="right">
-														<Typography variant="body2">{gg.gap.size.toLocaleString()}</Typography>
+														<Typography variant="body2">{gg.gap.size.toLocaleString("es-AR")}</Typography>
 													</TableCell>
 													<TableCell>
 														{hasSuggestion ? (
@@ -1261,9 +1261,9 @@ const CoveragePanel: React.FC = () => {
 																{gg.suggestedWorkers.slice(0, 3).map((w) => (
 																	<Tooltip
 																		key={getConfigId(w)}
-																		title={`Año: ${w.year} | ${(w.range_start ?? 0).toLocaleString()}–${(
+																		title={`Año: ${w.year} | ${(w.range_start ?? 0).toLocaleString("es-AR")}–${(
 																			w.range_end ?? 0
-																		).toLocaleString()} | ${calculateProgress(w).toFixed(0)}%`}
+																		).toLocaleString("es-AR")} | ${calculateProgress(w).toFixed(0)}%`}
 																		arrow
 																	>
 																		<Chip
@@ -1367,7 +1367,7 @@ const CoveragePanel: React.FC = () => {
 															{s.worker.worker_id}
 														</Typography>
 														<Typography variant="caption" color="text.secondary">
-															{s.worker.fuero} {s.worker.year} — pos {(s.worker.number ?? 0).toLocaleString()}
+															{s.worker.fuero} {s.worker.year} — pos {(s.worker.number ?? 0).toLocaleString("es-AR")}
 														</Typography>
 													</Stack>
 												</TableCell>
@@ -1394,12 +1394,12 @@ const CoveragePanel: React.FC = () => {
 												</TableCell>
 												<TableCell align="right">
 													<Typography variant="caption" fontFamily="monospace">
-														{s.range.start.toLocaleString()} — {s.range.end.toLocaleString()}
+														{s.range.start.toLocaleString("es-AR")} — {s.range.end.toLocaleString("es-AR")}
 													</Typography>
 												</TableCell>
 												<TableCell align="right">
 													<Typography variant="body2" fontWeight={600} color={s.type === "gap" ? "error.main" : "secondary.main"}>
-														{s.type === "gap" ? s.score.toLocaleString() : `${s.year}`}
+														{s.type === "gap" ? s.score.toLocaleString("es-AR") : `${s.year}`}
 													</Typography>
 												</TableCell>
 												<TableCell align="center">
@@ -1471,7 +1471,7 @@ const CoveragePanel: React.FC = () => {
 												</TableCell>
 												<TableCell align="right">
 													<Typography variant="caption" fontFamily="monospace">
-														{ph.pendingRange.start.toLocaleString()} — {ph.pendingRange.end.toLocaleString()}
+														{ph.pendingRange.start.toLocaleString("es-AR")} — {ph.pendingRange.end.toLocaleString("es-AR")}
 													</Typography>
 												</TableCell>
 												<TableCell align="right">

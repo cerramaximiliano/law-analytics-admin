@@ -573,7 +573,7 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 							<Stack spacing={{ xs: 1.5, sm: 2, md: 3 }}>
 								<Alert severity="info" variant="outlined">
 									<Typography variant="body2">
-										El número actual ({config.number?.toLocaleString()}) ha superado el rango final ({config.range_end?.toLocaleString()}).
+										El número actual ({config.number?.toLocaleString("es-AR")}) ha superado el rango final ({config.range_end?.toLocaleString("es-AR")}).
 										Puede actualizar el rango para continuar el scraping.
 									</Typography>
 								</Alert>
@@ -585,7 +585,7 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 										type="number"
 										value={rangeData.range_start}
 										onChange={(e) => setRangeData({ ...rangeData, range_start: Number(e.target.value) })}
-										helperText={`Actual: ${config.range_start?.toLocaleString()}`}
+										helperText={`Actual: ${config.range_start?.toLocaleString("es-AR")}`}
 									/>
 									<TextField
 										fullWidth
@@ -593,7 +593,7 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 										type="number"
 										value={rangeData.range_end}
 										onChange={(e) => setRangeData({ ...rangeData, range_end: Number(e.target.value) })}
-										helperText={`Actual: ${config.range_end?.toLocaleString()}`}
+										helperText={`Actual: ${config.range_end?.toLocaleString("es-AR")}`}
 									/>
 								</Stack>
 
@@ -661,7 +661,7 @@ const AdvancedConfigModal = ({ open, onClose, config, onUpdate, workerType }: Ad
 														{probe?.estimated_frontier && (
 															<>
 																{" "}
-																Frontera estimada en expediente <strong>{probe.estimated_frontier.toLocaleString()}</strong>.
+																Frontera estimada en expediente <strong>{probe.estimated_frontier.toLocaleString("es-AR")}</strong>.
 															</>
 														)}
 													</Typography>

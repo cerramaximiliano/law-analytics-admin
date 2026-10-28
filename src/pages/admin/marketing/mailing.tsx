@@ -899,7 +899,7 @@ const MailingCampaigns = () => {
 												<TableCell align="right" sx={COL_LG}>
 													{campaign.settings?.dailyLimit && campaign.settings.dailyLimit > 0 ? (
 														<Tooltip title="Límite de emails por día">
-															<Typography variant="body2">{campaign.settings.dailyLimit.toLocaleString()}</Typography>
+															<Typography variant="body2">{campaign.settings.dailyLimit.toLocaleString("es-AR")}</Typography>
 														</Tooltip>
 													) : (
 														<Typography variant="body2" color="textSecondary">

@@ -654,7 +654,7 @@ const SystemLogs = () => {
 				}}
 				rowsPerPageOptions={[10, 25, 50, 100, 200, 500]}
 				labelRowsPerPage="Por página:"
-				labelDisplayedRows={({ from: f, to: t, count }) => `${f}–${t} de ${count.toLocaleString()}`}
+				labelDisplayedRows={({ from: f, to: t, count }) => `${f}–${t} de ${count.toLocaleString("es-AR")}`}
 			/>
 
 			<AnalyzeLogsModal open={analyzeOpen} onClose={() => setAnalyzeOpen(false)} filters={currentFilters} />

@@ -492,7 +492,7 @@ const StuckDocumentsWorker = () => {
 								Docs procesados
 							</Typography>
 							<Typography variant="h4" sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}>
-								{config?.documents_processed?.toLocaleString() || 0}
+								{config?.documents_processed?.toLocaleString("es-AR") || 0}
 							</Typography>
 						</CardContent>
 					</Card>
@@ -508,7 +508,7 @@ const StuckDocumentsWorker = () => {
 								color="success.main"
 								sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}
 							>
-								{config?.documents_fixed?.toLocaleString() || 0}
+								{config?.documents_fixed?.toLocaleString("es-AR") || 0}
 							</Typography>
 						</CardContent>
 					</Card>
@@ -524,7 +524,7 @@ const StuckDocumentsWorker = () => {
 								color="error.main"
 								sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}
 							>
-								{config?.documents_failed?.toLocaleString() || 0}
+								{config?.documents_failed?.toLocaleString("es-AR") || 0}
 							</Typography>
 						</CardContent>
 					</Card>
@@ -562,7 +562,7 @@ const StuckDocumentsWorker = () => {
 											Total Pendientes
 										</Typography>
 										<Typography variant="h4" color="primary.main">
-											{stats.pending.total?.toLocaleString() || 0}
+											{stats.pending.total?.toLocaleString("es-AR") || 0}
 										</Typography>
 									</CardContent>
 								</Card>
@@ -574,7 +574,7 @@ const StuckDocumentsWorker = () => {
 											<Typography variant="caption" color="text.secondary">
 												{fuero}
 											</Typography>
-											<Typography variant="h6">{(data as any).total?.toLocaleString() || 0}</Typography>
+											<Typography variant="h6">{(data as any).total?.toLocaleString("es-AR") || 0}</Typography>
 											<Stack direction="row" spacing={0.5} sx={{ mt: 0.5 }}>
 												<Chip label={`App: ${(data as any).app || 0}`} size="small" variant="outlined" sx={{ fontSize: "0.65rem" }} />
 											</Stack>

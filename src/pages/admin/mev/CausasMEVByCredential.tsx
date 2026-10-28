@@ -268,7 +268,7 @@ const CausasMEVByCredential = () => {
 											Total Causas
 										</Typography>
 										<Typography variant="h4" color="primary.main" fontWeight="bold">
-											{summary.totalCausas.toLocaleString()}
+											{summary.totalCausas.toLocaleString("es-AR")}
 										</Typography>
 									</CardContent>
 								</Card>
@@ -280,7 +280,7 @@ const CausasMEVByCredential = () => {
 											Con Movimientos
 										</Typography>
 										<Typography variant="h4" color="success.main" fontWeight="bold">
-											{summary.withMovements.toLocaleString()}
+											{summary.withMovements.toLocaleString("es-AR")}
 										</Typography>
 									</CardContent>
 								</Card>
@@ -292,7 +292,7 @@ const CausasMEVByCredential = () => {
 											Sin Movimientos
 										</Typography>
 										<Typography variant="h4" color="warning.main" fontWeight="bold">
-											{summary.withoutMovements.toLocaleString()}
+											{summary.withoutMovements.toLocaleString("es-AR")}
 										</Typography>
 									</CardContent>
 								</Card>
@@ -304,7 +304,7 @@ const CausasMEVByCredential = () => {
 											Removidas
 										</Typography>
 										<Typography variant="h4" color="error.main" fontWeight="bold">
-											{summary.removed.toLocaleString()}
+											{summary.removed.toLocaleString("es-AR")}
 										</Typography>
 									</CardContent>
 								</Card>
@@ -316,7 +316,7 @@ const CausasMEVByCredential = () => {
 											Actualizadas hoy
 										</Typography>
 										<Typography variant="h4" fontWeight="bold">
-											{summary.updatedToday.toLocaleString()}
+											{summary.updatedToday.toLocaleString("es-AR")}
 										</Typography>
 									</CardContent>
 								</Card>

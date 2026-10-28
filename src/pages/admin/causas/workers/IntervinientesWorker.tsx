@@ -792,11 +792,11 @@ const IntervinientesWorker = () => {
 								Docs procesados
 							</Typography>
 							<Typography variant="h4" sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}>
-								{stats?.global?.documentsProcessed?.toLocaleString() || 0}
+								{stats?.global?.documentsProcessed?.toLocaleString("es-AR") || 0}
 								{eligibleCount?.total ? (
 									<Typography component="span" variant="body2" color="text.secondary">
 										{" / "}
-										{eligibleCount.total.toLocaleString()}
+										{eligibleCount.total.toLocaleString("es-AR")}
 									</Typography>
 								) : null}
 							</Typography>
@@ -824,7 +824,7 @@ const IntervinientesWorker = () => {
 								color="info.main"
 								sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}
 							>
-								{intervinientesStats?.totalIntervinientes?.toLocaleString() || 0}
+								{intervinientesStats?.totalIntervinientes?.toLocaleString("es-AR") || 0}
 							</Typography>
 							<Stack direction="row" spacing={1} sx={{ mt: 1 }}>
 								<Chip label={`P: ${intervinientesStats?.byTipo?.PARTE || 0}`} size="small" variant="outlined" />
@@ -844,7 +844,7 @@ const IntervinientesWorker = () => {
 								color="success.main"
 								sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}
 							>
-								{stats?.global?.contactsSynced?.toLocaleString() || 0}
+								{stats?.global?.contactsSynced?.toLocaleString("es-AR") || 0}
 							</Typography>
 						</CardContent>
 					</Card>
@@ -860,7 +860,7 @@ const IntervinientesWorker = () => {
 								color="error.main"
 								sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}
 							>
-								{stats?.global?.documentsError?.toLocaleString() || 0}
+								{stats?.global?.documentsError?.toLocaleString("es-AR") || 0}
 							</Typography>
 						</CardContent>
 					</Card>
@@ -954,7 +954,7 @@ const IntervinientesWorker = () => {
 											Total Elegibles
 										</Typography>
 										<Typography variant="h4" color="primary.main">
-											{eligibleCount.total.toLocaleString()}
+											{eligibleCount.total.toLocaleString("es-AR")}
 										</Typography>
 									</CardContent>
 								</Card>
@@ -966,7 +966,7 @@ const IntervinientesWorker = () => {
 											<Typography variant="caption" color="text.secondary" sx={{ textTransform: "capitalize" }}>
 												{fuero}
 											</Typography>
-											<Typography variant="h6">{(count as number)?.toLocaleString() || 0}</Typography>
+											<Typography variant="h6">{(count as number)?.toLocaleString("es-AR") || 0}</Typography>
 										</CardContent>
 									</Card>
 								</Grid>
@@ -1129,7 +1129,7 @@ const IntervinientesWorker = () => {
 								<Typography variant="caption" color="text.secondary">
 									Total Usuarios
 								</Typography>
-								<Typography variant="h5">{allUsers?.summary?.totalUsersInSystem?.toLocaleString() || 0}</Typography>
+								<Typography variant="h5">{allUsers?.summary?.totalUsersInSystem?.toLocaleString("es-AR") || 0}</Typography>
 							</CardContent>
 						</Card>
 					</Grid>
@@ -1140,7 +1140,7 @@ const IntervinientesWorker = () => {
 									Sync Habilitado
 								</Typography>
 								<Typography variant="h5" color="success.main">
-									{allUsers?.summary?.usersWithSyncEnabled?.toLocaleString() || 0}
+									{allUsers?.summary?.usersWithSyncEnabled?.toLocaleString("es-AR") || 0}
 								</Typography>
 							</CardContent>
 						</Card>
@@ -1152,7 +1152,7 @@ const IntervinientesWorker = () => {
 									Sync Deshabilitado
 								</Typography>
 								<Typography variant="h5" color="text.secondary">
-									{allUsers?.summary?.usersWithSyncDisabled?.toLocaleString() || 0}
+									{allUsers?.summary?.usersWithSyncDisabled?.toLocaleString("es-AR") || 0}
 								</Typography>
 							</CardContent>
 						</Card>
@@ -1404,7 +1404,7 @@ const IntervinientesWorker = () => {
 													Total procesados
 												</Typography>
 												<Typography variant="h5" color="primary.main">
-													{dailySummary.totals.processed.toLocaleString()}
+													{dailySummary.totals.processed.toLocaleString("es-AR")}
 												</Typography>
 											</Stack>
 										</Grid>
@@ -1437,7 +1437,7 @@ const IntervinientesWorker = () => {
 													Intervinientes extraídos
 												</Typography>
 												<Typography variant="h6" color="info.main">
-													{dailySummary.totals.intervinientesExtracted.toLocaleString()}
+													{dailySummary.totals.intervinientesExtracted.toLocaleString("es-AR")}
 												</Typography>
 											</Stack>
 										</Grid>
@@ -1447,7 +1447,7 @@ const IntervinientesWorker = () => {
 													Contactos sincronizados
 												</Typography>
 												<Typography variant="h6" color="success.main">
-													{dailySummary.totals.contactsSynced.toLocaleString()}
+													{dailySummary.totals.contactsSynced.toLocaleString("es-AR")}
 												</Typography>
 											</Stack>
 										</Grid>
@@ -1457,7 +1457,7 @@ const IntervinientesWorker = () => {
 													Errores
 												</Typography>
 												<Typography variant="h6" color="error.main">
-													{dailySummary.totals.errors.toLocaleString()}
+													{dailySummary.totals.errors.toLocaleString("es-AR")}
 												</Typography>
 											</Stack>
 										</Grid>
@@ -1466,7 +1466,7 @@ const IntervinientesWorker = () => {
 												<Typography variant="caption" color="text.secondary">
 													Ciclos ejecutados
 												</Typography>
-												<Typography variant="h6">{dailySummary.totals.cyclesRun.toLocaleString()}</Typography>
+												<Typography variant="h6">{dailySummary.totals.cyclesRun.toLocaleString("es-AR")}</Typography>
 											</Stack>
 										</Grid>
 									</Grid>
@@ -1522,28 +1522,28 @@ const IntervinientesWorker = () => {
 																{index === 0 && <Chip label="Hoy" size="small" color="primary" sx={{ ml: 1, height: 18 }} />}
 															</Typography>
 														</TableCell>
-														<TableCell align="right">{stat.totalEligible.toLocaleString()}</TableCell>
+														<TableCell align="right">{stat.totalEligible.toLocaleString("es-AR")}</TableCell>
 														<TableCell align="right">
 															<Typography variant="body2" color="primary.main" fontWeight="medium">
-																{stat.processed.toLocaleString()}
+																{stat.processed.toLocaleString("es-AR")}
 															</Typography>
 														</TableCell>
 														<TableCell align="right">
 															<Typography variant="body2" color="success.main">
-																{stat.success.toLocaleString()}
+																{stat.success.toLocaleString("es-AR")}
 															</Typography>
 														</TableCell>
 														<TableCell align="right">
 															<Typography variant="body2" color={stat.errors > 0 ? "error.main" : "text.secondary"}>
-																{stat.errors.toLocaleString()}
+																{stat.errors.toLocaleString("es-AR")}
 															</Typography>
 														</TableCell>
 														<TableCell align="right">
 															<Typography variant="body2" color={stat.pending > 0 ? "warning.main" : "success.main"}>
-																{stat.pending.toLocaleString()}
+																{stat.pending.toLocaleString("es-AR")}
 															</Typography>
 														</TableCell>
-														<TableCell align="right">{stat.intervinientesExtracted.toLocaleString()}</TableCell>
+														<TableCell align="right">{stat.intervinientesExtracted.toLocaleString("es-AR")}</TableCell>
 														<TableCell align="right">{stat.cyclesRun}</TableCell>
 													</TableRow>
 												))

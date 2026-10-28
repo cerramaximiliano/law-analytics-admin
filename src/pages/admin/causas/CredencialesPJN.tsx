@@ -2409,7 +2409,7 @@ const CredencialesPJN = () => {
 								</Typography>
 							</Grid>
 							{[
-								{ value: stats.movementTotals.totalMovements.toLocaleString(), label: "Total Movimientos", color: "text.primary" },
+								{ value: stats.movementTotals.totalMovements.toLocaleString("es-AR"), label: "Total Movimientos", color: "text.primary" },
 								{ value: stats.movementTotals.avgPerFolder, label: "Prom. Mov/Carpeta", color: "text.primary" },
 								{ value: stats.movementTotals.foldersWithMovements, label: "Carpetas con Movimientos", color: "text.primary" },
 								{

@@ -37,6 +37,7 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import "dayjs/locale/es";
+import { formatDateTime } from "utils/format";
 
 dayjs.extend(relativeTime);
 dayjs.extend(utc);
@@ -332,7 +333,7 @@ const PaymentFailures = () => {
 									{attempts.map((a) => (
 										<TableRow key={a._id} hover>
 											<TableCell>
-												<Tooltip title={dayjs(a.createdAt).format("DD/MM/YYYY HH:mm")}>
+												<Tooltip title={formatDateTime(a.createdAt)}>
 													<span>{dayjs(a.createdAt).fromNow()}</span>
 												</Tooltip>
 											</TableCell>
@@ -363,7 +364,7 @@ const PaymentFailures = () => {
 												{a.emailNotification?.sent ? (
 													<Tooltip
 														title={`Enviado ${
-															a.emailNotification.sentAt ? dayjs(a.emailNotification.sentAt).format("DD/MM/YYYY HH:mm") : ""
+															a.emailNotification.sentAt ? formatDateTime(a.emailNotification.sentAt) : ""
 														}`}
 													>
 														<Chip size="small" label="Sí" color="success" variant="outlined" />
@@ -428,7 +429,7 @@ const PaymentFailures = () => {
 										<Box>
 											<Typography variant="body2">{u.email || u.userId}</Typography>
 											<Typography variant="caption" color="text.secondary">
-												Último: {dayjs(u.lastFailedAt).format("DD/MM/YYYY HH:mm")}
+												Último: {formatDateTime(u.lastFailedAt)}
 												{u.lastFailureReason ? ` — ${u.lastFailureReason}` : ""}
 											</Typography>
 										</Box>

@@ -102,7 +102,7 @@ function ReportDetailDialog({ report, open, onClose }: { report: HealthReport | 
 									Logs 24h
 								</Typography>
 								<Typography variant="h5" fontWeight={700}>
-									{report.metrics.logCount24h.toLocaleString()}
+									{report.metrics.logCount24h.toLocaleString("es-AR")}
 								</Typography>
 								<Typography
 									variant="caption"
@@ -111,7 +111,7 @@ function ReportDetailDialog({ report, open, onClose }: { report: HealthReport | 
 									}
 								>
 									{volumeChange.direction === "flat" ? "≈" : volumeChange.direction === "up" ? "↑" : "↓"} {Math.abs(volumeChange.value)}% vs{" "}
-									{report.metrics.logCount7dAvg.toLocaleString()}/día
+									{report.metrics.logCount7dAvg.toLocaleString("es-AR")}/día
 								</Typography>
 							</Grid>
 							<Grid item xs={6} md={3}>
@@ -119,11 +119,11 @@ function ReportDetailDialog({ report, open, onClose }: { report: HealthReport | 
 									Errores 24h
 								</Typography>
 								<Typography variant="h5" fontWeight={700} color={report.metrics.errorCount24h > 0 ? "error.main" : "text.primary"}>
-									{report.metrics.errorCount24h.toLocaleString()}
+									{report.metrics.errorCount24h.toLocaleString("es-AR")}
 								</Typography>
 								<Typography variant="caption" color={errorChange.direction === "up" ? "error.main" : "text.secondary"}>
 									{errorChange.direction === "flat" ? "≈" : errorChange.direction === "up" ? "↑" : "↓"} {Math.abs(errorChange.value)}% vs{" "}
-									{report.metrics.errorCount7dAvg.toLocaleString()}/día
+									{report.metrics.errorCount7dAvg.toLocaleString("es-AR")}/día
 								</Typography>
 							</Grid>
 							<Grid item xs={6} md={3}>

@@ -187,14 +187,14 @@ const LinkExistingConfigModal: React.FC<LinkExistingConfigModalProps> = ({ open,
 													<TableCell sx={{ fontVariantNumeric: "tabular-nums" }}>{config.year}</TableCell>
 													<TableCell>
 														<Typography variant="body2" fontSize="0.75rem" sx={{ fontVariantNumeric: "tabular-nums" }}>
-															{config.range_start?.toLocaleString()} - {config.range_end?.toLocaleString()}
+															{config.range_start?.toLocaleString("es-AR")} - {config.range_end?.toLocaleString("es-AR")}
 														</Typography>
 													</TableCell>
 													<TableCell sx={{ minWidth: 120 }}>
 														<Stack spacing={0.5}>
 															<LinearProgress variant="determinate" value={progress} sx={{ height: 6, borderRadius: 1 }} />
 															<Typography variant="caption" color="text.secondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
-																{progress}% ({config.number?.toLocaleString()}/{config.range_end?.toLocaleString()})
+																{progress}% ({config.number?.toLocaleString("es-AR")}/{config.range_end?.toLocaleString("es-AR")})
 															</Typography>
 														</Stack>
 													</TableCell>

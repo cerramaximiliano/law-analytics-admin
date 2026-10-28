@@ -170,7 +170,7 @@ const FeatureGrantsPage: React.FC = () => {
 		const meta = typeof value === "object" && value ? value : null;
 		const tooltip = meta
 			? `${meta.reason ? `Reason: ${meta.reason}` : ""}${
-					meta.grantedAt ? ` · Granted: ${new Date(meta.grantedAt).toLocaleDateString()}` : ""
+					meta.grantedAt ? ` · Granted: ${new Date(meta.grantedAt).toLocaleDateString("es-AR")}` : ""
 			  }${meta.grantedBy ? ` · By: ${meta.grantedBy}` : ""}`
 			: active
 			? "Granteado (formato simple)"

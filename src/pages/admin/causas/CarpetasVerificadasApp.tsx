@@ -817,14 +817,14 @@ const CarpetasVerificadasApp = () => {
 										fontWeight={600}
 										sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}
 									>
-										{totalCount.toLocaleString()}
+										{totalCount.toLocaleString("es-AR")}
 										<Typography
 											component="span"
 											variant="body2"
 											color="text.secondary"
 											sx={{ ml: 0.5, fontVariantNumeric: "tabular-nums" }}
 										>
-											/ {totalInDatabase.toLocaleString()}
+											/ {totalInDatabase.toLocaleString("es-AR")}
 										</Typography>
 									</Typography>
 								</Stack>
@@ -876,7 +876,7 @@ const CarpetasVerificadasApp = () => {
 											<Tooltip title="Causas actualizadas hoy">
 												<Chip
 													icon={<TickCircle size={14} variant="Bold" />}
-													label={eligibilityStats.updatedToday.toLocaleString()}
+													label={eligibilityStats.updatedToday.toLocaleString("es-AR")}
 													size="small"
 													color="success"
 													sx={{ height: 24, "& .MuiChip-label": { px: 1 } }}
@@ -886,12 +886,12 @@ const CarpetasVerificadasApp = () => {
 												<Chip
 													icon={<Timer size={14} />}
 													label={
-														eligibilityStats.pendingToday?.toLocaleString() ||
+														eligibilityStats.pendingToday?.toLocaleString("es-AR") ||
 														(
 															eligibilityStats.eligible -
 															eligibilityStats.updatedToday -
 															eligibilityStats.eligibleWithErrors
-														).toLocaleString()
+														).toLocaleString("es-AR")
 													}
 													size="small"
 													color="warning"
@@ -901,15 +901,15 @@ const CarpetasVerificadasApp = () => {
 											<Tooltip title="Causas con errores (en cooldown)">
 												<Chip
 													icon={<CloseSquare size={14} variant="Bold" />}
-													label={eligibilityStats.eligibleWithErrors.toLocaleString()}
+													label={eligibilityStats.eligibleWithErrors.toLocaleString("es-AR")}
 													size="small"
 													color="error"
 													sx={{ height: 24, "& .MuiChip-label": { px: 1 } }}
 												/>
 											</Tooltip>
-											<Tooltip title={`Total elegibles: ${eligibilityStats.eligible.toLocaleString()}`}>
+											<Tooltip title={`Total elegibles: ${eligibilityStats.eligible.toLocaleString("es-AR")}`}>
 												<Chip
-													label={`${eligibilityStats.eligible.toLocaleString()} elegibles`}
+													label={`${eligibilityStats.eligible.toLocaleString("es-AR")} elegibles`}
 													size="small"
 													variant="outlined"
 													sx={{ height: 24, "& .MuiChip-label": { px: 1 } }}

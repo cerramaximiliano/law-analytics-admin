@@ -562,7 +562,7 @@ const StatCard: React.FC<StatCardProps> = ({ label, value, icon, loading }) => {
 								fontVariantNumeric: "tabular-nums",
 							}}
 						>
-							{value.toLocaleString()}
+							{value.toLocaleString("es-AR")}
 						</Typography>
 					)}
 				</Box>
@@ -1414,7 +1414,7 @@ const UserResources: React.FC = () => {
 												<Skeleton variant="text" width={40} height={28} />
 											) : (
 												<Typography variant="h5" fontWeight={600} sx={{ fontVariantNumeric: "tabular-nums" }}>
-													{activityStats?.summary.successfulLogins.toLocaleString() || 0}
+													{activityStats?.summary.successfulLogins.toLocaleString("es-AR") || 0}
 												</Typography>
 											)}
 										</Box>
@@ -1443,7 +1443,7 @@ const UserResources: React.FC = () => {
 												<Skeleton variant="text" width={40} height={28} />
 											) : (
 												<Typography variant="h5" fontWeight={600} sx={{ fontVariantNumeric: "tabular-nums" }}>
-													{activityStats?.summary.uniqueUsers.toLocaleString() || 0}
+													{activityStats?.summary.uniqueUsers.toLocaleString("es-AR") || 0}
 												</Typography>
 											)}
 										</Box>
@@ -1472,7 +1472,7 @@ const UserResources: React.FC = () => {
 												<Skeleton variant="text" width={40} height={28} />
 											) : (
 												<Typography variant="h5" fontWeight={600} sx={{ fontVariantNumeric: "tabular-nums" }}>
-													{activityStats?.byLoginMethod?.google?.toLocaleString() || 0}
+													{activityStats?.byLoginMethod?.google?.toLocaleString("es-AR") || 0}
 												</Typography>
 											)}
 										</Box>
@@ -1501,7 +1501,7 @@ const UserResources: React.FC = () => {
 												<Skeleton variant="text" width={40} height={28} />
 											) : (
 												<Typography variant="h5" fontWeight={600} sx={{ fontVariantNumeric: "tabular-nums" }}>
-													{activityStats?.byLoginMethod?.password?.toLocaleString() || 0}
+													{activityStats?.byLoginMethod?.password?.toLocaleString("es-AR") || 0}
 												</Typography>
 											)}
 										</Box>
@@ -1659,7 +1659,7 @@ const UserResources: React.FC = () => {
 												variant="h6"
 												sx={{ fontWeight: 700, color: s.color, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
 											>
-												{s.value.toLocaleString()}
+												{s.value.toLocaleString("es-AR")}
 											</Typography>
 										</Paper>
 									</Grid>

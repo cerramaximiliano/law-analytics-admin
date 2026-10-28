@@ -121,7 +121,7 @@ const AppUpdateWorker = () => {
 	const formatDate = (date: any): string => {
 		if (!date) return "N/A";
 		const dateStr = typeof date === "string" ? date : date.$date;
-		return new Date(dateStr).toLocaleString("es-ES");
+		return new Date(dateStr).toLocaleString("es-AR");
 	};
 
 	// Calcular tasa de éxito
@@ -378,17 +378,17 @@ const AppUpdateWorker = () => {
 									</TableCell>
 									<TableCell align="center">
 										<Typography variant="body2" fontWeight={500}>
-											{config.documents_checked?.toLocaleString() || 0}
+											{config.documents_checked?.toLocaleString("es-AR") || 0}
 										</Typography>
 									</TableCell>
 									<TableCell align="center">
 										<Typography variant="body2" color="success.main" fontWeight={500}>
-											{config.documents_updated?.toLocaleString() || 0}
+											{config.documents_updated?.toLocaleString("es-AR") || 0}
 										</Typography>
 									</TableCell>
 									<TableCell align="center">
 										<Typography variant="body2" color="error.main" fontWeight={500}>
-											{config.documents_failed?.toLocaleString() || 0}
+											{config.documents_failed?.toLocaleString("es-AR") || 0}
 										</Typography>
 									</TableCell>
 									<TableCell align="center">
@@ -488,7 +488,7 @@ const AppUpdateWorker = () => {
 								Actualizados
 							</Typography>
 							<Typography variant="h5" color="info.main">
-								{configs.reduce((acc, c) => acc + (c.documents_updated || 0), 0).toLocaleString()}
+								{configs.reduce((acc, c) => acc + (c.documents_updated || 0), 0).toLocaleString("es-AR")}
 							</Typography>
 						</CardContent>
 					</Card>

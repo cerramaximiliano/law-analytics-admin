@@ -2086,7 +2086,7 @@ const EmailTemplates = () => {
 															size="small"
 														/>
 													</TableCell>
-													<TableCell sx={COL_LG}>{new Date(template.updatedAt).toLocaleDateString()}</TableCell>
+													<TableCell sx={COL_LG}>{new Date(template.updatedAt).toLocaleDateString("es-AR")}</TableCell>
 													<TableCell align="center">
 														<Stack direction="row" spacing={1} justifyContent="center">
 															<IconButton aria-label="ver" size="small" color="info" onClick={() => handleOpenDetail(template)}>
@@ -3720,7 +3720,7 @@ const EmailTemplates = () => {
 													</Typography>
 												</Stack>
 												<Typography variant="caption" color="text.secondary">
-													{(tpl.htmlBody || "").length.toLocaleString()} B
+													{(tpl.htmlBody || "").length.toLocaleString("es-AR")} B
 												</Typography>
 											</Stack>
 										</Box>
@@ -3831,7 +3831,7 @@ const EmailTemplates = () => {
 							</Typography>
 							{templateToRevert.metadata?.previousVersion?.snapshotAt && (
 								<Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1 }}>
-									Snapshot tomado el {new Date(templateToRevert.metadata.previousVersion.snapshotAt).toLocaleString()}
+									Snapshot tomado el {new Date(templateToRevert.metadata.previousVersion.snapshotAt).toLocaleString("es-AR")}
 								</Typography>
 							)}
 							<Typography variant="caption" color="text.secondary">

@@ -54,6 +54,7 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import "dayjs/locale/es";
+import { formatDate, formatDateTime } from "utils/format";
 
 dayjs.extend(relativeTime);
 dayjs.extend(utc);
@@ -244,7 +245,7 @@ const Suscripciones = () => {
 
 			const msg = cancelAtPeriodEnd
 				? `Suscripción programada para cancelarse. Período de gracia hasta ${
-						response.gracePeriodEndDate ? dayjs(response.gracePeriodEndDate).format("DD/MM/YYYY") : "—"
+						response.gracePeriodEndDate ? formatDate(response.gracePeriodEndDate) : "—"
 				  }`
 				: `Suscripción cancelada inmediatamente. Período de gracia activo.`;
 
@@ -685,10 +686,10 @@ const Suscripciones = () => {
 										<Stack spacing={0.5}>
 											<Stack direction="row" spacing={1} alignItems="center">
 												<Calendar size={14} />
-												<Typography variant="caption">{dayjs(subscription.currentPeriodStart).format("DD/MM/YYYY")}</Typography>
+												<Typography variant="caption">{formatDate(subscription.currentPeriodStart)}</Typography>
 											</Stack>
 											<Typography variant="caption" color="text.secondary">
-												hasta {dayjs(subscription.currentPeriodEnd).format("DD/MM/YYYY")}
+												hasta {formatDate(subscription.currentPeriodEnd)}
 											</Typography>
 											{subscription.cancelAtPeriodEnd && (
 												<Chip label="Se cancelará" color="warning" size="small" sx={{ mt: 0.5, color: "text.primary" }} />
@@ -696,7 +697,7 @@ const Suscripciones = () => {
 										</Stack>
 									</TableCell>
 									<TableCell>
-										<Typography variant="caption">{dayjs(subscription.createdAt).format("DD/MM/YYYY")}</Typography>
+										<Typography variant="caption">{formatDate(subscription.createdAt)}</Typography>
 									</TableCell>
 									<TableCell>
 										<Stack spacing={0.5}>
@@ -711,7 +712,7 @@ const Suscripciones = () => {
 												</Tooltip>
 											)}
 											{subscription.trialEnd && dayjs(subscription.trialEnd).isAfter(dayjs()) && (
-												<Tooltip title={`Prueba hasta ${dayjs(subscription.trialEnd).format("DD/MM/YYYY")}`}>
+												<Tooltip title={`Prueba hasta ${formatDate(subscription.trialEnd)}`}>
 													<Chip label="En Prueba" color="info" size="small" />
 												</Tooltip>
 											)}
@@ -987,20 +988,20 @@ const Suscripciones = () => {
 												<Typography variant="caption" color="text.secondary">
 													Inicio del Período Actual
 												</Typography>
-												<Typography variant="body2">{dayjs(selectedSubscription.currentPeriodStart).format("DD/MM/YYYY HH:mm")}</Typography>
+												<Typography variant="body2">{formatDateTime(selectedSubscription.currentPeriodStart)}</Typography>
 											</Grid>
 											<Grid item xs={12} sm={6}>
 												<Typography variant="caption" color="text.secondary">
 													Fin del Período Actual
 												</Typography>
-												<Typography variant="body2">{dayjs(selectedSubscription.currentPeriodEnd).format("DD/MM/YYYY HH:mm")}</Typography>
+												<Typography variant="body2">{formatDateTime(selectedSubscription.currentPeriodEnd)}</Typography>
 											</Grid>
 											{selectedSubscription.trialStart && (
 												<Grid item xs={12} sm={6}>
 													<Typography variant="caption" color="text.secondary">
 														Inicio de Prueba
 													</Typography>
-													<Typography variant="body2">{dayjs(selectedSubscription.trialStart).format("DD/MM/YYYY HH:mm")}</Typography>
+													<Typography variant="body2">{formatDateTime(selectedSubscription.trialStart)}</Typography>
 												</Grid>
 											)}
 											{selectedSubscription.trialEnd && (
@@ -1008,7 +1009,7 @@ const Suscripciones = () => {
 													<Typography variant="caption" color="text.secondary">
 														Fin de Prueba
 													</Typography>
-													<Typography variant="body2">{dayjs(selectedSubscription.trialEnd).format("DD/MM/YYYY HH:mm")}</Typography>
+													<Typography variant="body2">{formatDateTime(selectedSubscription.trialEnd)}</Typography>
 												</Grid>
 											)}
 											{selectedSubscription.canceledAt && (
@@ -1016,26 +1017,26 @@ const Suscripciones = () => {
 													<Typography variant="caption" color="text.secondary">
 														Fecha de Cancelación
 													</Typography>
-													<Typography variant="body2">{dayjs(selectedSubscription.canceledAt).format("DD/MM/YYYY HH:mm")}</Typography>
+													<Typography variant="body2">{formatDateTime(selectedSubscription.canceledAt)}</Typography>
 												</Grid>
 											)}
 											<Grid item xs={12} sm={6}>
 												<Typography variant="caption" color="text.secondary">
 													Última Sincronización de Plan
 												</Typography>
-												<Typography variant="body2">{dayjs(selectedSubscription.lastPlanSync).format("DD/MM/YYYY HH:mm")}</Typography>
+												<Typography variant="body2">{formatDateTime(selectedSubscription.lastPlanSync)}</Typography>
 											</Grid>
 											<Grid item xs={12} sm={6}>
 												<Typography variant="caption" color="text.secondary">
 													Creación
 												</Typography>
-												<Typography variant="body2">{dayjs(selectedSubscription.createdAt).format("DD/MM/YYYY HH:mm")}</Typography>
+												<Typography variant="body2">{formatDateTime(selectedSubscription.createdAt)}</Typography>
 											</Grid>
 											<Grid item xs={12} sm={6}>
 												<Typography variant="caption" color="text.secondary">
 													Última Actualización
 												</Typography>
-												<Typography variant="body2">{dayjs(selectedSubscription.updatedAt).format("DD/MM/YYYY HH:mm")}</Typography>
+												<Typography variant="body2">{formatDateTime(selectedSubscription.updatedAt)}</Typography>
 											</Grid>
 										</Grid>
 									</Box>
@@ -1186,7 +1187,7 @@ const Suscripciones = () => {
 																Fecha de Modificación
 															</Typography>
 															<Typography variant="body2">
-																{dayjs(selectedSubscription.downgradeGracePeriod.modifiedAt).format("DD/MM/YYYY HH:mm")}
+																{formatDateTime(selectedSubscription.downgradeGracePeriod.modifiedAt)}
 															</Typography>
 														</Grid>
 													</>
@@ -1199,7 +1200,7 @@ const Suscripciones = () => {
 															Fecha de Procesamiento
 														</Typography>
 														<Typography variant="body2">
-															{dayjs(selectedSubscription.downgradeGracePeriod.processedAt).format("DD/MM/YYYY HH:mm")}
+															{formatDateTime(selectedSubscription.downgradeGracePeriod.processedAt)}
 														</Typography>
 													</Grid>
 												)}
@@ -1381,7 +1382,7 @@ const Suscripciones = () => {
 																			}
 																		/>
 																		<Typography variant="caption" color="text.secondary">
-																			{dayjs(event.timestamp).format("DD/MM/YYYY HH:mm:ss")}
+																			{formatDate(event.timestamp, "dateTimeSeconds")}
 																		</Typography>
 																	</Stack>
 																</Grid>
@@ -1810,7 +1811,7 @@ const Suscripciones = () => {
 														Primer Fallo
 													</Typography>
 													<Typography variant="body2">
-														{dayjs(selectedSubscription.paymentFailures.firstFailedAt).format("DD/MM/YYYY HH:mm")}
+														{formatDateTime(selectedSubscription.paymentFailures.firstFailedAt)}
 													</Typography>
 												</Grid>
 											)}
@@ -1820,7 +1821,7 @@ const Suscripciones = () => {
 														Último Fallo
 													</Typography>
 													<Typography variant="body2">
-														{dayjs(selectedSubscription.paymentFailures.lastFailedAt).format("DD/MM/YYYY HH:mm")}
+														{formatDateTime(selectedSubscription.paymentFailures.lastFailedAt)}
 													</Typography>
 												</Grid>
 											)}
@@ -1848,7 +1849,7 @@ const Suscripciones = () => {
 														Próximo Reintento
 													</Typography>
 													<Typography variant="body2">
-														{dayjs(selectedSubscription.paymentFailures.nextRetryAt).format("DD/MM/YYYY HH:mm")}
+														{formatDateTime(selectedSubscription.paymentFailures.nextRetryAt)}
 													</Typography>
 												</Grid>
 											)}
@@ -1908,7 +1909,7 @@ const Suscripciones = () => {
 								placeholder="2025-11-20T00:00:00.000Z"
 								helperText={
 									newExpiresAt && dayjs(newExpiresAt).isValid()
-										? `Vista previa: ${dayjs(newExpiresAt).format("DD/MM/YYYY HH:mm")}`
+										? `Vista previa: ${formatDateTime(newExpiresAt)}`
 										: "Escribe la fecha en cualquier formato válido"
 								}
 								error={newExpiresAt !== "" && !dayjs(newExpiresAt).isValid()}

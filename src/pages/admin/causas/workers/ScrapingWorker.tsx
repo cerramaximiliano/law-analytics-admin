@@ -383,7 +383,7 @@ const ScrapingWorker = () => {
 	const formatDate = (date: any): string => {
 		if (!date) return "N/A";
 		const dateStr = typeof date === "string" ? date : date.$date;
-		return new Date(dateStr).toLocaleString("es-ES");
+		return new Date(dateStr).toLocaleString("es-AR");
 	};
 
 	// Calcular tiempo relativo
@@ -1179,7 +1179,7 @@ const ScrapingWorker = () => {
 															) : (
 																<Stack spacing={0} alignItems="center">
 																	<Typography variant="body2" fontWeight={600} fontSize="1rem">
-																		{config.number?.toLocaleString() || 0}
+																		{config.number?.toLocaleString("es-AR") || 0}
 																	</Typography>
 																	<Typography variant="caption" color="text.secondary">
 																		{config.year}
@@ -1212,7 +1212,7 @@ const ScrapingWorker = () => {
 																</Stack>
 															) : (
 																<Typography variant="body2">
-																	{config.range_start?.toLocaleString()} - {config.range_end?.toLocaleString()}
+																	{config.range_start?.toLocaleString("es-AR")} - {config.range_end?.toLocaleString("es-AR")}
 																</Typography>
 															)}
 														</TableCell>
@@ -1224,12 +1224,12 @@ const ScrapingWorker = () => {
 																		(config.total_found || 0) +
 																		(config.total_not_found || 0) +
 																		(config.total_errors || 0)
-																	).toLocaleString()}
+																	).toLocaleString("es-AR")}
 																</Typography>
 																<Stack direction="row" spacing={0.5} alignItems="center" justifyContent="center">
 																	<Tooltip title="Válidos">
 																		<Typography variant="caption" color="success.main" fontWeight={500}>
-																			{config.total_found?.toLocaleString() || 0}
+																			{config.total_found?.toLocaleString("es-AR") || 0}
 																		</Typography>
 																	</Tooltip>
 																	<Typography variant="caption" color="text.secondary">
@@ -1237,7 +1237,7 @@ const ScrapingWorker = () => {
 																	</Typography>
 																	<Tooltip title="Inválidos">
 																		<Typography variant="caption" color="warning.main" fontWeight={500}>
-																			{config.total_not_found?.toLocaleString() || 0}
+																			{config.total_not_found?.toLocaleString("es-AR") || 0}
 																		</Typography>
 																	</Tooltip>
 																	<Typography variant="caption" color="text.secondary">
@@ -1245,7 +1245,7 @@ const ScrapingWorker = () => {
 																	</Typography>
 																	<Tooltip title="Errores">
 																		<Typography variant="caption" color="error.main" fontWeight={500}>
-																			{config.total_errors?.toLocaleString() || 0}
+																			{config.total_errors?.toLocaleString("es-AR") || 0}
 																		</Typography>
 																	</Tooltip>
 																</Stack>
@@ -1271,8 +1271,8 @@ const ScrapingWorker = () => {
 																</Typography>
 																{config.not_found_range?.start_number && config.not_found_range?.end_number && (
 																	<Typography variant="caption" color="text.secondary">
-																		{config.not_found_range.start_number.toLocaleString()} -{" "}
-																		{config.not_found_range.end_number.toLocaleString()}
+																		{config.not_found_range.start_number.toLocaleString("es-AR")} -{" "}
+																		{config.not_found_range.end_number.toLocaleString("es-AR")}
 																	</Typography>
 																)}
 															</Stack>
@@ -1297,7 +1297,7 @@ const ScrapingWorker = () => {
 																</Typography>
 																{config.error_range?.start_number && config.error_range?.end_number && (
 																	<Typography variant="caption" color="text.secondary">
-																		{config.error_range.start_number.toLocaleString()} - {config.error_range.end_number.toLocaleString()}
+																		{config.error_range.start_number.toLocaleString("es-AR")} - {config.error_range.end_number.toLocaleString("es-AR")}
 																	</Typography>
 																)}
 															</Stack>
@@ -1335,7 +1335,7 @@ const ScrapingWorker = () => {
 															<TableCell align="center">
 																<Stack alignItems="center" spacing={0.5}>
 																	<Typography variant="body2" fontWeight={500}>
-																		{config.capsolver?.totalCaptchas?.toLocaleString() || 0}
+																		{config.capsolver?.totalCaptchas?.toLocaleString("es-AR") || 0}
 																	</Typography>
 																	<Chip
 																		label={config.captcha?.defaultProvider || "2captcha"}
@@ -1500,7 +1500,7 @@ const ScrapingWorker = () => {
 												Captchas Resueltos
 											</Typography>
 											<Typography variant="h4">
-												{configs.reduce((acc, c) => acc + (c.capsolver?.totalCaptchas || 0), 0).toLocaleString()}
+												{configs.reduce((acc, c) => acc + (c.capsolver?.totalCaptchas || 0), 0).toLocaleString("es-AR")}
 											</Typography>
 										</CardContent>
 									</Card>
@@ -1539,7 +1539,7 @@ const ScrapingWorker = () => {
 								Worker ID: {configToDelete?.fuero} - {configToDelete?.year}
 							</Typography>
 							<Typography variant="body2" color="text.secondary">
-								Rango: {configToDelete?.range_start?.toLocaleString()} - {configToDelete?.range_end?.toLocaleString()}
+								Rango: {configToDelete?.range_start?.toLocaleString("es-AR")} - {configToDelete?.range_end?.toLocaleString("es-AR")}
 							</Typography>
 						</Box>
 						<Alert severity="warning" sx={{ mt: 2 }}>

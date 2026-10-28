@@ -387,7 +387,7 @@ const CarpetasPivotsEje = () => {
 										</Typography>
 									</Stack>
 									<Typography variant="h4" color="info.main" fontWeight="bold">
-										{totalCount.toLocaleString()}
+										{totalCount.toLocaleString("es-AR")}
 									</Typography>
 								</Stack>
 							</CardContent>

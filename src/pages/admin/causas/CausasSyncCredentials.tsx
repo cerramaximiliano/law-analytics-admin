@@ -436,7 +436,7 @@ const CausasSyncCredentials = () => {
 											Total Causas
 										</Typography>
 										<Typography variant="h4" color="primary.main" fontWeight="bold">
-											{summary.totalCausas.toLocaleString()}
+											{summary.totalCausas.toLocaleString("es-AR")}
 										</Typography>
 									</CardContent>
 								</Card>
@@ -448,7 +448,7 @@ const CausasSyncCredentials = () => {
 											Con Movimientos
 										</Typography>
 										<Typography variant="h4" color="success.main" fontWeight="bold">
-											{summary.withMovements.toLocaleString()}
+											{summary.withMovements.toLocaleString("es-AR")}
 										</Typography>
 									</CardContent>
 								</Card>
@@ -460,7 +460,7 @@ const CausasSyncCredentials = () => {
 											Sin Movimientos
 										</Typography>
 										<Typography variant="h4" color="warning.main" fontWeight="bold">
-											{summary.withoutMovements.toLocaleString()}
+											{summary.withoutMovements.toLocaleString("es-AR")}
 										</Typography>
 									</CardContent>
 								</Card>
@@ -524,7 +524,7 @@ const CausasSyncCredentials = () => {
 												)}
 											</Stack>
 											<Typography variant="h4" color="warning.main" fontWeight="bold">
-												{(summary.conErrores ?? 0).toLocaleString()}
+												{(summary.conErrores ?? 0).toLocaleString("es-AR")}
 											</Typography>
 										</CardContent>
 									</Card>
@@ -552,7 +552,7 @@ const CausasSyncCredentials = () => {
 												{movHoyFilter && <Chip label="filtrando" size="small" color="success" sx={{ height: 18, fontSize: "0.6rem" }} />}
 											</Stack>
 											<Typography variant="h4" color="success.main" fontWeight="bold">
-												{(summary.movimientosHoy ?? 0).toLocaleString()}
+												{(summary.movimientosHoy ?? 0).toLocaleString("es-AR")}
 											</Typography>
 										</CardContent>
 									</Card>
@@ -580,7 +580,7 @@ const CausasSyncCredentials = () => {
 												{noActFilter && <Chip label="filtrando" size="small" color="error" sx={{ height: 18, fontSize: "0.6rem" }} />}
 											</Stack>
 											<Typography variant="h4" color="error.main" fontWeight="bold">
-												{(summary.noActualizables ?? 0).toLocaleString()}
+												{(summary.noActualizables ?? 0).toLocaleString("es-AR")}
 											</Typography>
 										</CardContent>
 									</Card>

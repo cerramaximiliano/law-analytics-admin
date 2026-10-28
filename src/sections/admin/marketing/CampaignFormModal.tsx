@@ -46,6 +46,7 @@ import { CampaignService } from "store/reducers/campaign";
 import { SegmentService } from "store/reducers/segments";
 import { useSnackbar } from "notistack";
 import { DEFAULT_FREQUENCY_POLICY, getPolicy } from "utils/campaignCoordination";
+import { formatDate } from "utils/format";
 
 // Extend dayjs with timezone support
 dayjs.extend(utc);
@@ -832,7 +833,7 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 												</Typography>
 												<Typography variant="body2" color="text.secondary">
 													{promo.discountType === "percentage" ? `${promo.discountValue}%` : `${promo.currency} ${promo.discountValue}`}
-													{promo.validUntil ? ` · hasta ${dayjs(promo.validUntil).format("DD/MM/YYYY")}` : ""}
+													{promo.validUntil ? ` · hasta ${formatDate(promo.validUntil)}` : ""}
 												</Typography>
 												{!promo.vigente && <Chip size="small" color="warning" variant="outlined" label="no vigente" />}
 												{promo.targeted && <Chip size="small" color="info" variant="outlined" label="dirigida" />}
@@ -853,7 +854,7 @@ const CampaignFormModal = ({ open, onClose, onSuccess, campaign = null, mode }: 
 								return (
 									<Alert severity="warning" sx={{ mt: 1 }}>
 										La promo <strong>{selected.code}</strong> no está vigente hoy
-										{selected.validUntil ? ` (vence/venció el ${dayjs(selected.validUntil).format("DD/MM/YYYY")})` : ""}. La campaña no va a
+										{selected.validUntil ? ` (vence/venció el ${formatDate(selected.validUntil)})` : ""}. La campaña no va a
 										poder activarse mientras la promo no esté vigente.
 									</Alert>
 								);

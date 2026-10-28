@@ -18,11 +18,11 @@ import {
 	useTheme,
 } from "@mui/material";
 import { DocumentText, TickCircle, Warning2 } from "iconsax-react";
-import dayjs from "dayjs";
 import { useSnackbar } from "notistack";
 import InfolegService from "api/infolegService";
 import type { InfolegStats } from "types/infoleg";
 import { headerBorder } from "themes/dashboardTokens";
+import { formatDate } from "utils/format";
 
 const TIPO_LABELS: Record<string, string> = {
 	ley: "Ley",
@@ -277,7 +277,7 @@ const StatsTab = () => {
 										</TableCell>
 										<TableCell align="right">
 											<Typography variant="caption" color="text.secondary">
-												{n.scrapedAt ? dayjs(n.scrapedAt).format("DD/MM/YY HH:mm") : "—"}
+												{n.scrapedAt ? formatDate(n.scrapedAt, "dateTimeShort") : "—"}
 											</Typography>
 										</TableCell>
 									</TableRow>

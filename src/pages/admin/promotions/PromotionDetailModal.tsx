@@ -421,7 +421,7 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 									<People size={32} color={theme.palette.primary.main} variant="Bulk" />
 									<Box>
 										<Typography variant="h2" color="primary" sx={{ lineHeight: 1.1 }}>
-											{eligibleData.eligibleCount.toLocaleString()}
+											{eligibleData.eligibleCount.toLocaleString("es-AR")}
 										</Typography>
 										<Typography variant="caption" color="textSecondary">
 											{eligibleData.eligibleCount === 1 ? "usuario verá el beneficio" : "usuarios verán el beneficio"}
@@ -445,33 +445,33 @@ const PromotionDetailModal = ({ open, onClose, discount }: PromotionDetailModalP
 										)}
 										{!eligibleData.breakdown.isPublic && eligibleData.breakdown.targetSegmentsCount > 0 && (
 											<Tooltip
-												title={`${eligibleData.breakdown.segmentEmailsCount.toLocaleString()} email(s) en los segmentos resueltos a usuarios de la plataforma`}
+												title={`${eligibleData.breakdown.segmentEmailsCount.toLocaleString("es-AR")} email(s) en los segmentos resueltos a usuarios de la plataforma`}
 											>
 												<Chip size="small" variant="outlined" label={`${eligibleData.breakdown.targetSegmentsCount} segmento(s)`} />
 											</Tooltip>
 										)}
 										{eligibleData.breakdown.excludeActiveSubscribers && (
 											<Tooltip
-												title={`Se excluyen ${eligibleData.breakdown.activeSubscribersInPlatform.toLocaleString()} suscriptores activos en plan paid`}
+												title={`Se excluyen ${eligibleData.breakdown.activeSubscribersInPlatform.toLocaleString("es-AR")} suscriptores activos en plan paid`}
 											>
 												<Chip size="small" color="warning" variant="outlined" label="Excluye suscriptores activos" />
 											</Tooltip>
 										)}
 										{eligibleData.breakdown.newCustomersOnly && (
 											<Tooltip
-												title={`Se excluyen ${eligibleData.breakdown.everPaidUsersInPlatform.toLocaleString()} usuarios que alguna vez tuvieron suscripción paga`}
+												title={`Se excluyen ${eligibleData.breakdown.everPaidUsersInPlatform.toLocaleString("es-AR")} usuarios que alguna vez tuvieron suscripción paga`}
 											>
 												<Chip size="small" color="error" variant="outlined" label="Solo nuevos clientes" />
 											</Tooltip>
 										)}
 									</Stack>
 									<Typography variant="caption" color="textSecondary">
-										Universo bruto: <strong>{eligibleData.universeCount.toLocaleString()}</strong>
+										Universo bruto: <strong>{eligibleData.universeCount.toLocaleString("es-AR")}</strong>
 										{eligibleData.universeCount !== eligibleData.eligibleCount && (
 											<>
 												{" "}
 												· Excluidos por restricciones:{" "}
-												<strong>{(eligibleData.universeCount - eligibleData.eligibleCount).toLocaleString()}</strong>
+												<strong>{(eligibleData.universeCount - eligibleData.eligibleCount).toLocaleString("es-AR")}</strong>
 											</>
 										)}
 									</Typography>

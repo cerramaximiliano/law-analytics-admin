@@ -66,7 +66,7 @@ const PlanDetailModal = ({ open, onClose, plan }: PlanDetailModalProps) => {
 
 	const formatDate = (dateObj: any) => {
 		if (!dateObj || !dateObj.$date) return "N/A";
-		return new Date(dateObj.$date).toLocaleString("es-ES", {
+		return new Date(dateObj.$date).toLocaleString("es-AR", {
 			year: "numeric",
 			month: "long",
 			day: "numeric",
@@ -367,7 +367,7 @@ const PlanDetailModal = ({ open, onClose, plan }: PlanDetailModalProps) => {
 												Última Fecha de Sincronización
 											</Typography>
 											<Typography variant="body2">
-												{new Date(plan.metadata.lastSyncDate).toLocaleString("es-ES", {
+												{new Date(plan.metadata.lastSyncDate).toLocaleString("es-AR", {
 													year: "numeric",
 													month: "long",
 													day: "numeric",
@@ -413,7 +413,7 @@ const PlanDetailModal = ({ open, onClose, plan }: PlanDetailModalProps) => {
 									<TableBody>
 										{plan.changeHistory.map((change, index) => (
 											<TableRow key={index}>
-												<TableCell>{new Date(change.date).toLocaleString("es-ES")}</TableCell>
+												<TableCell>{new Date(change.date).toLocaleString("es-AR")}</TableCell>
 												<TableCell>{change.field}</TableCell>
 												<TableCell>{JSON.stringify(change.oldValue)}</TableCell>
 												<TableCell>{JSON.stringify(change.newValue)}</TableCell>

@@ -493,7 +493,7 @@ const PostalTrackingPage = () => {
 											fontSize: { xs: "1.1rem", sm: "1.5rem" },
 										}}
 									>
-										{stat.value.toLocaleString()}
+										{stat.value.toLocaleString("es-AR")}
 									</Typography>
 								)}
 								<Typography variant="caption" color="text.secondary" noWrap sx={{ display: "block", mt: 0.25 }}>

@@ -365,7 +365,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ onRefresh }) => {
 										Total de logs
 									</Typography>
 									<Typography variant="h3" sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}>
-										{counts?.total?.toLocaleString() || 0}
+										{counts?.total?.toLocaleString("es-AR") || 0}
 									</Typography>
 								</Stack>
 							</CardContent>
@@ -392,7 +392,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ onRefresh }) => {
 												{getWorkerTypeLabel(type)}
 											</Typography>
 											<Typography variant="h4" sx={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", fontWeight: 600 }}>
-												{count?.toLocaleString() || 0}
+												{count?.toLocaleString("es-AR") || 0}
 											</Typography>
 										</Stack>
 									</CardContent>
@@ -554,7 +554,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ onRefresh }) => {
 											<Typography variant="subtitle2" color="text.secondary">
 												Docs con Logs
 											</Typography>
-											<Typography variant="h4">{logsStats.statistics.documentsWithLogs.toLocaleString()}</Typography>
+											<Typography variant="h4">{logsStats.statistics.documentsWithLogs.toLocaleString("es-AR")}</Typography>
 										</Stack>
 									</CardContent>
 								</Card>
@@ -566,7 +566,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ onRefresh }) => {
 											<Typography variant="subtitle2" color="text.secondary">
 												Docs sin Logs
 											</Typography>
-											<Typography variant="h4">{logsStats.statistics.documentsWithoutLogs.toLocaleString()}</Typography>
+											<Typography variant="h4">{logsStats.statistics.documentsWithoutLogs.toLocaleString("es-AR")}</Typography>
 										</Stack>
 									</CardContent>
 								</Card>
@@ -578,7 +578,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ onRefresh }) => {
 											<Typography variant="subtitle2" color="text.secondary">
 												Total Entradas
 											</Typography>
-											<Typography variant="h4">{logsStats.statistics.totalLogEntries.toLocaleString()}</Typography>
+											<Typography variant="h4">{logsStats.statistics.totalLogEntries.toLocaleString("es-AR")}</Typography>
 										</Stack>
 									</CardContent>
 								</Card>
@@ -611,8 +611,8 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ onRefresh }) => {
 										{logsStats.statistics.byWorkerType.map((wt) => (
 											<TableRow key={wt._id}>
 												<TableCell>{getWorkerTypeLabel(wt._id)}</TableCell>
-												<TableCell align="right">{wt.count.toLocaleString()}</TableCell>
-												<TableCell align="right">{wt.totalLogEntries.toLocaleString()}</TableCell>
+												<TableCell align="right">{wt.count.toLocaleString("es-AR")}</TableCell>
+												<TableCell align="right">{wt.totalLogEntries.toLocaleString("es-AR")}</TableCell>
 											</TableRow>
 										))}
 									</TableBody>
@@ -2653,7 +2653,7 @@ const CleanupConfigTab: React.FC = () => {
 										<Typography variant="caption" color="text.secondary">
 											Logs limpiados (última vez)
 										</Typography>
-										<Typography variant="body1">{config?.lastExecution?.stats?.totalCleared?.toLocaleString() || 0}</Typography>
+										<Typography variant="body1">{config?.lastExecution?.stats?.totalCleared?.toLocaleString("es-AR") || 0}</Typography>
 									</Box>
 								</Grid>
 							</Grid>
@@ -2919,7 +2919,7 @@ const CleanupConfigTab: React.FC = () => {
 												<Typography variant="caption" color="text.secondary">
 													Max docs por ejecución
 												</Typography>
-												<Typography variant="body1">{config?.limits?.maxDocsPerRun?.toLocaleString() || "-"}</Typography>
+												<Typography variant="body1">{config?.limits?.maxDocsPerRun?.toLocaleString("es-AR") || "-"}</Typography>
 											</Box>
 										</Grid>
 										<Grid item xs={6}>
@@ -2935,7 +2935,7 @@ const CleanupConfigTab: React.FC = () => {
 												<Typography variant="caption" color="text.secondary">
 													Umbral de advertencia
 												</Typography>
-												<Typography variant="body1">{config?.limits?.warningThreshold?.toLocaleString() || "-"}</Typography>
+												<Typography variant="body1">{config?.limits?.warningThreshold?.toLocaleString("es-AR") || "-"}</Typography>
 											</Box>
 										</Grid>
 									</Grid>
@@ -3014,7 +3014,7 @@ const CleanupConfigTab: React.FC = () => {
 														/>
 													</TableCell>
 													<TableCell align="right">{item.duration ? `${(item.duration / 1000).toFixed(1)}s` : "-"}</TableCell>
-													<TableCell align="right">{item.totalCleared?.toLocaleString() || 0}</TableCell>
+													<TableCell align="right">{item.totalCleared?.toLocaleString("es-AR") || 0}</TableCell>
 													<TableCell>
 														{item.error ? (
 															<Typography

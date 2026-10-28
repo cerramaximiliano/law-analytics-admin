@@ -213,7 +213,7 @@ const CarpetasNoVerificadasEje = () => {
 										variant="h4"
 										sx={{ color: "warning.main", fontWeight: 600, fontVariantNumeric: "tabular-nums", letterSpacing: -0.3 }}
 									>
-										{totalCount.toLocaleString()}
+										{totalCount.toLocaleString("es-AR")}
 									</Typography>
 								</Stack>
 							</CardContent>

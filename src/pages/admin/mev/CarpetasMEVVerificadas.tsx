@@ -519,14 +519,14 @@ const CarpetasMEVVerificadas = () => {
 										variant="h4"
 										sx={{ color: "primary.main", fontWeight: 600, fontVariantNumeric: "tabular-nums", letterSpacing: -0.3 }}
 									>
-										{totalCount.toLocaleString()}
+										{totalCount.toLocaleString("es-AR")}
 										<Typography
 											component="span"
 											variant="body2"
 											color="text.secondary"
 											sx={{ ml: 0.5, fontVariantNumeric: "tabular-nums" }}
 										>
-											/ {totalInDatabase.toLocaleString()}
+											/ {totalInDatabase.toLocaleString("es-AR")}
 										</Typography>
 									</Typography>
 								</Stack>
@@ -578,7 +578,7 @@ const CarpetasMEVVerificadas = () => {
 											<Tooltip title="Actualizadas hoy: causas scrapeadas con éxito hoy (aunque después hayan tenido un error, mantienen este estado)">
 												<Chip
 													icon={<TickCircle size={14} variant="Bold" />}
-													label={eligibilityStats.updatedToday.toLocaleString()}
+													label={eligibilityStats.updatedToday.toLocaleString("es-AR")}
 													size="small"
 													color="success"
 													sx={{ height: 24, "& .MuiChip-label": { px: 1 } }}
@@ -588,12 +588,12 @@ const CarpetasMEVVerificadas = () => {
 												<Chip
 													icon={<Timer size={14} />}
 													label={
-														eligibilityStats.pendingToday?.toLocaleString() ||
+														eligibilityStats.pendingToday?.toLocaleString("es-AR") ||
 														(
 															eligibilityStats.eligible -
 															eligibilityStats.updatedToday -
 															eligibilityStats.eligibleWithErrors
-														).toLocaleString()
+														).toLocaleString("es-AR")
 													}
 													size="small"
 													color="warning"
@@ -603,7 +603,7 @@ const CarpetasMEVVerificadas = () => {
 											<Tooltip title="Con error: fallaron en el scraping y NO tuvieron éxito hoy (cooldown 30 min, se reintentan automáticamente)">
 												<Chip
 													icon={<CloseSquare size={14} variant="Bold" />}
-													label={eligibilityStats.eligibleWithErrors.toLocaleString()}
+													label={eligibilityStats.eligibleWithErrors.toLocaleString("es-AR")}
 													size="small"
 													color="error"
 													sx={{ height: 24, "& .MuiChip-label": { px: 1 } }}
@@ -613,7 +613,7 @@ const CarpetasMEVVerificadas = () => {
 												<Tooltip title="Sin credencial: elegibles cuyo usuario no tiene credencial MEV habilitada. Los workers las omiten, no cuentan como pendientes ni en la cobertura">
 													<Chip
 														icon={<LockSlash size={14} />}
-														label={`${(eligibilityStats.noCredential ?? 0).toLocaleString()} sin credencial`}
+														label={`${(eligibilityStats.noCredential ?? 0).toLocaleString("es-AR")} sin credencial`}
 														size="small"
 														sx={{ height: 24, "& .MuiChip-label": { px: 1 } }}
 													/>
@@ -621,7 +621,7 @@ const CarpetasMEVVerificadas = () => {
 											)}
 											<Tooltip title="Total elegibles para actualización (actualizables, verificadas, source app). Suma de actualizadas + pendientes + con errores + sin credencial">
 												<Chip
-													label={`${eligibilityStats.eligible.toLocaleString()} elegibles`}
+													label={`${eligibilityStats.eligible.toLocaleString("es-AR")} elegibles`}
 													size="small"
 													variant="outlined"
 													sx={{ height: 24, "& .MuiChip-label": { px: 1 } }}

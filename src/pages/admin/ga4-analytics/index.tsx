@@ -404,7 +404,7 @@ const MetricCard: React.FC<MetricCardProps> = ({ title, value, icon, loading, co
 							letterSpacing: "-0.02em",
 						}}
 					>
-						{typeof value === "number" ? value.toLocaleString() : value}
+						{typeof value === "number" ? value.toLocaleString("es-AR") : value}
 					</Typography>
 					{subtitle && (
 						<Typography variant="caption" color="textSecondary" sx={{ mt: 0.5, display: "block" }}>
@@ -625,7 +625,7 @@ const FunnelStep: React.FC<FunnelStepProps> = ({ step, users, conversionRate, is
 						<Skeleton variant="text" width={60} />
 					) : (
 						<Typography variant="h6" sx={{ color, fontWeight: 600 }}>
-							{users.toLocaleString()}
+							{users.toLocaleString("es-AR")}
 						</Typography>
 					)}
 				</Box>
@@ -883,7 +883,7 @@ const GA4Dashboard = () => {
 					{lastUpdated && (
 						<Chip
 							size="small"
-							label={`Actualizado: ${lastUpdated.toLocaleTimeString("es-ES")}`}
+							label={`Actualizado: ${lastUpdated.toLocaleTimeString("es-AR")}`}
 							variant="outlined"
 							sx={{ borderRadius: 1.5 }}
 						/>
@@ -1228,8 +1228,8 @@ const GA4Dashboard = () => {
 													<TableCell sx={{ maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
 														{page.pagePath}
 													</TableCell>
-													<TableCell align="right">{page.pageViews.toLocaleString()}</TableCell>
-													<TableCell align="right">{page.users.toLocaleString()}</TableCell>
+													<TableCell align="right">{page.pageViews.toLocaleString("es-AR")}</TableCell>
+													<TableCell align="right">{page.users.toLocaleString("es-AR")}</TableCell>
 												</TableRow>
 											))}
 										</TableBody>
@@ -1262,8 +1262,8 @@ const GA4Dashboard = () => {
 											{data?.customEvents.map((event, index) => (
 												<TableRow key={index} hover>
 													<TableCell>{event.eventName}</TableCell>
-													<TableCell align="right">{event.count.toLocaleString()}</TableCell>
-													<TableCell align="right">{event.users.toLocaleString()}</TableCell>
+													<TableCell align="right">{event.count.toLocaleString("es-AR")}</TableCell>
+													<TableCell align="right">{event.users.toLocaleString("es-AR")}</TableCell>
 												</TableRow>
 											))}
 										</TableBody>
@@ -1416,8 +1416,8 @@ const GA4Dashboard = () => {
 															<span>{page?.page || "-"}</span>
 														</Tooltip>
 													</TableCell>
-													<TableCell align="right">{(page?.sessions ?? 0).toLocaleString()}</TableCell>
-													<TableCell align="right">{(page?.users ?? 0).toLocaleString()}</TableCell>
+													<TableCell align="right">{(page?.sessions ?? 0).toLocaleString("es-AR")}</TableCell>
+													<TableCell align="right">{(page?.users ?? 0).toLocaleString("es-AR")}</TableCell>
 													<TableCell align="right">
 														<Chip
 															size="small"
@@ -1470,8 +1470,8 @@ const GA4Dashboard = () => {
 															<span>{page?.page || "-"}</span>
 														</Tooltip>
 													</TableCell>
-													<TableCell align="right">{(page?.exits ?? 0).toLocaleString()}</TableCell>
-													<TableCell align="right">{(page?.pageViews ?? 0).toLocaleString()}</TableCell>
+													<TableCell align="right">{(page?.exits ?? 0).toLocaleString("es-AR")}</TableCell>
+													<TableCell align="right">{(page?.pageViews ?? 0).toLocaleString("es-AR")}</TableCell>
 													<TableCell align="right">
 														<Chip
 															size="small"
@@ -1612,8 +1612,8 @@ const GA4Dashboard = () => {
 															<span>{path?.path || "-"}</span>
 														</Tooltip>
 													</TableCell>
-													<TableCell align="right">{(path?.sessions ?? 0).toLocaleString()}</TableCell>
-													<TableCell align="right">{(path?.users ?? 0).toLocaleString()}</TableCell>
+													<TableCell align="right">{(path?.sessions ?? 0).toLocaleString("es-AR")}</TableCell>
+													<TableCell align="right">{(path?.users ?? 0).toLocaleString("es-AR")}</TableCell>
 													<TableCell align="right">{formatDuration(path?.avgDuration ?? 0)}</TableCell>
 												</TableRow>
 											))}
@@ -1666,7 +1666,7 @@ const GA4Dashboard = () => {
 													<TableCell align="right">
 														<Chip
 															size="small"
-															label={(flow?.transitions ?? 0).toLocaleString()}
+															label={(flow?.transitions ?? 0).toLocaleString("es-AR")}
 															color="primary"
 															variant="outlined"
 															sx={{ minWidth: 50 }}
@@ -1714,7 +1714,7 @@ const GA4Dashboard = () => {
 													borderRadius: 8,
 												}}
 												formatter={(value: number, _name: string, props: any) => [
-													`${value.toLocaleString()} transiciones`,
+													`${value.toLocaleString("es-AR")} transiciones`,
 													`${props.payload.fullFrom} → ${props.payload.fullTo}`,
 												]}
 											/>
@@ -1820,7 +1820,7 @@ const GA4Dashboard = () => {
 															<Typography variant="body2" fontWeight={500}>
 																{event.eventName}
 															</Typography>
-															<Chip size="small" label={event.count.toLocaleString()} sx={{ ml: 1 }} />
+															<Chip size="small" label={event.count.toLocaleString("es-AR")} sx={{ ml: 1 }} />
 														</Box>
 														<Typography variant="caption" color="textSecondary" sx={{ display: "block" }}>
 															{getEventDescription(event.eventName)}
@@ -1935,7 +1935,7 @@ const GA4Dashboard = () => {
 														Usuarios Inicio
 													</Typography>
 													<Typography variant="h6" fontWeight={600}>
-														{funnelData.summary.startUsers.toLocaleString()}
+														{funnelData.summary.startUsers.toLocaleString("es-AR")}
 													</Typography>
 												</Paper>
 											</Grid>
@@ -1948,7 +1948,7 @@ const GA4Dashboard = () => {
 														Usuarios Final
 													</Typography>
 													<Typography variant="h6" fontWeight={600} color="success.main">
-														{funnelData.summary.endUsers.toLocaleString()}
+														{funnelData.summary.endUsers.toLocaleString("es-AR")}
 													</Typography>
 												</Paper>
 											</Grid>
@@ -1974,7 +1974,7 @@ const GA4Dashboard = () => {
 														Dropoff Total
 													</Typography>
 													<Typography variant="h6" fontWeight={600}>
-														{funnelData.summary.totalDropoff.toLocaleString()}
+														{funnelData.summary.totalDropoff.toLocaleString("es-AR")}
 													</Typography>
 												</Paper>
 											</Grid>
@@ -2025,10 +2025,10 @@ const GA4Dashboard = () => {
 																	</Box>
 																	<Box sx={{ textAlign: "right", flexShrink: 0, ml: 1 }}>
 																		<Typography variant="body2" fontWeight={600}>
-																			{step.users.toLocaleString()} usuarios
+																			{step.users.toLocaleString("es-AR")} usuarios
 																		</Typography>
 																		<Typography variant="caption" color="textSecondary">
-																			{step.count.toLocaleString()} eventos
+																			{step.count.toLocaleString("es-AR")} eventos
 																		</Typography>
 																	</Box>
 																</Box>
@@ -2045,7 +2045,7 @@ const GA4Dashboard = () => {
 																/>
 																{step.dropoff > 0 && (
 																	<Typography variant="caption" color="error.main">
-																		-{step.dropoff.toLocaleString()} usuarios
+																		-{step.dropoff.toLocaleString("es-AR")} usuarios
 																	</Typography>
 																)}
 															</Box>
@@ -2103,8 +2103,8 @@ const GA4Dashboard = () => {
 															{getEventDescription(event.eventName)}
 														</Typography>
 													</TableCell>
-													<TableCell align="right">{event.count.toLocaleString()}</TableCell>
-													<TableCell align="right">{event.users.toLocaleString()}</TableCell>
+													<TableCell align="right">{event.count.toLocaleString("es-AR")}</TableCell>
+													<TableCell align="right">{event.users.toLocaleString("es-AR")}</TableCell>
 													<TableCell align="center">
 														<Chip
 															size="small"
@@ -2208,7 +2208,7 @@ const GA4Dashboard = () => {
 														<Typography variant="body2" fontWeight={500}>
 															{event.eventName}
 														</Typography>
-														<Chip size="small" label={event.count.toLocaleString()} sx={{ ml: 1 }} />
+														<Chip size="small" label={event.count.toLocaleString("es-AR")} sx={{ ml: 1 }} />
 													</Box>
 													<Typography variant="caption" color="textSecondary" sx={{ display: "block" }}>
 														{getEventDescription(event.eventName)}
@@ -2231,7 +2231,7 @@ const GA4Dashboard = () => {
 													Total de Eventos
 												</Typography>
 												<Typography variant="h6" fontWeight={600}>
-													{eventDetails.summary.totalCount.toLocaleString()}
+													{eventDetails.summary.totalCount.toLocaleString("es-AR")}
 												</Typography>
 											</Paper>
 											<Paper elevation={0} sx={{ p: 1.5, bgcolor: alpha(theme.palette.success.main, 0.05), borderRadius: 1 }}>
@@ -2239,7 +2239,7 @@ const GA4Dashboard = () => {
 													Usuarios Únicos
 												</Typography>
 												<Typography variant="h6" fontWeight={600} color="success.main">
-													{eventDetails.summary.totalUsers.toLocaleString()}
+													{eventDetails.summary.totalUsers.toLocaleString("es-AR")}
 												</Typography>
 											</Paper>
 											<Paper elevation={0} sx={{ p: 1.5, bgcolor: alpha(theme.palette.warning.main, 0.05), borderRadius: 1 }}>
@@ -2337,8 +2337,8 @@ const GA4Dashboard = () => {
 																				<span>{val.value}</span>
 																			</Tooltip>
 																		</TableCell>
-																		<TableCell align="right">{val.count.toLocaleString()}</TableCell>
-																		<TableCell align="right">{val.users.toLocaleString()}</TableCell>
+																		<TableCell align="right">{val.count.toLocaleString("es-AR")}</TableCell>
+																		<TableCell align="right">{val.users.toLocaleString("es-AR")}</TableCell>
 																	</TableRow>
 																))}
 															</TableBody>

@@ -299,7 +299,7 @@ const BatchCreateWorkersModal: React.FC<BatchCreateWorkersModalProps> = ({ open,
 														sx={{ width: 120 }}
 													/>
 												</TableCell>
-												<TableCell sx={{ fontVariantNumeric: "tabular-nums" }}>{(range.end - range.start).toLocaleString()}</TableCell>
+												<TableCell sx={{ fontVariantNumeric: "tabular-nums" }}>{(range.end - range.start).toLocaleString("es-AR")}</TableCell>
 												<TableCell sx={{ fontVariantNumeric: "tabular-nums" }}>{index * delayIncrement}s</TableCell>
 											</TableRow>
 										))}

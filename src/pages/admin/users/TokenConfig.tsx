@@ -29,6 +29,7 @@ import TokenConfigService, { TokenConfigResponse, UpdateTokenConfigParams, Histo
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/es";
+import { formatDateTime } from "utils/format";
 
 dayjs.extend(relativeTime);
 dayjs.locale("es");
@@ -540,7 +541,7 @@ const TokenConfigPage = () => {
 											.map((entry, index) => (
 												<TableRow key={index}>
 													<TableCell>
-														<Typography variant="caption">{dayjs(entry.changedAt).format("DD/MM/YYYY HH:mm")}</Typography>
+														<Typography variant="caption">{formatDateTime(entry.changedAt)}</Typography>
 														<br />
 														<Typography variant="caption" color="text.secondary">
 															{dayjs(entry.changedAt).fromNow()}

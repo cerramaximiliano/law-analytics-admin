@@ -875,9 +875,9 @@ const OnboardingAnalytics: React.FC = () => {
 											</TableCell>
 											<TableCell>{event.sessionsCount}</TableCell>
 											<TableCell>
-												<Typography variant="body2">{new Date(event.createdAt).toLocaleDateString()}</Typography>
+												<Typography variant="body2">{new Date(event.createdAt).toLocaleDateString("es-AR")}</Typography>
 												<Typography variant="caption" color="text.secondary">
-													{new Date(event.createdAt).toLocaleTimeString()}
+													{new Date(event.createdAt).toLocaleTimeString("es-AR")}
 												</Typography>
 											</TableCell>
 											<TableCell>
@@ -973,14 +973,14 @@ const OnboardingAnalytics: React.FC = () => {
 											</TableCell>
 											<TableCell>
 												{user.lastSessionAt ? (
-													new Date(user.lastSessionAt).toLocaleDateString()
+													new Date(user.lastSessionAt).toLocaleDateString("es-AR")
 												) : (
 													<Typography variant="body2" color="text.secondary">
 														N/A
 													</Typography>
 												)}
 											</TableCell>
-											<TableCell>{new Date(user.createdAt).toLocaleDateString()}</TableCell>
+											<TableCell>{new Date(user.createdAt).toLocaleDateString("es-AR")}</TableCell>
 											<TableCell align="center">
 												<Chip
 													label={`${user.daysSinceRegistration} dias`}
@@ -1105,7 +1105,7 @@ const OnboardingAnalytics: React.FC = () => {
 											<TableCell>{renderOnboardingStateChip(u)}</TableCell>
 											<TableCell>
 												<Typography variant="caption" color="text.secondary">
-													{new Date(u.createdAt).toLocaleDateString()}
+													{new Date(u.createdAt).toLocaleDateString("es-AR")}
 												</Typography>
 											</TableCell>
 											<TableCell align="right">

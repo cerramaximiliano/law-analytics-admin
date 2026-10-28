@@ -11,7 +11,7 @@ import { Box, Chip, CircularProgress, Grid, Stack, Tooltip, Typography } from "@
 import { alpha, useTheme } from "@mui/material/styles";
 import EmailsEngagementService, { EmailSourceFunnel, UserEmailActivity as Activity } from "api/emailsEngagement";
 import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER, PRO_TEAL } from "themes/dashboardTokens";
-import dayjs from "utils/dayjs-config";
+import { formatDate } from "utils/format";
 
 const SOURCE_COLOR: Record<string, string> = {
 	movimientos: BRAND_BLUE,
@@ -40,7 +40,7 @@ const Etapa = ({ label, valor, base, color }: { label: string; valor: number | n
 			) : (
 				<Stack direction="row" spacing={0.5} alignItems="baseline">
 					<Typography variant="body2" sx={{ fontWeight: 600, color, fontVariantNumeric: "tabular-nums" }}>
-						{valor.toLocaleString()}
+						{valor.toLocaleString("es-AR")}
 					</Typography>
 					{pct !== null && base > 0 && (
 						<Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.65rem" }}>
@@ -74,7 +74,7 @@ const FuenteRow = ({ f }: { f: EmailSourceFunnel }) => {
 						{f.label}
 					</Typography>
 					<Typography variant="caption" color="text.secondary">
-						{f.ultimo ? `último ${dayjs(f.ultimo).format("DD/MM/YY HH:mm")}` : "sin envíos"}
+						{f.ultimo ? `último ${formatDate(f.ultimo, "dateTimeShort")}` : "sin envíos"}
 					</Typography>
 				</Box>
 				<Etapa label="Correos" valor={f.correos} base={f.correos} color={color} />

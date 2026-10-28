@@ -221,7 +221,7 @@ const CarpetasNoVerificadasPjMendoza = () => {
 											letterSpacing: "-0.01em",
 										}}
 									>
-										{totalCount.toLocaleString()}
+										{totalCount.toLocaleString("es-AR")}
 									</Typography>
 								</Stack>
 							</CardContent>

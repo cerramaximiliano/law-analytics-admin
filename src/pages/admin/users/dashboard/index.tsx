@@ -53,6 +53,7 @@ import { UserDashboardOverview, ActivityRankingRow, InactiveUserRow, NewUnactiva
 import LifecycleTab from "./LifecycleTab";
 import { useSnackbar } from "notistack";
 import { useTabIndexParam } from "hooks/useTabParam";
+import { formatDate } from "utils/format";
 
 // Slugs del tab en la URL; el orden fija el índice de cada <Tab>.
 const TAB_SLUGS = ["top", "churn", "sin-activar", "heavy-ia", "pagos", "ciclo-vida"] as const;
@@ -68,7 +69,7 @@ const fmtNum = (n: number | undefined | null): string => new Intl.NumberFormat("
 
 const fmtDate = (date?: string | null): string => {
 	if (!date) return "—";
-	return dayjs(date).format("DD/MM/YY HH:mm");
+	return formatDate(date, "dateTimeShort");
 };
 
 const fmtFromNow = (date?: string | null): string => {
@@ -789,7 +790,7 @@ const UsersDashboard: React.FC = () => {
 									</TableCell>
 									<TableCell>
 										<Typography variant="body2" color="text.secondary">
-											{s.currentPeriodEnd ? dayjs(s.currentPeriodEnd).format("DD/MM/YY") : "—"}
+											{s.currentPeriodEnd ? formatDate(s.currentPeriodEnd, "dateShort") : "—"}
 										</Typography>
 									</TableCell>
 									<TableCell>

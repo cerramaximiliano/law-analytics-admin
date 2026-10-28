@@ -456,14 +456,14 @@ const CarpetasVerificadasPjMendoza = () => {
 											letterSpacing: "-0.01em",
 										}}
 									>
-										{totalCount.toLocaleString()}
+										{totalCount.toLocaleString("es-AR")}
 										<Typography
 											component="span"
 											variant="body2"
 											color="text.secondary"
 											sx={{ ml: 0.5, fontVariantNumeric: "tabular-nums" }}
 										>
-											/ {totalInDatabase.toLocaleString()}
+											/ {totalInDatabase.toLocaleString("es-AR")}
 										</Typography>
 									</Typography>
 								</Stack>

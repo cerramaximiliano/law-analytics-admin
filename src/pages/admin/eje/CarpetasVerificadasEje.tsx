@@ -445,9 +445,9 @@ const CarpetasVerificadasEje = () => {
 										Resultados
 									</Typography>
 									<Typography variant="h4" color="primary.main" fontWeight="bold">
-										{totalCount.toLocaleString()}
+										{totalCount.toLocaleString("es-AR")}
 										<Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 0.5 }}>
-											/ {totalInDatabase.toLocaleString()}
+											/ {totalInDatabase.toLocaleString("es-AR")}
 										</Typography>
 									</Typography>
 								</Stack>

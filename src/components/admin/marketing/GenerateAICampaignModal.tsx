@@ -678,7 +678,7 @@ const GenerateAICampaignModal = ({ open, onClose, onCampaignSaved }: Props) => {
 
 							{usage && (
 								<Typography variant="caption" color="text.secondary">
-									Tokens: {usage.total_tokens?.toLocaleString()} (prompt {usage.prompt_tokens}, completion {usage.completion_tokens})
+									Tokens: {usage.total_tokens?.toLocaleString("es-AR")} (prompt {usage.prompt_tokens}, completion {usage.completion_tokens})
 								</Typography>
 							)}
 

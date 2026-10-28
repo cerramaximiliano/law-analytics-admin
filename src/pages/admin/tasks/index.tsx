@@ -77,6 +77,7 @@ import {
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/es";
+import { formatDate } from "utils/format";
 
 dayjs.extend(relativeTime);
 dayjs.locale("es");
@@ -754,7 +755,7 @@ const AdminTasks: React.FC = () => {
 													color={task.isOverdue ? "error" : "textPrimary"}
 													fontWeight={task.isOverdue ? "bold" : "normal"}
 												>
-													{dayjs(task.dueDate).format("DD/MM/YY")}
+													{formatDate(task.dueDate, "dateShort")}
 												</Typography>
 												<Typography variant="caption" color={task.isOverdue ? "error" : "textSecondary"}>
 													{dayjs(task.dueDate).fromNow()}

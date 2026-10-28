@@ -653,7 +653,7 @@ const UsersList = () => {
 		}
 
 		const tooltipContent = authProviderUpdatedAt
-			? `Último uso: ${new Date(authProviderUpdatedAt).toLocaleString()}`
+			? `Último uso: ${new Date(authProviderUpdatedAt).toLocaleString("es-AR")}`
 			: "Usuario registrado antes de implementar este campo";
 
 		return (
@@ -1034,8 +1034,8 @@ const UsersList = () => {
 												</TableCell>
 												<TableCell>{renderAuthProviderChip(user.authProvider, user.authProviderUpdatedAt)}</TableCell>
 												<TableCell>{renderCalendarChip(user)}</TableCell>
-												<TableCell>{user.lastLogin ? new Date(user.lastLogin).toLocaleString() : "Nunca"}</TableCell>
-												<TableCell>{user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "-"}</TableCell>
+												<TableCell>{user.lastLogin ? new Date(user.lastLogin).toLocaleString("es-AR") : "Nunca"}</TableCell>
+												<TableCell>{user.createdAt ? new Date(user.createdAt).toLocaleDateString("es-AR") : "-"}</TableCell>
 												<TableCell align="center">
 													<Stack direction="row" justifyContent="center" alignItems="center">
 														<Tooltip title="Ver detalles">

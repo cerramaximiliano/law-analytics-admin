@@ -100,7 +100,7 @@ const StatCard: React.FC<{ label: string; value: number; color: string; loading?
 				<Skeleton variant="text" width={50} height={32} />
 			) : (
 				<Typography variant="h3" sx={{ color, fontWeight: 700, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}>
-					{value.toLocaleString()}
+					{value.toLocaleString("es-AR")}
 				</Typography>
 			)}
 		</Paper>

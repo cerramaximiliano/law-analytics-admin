@@ -439,7 +439,7 @@ const SegmentsPanel = () => {
 											</Typography>
 										</TableCell>
 										<TableCell>
-											<Typography variant="body2">{segment.createdAt ? new Date(segment.createdAt).toLocaleDateString() : "-"}</Typography>
+											<Typography variant="body2">{segment.createdAt ? new Date(segment.createdAt).toLocaleDateString("es-AR") : "-"}</Typography>
 										</TableCell>
 										<TableCell>
 											<Typography variant="body2">

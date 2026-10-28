@@ -213,7 +213,7 @@ const MEVWorkers = () => {
 	// Formatear fecha
 	const formatDate = (date: string | undefined): string => {
 		if (!date) return "N/A";
-		return new Date(date).toLocaleString("es-ES");
+		return new Date(date).toLocaleString("es-AR");
 	};
 
 	// Formatear fecha con tiempo transcurrido
@@ -242,7 +242,7 @@ const MEVWorkers = () => {
 		}
 
 		return {
-			formatted: dateObj.toLocaleString("es-ES"),
+			formatted: dateObj.toLocaleString("es-AR"),
 			elapsed,
 		};
 	};
@@ -392,11 +392,11 @@ const MEVWorkers = () => {
 	const formatSystemValue = (value: any, dataType: string): string => {
 		switch (dataType) {
 			case "date":
-				return value ? new Date(value).toLocaleString("es-ES") : "N/A";
+				return value ? new Date(value).toLocaleString("es-AR") : "N/A";
 			case "boolean":
 				return value ? "Sí" : "No";
 			case "number":
-				return value?.toLocaleString() || "0";
+				return value?.toLocaleString("es-AR") || "0";
 			case "json":
 				return typeof value === "object" ? JSON.stringify(value, null, 2) : value;
 			default:
@@ -808,17 +808,17 @@ const MEVWorkers = () => {
 															</TableCell>
 															<TableCell align="center">
 																<Typography variant="body2" fontWeight={500}>
-																	{config.documents_verified?.toLocaleString() || 0}
+																	{config.documents_verified?.toLocaleString("es-AR") || 0}
 																</Typography>
 															</TableCell>
 															<TableCell align="center">
 																<Typography variant="body2" color="success.main" fontWeight={500}>
-																	{config.documents_valid?.toLocaleString() || 0}
+																	{config.documents_valid?.toLocaleString("es-AR") || 0}
 																</Typography>
 															</TableCell>
 															<TableCell align="center">
 																<Typography variant="body2" color="warning.main" fontWeight={500}>
-																	{config.documents_not_found?.toLocaleString() || 0}
+																	{config.documents_not_found?.toLocaleString("es-AR") || 0}
 																</Typography>
 															</TableCell>
 															<TableCell align="center">
@@ -1099,17 +1099,17 @@ const MEVWorkers = () => {
 														</TableCell>
 														<TableCell align="center">
 															<Typography variant="body2" fontWeight={500}>
-																{config.documents_verified?.toLocaleString() || 0}
+																{config.documents_verified?.toLocaleString("es-AR") || 0}
 															</Typography>
 														</TableCell>
 														<TableCell align="center">
 															<Typography variant="body2" color="success.main" fontWeight={500}>
-																{config.documents_valid?.toLocaleString() || 0}
+																{config.documents_valid?.toLocaleString("es-AR") || 0}
 															</Typography>
 														</TableCell>
 														<TableCell align="center">
 															<Typography variant="body2" color="warning.main" fontWeight={500}>
-																{config.documents_not_found?.toLocaleString() || 0}
+																{config.documents_not_found?.toLocaleString("es-AR") || 0}
 															</Typography>
 														</TableCell>
 														<TableCell align="center">
@@ -1120,11 +1120,11 @@ const MEVWorkers = () => {
 															/>
 														</TableCell>
 														<TableCell align="center">
-															<Typography variant="body2">{config.statistics?.total_searches?.toLocaleString() || 0}</Typography>
+															<Typography variant="body2">{config.statistics?.total_searches?.toLocaleString("es-AR") || 0}</Typography>
 														</TableCell>
 														<TableCell align="center">
 															<Typography variant="body2" color="success.main">
-																{config.statistics?.successful_searches?.toLocaleString() || 0}
+																{config.statistics?.successful_searches?.toLocaleString("es-AR") || 0}
 															</Typography>
 														</TableCell>
 														<TableCell align="center">
@@ -1186,7 +1186,7 @@ const MEVWorkers = () => {
 								Total Verificados
 							</Typography>
 							<Typography variant="h4">
-								{verificationConfigs.reduce((acc, c) => acc + (c.documents_verified || 0), 0).toLocaleString()}
+								{verificationConfigs.reduce((acc, c) => acc + (c.documents_verified || 0), 0).toLocaleString("es-AR")}
 							</Typography>
 						</CardContent>
 					</Card>
@@ -1223,7 +1223,7 @@ const MEVWorkers = () => {
 										Total Búsquedas
 									</Typography>
 									<Typography variant="body2" fontWeight={500}>
-										{verificationConfigs[0].statistics.total_searches?.toLocaleString() || 0}
+										{verificationConfigs[0].statistics.total_searches?.toLocaleString("es-AR") || 0}
 									</Typography>
 								</Stack>
 							</Grid>
@@ -1233,7 +1233,7 @@ const MEVWorkers = () => {
 										Búsquedas Exitosas
 									</Typography>
 									<Typography variant="body2" fontWeight={500} color="success.main">
-										{verificationConfigs[0].statistics.successful_searches?.toLocaleString() || 0}
+										{verificationConfigs[0].statistics.successful_searches?.toLocaleString("es-AR") || 0}
 									</Typography>
 								</Stack>
 							</Grid>
@@ -1243,7 +1243,7 @@ const MEVWorkers = () => {
 										Búsquedas Fallidas
 									</Typography>
 									<Typography variant="body2" fontWeight={500} color="error.main">
-										{verificationConfigs[0].statistics.failed_searches?.toLocaleString() || 0}
+										{verificationConfigs[0].statistics.failed_searches?.toLocaleString("es-AR") || 0}
 									</Typography>
 								</Stack>
 							</Grid>
@@ -1253,7 +1253,7 @@ const MEVWorkers = () => {
 										Uptime (horas)
 									</Typography>
 									<Typography variant="body2" fontWeight={500}>
-										{verificationConfigs[0].statistics.uptime_hours?.toLocaleString() || 0}
+										{verificationConfigs[0].statistics.uptime_hours?.toLocaleString("es-AR") || 0}
 									</Typography>
 								</Stack>
 							</Grid>
@@ -1591,17 +1591,17 @@ const MEVWorkers = () => {
 															</TableCell>
 															<TableCell align="center">
 																<Typography variant="body2" fontWeight={500}>
-																	{config.documents_verified?.toLocaleString() || 0}
+																	{config.documents_verified?.toLocaleString("es-AR") || 0}
 																</Typography>
 															</TableCell>
 															<TableCell align="center">
 																<Typography variant="body2" color="success.main" fontWeight={500}>
-																	{config.documents_valid?.toLocaleString() || 0}
+																	{config.documents_valid?.toLocaleString("es-AR") || 0}
 																</Typography>
 															</TableCell>
 															<TableCell align="center">
 																<Typography variant="body2" color="warning.main" fontWeight={500}>
-																	{config.documents_not_found?.toLocaleString() || 0}
+																	{config.documents_not_found?.toLocaleString("es-AR") || 0}
 																</Typography>
 															</TableCell>
 															<TableCell align="center">
@@ -1882,17 +1882,17 @@ const MEVWorkers = () => {
 														</TableCell>
 														<TableCell align="center">
 															<Typography variant="body2" fontWeight={500}>
-																{config.documents_verified?.toLocaleString() || 0}
+																{config.documents_verified?.toLocaleString("es-AR") || 0}
 															</Typography>
 														</TableCell>
 														<TableCell align="center">
 															<Typography variant="body2" color="success.main" fontWeight={500}>
-																{config.documents_valid?.toLocaleString() || 0}
+																{config.documents_valid?.toLocaleString("es-AR") || 0}
 															</Typography>
 														</TableCell>
 														<TableCell align="center">
 															<Typography variant="body2" color="warning.main" fontWeight={500}>
-																{config.documents_not_found?.toLocaleString() || 0}
+																{config.documents_not_found?.toLocaleString("es-AR") || 0}
 															</Typography>
 														</TableCell>
 														<TableCell align="center">
@@ -1903,11 +1903,11 @@ const MEVWorkers = () => {
 															/>
 														</TableCell>
 														<TableCell align="center">
-															<Typography variant="body2">{config.statistics?.total_searches?.toLocaleString() || 0}</Typography>
+															<Typography variant="body2">{config.statistics?.total_searches?.toLocaleString("es-AR") || 0}</Typography>
 														</TableCell>
 														<TableCell align="center">
 															<Typography variant="body2" color="success.main">
-																{config.statistics?.successful_searches?.toLocaleString() || 0}
+																{config.statistics?.successful_searches?.toLocaleString("es-AR") || 0}
 															</Typography>
 														</TableCell>
 														<TableCell align="center">
@@ -1969,7 +1969,7 @@ const MEVWorkers = () => {
 								Total Actualizados
 							</Typography>
 							<Typography variant="h4">
-								{updateConfigs.reduce((acc, c) => acc + (c.documents_verified || 0), 0).toLocaleString()}
+								{updateConfigs.reduce((acc, c) => acc + (c.documents_verified || 0), 0).toLocaleString("es-AR")}
 							</Typography>
 						</CardContent>
 					</Card>

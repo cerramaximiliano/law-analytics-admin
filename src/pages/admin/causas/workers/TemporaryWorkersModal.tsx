@@ -55,7 +55,7 @@ const TemporaryWorkersModal: React.FC<TemporaryWorkersModalProps> = ({ open, onC
 	const formatDate = (date: any): string => {
 		if (!date) return "N/A";
 		const dateStr = typeof date === "string" ? date : date.$date;
-		return new Date(dateStr).toLocaleString("es-ES");
+		return new Date(dateStr).toLocaleString("es-AR");
 	};
 
 	// Cargar workers temporarios
@@ -287,7 +287,7 @@ const TemporaryWorkersModal: React.FC<TemporaryWorkersModalProps> = ({ open, onC
 												</TableCell>
 												<TableCell align="center">
 													<Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>
-														{config.range_start?.toLocaleString()} - {config.range_end?.toLocaleString()}
+														{config.range_start?.toLocaleString("es-AR")} - {config.range_end?.toLocaleString("es-AR")}
 													</Typography>
 												</TableCell>
 												<TableCell align="center">

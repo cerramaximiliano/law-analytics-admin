@@ -464,7 +464,7 @@ const EmailLogsPage = () => {
 									</Box>
 									<Box>
 										<Typography variant="h5" fontWeight={600} sx={{ fontVariantNumeric: "tabular-nums" }}>
-											{stat.value.toLocaleString()}
+											{stat.value.toLocaleString("es-AR")}
 										</Typography>
 										<Typography variant="caption" color="textSecondary" sx={{ letterSpacing: 0.3 }}>
 											{stat.label}

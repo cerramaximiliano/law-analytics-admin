@@ -29,6 +29,7 @@ import CronConfigService, { CronConfig, UpdateCronConfigParams } from "api/cronC
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/es";
+import { formatDateTime } from "utils/format";
 
 dayjs.extend(relativeTime);
 dayjs.locale("es");
@@ -294,7 +295,7 @@ const CronConfigPage = () => {
 									</Typography>
 									<Stack direction="row" spacing={0.5} alignItems="center">
 										<Clock size={14} />
-										<Typography variant="body2">{config?.nextRun ? dayjs(config.nextRun).format("DD/MM/YYYY HH:mm") : "-"}</Typography>
+										<Typography variant="body2">{config?.nextRun ? formatDateTime(config.nextRun) : "-"}</Typography>
 									</Stack>
 									{config?.nextRun && (
 										<Typography variant="caption" color="text.secondary">
@@ -503,7 +504,7 @@ const CronConfigPage = () => {
 										{config.history.slice(0, 10).map((entry, index) => (
 											<TableRow key={index}>
 												<TableCell>
-													<Typography variant="caption">{dayjs(entry.updatedAt).format("DD/MM/YYYY HH:mm")}</Typography>
+													<Typography variant="caption">{formatDateTime(entry.updatedAt)}</Typography>
 												</TableCell>
 												<TableCell>
 													<Typography variant="caption">{entry.updatedBy}</Typography>

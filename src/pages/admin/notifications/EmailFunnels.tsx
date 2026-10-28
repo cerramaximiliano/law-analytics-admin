@@ -38,6 +38,7 @@ import CopyButton from "components/CopyButton";
 import EmailFunnelsService, { EmailFunnelSource, FunnelTopUser } from "api/emailFunnels";
 import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER, PRO_TEAL } from "themes/dashboardTokens";
 import dayjs from "utils/dayjs-config";
+import { formatDate } from "utils/format";
 
 const SOURCE_COLOR: Record<string, string> = {
 	movimientos: BRAND_BLUE,
@@ -85,10 +86,10 @@ const Etapa = ({
 			</Typography>
 			<Stack direction="row" spacing={0.75} alignItems="baseline">
 				<Typography variant="h5" sx={{ fontWeight: 700, color, fontVariantNumeric: "tabular-nums" }}>
-					{valor.toLocaleString()}
+					{valor.toLocaleString("es-AR")}
 				</Typography>
 				{p && (
-					<Tooltip title={`sobre ${base.toLocaleString()} ${baseLabel}`}>
+					<Tooltip title={`sobre ${base.toLocaleString("es-AR")} ${baseLabel}`}>
 						<Typography variant="caption" color="text.secondary">
 							{p}
 						</Typography>
@@ -125,7 +126,7 @@ const SourceCard = ({ f, activa, onClick }: { f: EmailFunnelSource; activa: bool
 			<Stack direction="row" spacing={2}>
 				<Box>
 					<Typography variant="h4" sx={{ fontWeight: 700, color, fontVariantNumeric: "tabular-nums" }}>
-						{f.correos.toLocaleString()}
+						{f.correos.toLocaleString("es-AR")}
 					</Typography>
 					<Typography variant="caption" color="text.secondary">
 						correos · {f.usuarios} usuarios
@@ -192,7 +193,7 @@ const EmailFunnels: React.FC = () => {
 			...Object.keys(f.series.conversiones),
 		]);
 		return [...dias].sort().map((d) => ({
-			dia: dayjs(d).format("DD/MM"),
+			dia: formatDate(d, "dayMonth"),
 			correos: f.series.correos[d] || 0,
 			aperturas: f.series.aperturas[d] || 0,
 			clicks: f.series.clicks[d] || 0,
@@ -287,7 +288,7 @@ const EmailFunnels: React.FC = () => {
 										<Stack direction="row" spacing={1} alignItems="center">
 											{f.ultimo && (
 												<Typography variant="caption" color="text.secondary">
-													último envío {dayjs(f.ultimo).format("DD/MM/YY HH:mm")}
+													último envío {formatDate(f.ultimo, "dateTimeShort")}
 												</Typography>
 											)}
 											{f.detalle && (
