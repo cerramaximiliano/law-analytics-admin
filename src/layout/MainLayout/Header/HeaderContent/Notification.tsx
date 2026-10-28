@@ -332,7 +332,8 @@ const NotificationPage = () => {
 			my: 1.5,
 			border: `1px solid ${theme.palette.divider}`,
 			borderRadius: 1, // Añadir bordes redondeados para un aspecto más moderno
-			transition: "all 0.2s ease-in-out", // Transición para todos los cambios de estilo
+			transition:
+				"background-color 0.2s ease-in-out, border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out, opacity 0.2s ease-in-out",
 			position: "relative", // Necesario para efectos de ripple personalizado
 			overflow: "hidden", // Contener el efecto ripple
 
@@ -473,7 +474,7 @@ const NotificationPage = () => {
 													}}
 													disabled={processingIds.has(notification._id)}
 													sx={{
-														transition: "all 0.15s ease-in-out",
+														transition: "background-color 0.15s ease-in-out, transform 0.15s ease-in-out",
 														"&:hover": {
 															bgcolor: alpha(theme.palette.success.light, 0.3),
 														},
@@ -493,7 +494,7 @@ const NotificationPage = () => {
 												}}
 												disabled={processingIds.has(notification._id)}
 												sx={{
-													transition: "all 0.15s ease-in-out",
+													transition: "background-color 0.15s ease-in-out, transform 0.15s ease-in-out",
 													opacity: notification.read ? 0.6 : 1,
 													"&:hover": {
 														transform: "rotate(90deg)",
@@ -588,7 +589,7 @@ const NotificationPage = () => {
 													}}
 													disabled={processingIds.has(notification._id)}
 													sx={{
-														transition: "all 0.15s ease-in-out",
+														transition: "background-color 0.15s ease-in-out, transform 0.15s ease-in-out",
 														"&:hover": {
 															bgcolor: alpha(theme.palette.success.light, 0.3),
 														},
@@ -608,7 +609,7 @@ const NotificationPage = () => {
 												}}
 												disabled={processingIds.has(notification._id)}
 												sx={{
-													transition: "all 0.15s ease-in-out",
+													transition: "background-color 0.15s ease-in-out, transform 0.15s ease-in-out",
 													opacity: notification.read ? 0.6 : 1,
 													"&:hover": {
 														transform: "rotate(90deg)",
@@ -704,7 +705,7 @@ const NotificationPage = () => {
 			<IconButton
 				color="secondary"
 				variant="light"
-				aria-label="open notifications"
+				aria-label="Abrir notificaciones"
 				ref={anchorRef}
 				aria-controls={open ? "notifications-popup" : undefined}
 				aria-haspopup="true"

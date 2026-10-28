@@ -52,7 +52,7 @@ const Localization = () => {
 			<IconButton
 				color="secondary"
 				variant="light"
-				aria-label="open localization"
+				aria-label="Cambiar idioma"
 				ref={anchorRef}
 				aria-controls={open ? "localization-grow" : undefined}
 				aria-haspopup="true"

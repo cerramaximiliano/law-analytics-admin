@@ -27,6 +27,8 @@ export default function Dialog(theme: Theme) {
 				},
 				paper: {
 					backgroundImage: "none",
+					// Al llegar al final del scroll del modal, la página de atrás no se mueve.
+					overscrollBehavior: "contain",
 					[theme.breakpoints.down("sm")]: {
 						margin: 8,
 						width: "calc(100% - 16px)",

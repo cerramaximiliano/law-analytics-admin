@@ -43,7 +43,7 @@ const Header = () => {
 		<Toolbar sx={{ px: { xs: 2, sm: 4.5, lg: 8 } }}>
 			{!isHorizontal ? (
 				<IconButton
-					aria-label="open drawer"
+					aria-label={drawerOpen ? "Cerrar menú lateral" : "Abrir menú lateral"}
 					onClick={() => dispatch(openDrawer(!drawerOpen))}
 					edge="start"
 					color="secondary"

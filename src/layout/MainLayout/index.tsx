@@ -35,10 +35,38 @@ const MainLayout = () => {
 
 	return (
 		<Box sx={{ display: "flex", width: "100%" }}>
+			{/* Primer elemento enfocable: con teclado evita recorrer todo el header y el menú */}
+			<Box
+				component="a"
+				href="#main-content"
+				sx={{
+					position: "fixed",
+					top: 8,
+					left: 8,
+					zIndex: theme.zIndex.tooltip + 1,
+					px: 2,
+					py: 1,
+					borderRadius: 1,
+					bgcolor: "background.paper",
+					color: "primary.main",
+					boxShadow: theme.customShadows.z1,
+					fontWeight: 600,
+					textDecoration: "none",
+					transform: "translateY(-150%)",
+					"&:focus-visible": { transform: "none", outline: `2px solid ${theme.palette.primary.main}` },
+				}}
+			>
+				Saltar al contenido
+			</Box>
 			<Header />
 			<Drawer />
 
-			<Box component="main" sx={{ width: `calc(100% - ${DRAWER_WIDTH}px)`, flexGrow: 1, p: { xs: 2, md: 3 } }}>
+			<Box
+				component="main"
+				id="main-content"
+				tabIndex={-1}
+				sx={{ width: `calc(100% - ${DRAWER_WIDTH}px)`, flexGrow: 1, p: { xs: 2, md: 3 }, "&:focus": { outline: "none" } }}
+			>
 				<Toolbar />
 				<Container
 					maxWidth={container ? "xl" : false}

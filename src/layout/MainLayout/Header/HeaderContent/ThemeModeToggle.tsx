@@ -29,7 +29,7 @@ const ThemeModeToggle = () => {
 	return (
 		<Box sx={{ flexShrink: 0, ml: 0.5 }}>
 			<IconButton
-				aria-label="toggle dark mode"
+				aria-label={isDark ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
 				onClick={handleToggle}
 				color="secondary"
 				variant="light"
