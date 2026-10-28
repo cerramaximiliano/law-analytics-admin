@@ -1,10 +1,26 @@
 import { useCallback, useEffect, useState } from "react";
-import { Alert, Box, Button, CircularProgress, InputAdornment, TextField, Typography } from "@mui/material";
+import {
+	Alert,
+	Box,
+	Button,
+	CircularProgress,
+	FormControlLabel,
+	InputAdornment,
+	Switch,
+	TextField,
+	ToggleButton,
+	ToggleButtonGroup,
+	Typography,
+} from "@mui/material";
 import { SearchNormal1 } from "iconsax-react";
 
 import MainCard from "components/MainCard";
 import MarketingQuickNav from "components/admin/marketing/MarketingQuickNav";
-import { JourneyLookup, JourneyMapData, JourneyService } from "api/journey";
+import { JourneyLookup, JourneyMapData, JourneyPeriod, JourneyService } from "api/journey";
+import JourneyCampaignDetail from "sections/admin/marketing/journey/JourneyCampaignDetail";
+import JourneyHistorial from "sections/admin/marketing/journey/JourneyHistorial";
+import JourneyStrategy from "sections/admin/marketing/journey/JourneyStrategy";
+import { PERIOD_LABEL } from "sections/admin/marketing/journey/journeyFormat";
 import JourneyMap, { JourneyNodeId } from "sections/admin/marketing/journey/JourneyMap";
 import JourneyNodePanel from "sections/admin/marketing/journey/JourneyNodePanel";
 import JourneyLookupCard from "sections/admin/marketing/journey/JourneyLookupCard";
@@ -25,6 +41,10 @@ const Recorrido = () => {
 	const [lookup, setLookup] = useState<JourneyLookup | null>(null);
 	const [lookupLoading, setLookupLoading] = useState<boolean>(false);
 	const [lookupMsg, setLookupMsg] = useState<string | null>(null);
+	const [period, setPeriod] = useState<JourneyPeriod>("30");
+	const [showHistorial, setShowHistorial] = useState<boolean>(false);
+	const [showStrategy, setShowStrategy] = useState<boolean>(false);
+	const [openCampaign, setOpenCampaign] = useState<string | null>(null);
 
 	const load = useCallback(async (refresh = false) => {
 		try {
@@ -98,6 +118,21 @@ const Recorrido = () => {
 				<Button size="small" variant="outlined" onClick={() => load(true)} disabled={refreshing}>
 					{refreshing ? "Recalculando…" : "Recalcular mapa"}
 				</Button>
+				<ToggleButtonGroup size="small" exclusive value={period} onChange={(_, v) => v && setPeriod(v)}>
+					{(["7", "30", "90", "all"] as JourneyPeriod[]).map((p) => (
+						<ToggleButton key={p} value={p}>
+							{PERIOD_LABEL[p]}
+						</ToggleButton>
+					))}
+				</ToggleButtonGroup>
+				<FormControlLabel
+					control={<Switch size="small" checked={showHistorial} onChange={(e) => setShowHistorial(e.target.checked)} />}
+					label="Historial"
+				/>
+				<FormControlLabel
+					control={<Switch size="small" checked={showStrategy} onChange={(e) => setShowStrategy(e.target.checked)} />}
+					label="Estrategia"
+				/>
 				{data && (
 					<Typography variant="caption" color="textSecondary">
 						Calculado {new Date(data.generatedAt).toLocaleString("es-AR")} · se actualiza cada hora. Solo conteos en el mapa.
@@ -160,6 +195,7 @@ const Recorrido = () => {
 									data={data}
 									node={selected}
 									highlightCampaigns={lookup?.highlight.campaignIds || []}
+									onOpenCampaign={setOpenCampaign}
 									onLookup={(id) => {
 										setQuery(id);
 										runLookup(id);
@@ -172,6 +208,29 @@ const Recorrido = () => {
 								</Typography>
 							)}
 						</Box>
+
+						{data.v2Error && (
+							<Alert severity="warning" sx={{ mt: 2 }}>
+								No se pudieron calcular las estadísticas por paso: {data.v2Error}
+							</Alert>
+						)}
+						{data.v2 && showStrategy && (
+							<Box sx={{ mt: 2 }}>
+								<JourneyStrategy v2={data.v2} period={period} onOpen={setOpenCampaign} />
+							</Box>
+						)}
+						{data.v2 && showHistorial && (
+							<Box sx={{ mt: 2 }}>
+								<JourneyHistorial v2={data.v2} onOpen={setOpenCampaign} />
+							</Box>
+						)}
+						{data.v2 && openCampaign && (
+							<JourneyCampaignDetail
+								campaign={data.v2.campaigns[openCampaign] ?? null}
+								period={period}
+								onClose={() => setOpenCampaign(null)}
+							/>
+						)}
 					</>
 				)
 			)}

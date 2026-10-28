@@ -39,7 +39,99 @@ export interface JourneyBucket {
 	count: number;
 }
 
+export type JourneyPeriod = "7" | "30" | "90" | "all";
+
+export interface JourneyMetrics {
+	sent: number;
+	delivered: number;
+	opens: number;
+	clicks: number;
+	hardBounce: number;
+	softBounce: number;
+	bounced: number;
+	complained: number;
+	unsubscribed: number;
+}
+
+export interface JourneyStepContent {
+	seq: number;
+	name: string;
+	subject: string;
+	template: string | null;
+	delay: string;
+	filter: string[];
+	ab: Array<{ name: string; subject: string | null; template: string | null; weight: number }> | null;
+}
+
+export interface JourneyConversionSummary {
+	total: number;
+	byStep: Record<string, number>;
+	medianDays: number | null;
+	medianDaysByStep: Record<string, number | null>;
+	bestStep: number | null;
+	withClick: number;
+}
+
+export interface JourneyCampaignStats {
+	name: string;
+	status: string;
+	tipo: string;
+	subtipo: string | null;
+	createdAt: string | null;
+	completedAt: string | null;
+	archivedAt: string | null;
+	firstSend: string | null;
+	lastSend: string | null;
+	totalSent: number;
+	durationDays: number | null;
+	enrollment: {
+		everEnrolled: number;
+		active: number;
+		paused: number;
+		completedByReason: Record<string, number>;
+		removedByReason: Record<string, number>;
+		skippedByReason: Record<string, number>;
+	} | null;
+	activeByStep: Record<string, number>;
+	steps: JourneyStepContent[];
+	periods: Partial<
+		Record<
+			JourneyPeriod,
+			{ steps: Record<string, JourneyMetrics>; variants: Record<string, Record<string, JourneyMetrics>>; total: JourneyMetrics }
+		>
+	>;
+	conversions: Record<JourneyPeriod, JourneyConversionSummary>;
+	paid: Record<JourneyPeriod, { total: number; byStep: Record<string, number> }>;
+	health: Array<{ kind: string; texto: string; lastSentAt: string }>;
+	coordinator: Partial<Record<JourneyPeriod, { deferred: number; wouldDefer: number; skipped: number }>>;
+}
+
+export interface JourneyCategoryTotals {
+	everEnrolled: number;
+	active: number;
+	completedByReason: Record<string, number>;
+	removedByReason: Record<string, number>;
+	skippedByReason: Record<string, number>;
+	activeByStep: Record<string, number>;
+	converted: number;
+	paid: number;
+	contactsEver: number;
+}
+
+export interface JourneyV2 {
+	periods: JourneyPeriod[];
+	campaigns: Record<string, JourneyCampaignStats>;
+	categories: Record<string, JourneyCategoryTotals | null>;
+	cohorts: Record<string, Array<{ week: string; entered: number; converted: number }>>;
+	usersAging: Record<
+		string,
+		{ n: number; avgDays: number; lt7: number; d7_30: number; d30_60: number; gt60: number; gt30: number; gt90: number }
+	>;
+}
+
 export interface JourneyMapData {
+	v2?: JourneyV2 | null;
+	v2Error?: string | null;
 	generatedAt: string;
 	tookMs: number;
 	cached?: boolean;

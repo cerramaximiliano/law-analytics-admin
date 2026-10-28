@@ -17,6 +17,7 @@ import {
 } from "@mui/material";
 import { JourneyBucket, JourneyCampaign, JourneyLeakItem, JourneyMapData, JourneyReason, JourneyService } from "api/journey";
 import { JourneyNodeId } from "./JourneyMap";
+import JourneyAccumulated from "./JourneyAccumulated";
 
 const fmt = (n: number | undefined | null) => (n === undefined || n === null ? "—" : n.toLocaleString("es-AR"));
 const STATUS_LABEL: Record<string, string> = { active: "Activa", paused: "Pausada", draft: "Borrador" };
@@ -25,8 +26,23 @@ const KIND_BG: Record<string, string> = { ok: "#86efac", info: "#e2e8f0", intenc
 const KIND_LABEL: Record<string, string> = { ok: "OK", info: "Pendiente", intencional: "A propósito", fuga: "Fuga" };
 const DARK = "#1f1f1f"; // chips claros/ocres siempre con letra oscura
 
-const CampaignCard: React.FC<{ c: JourneyCampaign; highlighted: boolean }> = ({ c, highlighted }) => (
-	<Paper variant="outlined" sx={{ p: 1.5, mb: 1, borderColor: highlighted ? "#F59E0B" : undefined, borderWidth: highlighted ? 2 : 1 }}>
+const CampaignCard: React.FC<{ c: JourneyCampaign; highlighted: boolean; onOpen?: (id: string) => void }> = ({
+	c,
+	highlighted,
+	onOpen,
+}) => (
+	<Paper
+		variant="outlined"
+		onClick={onOpen ? () => onOpen(c._id) : undefined}
+		sx={{
+			p: 1.5,
+			mb: 1,
+			borderColor: highlighted ? "#F59E0B" : undefined,
+			borderWidth: highlighted ? 2 : 1,
+			cursor: onOpen ? "pointer" : "default",
+			"&:hover": onOpen ? { bgcolor: "action.hover" } : undefined,
+		}}
+	>
 		<Box sx={{ display: "flex", gap: 1, alignItems: "center", flexWrap: "wrap" }}>
 			<Typography variant="subtitle2">{c.name}</Typography>
 			<Chip size="small" label={STATUS_LABEL[c.status]} sx={{ bgcolor: STATUS_BG[c.status], color: DARK, fontWeight: 600 }} />
@@ -158,6 +174,7 @@ interface Props {
 	node: JourneyNodeId;
 	highlightCampaigns: string[];
 	onLookup: (contactId: string) => void;
+	onOpenCampaign: (id: string) => void;
 }
 
 const NODE_TITLES: Record<string, string> = {
@@ -174,7 +191,7 @@ const NODE_TITLES: Record<string, string> = {
 	contenido: "Carril paralelo: contenido y servicio",
 };
 
-const JourneyNodePanel: React.FC<Props> = ({ data, node, highlightCampaigns, onLookup }) => {
+const JourneyNodePanel: React.FC<Props> = ({ data, node, highlightCampaigns, onLookup, onOpenCampaign }) => {
 	const [bucket, setBucket] = useState<string | null>(null);
 	useEffect(() => setBucket(null), [node]);
 
@@ -249,6 +266,18 @@ const JourneyNodePanel: React.FC<Props> = ({ data, node, highlightCampaigns, onL
 					{note}
 				</Alert>
 			)}
+			{data.v2 && node !== "registro" && node !== "cliente" && node !== "activo_free" && (
+				<>
+					<JourneyAccumulated
+						title={NODE_TITLES[node] || node}
+						totals={data.v2.categories[node === "contenido" ? "contenido" : node] ?? null}
+						convertedLabel={node === "captacion" ? "Convertidos (altas en la app)" : "Convertidos a plan pago"}
+					/>
+					{node === "contenido" && (
+						<JourneyAccumulated title="Avisos de servicio" totals={data.v2.categories.servicio ?? null} convertedLabel="Convertidos" />
+					)}
+				</>
+			)}
 			{buckets.length > 0 && (
 				<Box sx={{ mb: 2 }}>
 					<Typography variant="subtitle2" gutterBottom>
@@ -288,7 +317,12 @@ const JourneyNodePanel: React.FC<Props> = ({ data, node, highlightCampaigns, onL
 						Campañas ({campaigns.length})
 					</Typography>
 					{campaigns.map((c) => (
-						<CampaignCard key={c._id} c={c} highlighted={highlightCampaigns.includes(c._id)} />
+						<CampaignCard
+							key={c._id}
+							c={c}
+							highlighted={highlightCampaigns.includes(c._id)}
+							onOpen={data.v2 ? onOpenCampaign : undefined}
+						/>
 					))}
 				</Box>
 			)}
