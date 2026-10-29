@@ -184,6 +184,8 @@ export interface SearchUsersParams {
 	isActive?: boolean | string;
 	/** "true" | "false": vinculación con Google Calendar. */
 	googleCalendar?: string;
+	/** "true" (con la app) | "push" (con avisos activos) | "false" (sin la app). */
+	mobileApp?: string;
 	page?: number;
 	limit?: number;
 	sortBy?: string;
@@ -269,6 +271,7 @@ export const searchUsers = (params: SearchUsersParams) => {
 				queryParams.append("isActive", String(params.isActive));
 			}
 			if (params.googleCalendar) queryParams.append("googleCalendar", params.googleCalendar);
+			if (params.mobileApp) queryParams.append("mobileApp", params.mobileApp);
 			if (params.page) queryParams.append("page", String(params.page));
 			if (params.limit) queryParams.append("limit", String(params.limit));
 			if (params.sortBy) queryParams.append("sortBy", params.sortBy);

@@ -56,7 +56,21 @@ import UserStatsService, { SyncFolderStatsResult, SyncFolderStatsBulkResult } fr
 import { useSnackbar } from "notistack";
 
 // assets
-import { Eye, Trash, Edit, Add, Chart, SearchNormal1, CloseCircle, Refresh, Copy, CopySuccess, Calculator, Calendar } from "iconsax-react";
+import {
+	Eye,
+	Trash,
+	Edit,
+	Add,
+	Chart,
+	SearchNormal1,
+	CloseCircle,
+	Refresh,
+	Copy,
+	CopySuccess,
+	Calculator,
+	Calendar,
+	Mobile,
+} from "iconsax-react";
 import { useTabIndexParam } from "hooks/useTabParam";
 
 // Slugs del tab en la URL; el orden fija el índice de cada <Tab>.
@@ -116,6 +130,20 @@ const headCells = [
 		sortable: true,
 	},
 	{
+		id: "googleCalendar",
+		numeric: false,
+		label: "Calendar",
+		align: "left",
+		sortable: false,
+	},
+	{
+		id: "mobileApp",
+		numeric: false,
+		label: "App",
+		align: "left",
+		sortable: false,
+	},
+	{
 		id: "lastLogin",
 		numeric: false,
 		label: "Último Login",
@@ -128,13 +156,6 @@ const headCells = [
 		label: "Creado",
 		align: "left",
 		sortable: true,
-	},
-	{
-		id: "googleCalendar",
-		numeric: false,
-		label: "Calendar",
-		align: "left",
-		sortable: false,
 	},
 	{
 		id: "actions",
@@ -184,6 +205,7 @@ const UsersList = () => {
 	// Filtro de Google Calendar: client-side, porque el listado ya trae todos
 	// los usuarios y el backend no expone este campo como parámetro de búsqueda.
 	const [gcalFilter, setGcalFilter] = useState<string>("");
+	const [appFilter, setAppFilter] = useState<string>("");
 
 	// Estado para el diálogo de detalles de usuario
 	const [viewDialogOpen, setViewDialogOpen] = useState(false);
@@ -277,6 +299,7 @@ const UsersList = () => {
 				role: roleFilter || undefined,
 				isActive: statusFilter || undefined,
 				googleCalendar: gcalFilter || undefined,
+				mobileApp: appFilter || undefined,
 				sortBy: orderBy,
 				sortOrder: order,
 				page: page + 1, // el backend cuenta desde 1
@@ -286,7 +309,7 @@ const UsersList = () => {
 
 			dispatch(searchUsers(params));
 		},
-		[searchText, roleFilter, statusFilter, gcalFilter, orderBy, order, page, rowsPerPage],
+		[searchText, roleFilter, statusFilter, gcalFilter, appFilter, orderBy, order, page, rowsPerPage],
 	);
 
 	// Handlers para filtros
@@ -324,6 +347,7 @@ const UsersList = () => {
 		setRoleFilter("");
 		setStatusFilter("");
 		setGcalFilter("");
+		setAppFilter("");
 		setOrderBy("createdAt");
 		setOrder("desc");
 		setPage(0);
@@ -599,6 +623,51 @@ const UsersList = () => {
 	// Google Calendar vinculado: chip verde con la cuenta de Google y la última
 	// sincronización en el tooltip. Sin vincular no dibuja nada (la mayoría de
 	// los usuarios no lo tiene y un chip gris por fila sería puro ruido).
+	// App móvil: "Avisos" si tiene teléfono registrado para push (se le pueden mandar notificaciones),
+	// "Instalada" si solo inició sesión desde la app. El detalle va en el tooltip.
+	const renderAppChip = (user: User) => {
+		const app = user.mobileApp;
+		if (!app?.hasApp) {
+			return (
+				<Typography variant="caption" color="text.secondary">
+					—
+				</Typography>
+			);
+		}
+		const fmt = (d: string | null) => (d ? new Date(d).toLocaleString("es-AR") : "—");
+		const color = app.pushEnabled ? LIVE_GREEN : BRAND_BLUE;
+		const platforms = app.platforms.map((p) => (p === "ios" ? "iPhone" : p === "android" ? "Android" : p)).join(" · ");
+		const title = [
+			platforms,
+			`Versión: ${app.appVersion || "—"}`,
+			app.pushEnabled
+				? `Avisos activos en ${app.devices} ${app.devices === 1 ? "teléfono" : "teléfonos"}`
+				: "Sin avisos (no registró el teléfono)",
+			`Inicios de sesión en la app: ${app.appLogins}`,
+			`Primera vez: ${fmt(app.firstSeenAt)}`,
+			`Última actividad: ${fmt(app.lastSeenAt)}`,
+		].join(" · ");
+		return (
+			<Tooltip arrow title={title}>
+				<Chip
+					size="small"
+					icon={<Mobile size={13} />}
+					label={app.pushEnabled ? "Avisos" : "Instalada"}
+					sx={{
+						height: 22,
+						fontSize: "0.65rem",
+						fontWeight: 600,
+						cursor: "help",
+						color,
+						bgcolor: alpha(color, 0.12),
+						border: `1px solid ${alpha(color, 0.32)}`,
+						"& .MuiChip-icon": { color },
+					}}
+				/>
+			</Tooltip>
+		);
+	};
+
 	const renderCalendarChip = (user: User) => {
 		if (user.googleCalendarConnected !== true) {
 			return (
@@ -824,13 +893,35 @@ const UsersList = () => {
 							</Select>
 						</FormControl>
 
+						{/* Filtro por app móvil (server-side): universo para push y promociones */}
+						<FormControl size="small" sx={{ minWidth: { sm: 170 }, width: { xs: "100%", sm: "auto" } }}>
+							<InputLabel id="app-filter-label">App móvil</InputLabel>
+							<Select
+								labelId="app-filter-label"
+								value={appFilter}
+								label="App móvil"
+								onChange={(e) => {
+									setAppFilter(e.target.value);
+									setPage(0);
+									fetchUsers({ mobileApp: e.target.value || undefined, page: 1 });
+								}}
+							>
+								<MenuItem value="">
+									<em>Todos</em>
+								</MenuItem>
+								<MenuItem value="true">Con la app</MenuItem>
+								<MenuItem value="push">Con avisos activos</MenuItem>
+								<MenuItem value="false">Sin la app</MenuItem>
+							</Select>
+						</FormControl>
+
 						{/* Botón de buscar */}
 						<Button variant="contained" size="small" onClick={handleSearchSubmit} sx={{ height: 40 }}>
 							Buscar
 						</Button>
 
 						{/* Botón limpiar filtros */}
-						{(searchText || roleFilter || statusFilter || gcalFilter) && (
+						{(searchText || roleFilter || statusFilter || gcalFilter || appFilter) && (
 							<Button variant="outlined" size="small" onClick={handleClearFilters} color="secondary" sx={{ height: 40 }}>
 								Limpiar filtros
 							</Button>
@@ -987,7 +1078,12 @@ const UsersList = () => {
 															>
 																{(user._id || user.id || "").slice(0, 8)}…
 															</Typography>
-															<IconButton aria-label="Copiar ID" size="small" onClick={() => handleCopyId(user._id || user.id || "")} sx={{ p: 0.25 }}>
+															<IconButton
+																aria-label="Copiar ID"
+																size="small"
+																onClick={() => handleCopyId(user._id || user.id || "")}
+																sx={{ p: 0.25 }}
+															>
 																{copiedId === (user._id || user.id) ? <CopySuccess size={14} color="green" /> : <Copy size={14} />}
 															</IconButton>
 														</Stack>
@@ -1035,6 +1131,7 @@ const UsersList = () => {
 												</TableCell>
 												<TableCell>{renderAuthProviderChip(user.authProvider, user.authProviderUpdatedAt)}</TableCell>
 												<TableCell>{renderCalendarChip(user)}</TableCell>
+												<TableCell>{renderAppChip(user)}</TableCell>
 												<TableCell>{user.lastLogin ? new Date(user.lastLogin).toLocaleString("es-AR") : "Nunca"}</TableCell>
 												<TableCell>{user.createdAt ? new Date(user.createdAt).toLocaleDateString("es-AR") : "-"}</TableCell>
 												<TableCell align="center">

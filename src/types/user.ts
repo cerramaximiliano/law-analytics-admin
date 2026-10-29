@@ -253,6 +253,8 @@ export interface User {
 	googleCalendarConnected?: boolean;
 	googleCalendarEmail?: string | null;
 	googleCalendarLastSync?: string | null;
+	/** App móvil (la-mobile): null = sin rastro de la app. Lo arma GET /api/users/search. */
+	mobileApp?: MobileAppSummary | null;
 	subscription?: Subscription;
 	subscriptions?: SubscriptionsByEnvironment;
 	stripeHistory?: StripeHistoryByEnvironment;
@@ -282,4 +284,18 @@ export interface UserResponse {
 	subscriptions?: SubscriptionsByEnvironment;
 	stripeHistory?: StripeHistoryByEnvironment;
 	lightData?: UserLightData;
+}
+
+/** Resumen de la app móvil de un usuario (hub services/mobileAppUsersService.js). */
+export interface MobileAppSummary {
+	hasApp: boolean;
+	/** Tiene al menos un teléfono registrado para notificaciones push. */
+	pushEnabled: boolean;
+	devices: number;
+	platforms: string[];
+	appVersion: string | null;
+	firstSeenAt: string | null;
+	lastSeenAt: string | null;
+	/** Inicios de sesión desde la app (últimos 180 días). */
+	appLogins: number;
 }
