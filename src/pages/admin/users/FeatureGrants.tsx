@@ -39,8 +39,12 @@ import TableSkeleton from "components/UI/TableSkeleton";
 import ConfirmDialog from "components/admin/ConfirmDialog";
 import {
 	deleteUserGrant,
+	EXTRA_FOLDERS_BLOCK,
+	EXTRA_FOLDERS_FEATURE,
+	EXTRA_FOLDERS_MAX_BLOCKS,
 	getUserGrants,
 	isGrantActive,
+	isGrantExpired,
 	listUsersWithGrants,
 	setUserGrant,
 	type FeatureGrantValue,
@@ -52,6 +56,21 @@ import {
 import { Add, Edit, Trash, SearchNormal1, CloseCircle, Refresh } from "iconsax-react";
 
 const DEFAULT_FEATURE: KnownFeature = "mcp_access";
+
+/** Campos propios del grant extra_folders a partir del valor guardado. */
+function extraFoldersFields(value: FeatureGrantValue | undefined): { blocks: string; expiresAt: string } {
+	const meta = typeof value === "object" && value ? value : null;
+	return {
+		blocks: meta?.blocks ? String(meta.blocks) : "1",
+		expiresAt: meta?.expiresAt ? new Date(meta.expiresAt).toISOString().slice(0, 10) : "",
+	};
+}
+
+/** Error de validación de los bloques, o null si son válidos. */
+function blocksError(raw: string): string | null {
+	const n = Number(raw);
+	return Number.isInteger(n) && n >= 1 && n <= EXTRA_FOLDERS_MAX_BLOCKS ? null : `Entero entre 1 y ${EXTRA_FOLDERS_MAX_BLOCKS}`;
+}
 
 const FeatureGrantsPage: React.FC = () => {
 	const { enqueueSnackbar } = useSnackbar();
@@ -73,7 +92,12 @@ const FeatureGrantsPage: React.FC = () => {
 		feature: KnownFeature;
 		granted: boolean;
 		reason: string;
+		/** Solo extra_folders. */
+		blocks: string;
+		expiresAt: string;
 	} | null>(null);
+	/** Grants actuales del user en edición, para recargar los campos al cambiar de feature. */
+	const [editingGrants, setEditingGrants] = useState<UserWithGrants["featureGrants"]>({});
 	const [submitting, setSubmitting] = useState(false);
 
 	// Modal de "agregar grant a un user nuevo"
@@ -110,7 +134,8 @@ const FeatureGrantsPage: React.FC = () => {
 		const value = user.featureGrants?.[feature];
 		const granted = isGrantActive(value);
 		const reason = typeof value === "object" && value ? value.reason || "" : "";
-		setEditing({ userId: user._id, email: user.email, name: user.name, feature, granted, reason });
+		setEditingGrants(user.featureGrants || {});
+		setEditing({ userId: user._id, email: user.email, name: user.name, feature, granted, reason, ...extraFoldersFields(value) });
 	};
 
 	const handleAddNew = () => {
@@ -124,6 +149,7 @@ const FeatureGrantsPage: React.FC = () => {
 		try {
 			const data = await getUserGrants(lookupUserId.trim());
 			setAddOpen(false);
+			setEditingGrants(data.featureGrants || {});
 			setEditing({
 				userId: data.userId,
 				email: data.email,
@@ -131,6 +157,7 @@ const FeatureGrantsPage: React.FC = () => {
 				feature: DEFAULT_FEATURE,
 				granted: isGrantActive(data.featureGrants?.[DEFAULT_FEATURE]),
 				reason: "",
+				...extraFoldersFields(data.featureGrants?.[DEFAULT_FEATURE]),
 			});
 		} catch (err: any) {
 			enqueueSnackbar(err.response?.data?.message || "User no encontrado", { variant: "error" });
@@ -141,11 +168,18 @@ const FeatureGrantsPage: React.FC = () => {
 
 	const handleSave = async () => {
 		if (!editing) return;
+		const withBlocks = editing.feature === EXTRA_FOLDERS_FEATURE && editing.granted;
+		if (withBlocks && blocksError(editing.blocks)) return;
 		setSubmitting(true);
 		try {
 			await setUserGrant(editing.userId, editing.feature, {
 				granted: editing.granted,
 				reason: editing.reason.trim() || null,
+				...(withBlocks && {
+					blocks: Number(editing.blocks),
+					// Vence al final del día elegido (hora de Argentina).
+					expiresAt: editing.expiresAt ? `${editing.expiresAt}T23:59:59-03:00` : null,
+				}),
 			});
 			enqueueSnackbar(`Grant ${editing.granted ? "activado" : "revocado"} OK`, { variant: "success" });
 			setEditing(null);
@@ -172,8 +206,10 @@ const FeatureGrantsPage: React.FC = () => {
 	};
 
 	const renderGrantChip = (value: FeatureGrantValue | undefined) => {
-		const active = isGrantActive(value);
+		const expired = isGrantExpired(value);
+		const active = isGrantActive(value) && !expired;
 		const meta = typeof value === "object" && value ? value : null;
+		const label = expired ? "Vencido" : active ? (meta?.blocks ? `Activo · ${meta.blocks} bl.` : "Activo") : "Revocado";
 		const tooltip = meta
 			? `${meta.reason ? `Reason: ${meta.reason}` : ""}${
 					meta.grantedAt ? ` · Granted: ${new Date(meta.grantedAt).toLocaleDateString("es-AR")}` : ""
@@ -183,12 +219,7 @@ const FeatureGrantsPage: React.FC = () => {
 			: "Revocado";
 		return (
 			<Tooltip title={tooltip || (active ? "Activo" : "Revocado")} arrow>
-				<Chip
-					size="small"
-					label={active ? "Activo" : "Revocado"}
-					color={active ? "success" : "default"}
-					variant={active ? "filled" : "outlined"}
-				/>
+				<Chip size="small" label={label} color={active ? "success" : "default"} variant={active ? "filled" : "outlined"} />
 			</Tooltip>
 		);
 	};
@@ -401,7 +432,11 @@ const FeatureGrantsPage: React.FC = () => {
 								<Select
 									label="Feature"
 									value={editing.feature}
-									onChange={(e) => setEditing({ ...editing, feature: e.target.value as KnownFeature })}
+									onChange={(e) => {
+										const feature = e.target.value as KnownFeature;
+										const value = editingGrants?.[feature];
+										setEditing({ ...editing, feature, granted: isGrantActive(value), ...extraFoldersFields(value) });
+									}}
 								>
 									{knownFeatures.map((f) => (
 										<MenuItem key={f} value={f}>
@@ -420,6 +455,36 @@ const FeatureGrantsPage: React.FC = () => {
 								}
 								label={editing.granted ? "Granteado (bypass de plan/addon activo)" : "Revocado"}
 							/>
+							{editing.feature === EXTRA_FOLDERS_FEATURE && editing.granted && (
+								<Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+									<TextField
+										label="Bloques"
+										type="number"
+										size="small"
+										value={editing.blocks}
+										onChange={(e) => setEditing({ ...editing, blocks: e.target.value })}
+										inputProps={{ min: 1, max: EXTRA_FOLDERS_MAX_BLOCKS, step: 1 }}
+										error={!!blocksError(editing.blocks)}
+										helperText={
+											blocksError(editing.blocks) ||
+											`+${(Number(editing.blocks) * EXTRA_FOLDERS_BLOCK.folders).toLocaleString("es-AR")} causas y +${
+												Number(editing.blocks) * EXTRA_FOLDERS_BLOCK.storage
+											} MB, sumados a lo comprado`
+										}
+										sx={{ flex: 1 }}
+									/>
+									<TextField
+										label="Vence (opcional)"
+										type="date"
+										size="small"
+										value={editing.expiresAt}
+										onChange={(e) => setEditing({ ...editing, expiresAt: e.target.value })}
+										InputLabelProps={{ shrink: true }}
+										helperText="Vacío = sin vencimiento"
+										sx={{ flex: 1 }}
+									/>
+								</Stack>
+							)}
 							<TextField
 								label="Motivo (opcional)"
 								value={editing.reason}
@@ -436,7 +501,12 @@ const FeatureGrantsPage: React.FC = () => {
 					<Button onClick={() => setEditing(null)} disabled={submitting}>
 						Cancelar
 					</Button>
-					<Button variant="contained" onClick={handleSave} disabled={submitting} startIcon={submitting && <CircularProgress size={16} />}>
+					<Button
+						variant="contained"
+						onClick={handleSave}
+						disabled={submitting || (editing?.feature === EXTRA_FOLDERS_FEATURE && editing.granted && !!blocksError(editing.blocks))}
+						startIcon={submitting && <CircularProgress size={16} />}
+					>
 						Guardar
 					</Button>
 				</DialogActions>
