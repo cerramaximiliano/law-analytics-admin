@@ -158,6 +158,25 @@ export interface JourneyCheck {
 	details?: Array<Record<string, unknown>>;
 }
 
+// Flujo con caja propia en el mapa, definido por el bloque `journey` de sus campañas (la-marketing-service
+// services/journeyFlows.js). Los conteos que el flujo no declara vienen en null.
+export interface JourneyFlujo {
+	id: string;
+	nodo: string;
+	despuesDe: string;
+	descripcion: string | null;
+	color: string | null;
+	campos: { marca: string | null; desde: string | null; listo: string | null };
+	campaigns: Array<{ _id: string; name: string; status: string; subtipo: string | null; active: number }>;
+	enCampania: number;
+	marcados: number | null;
+	byPeriod: Record<string, number> | null;
+	esperando: number | null;
+	terminaron: number | null;
+	registrados: number | null;
+	fromCampaign: Array<{ campaignId: string | null; name: string; n: number }>;
+}
+
 export interface JourneyMapData {
 	checks?: JourneyCheck[];
 	checksAlerts?: number;
@@ -167,6 +186,7 @@ export interface JourneyMapData {
 	tookMs: number;
 	cached?: boolean;
 	flows: { windowDays: number; altas: { total: number; bySubtipo: Record<string, number> }; entradas: Record<string, number> };
+	flujos?: JourneyFlujo[];
 	captacion: {
 		campaigns: Record<string, JourneyCampaign[]>;
 		activeCampaigns: number;
