@@ -199,7 +199,7 @@ export class CausasPjnService {
 		isPrivate?: boolean | "null";
 		source?: "app" | "pjn-login" | "cache" | string;
 		soloElegibles?: boolean;
-		estadoActualizacion?: "todos" | "actualizados" | "pendientes" | "errores";
+		estadoActualizacion?: "todos" | "actualizados" | "pendientes" | "en_espera" | "errores";
 		sortBy?: "number" | "year" | "caratula" | "juzgado" | "objeto" | "movimientosCount" | "lastUpdate" | "fechaUltimoMovimiento";
 		sortOrder?: "asc" | "desc";
 	}): Promise<CausasResponse> {
