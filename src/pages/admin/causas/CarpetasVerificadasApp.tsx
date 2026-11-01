@@ -882,7 +882,7 @@ const CarpetasVerificadasApp = () => {
 													sx={{ height: 24, "& .MuiChip-label": { px: 1 } }}
 												/>
 											</Tooltip>
-											<Tooltip title="Causas pendientes de actualizar hoy">
+											<Tooltip title="Causas vencidas según su prioridad, a la espera del worker">
 												<Chip
 													icon={<Timer size={14} />}
 													label={
@@ -898,6 +898,21 @@ const CarpetasVerificadasApp = () => {
 													sx={{ height: 24, "& .MuiChip-label": { px: 1 } }}
 												/>
 											</Tooltip>
+											{(eligibilityStats.waitingArchivo ?? 0) > 0 && (
+												<Tooltip
+													title={`Carpetas archivadas o sin carpeta: se actualizan cada ${
+														eligibilityStats.archivoThresholdHours ?? 24
+													} h y todavía no les toca`}
+												>
+													<Chip
+														icon={<Archive size={14} />}
+														label={(eligibilityStats.waitingArchivo ?? 0).toLocaleString("es-AR")}
+														size="small"
+														variant="outlined"
+														sx={{ height: 24, "& .MuiChip-label": { px: 1 } }}
+													/>
+												</Tooltip>
+											)}
 											<Tooltip title="Causas con errores (en cooldown)">
 												<Chip
 													icon={<CloseSquare size={14} variant="Bold" />}
@@ -945,8 +960,9 @@ const CarpetasVerificadasApp = () => {
 								disabled={!soloElegibles}
 							>
 								<MenuItem value="todos">Todos los estados</MenuItem>
-								<MenuItem value="actualizados">✅ Actualizados ({"<"}12h)</MenuItem>
-								<MenuItem value="pendientes">⚠️ Pendientes ({">"}12h)</MenuItem>
+								<MenuItem value="actualizados">✅ Actualizados hoy</MenuItem>
+								<MenuItem value="pendientes">⚠️ Pendientes (vencidas)</MenuItem>
+								<MenuItem value="en_espera">⏳ En espera de ciclo (archivadas o sin carpeta)</MenuItem>
 								<MenuItem value="errores">🔴 Con errores/cooldown</MenuItem>
 							</Select>
 						</FormControl>
