@@ -75,7 +75,7 @@ const Recorrido = () => {
 			if (!res) setLookupMsg("No se encontró un contacto con ese dato.");
 			else {
 				const stage = res.highlight.stage;
-				if (NODE_STAGES.has(stage) || stage.startsWith("conversion:")) setSelected(stage as JourneyNodeId);
+				if (NODE_STAGES.has(stage) || stage.startsWith("conversion:") || stage.startsWith("flujo:")) setSelected(stage as JourneyNodeId);
 			}
 		} catch (err: any) {
 			setLookupMsg(err?.response?.data?.error || err?.message || "Error al buscar");
@@ -85,7 +85,11 @@ const Recorrido = () => {
 	}, []);
 
 	const highlight: JourneyNodeId[] =
-		lookup && lookup.highlight.stage && (NODE_STAGES.has(lookup.highlight.stage) || lookup.highlight.stage.startsWith("conversion:"))
+		lookup &&
+		lookup.highlight.stage &&
+		(NODE_STAGES.has(lookup.highlight.stage) ||
+			lookup.highlight.stage.startsWith("conversion:") ||
+			lookup.highlight.stage.startsWith("flujo:"))
 			? [lookup.highlight.stage as JourneyNodeId]
 			: [];
 

@@ -17,6 +17,7 @@ import {
 } from "@mui/material";
 import { JourneyBucket, JourneyCampaign, JourneyLeakItem, JourneyMapData, JourneyReason, JourneyService } from "api/journey";
 import { JourneyNodeId } from "./JourneyMap";
+import { flujosDe } from "./journeyFlujos";
 import JourneyAccumulated from "./JourneyAccumulated";
 import { clickableProps } from "utils/a11y";
 import EnrollmentPausedChip from "./EnrollmentPausedChip";
@@ -192,7 +193,6 @@ const NODE_TITLES: Record<string, string> = {
 	cliente: "Cliente",
 	inactivo: "Inactivo · Reconquista",
 	activo_free: "Activo free",
-	interesados: "Interesados",
 	contenido: "Carril paralelo: contenido y servicio",
 };
 
@@ -201,6 +201,14 @@ const JourneyNodePanel: React.FC<Props> = ({ data, node, highlightCampaigns, onL
 	useEffect(() => setBucket(null), [node]);
 
 	const stages = data.stages;
+	const flujo = node.startsWith("flujo:") ? flujosDe(data).find((f) => f.id === node) ?? null : null;
+	const todasLasCampanias: JourneyCampaign[] = [
+		...Object.values(data.captacion.campaigns).flat(),
+		...(stages.onboarding.campaigns || []),
+		...Object.values(stages.conversion.sub).flatMap((x) => x.campaigns || []),
+		...(stages.inactivo.campaigns || []),
+		...(stages.activo_free.campaigns || []),
+	];
 	let campaigns: JourneyCampaign[] = [];
 	let buckets: Array<Pick<JourneyBucket, "key" | "label" | "kind" | "description" | "count">> = [];
 	let reasons: { items?: JourneyReason[]; sampleSize?: number } | null = null;
@@ -279,21 +287,21 @@ const JourneyNodePanel: React.FC<Props> = ({ data, node, highlightCampaigns, onL
 		} else {
 			note = `${fmt(s.total)} usuarios free con más de 30 días de alta y sin conversión: sin campaña por diseño.`;
 		}
-	} else if (node === "interesados") {
-		campaigns = data.captacion.campaigns.interesados || [];
-		note =
-			"Hicieron clic en una captación activa hace más de 72 h y no se registraron: salen de su variante y entran a esta campaña. Mientras no esté activa, esperan en el bucket «Interesados» de captación.";
+	} else if (flujo) {
+		const ids = new Set(flujo.campaigns.map((c) => c._id));
+		campaigns = todasLasCampanias.filter((c) => ids.has(c._id));
+		note = flujo.descripcion;
 	}
 
 	const nodeTitle =
 		NODE_TITLES[node] ||
+		flujo?.nodo ||
 		(node.startsWith("conversion:") ? `Conversión · ${stages.conversion.sub[node.slice(11)]?.label || node.slice(11)}` : node);
 
 	return (
 		<Paper variant="outlined" sx={{ p: 2 }}>
 			<Typography variant="h6" gutterBottom>
-				{NODE_TITLES[node] ||
-					(node.startsWith("conversion:") ? `Conversión · ${data.stages.conversion.sub[node.slice(11)]?.label || node.slice(11)}` : node)}
+				{nodeTitle}
 			</Typography>
 			{note && (
 				<Alert severity="info" sx={{ mb: 2 }}>
@@ -313,33 +321,56 @@ const JourneyNodePanel: React.FC<Props> = ({ data, node, highlightCampaigns, onL
 					)}
 				</>
 			)}
-			{node === "interesados" && data.captacion.interesados && (
+			{flujo && (
 				<Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
-					<Typography variant="subtitle2" gutterBottom>
-						Marcados como interesados
-					</Typography>
 					<Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 1 }}>
-						{(["7", "30", "90", "all"] as const).map((p) => (
-							<Chip
-								key={p}
-								size="small"
-								variant="outlined"
-								label={`${p === "all" ? "Todos" : `${p} días`}: ${fmt(data.captacion.interesados?.byPeriod?.[p])}`}
-							/>
-						))}
+						{flujo.marcados !== null && <Chip size="small" label={`Marcados: ${fmt(flujo.marcados)}`} />}
+						{flujo.campos.listo && flujo.esperando !== null && <Chip size="small" label={`Listos para entrar: ${fmt(flujo.esperando)}`} />}
+						<Chip size="small" color="primary" variant="outlined" label={`En campaña: ${fmt(flujo.enCampania)}`} />
+						{flujo.terminaron !== null && <Chip size="small" variant="outlined" label={`Terminaron: ${fmt(flujo.terminaron)}`} />}
+						{flujo.registrados !== null && (
+							<Chip size="small" color="success" variant="outlined" label={`Se registraron: ${fmt(flujo.registrados)}`} />
+						)}
 					</Box>
-					<Typography variant="caption" fontWeight={700}>
-						De qué variante venían (última inscripción removida)
+					{flujo.byPeriod && Object.keys(flujo.byPeriod).length > 1 && (
+						<>
+							<Typography variant="caption" fontWeight={700} display="block">
+								Marcados por período
+							</Typography>
+							<Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 1 }}>
+								{(["7", "30", "90", "all"] as const)
+									.filter((p) => flujo.byPeriod?.[p] !== undefined)
+									.map((p) => (
+										<Chip
+											key={p}
+											size="small"
+											variant="outlined"
+											label={`${p === "all" ? "Todos" : `${p} días`}: ${fmt(flujo.byPeriod?.[p])}`}
+										/>
+									))}
+							</Box>
+						</>
+					)}
+					{flujo.fromCampaign.length > 0 && (
+						<>
+							<Typography variant="caption" fontWeight={700}>
+								De qué campaña vienen (última inscripción terminada o removida)
+							</Typography>
+							<ul style={{ margin: "2px 0 0 18px", padding: 0 }}>
+								{flujo.fromCampaign.map((v) => (
+									<li key={v.campaignId || "sin"}>
+										<Typography variant="caption">
+											{v.name.replace("Captación PJN · ", "")} — <strong>{fmt(v.n)}</strong>
+										</Typography>
+									</li>
+								))}
+							</ul>
+						</>
+					)}
+					<Typography variant="caption" color="textSecondary" display="block" sx={{ mt: 1 }}>
+						Marca: {flujo.campos.marca || "—"}
+						{flujo.campos.listo ? ` · entra con: ${flujo.campos.listo}` : ""}
 					</Typography>
-					<ul style={{ margin: "2px 0 0 18px", padding: 0 }}>
-						{data.captacion.interesados.fromVariant.map((v) => (
-							<li key={v.campaignId || "sin"}>
-								<Typography variant="caption">
-									{v.name.replace("Captación PJN · ", "")} — <strong>{fmt(v.n)}</strong>
-								</Typography>
-							</li>
-						))}
-					</ul>
 				</Paper>
 			)}
 			{node === "captacion" && data.captacion.control && data.captacion.control.control.n > 0 && (

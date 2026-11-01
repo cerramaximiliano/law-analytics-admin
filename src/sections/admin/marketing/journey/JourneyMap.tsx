@@ -1,9 +1,12 @@
 import React from "react";
 import { useTheme } from "@mui/material";
 import { JourneyMapData } from "api/journey";
+import { estadoCampanias, flujosDe } from "./journeyFlujos";
 
 // Mapa del recorrido en SVG: captación → registro → onboarding → conversión → cliente, con inactivo, activo_free y el
 // carril de contenido/servicio al costado. Cada nodo es clickeable; los nodos del contacto buscado se resaltan.
+// Los flujos con caja propia (Interesados, Estudios…) salen de data.flujos (bloque `journey` de cada campaña): los de
+// captación se apilan entre Captación y Onboarding; los de otras etapas, en una fila al pie.
 
 export type JourneyNodeId =
 	| "captacion"
@@ -11,7 +14,7 @@ export type JourneyNodeId =
 	| "onboarding"
 	| "conversion"
 	| `conversion:${string}`
-	| "interesados"
+	| `flujo:${string}`
 	| "cliente"
 	| "inactivo"
 	| "activo_free"
@@ -27,6 +30,8 @@ interface Props {
 
 const fmt = (n: number | undefined | null) => (n === undefined || n === null ? "—" : n.toLocaleString("es-AR"));
 const sum = (list: Array<{ active: number }> = []) => list.reduce((a, c) => a + c.active, 0);
+// Caracteres que entran en una línea de 11,5 px según el ancho de la caja (44 en las cajas anchas, como antes)
+const maxChars = (w: number) => (w >= 250 ? 44 : Math.floor(w / 6.2));
 
 const JourneyMap: React.FC<Props> = ({ data, selected, highlight, period = "30", onSelect }) => {
 	const theme = useTheme();
@@ -44,25 +49,35 @@ const JourneyMap: React.FC<Props> = ({ data, selected, highlight, period = "30",
 	const sub = stages.conversion.sub;
 	const entradas = data.flows.entradas;
 
+	// Flujos con caja propia
+	const flujos = flujosDe(data);
+	const flujosCap = flujos.filter((f) => f.despuesDe === "captacion");
+	const flujosOtros = flujos.filter((f) => f.despuesDe !== "captacion");
+	const FLUJO_Y = 215;
+	const FLUJO_GAP = 12;
+	const flujoLines = (f: (typeof flujos)[number]) =>
+		[
+			f.marcados !== null ? `${fmt(f.marcados)} marcados` : null,
+			f.byPeriod?.[period] !== undefined ? `${fmt(f.byPeriod[period])} en el período` : null,
+			f.esperando !== null && f.campos.listo ? `${fmt(f.esperando)} listos para entrar` : null,
+			`Campaña ${estadoCampanias(f)}`,
+			`${fmt(f.enCampania)} activos${f.terminaron ? ` · ${fmt(f.terminaron)} terminaron` : ""}`,
+		].filter((l): l is string => !!l);
+	// Alto de cada caja según sus líneas (título 26 px + 17 px por línea) y posición apilada
+	const altoFlujo = (f: (typeof flujos)[number]) => 40 + flujoLines(f).length * 17;
+	const yFlujoCap: number[] = [];
+	flujosCap.reduce((y, f) => {
+		yFlujoCap.push(y);
+		return y + altoFlujo(f) + FLUJO_GAP;
+	}, FLUJO_Y);
+
 	// Subetapas de conversión dinámicas: la caja crece con la cantidad y baja la fila inferior
 	const subKeys = stages.conversion.subOrder ?? Object.keys(sub);
 	const convH = Math.max(290, 76 + subKeys.length * 74);
-	const bottomY = Math.max(330, 10 + convH + 30);
-
-	const inter = data.captacion.interesados;
-	const interCampaigns = (data.captacion.campaigns.interesados ?? []) as Array<{ status: string; active: number }>;
-	const interStatus = interCampaigns.length
-		? interCampaigns.some((c) => c.status === "active")
-			? "activa"
-			: interCampaigns[0].status === "draft"
-			? "en borrador"
-			: "pausada"
-		: "sin campaña";
-	const interesadosLines = [
-		`${fmt(inter?.marked)} marcados`,
-		`${fmt(inter?.byPeriod?.[period])} en el período`,
-		`Campaña ${interStatus} · ${fmt(interCampaigns.reduce((a, c) => a + c.active, 0))} activos`,
-	];
+	const flujosCapBottom = flujosCap.length ? yFlujoCap[yFlujoCap.length - 1] + altoFlujo(flujosCap[flujosCap.length - 1]) : 0;
+	const altoOtros = Math.max(0, ...flujosOtros.map(altoFlujo));
+	const bottomY = Math.max(330, 10 + convH + 30, flujosCapBottom + 20);
+	const otrosY = bottomY + 110;
 	const af = stages.activo_free;
 	const afCampaigns = af.campaigns ?? [];
 	const afLines = afCampaigns.length
@@ -115,16 +130,26 @@ const JourneyMap: React.FC<Props> = ({ data, selected, highlight, period = "30",
 			title: "Registro",
 			lines: [`${fmt(data.flows.altas.total)} altas`, `últimos ${data.flows.windowDays} días`],
 		},
-		{
-			id: "interesados",
-			x: 300,
-			y: 215,
-			w: 170,
-			h: 95,
-			color: "#0EA5E9",
-			title: "Interesados",
-			lines: interesadosLines,
-		},
+		...flujosCap.map((f, i) => ({
+			id: f.id as JourneyNodeId,
+			x: 290,
+			y: yFlujoCap[i],
+			w: 175,
+			h: altoFlujo(f),
+			color: f.color || "#0EA5E9",
+			title: f.nodo,
+			lines: flujoLines(f),
+		})),
+		...flujosOtros.map((f, i) => ({
+			id: f.id as JourneyNodeId,
+			x: 10 + i * 270,
+			y: otrosY,
+			w: 255,
+			h: altoFlujo(f),
+			color: f.color || "#0EA5E9",
+			title: `${f.nodo} (desde ${f.despuesDe})`,
+			lines: flujoLines(f),
+		})),
 		{
 			id: "onboarding",
 			x: 470,
@@ -231,7 +256,7 @@ const JourneyMap: React.FC<Props> = ({ data, selected, highlight, period = "30",
 
 	return (
 		<svg
-			viewBox={`0 0 1190 ${bottomY + 110}`}
+			viewBox={`0 0 1190 ${(flujosOtros.length ? otrosY + altoOtros : bottomY + 90) + 20}`}
 			width="100%"
 			role="img"
 			aria-label="Mapa del recorrido del contacto"
@@ -244,8 +269,12 @@ const JourneyMap: React.FC<Props> = ({ data, selected, highlight, period = "30",
 			</defs>
 
 			{arrow(260, 155, 305, 155, data.flows.altas.total ? fmt(data.flows.altas.total) : undefined)}
-			{arrow(260, 245, 300, 255, inter ? fmt(inter.byPeriod?.[period]) : undefined)}
-			{arrow(385, 215, 370, 190)}
+			{flujosCap.map((f, i) => {
+				const y = yFlujoCap[i] + 40;
+				const n = f.byPeriod?.[period] ?? f.esperando ?? f.marcados;
+				return arrow(260, Math.min(y, 265), 290, y, n !== null && n !== undefined ? fmt(n) : undefined);
+			})}
+			{flujosCap.length > 0 && arrow(385, FLUJO_Y, 370, 190)}
 			{arrow(425, 155, 470, 115, entradas.onboarding !== undefined ? fmt(entradas.onboarding) : undefined)}
 			{arrow(680, 115, 725, 115, entradas.conversion !== undefined ? fmt(entradas.conversion) : undefined)}
 			{arrow(980, 155, 1030, 155, entradas.cliente !== undefined ? fmt(entradas.cliente) : undefined)}
@@ -281,7 +310,7 @@ const JourneyMap: React.FC<Props> = ({ data, selected, highlight, period = "30",
 						)}
 						{n.lines.map((line, i) => (
 							<text key={i} x={n.x + 10} y={n.y + 44 + i * 17} fontSize={11.5} fill={i === 0 ? text : muted}>
-								{line.length > 44 ? `${line.slice(0, 43)}…` : line}
+								{line.length > maxChars(n.w) ? `${line.slice(0, maxChars(n.w) - 1)}…` : line}
 							</text>
 						))}
 						{n.id === "conversion" &&
