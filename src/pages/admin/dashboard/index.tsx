@@ -2071,6 +2071,16 @@ const AdminDashboard = () => {
 											</Box>
 										</Grid>
 									</Grid>
+									{(eligibilityStats.waitingArchivo ?? 0) > 0 && (
+										<Typography
+											variant="caption"
+											color="text.secondary"
+											sx={{ display: "block", textAlign: "center", mt: 1.5, fontSize: { xs: "0.65rem", sm: "0.72rem" } }}
+										>
+											+{(eligibilityStats.waitingArchivo ?? 0).toLocaleString("es-AR")} de carpetas archivadas o sin carpeta · se actualizan cada{" "}
+											{eligibilityStats.archivoThresholdHours ?? 24} h
+										</Typography>
+									)}
 								</>
 							) : (
 								<Typography variant="body2" color="text.secondary" textAlign="center">

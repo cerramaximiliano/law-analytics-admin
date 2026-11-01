@@ -93,6 +93,11 @@ export interface EligibilityStats {
 	updatedToday: number;
 	pendingToday?: number;
 	coveragePercent?: number;
+	// No actualizadas hoy que todavía no vencieron (esperan su ciclo; no cuentan como pendientes)
+	waitingCycle?: number;
+	// Subconjunto de prioridad "archivo": carpetas todas archivadas o sin carpeta
+	waitingArchivo?: number;
+	archivoThresholdHours?: number | null;
 }
 
 export interface EligibilityStatsResponse {
