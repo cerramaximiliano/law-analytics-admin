@@ -56,6 +56,7 @@ import {
 	Lock,
 	Warning2,
 	DocumentText,
+	Gallery,
 } from "iconsax-react";
 import { enqueueSnackbar } from "notistack";
 import MainCard from "components/MainCard";
@@ -77,6 +78,7 @@ import pjnCredentialsService, {
 	PjnAdminAlert,
 } from "api/pjnCredentials";
 import BandejaEvidenciaDialog from "./BandejaEvidenciaDialog";
+import ListadoHistorialDialog from "./ListadoHistorialDialog";
 import EmailLogsService from "api/emailLogs";
 import { EmailLog } from "types/email-log";
 
@@ -489,6 +491,7 @@ const CredencialesPJN = () => {
 	const [errorHistoryDetail, setErrorHistoryDetail] = useState<CredentialErrorEntry[]>([]);
 	const [errorHistoryLoading, setErrorHistoryLoading] = useState(false);
 	const [bandejaDialog, setBandejaDialog] = useState<PjnCredential | null>(null);
+	const [listadoDialog, setListadoDialog] = useState<PjnCredential | null>(null);
 	// Lightbox para ver el screenshot en grande
 	const [screenshotLightbox, setScreenshotLightbox] = useState<{ url: string; label: string } | null>(null);
 
@@ -1739,6 +1742,11 @@ const CredencialesPJN = () => {
 														<Tooltip title="Bandeja: estado y evidencia de fallos">
 															<IconButton size="small" onClick={() => setBandejaDialog(cred)} color="default">
 																<DocumentText size={18} />
+															</IconButton>
+														</Tooltip>
+														<Tooltip title="Listado Mis Causas: historial de 60 días con capturas de cada página">
+															<IconButton size="small" onClick={() => setListadoDialog(cred)} color="default">
+																<Gallery size={18} />
 															</IconButton>
 														</Tooltip>
 														<Tooltip title="Actualizar contraseña">
@@ -3022,6 +3030,13 @@ const CredencialesPJN = () => {
 				credentialId={bandejaDialog?._id || null}
 				title={bandejaDialog ? `${bandejaDialog.userName} — ${bandejaDialog.cuilMasked}` : undefined}
 				onClose={() => setBandejaDialog(null)}
+			/>
+
+			<ListadoHistorialDialog
+				open={!!listadoDialog}
+				credentialId={listadoDialog?._id || null}
+				title={listadoDialog ? `${listadoDialog.userName} — ${listadoDialog.cuilMasked}` : undefined}
+				onClose={() => setListadoDialog(null)}
 			/>
 
 			{/* Lightbox del screenshot de error de login */}
