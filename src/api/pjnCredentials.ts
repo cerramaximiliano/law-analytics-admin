@@ -853,6 +853,45 @@ export interface BandejaState {
 	errorHistory: BandejaErrorEntry[];
 }
 
+// Historial del listado "Mis Causas" (mis-causas-syncs + pjn-credentials.listingHistory)
+export interface ListingHistoryEntry {
+	syncId: string;
+	status: string | null;
+	triggeredBy: string | null;
+	startedAt: string | null;
+	completedAt: string | null;
+	total: number | null;
+	previousTotal: number | null;
+	delta: number | null;
+	scanComplete: boolean | null;
+	pagesScanned: number | null;
+	listRemovedMarked: number;
+	listRemovedCleared: number;
+	causasNuevas: number;
+	error: string | null;
+	/** true si el worker guardó el diff por clave de esta corrida (desde 2026-11-02). */
+	hasDiff: boolean;
+	added: string[];
+	removed: string[];
+	/** true si pasaron >60 días: el tag ttl de S3 ya borró las capturas. */
+	expired: boolean;
+	screenshots: Array<{
+		page: number | null;
+		s3Key: string | null;
+		bytes: number | null;
+		screenshotUrl: string | null; // pre-firmada (~5 min); null si expiró
+	}>;
+}
+
+export interface ListingHistoryResponse {
+	credentialsId: string;
+	userId: string;
+	currentTotal: number | null;
+	currentKeys: string[];
+	days: number;
+	entries: ListingHistoryEntry[];
+}
+
 export interface CausaScreenshotEntry {
 	_id: string;
 	type: "search_error" | "scraping_error" | "degraded_scrape" | "processing_exception" | "login_error" | "empty_movements" | "other";
@@ -936,6 +975,15 @@ class PjnCredentialsService {
 	/** Estado del worker de bandeja + evidencia de fallos (null si no hay doc). */
 	async getBandejaState(id: string): Promise<{ success: boolean; data: BandejaState | null }> {
 		const response = await adminAxios.get(`/api/pjn-credentials/${id}/bandeja`);
+		return response.data;
+	}
+
+	/**
+	 * Historial del listado "Mis Causas" de la credencial: corridas del sync diario
+	 * con total, altas/bajas por clave y capturas firmadas (~5 min) de cada página.
+	 */
+	async getListingHistory(id: string, days = 60): Promise<{ success: boolean; data: ListingHistoryResponse; count: number }> {
+		const response = await adminAxios.get(`/api/pjn-credentials/${id}/listing-history`, { params: { days } });
 		return response.data;
 	}
 
