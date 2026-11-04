@@ -98,7 +98,7 @@ const PaymentFailures = Loadable(lazyWithRetry(() => import("pages/usuarios/Paym
 // Server Status
 const ServerStatus = Loadable(lazyWithRetry(() => import("pages/admin/server-status")));
 
-// Infrastructure (Cloud Failover)
+// Infrastructure
 const InfrastructurePage = Loadable(lazyWithRetry(() => import("pages/admin/infrastructure")));
 const DatabasesMonitoring = Loadable(lazyWithRetry(() => import("pages/admin/infrastructure/databases")));
 const PortalesStatus = Loadable(lazyWithRetry(() => import("pages/admin/infrastructure/portales")));

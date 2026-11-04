@@ -24,7 +24,7 @@ export interface InfraProcess {
 	github: { name: string; url: string } | null;
 	role: string | null;
 	cron: boolean;
-	/** "failover" marca al proceso que sostiene el respaldo en la nube. */
+	/** Marca libre del inventario para destacar un proceso en el panel (hoy sin uso). */
 	highlight: string | null;
 	catalogued: boolean;
 	/** Proceso ajeno al ecosistema que comparte el box. */
@@ -69,7 +69,6 @@ export interface InfraBox {
 	/** Base de datos que hospeda, para el link cruzado con /admin/infrastructure/databases. */
 	databaseKey?: string | null;
 	retired?: boolean;
-	hasFailover?: boolean;
 	sshHint?: string;
 	systemdUnits?: { name: string; role: string }[];
 	notes?: string[];
