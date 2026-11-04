@@ -4,10 +4,8 @@
 // cada uno tiene su propia pestaña con los procesos que corren adentro. Hacer
 // click en un box de la general abre su pestaña.
 //
-// Antes esta vista era solo el panel de failover del scraping, y todavía decía
-// que el box respaldado era worker_02 — el servicio se había mudado a
-// worker-cloud-02 en agosto de 2026. Ese panel ahora vive dentro de la pestaña
-// del box que efectivamente lo corre, que es donde se lo busca.
+// Antes esta vista era solo el panel de failover del scraping; ese respaldo en
+// ECS Fargate se retiró el 2026-11-04 y el panel con él.
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
 	Alert,
@@ -34,7 +32,6 @@ import RepoSearch, { RepoHit } from "./RepoSearch";
 import InfrastructureService, { InfraBox, getBoxState } from "api/infrastructure";
 import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER, headerBorder, navHoverBg } from "themes/dashboardTokens";
 import BoxPanel from "./BoxPanel";
-import FailoverPanel from "./FailoverPanel";
 import { clickableProps } from "utils/a11y";
 
 // Orden de los grupos en la vista general: primero lo que sostiene al resto.
@@ -116,9 +113,6 @@ const BoxCard = ({ box, onOpen }: { box: InfraBox; onOpen: () => void }) => {
 								<Chip size="small" label="crítico" color="error" variant="outlined" sx={{ height: 18, fontSize: "0.62rem" }} />
 							)}
 							{box.retired && <Chip size="small" label="sin producción" variant="outlined" sx={{ height: 18, fontSize: "0.62rem" }} />}
-							{box.hasFailover && (
-								<Chip size="small" label="respaldo" color="warning" variant="outlined" sx={{ height: 18, fontSize: "0.62rem" }} />
-							)}
 						</Stack>
 						<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.25 }}>
 							{box.role}
@@ -402,9 +396,7 @@ const InfrastructurePage = () => {
 								)}
 							</Stack>
 						) : (
-							<BoxPanel key={current.key} box={current} highlightRepo={repoResaltado} onClearHighlight={limpiarRepo}>
-								{current.hasFailover ? <FailoverPanel /> : null}
-							</BoxPanel>
+							<BoxPanel key={current.key} box={current} highlightRepo={repoResaltado} onClearHighlight={limpiarRepo} />
 						)}
 					</Box>
 				</Paper>

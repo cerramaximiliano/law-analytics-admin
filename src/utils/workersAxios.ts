@@ -11,7 +11,7 @@ import { requestQueueService } from "services/requestQueueService";
 //     y datos que viven en el Mongo local de worker_01 (replicados en rs0).
 //   - VITE_PJN_API_URL (raíz de api.lawanalytics.app): pjn/api contra ATLAS —
 //     datos que viven en Atlas (config del scraping-manager de pjn-mis-causas,
-//     failover, causas-update-config). ⚠️ Estos NO existen en el rs0: apuntarlos
+//     causas-update-config). ⚠️ Estos NO existen en el rs0: apuntarlos
 //     al /cache da 500 "Config no encontrada" (incidente Integraciones 2026-08-17).
 const createWorkersAxiosInstance = (baseURL: string): AxiosInstance => {
 	const instance: AxiosInstance = axios.create({
@@ -197,7 +197,7 @@ function attachAuthInterceptors(instance: AxiosInstance) {
 const workersAxios: AxiosInstance = createWorkersAxiosInstance(import.meta.env.VITE_WORKERS_URL || "http://localhost:3035");
 
 // Instancia hermana: pjn/api contra ATLAS (raíz de api.lawanalytics.app) — para
-// services cuyos datos NO están en el rs0 (scraping-manager, failover, etc.).
+// services cuyos datos NO están en el rs0 (scraping-manager, etc.).
 export const pjnAtlasAxios: AxiosInstance = createWorkersAxiosInstance(import.meta.env.VITE_PJN_API_URL || "https://api.lawanalytics.app");
 
 export default workersAxios;

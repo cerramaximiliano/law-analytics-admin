@@ -208,9 +208,6 @@ const ProcessRow = ({
 					<Typography variant="body2" sx={{ fontFamily: "monospace", fontWeight: 500 }}>
 						{p.name}
 					</Typography>
-					{p.highlight === "failover" && (
-						<Chip size="small" label="failover" color="warning" variant="outlined" sx={{ height: 18, fontSize: "0.62rem" }} />
-					)}
 					{p.cron && (
 						<Tooltip title="Corre por cron: estar detenido entre corridas es lo normal">
 							<Chip size="small" icon={<Timer1 size={11} />} label="cron" variant="outlined" sx={{ height: 18, fontSize: "0.62rem" }} />
@@ -377,7 +374,6 @@ const BoxPanel = ({ box, children, highlightRepo, onClearHighlight }: Props) => 
 								</Typography>
 								{box.critical && <Chip size="small" label="crítico" color="error" variant="outlined" />}
 								{box.retired && <Chip size="small" label="sin producción" variant="outlined" />}
-								{box.hasFailover && <Chip size="small" label="con respaldo en la nube" color="warning" variant="outlined" />}
 							</Stack>
 							<Typography variant="body1" color="text.secondary">
 								{box.role}
