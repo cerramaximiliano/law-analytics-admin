@@ -11,6 +11,7 @@ import {
 	TableRow,
 	Paper,
 	Chip,
+	Switch,
 	IconButton,
 	Tooltip,
 	FormControl,
@@ -491,6 +492,9 @@ const CredencialesPJN = () => {
 	const [errorHistoryDetail, setErrorHistoryDetail] = useState<CredentialErrorEntry[]>([]);
 	const [errorHistoryLoading, setErrorHistoryLoading] = useState(false);
 	const [bandejaDialog, setBandejaDialog] = useState<PjnCredential | null>(null);
+	// Confirmación del switch "No en trámite" (credencial + valor que se quiere poner)
+	const [noEnTramiteDialog, setNoEnTramiteDialog] = useState<{ credential: PjnCredential; incluir: boolean } | null>(null);
+	const [noEnTramiteSaving, setNoEnTramiteSaving] = useState(false);
 	const [listadoDialog, setListadoDialog] = useState<PjnCredential | null>(null);
 	// Lightbox para ver el screenshot en grande
 	const [screenshotLightbox, setScreenshotLightbox] = useState<{ url: string; label: string } | null>(null);
@@ -707,6 +711,24 @@ const CredencialesPJN = () => {
 		}
 	};
 
+	const handleConfirmNoEnTramite = async () => {
+		if (!noEnTramiteDialog) return;
+		setNoEnTramiteSaving(true);
+		try {
+			const response = await pjnCredentialsService.setNoEnTramite(noEnTramiteDialog.credential._id, noEnTramiteDialog.incluir);
+			if (response.success) {
+				enqueueSnackbar(response.message, { variant: "success" });
+				setNoEnTramiteDialog(null);
+				fetchCredentials();
+			}
+		} catch (error) {
+			console.error("Error al actualizar expedientes no en trámite:", error);
+			enqueueSnackbar("Error al actualizar expedientes no en trámite", { variant: "error" });
+		} finally {
+			setNoEnTramiteSaving(false);
+		}
+	};
+
 	const handleReset = async (credential: PjnCredential) => {
 		try {
 			const response = await pjnCredentialsService.resetCredential(credential._id);
@@ -913,7 +935,10 @@ const CredencialesPJN = () => {
 	};
 
 	return (
-		<MainCard title="Credenciales PJN" secondary={<CrossViewLinks current="datos" to={{ worker: "/admin/causas/workers?worker=mis-causas" }} />}>
+		<MainCard
+			title="Credenciales PJN"
+			secondary={<CrossViewLinks current="datos" to={{ worker: "/admin/causas/workers?worker=mis-causas" }} />}
+		>
 			{/* Stats loading/error */}
 			{statsLoading && (
 				<Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
@@ -1421,6 +1446,20 @@ const CredencialesPJN = () => {
 										</TableCell>
 										<TableCell align="center">
 											<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.5 }}>
+												No en trámite
+												<Tooltip
+													title="Expedientes archivados o destruidos en el portal (solo visibles con «Ver todos los expedientes»). OFF: no se traen. ON: se guardan como carpetas archivadas, sin movimientos; se actualizan cuando el usuario las desarchiva. El número es cuántos vio el último sync en el portal."
+													arrow
+													placement="top"
+												>
+													<Box component="span" sx={{ display: "inline-flex", cursor: "help", opacity: 0.5 }}>
+														<InfoCircle size={13} />
+													</Box>
+												</Tooltip>
+											</Box>
+										</TableCell>
+										<TableCell align="center">
+											<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.5 }}>
 												Acciones
 												<Tooltip
 													title="Ver JSON completo · Activar/Desactivar · Resetear verificación (mantiene carpetas) · Resetear sync completo (elimina carpetas y causas) · Eliminar credencial."
@@ -1438,13 +1477,13 @@ const CredencialesPJN = () => {
 								<TableBody>
 									{loading ? (
 										<TableRow>
-											<TableCell colSpan={17} align="center" sx={{ py: 4 }}>
+											<TableCell colSpan={18} align="center" sx={{ py: 4 }}>
 												<CircularProgress size={32} />
 											</TableCell>
 										</TableRow>
 									) : credentials.length === 0 ? (
 										<TableRow>
-											<TableCell colSpan={17} align="center" sx={{ py: 4 }}>
+											<TableCell colSpan={18} align="center" sx={{ py: 4 }}>
 												<Typography color="text.secondary">No se encontraron credenciales</Typography>
 											</TableCell>
 										</TableRow>
@@ -1707,6 +1746,43 @@ const CredencialesPJN = () => {
 												</TableCell>
 												<TableCell>
 													<Typography variant="caption">{formatDate(cred.createdAt)}</Typography>
+												</TableCell>
+												<TableCell align="center">
+													<Tooltip
+														arrow
+														title={
+															cred.noEnTramite?.incluir === true
+																? `ON — se traen archivados y sin movimientos${
+																		cred.noEnTramite?.cambiadoAt
+																			? ` (desde ${formatDate(cred.noEnTramite.cambiadoAt)}${
+																					cred.noEnTramite?.cambiadoPor ? `, ${cred.noEnTramite.cambiadoPor}` : ""
+																			  })`
+																			: ""
+																  }. Clic para desactivar.`
+																: `OFF${cred.noEnTramite?.incluir == null ? " (default global)" : ""} — no se traen. Clic para activar.`
+														}
+													>
+														<Stack direction="row" alignItems="center" spacing={0.5} justifyContent="center">
+															<Switch
+																size="small"
+																checked={cred.noEnTramite?.incluir === true}
+																onChange={(e) => setNoEnTramiteDialog({ credential: cred, incluir: e.target.checked })}
+																inputProps={{ "aria-label": "Traer expedientes no en trámite" }}
+															/>
+															<Chip
+																label={cred.noEnTramite?.incluir === true ? "ON" : "OFF"}
+																size="small"
+																color={cred.noEnTramite?.incluir === true ? "success" : "default"}
+																variant={cred.noEnTramite?.incluir === true ? "filled" : "outlined"}
+																sx={{ fontSize: "0.65rem", height: 20, fontWeight: 700 }}
+															/>
+															{cred.noEnTramite?.ultimoConteo != null && (
+																<Typography variant="caption" color="text.secondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
+																	{cred.noEnTramite.ultimoConteo.toLocaleString("es-AR")}
+																</Typography>
+															)}
+														</Stack>
+													</Tooltip>
 												</TableCell>
 												<TableCell align="center">
 													<Stack direction="row" spacing={0.5} justifyContent="center">
@@ -3061,6 +3137,57 @@ const CredencialesPJN = () => {
 						</>
 					)}
 					<Button onClick={() => setScreenshotLightbox(null)}>Cerrar</Button>
+				</DialogActions>
+			</Dialog>
+
+			{/* Confirmación del switch "No en trámite" */}
+			<Dialog open={!!noEnTramiteDialog} onClose={() => (noEnTramiteSaving ? null : setNoEnTramiteDialog(null))} maxWidth="sm" fullWidth>
+				<DialogTitle>
+					{noEnTramiteDialog?.incluir ? "Traer expedientes no en trámite" : "Dejar de traer expedientes no en trámite"}
+				</DialogTitle>
+				<DialogContent>
+					<DialogContentText component="div">
+						<Typography variant="body2" sx={{ mb: 1.5 }}>
+							Credencial de <strong>{noEnTramiteDialog?.credential.userName}</strong> ({noEnTramiteDialog?.credential.userEmail})
+							{noEnTramiteDialog?.credential.noEnTramite?.ultimoConteo != null && (
+								<>
+									{" "}
+									— el último sync vio <strong>{noEnTramiteDialog.credential.noEnTramite.ultimoConteo.toLocaleString("es-AR")}</strong>{" "}
+									expedientes no en trámite en el portal.
+								</>
+							)}
+						</Typography>
+						{noEnTramiteDialog?.incluir ? (
+							<>
+								<Typography variant="body2" sx={{ mb: 1 }}>
+									En el próximo sync diario se obtendrán los expedientes <strong>no en trámite</strong> de esta credencial (archivados,
+									destruidos o a destruir en el portal) y se guardarán como <strong>carpetas archivadas, sin movimientos</strong>.
+								</Typography>
+								<Typography variant="body2" sx={{ mb: 1 }}>
+									No se envía aviso de causas nuevas ni notificaciones de movimientos. Cuando el usuario desarchive una de esas carpetas, la
+									causa se habilita y en la próxima corrida se descarga su historial completo.
+								</Typography>
+							</>
+						) : (
+							<Typography variant="body2">
+								No se traerán nuevos expedientes no en trámite. Las carpetas que ya se trajeron se conservan archivadas y siguen
+								habilitándose si el usuario las desarchiva.
+							</Typography>
+						)}
+					</DialogContentText>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => setNoEnTramiteDialog(null)} disabled={noEnTramiteSaving}>
+						Cancelar
+					</Button>
+					<Button
+						onClick={handleConfirmNoEnTramite}
+						variant="contained"
+						color={noEnTramiteDialog?.incluir ? "primary" : "warning"}
+						disabled={noEnTramiteSaving}
+					>
+						{noEnTramiteSaving ? "Guardando…" : noEnTramiteDialog?.incluir ? "Activar" : "Desactivar"}
+					</Button>
 				</DialogActions>
 			</Dialog>
 
