@@ -10,6 +10,17 @@ export interface PjnCredential {
 	cuilMasked: string;
 	enabled: boolean;
 	bandejaNotificationsEnabled?: boolean;
+	/**
+	 * Expedientes "no en trámite" (solo visibles con "Ver todos" en Mis Causas). incluir null = default
+	 * global (OFF). ultimoConteo: cuántos vio update-sync en el portal.
+	 */
+	noEnTramite?: {
+		incluir: boolean | null;
+		cambiadoAt: string | null;
+		cambiadoPor: string | null;
+		ultimoConteo: number | null;
+		ultimoConteoAt: string | null;
+	};
 	verified: boolean;
 	verifiedAt: string | null;
 	isValid: boolean;
@@ -1010,6 +1021,14 @@ class PjnCredentialsService {
 	 */
 	async toggleBandejaNotifications(id: string, bandejaNotificationsEnabled: boolean): Promise<GenericResponse> {
 		const response = await adminAxios.patch(`/api/pjn-credentials/${id}/bandeja-notifications`, { bandejaNotificationsEnabled });
+		return response.data;
+	}
+
+	/**
+	 * Traer o no los expedientes "no en trámite" (archivados, sin movimientos; se hidratan al desarchivar)
+	 */
+	async setNoEnTramite(id: string, incluir: boolean): Promise<GenericResponse> {
+		const response = await adminAxios.patch(`/api/pjn-credentials/${id}/no-en-tramite`, { incluir });
 		return response.data;
 	}
 
