@@ -315,9 +315,45 @@ export interface ExtraccionFiltros {
 	limit?: number;
 }
 
+// Monitor de avance (pjn-rag-workers scripts/avance.js, foto horaria en rs0 `rag-avance`).
+export type EtapaAvance = "cedulas" | "escritos" | "deo";
+export interface AvanceEtapa {
+	leidos: number;
+	descartados: number;
+	cola: number;
+	colaBytes: number;
+	deOtraEtapa: number;
+	sinS3: number;
+	otros: number;
+	universo: number;
+	hecho: number;
+	total: number;
+	pct: number;
+	ritmo: { h1: number; h24: number; porHora: number };
+	entrada24h: number;
+	etaHoras: number | null;
+}
+export interface AvancePunto {
+	at: string;
+	etapas: Partial<
+		Record<
+			EtapaAvance,
+			{ pct: number; cola: number; colaBytes: number; hecho: number; total: number; porHora: number | null; etaHoras: number | null }
+		>
+	>;
+}
+export interface AvanceExtraccion {
+	ultimo: { at: string; host: string | null; resumenes: Partial<Record<EtapaAvance, AvanceEtapa>> } | null;
+	historial: AvancePunto[];
+}
+
 const limpiar = (f: ExtraccionFiltros) => Object.fromEntries(Object.entries(f).filter(([, v]) => v !== undefined && v !== ""));
 
 const RagExtraccionService = {
+	async avance(horas = 48): Promise<AvanceExtraccion> {
+		const r = await ragAxios.get("/rag/admin/extraccion/avance", { params: { horas } });
+		return { ultimo: r.data.ultimo, historial: r.data.historial || [] };
+	},
 	async resumen(etapa: EtapaExtraccion = "cedulas"): Promise<ExtraccionResumen> {
 		const r = await ragAxios.get("/rag/admin/extraccion/resumen", { params: { etapa } });
 		return r.data.data;
