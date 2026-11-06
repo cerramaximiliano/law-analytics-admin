@@ -18,6 +18,9 @@
 # servidor no queda otra que compilar ahí; ver el aviso del paso 3).
 
 set -e
+# El build local y las comprobaciones de git son relativas a esta carpeta: ubicarse acá aunque se invoque desde otro
+# directorio (`bash /ruta/update-dashboard.sh`); si no, el paso 3 falla con "no es un repositorio git".
+cd "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Colores
 RED='\033[0;31m'
