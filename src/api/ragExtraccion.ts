@@ -338,7 +338,17 @@ export interface AvancePunto {
 	etapas: Partial<
 		Record<
 			EtapaAvance,
-			{ pct: number; cola: number; colaBytes: number; hecho: number; total: number; porHora: number | null; etaHoras: number | null }
+			{
+				pct: number;
+				cola: number;
+				colaBytes: number;
+				hecho: number;
+				total: number;
+				h1: number | null;
+				porHora: number | null;
+				entrada24h: number;
+				etaHoras: number | null;
+			}
 		>
 	>;
 }
