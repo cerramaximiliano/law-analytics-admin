@@ -352,6 +352,29 @@ export interface AvancePunto {
 		>
 	>;
 }
+export interface MetricasCalidad {
+	docs: number;
+	porStatus: Record<string, number>;
+	pctFallidos: number;
+	leidos: number;
+	paginas: number;
+	paginasLeidas: number;
+	charsPorPagina: number;
+	charsPorDoc: number;
+	pctDocsConOcr: number;
+	pctPaginasOcr: number;
+	pctPaginasSinTexto: number;
+	pctCasiVacios: number;
+	pctDuplicados: number;
+	msPorDoc: number;
+	msOcrPorDoc: number;
+	porVersion: Record<string, number>;
+}
+export interface CalidadExtraccion {
+	ventanaHoras: number;
+	ultimo: Partial<Record<EtapaAvance, { at: string; host: string | null; metricas: MetricasCalidad; alertas: string[] }>>;
+	historial: Array<{ at: string; etapa: EtapaAvance; m: MetricasCalidad; alertas: string[] }>;
+}
 export interface AvanceExtraccion {
 	ultimo: { at: string; host: string | null; resumenes: Partial<Record<EtapaAvance, AvanceEtapa>> } | null;
 	historial: AvancePunto[];
@@ -363,6 +386,10 @@ const RagExtraccionService = {
 	async avance(horas = 48): Promise<AvanceExtraccion> {
 		const r = await ragAxios.get("/rag/admin/extraccion/avance", { params: { horas } });
 		return { ultimo: r.data.ultimo, historial: r.data.historial || [] };
+	},
+	async calidad(dias = 14): Promise<CalidadExtraccion> {
+		const r = await ragAxios.get("/rag/admin/extraccion/calidad", { params: { dias } });
+		return { ventanaHoras: r.data.ventanaHoras, ultimo: r.data.ultimo || {}, historial: r.data.historial || [] };
 	},
 	async resumen(etapa: EtapaExtraccion = "cedulas"): Promise<ExtraccionResumen> {
 		const r = await ragAxios.get("/rag/admin/extraccion/resumen", { params: { etapa } });

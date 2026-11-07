@@ -53,6 +53,7 @@ import RagExtraccionService, {
 import { headerBorder } from "themes/dashboardTokens";
 import PdfCanvasViewer from "components/PdfCanvasViewer";
 import AvanceExtraccion from "./AvanceExtraccion";
+import CalidadExtraccion from "./CalidadExtraccion";
 import { clickableProps } from "utils/a11y";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -1331,6 +1332,7 @@ const ExtraccionTab = () => {
 				</Stack>
 
 				<AvanceExtraccion />
+				<CalidadExtraccion />
 
 				{resumen && resumen.etapa === etapa ? (
 					esDiligenciadas ? (
