@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Box, Typography, Stack, Tabs, Tab, Alert, Skeleton, useTheme } from "@mui/material";
-import { Setting2, Clock, Chart, MessageQuestion, Timer1 } from "iconsax-react";
+import { Setting2, Clock, Chart, MessageQuestion } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { CausasUpdateConfig, CausasUpdateService } from "api/causasUpdate";
 import { BRAND_BLUE } from "themes/dashboardTokens";
 import CausasUpdateConfigTab from "./CausasUpdateConfigTab";
 import CausasUpdateHistoryTab from "./CausasUpdateHistoryTab";
-import CausasUpdateCicloTab from "./CausasUpdateCicloTab";
 import CausasUpdateStatsTab from "./CausasUpdateStatsTab";
 
 interface TabPanelProps {
@@ -75,7 +74,6 @@ const CausasUpdateWorker: React.FC = () => {
 
 	const tabs = [
 		{ label: "Configuración", subtitle: "Config. general", icon: <Setting2 size={20} /> },
-		{ label: "Ciclo", subtitle: "Clases y franjas", icon: <Timer1 size={20} /> },
 		{ label: "Historial", subtitle: "Runs de scraping", icon: <Clock size={20} /> },
 		{ label: "Estadísticas", subtitle: "Estado en vivo", icon: <Chart size={20} /> },
 		{ label: "Ayuda", subtitle: "Guía de uso", icon: <MessageQuestion size={20} /> },
@@ -141,15 +139,12 @@ const CausasUpdateWorker: React.FC = () => {
 						<CausasUpdateConfigTab config={config} onConfigUpdate={fetchConfig} />
 					</TabPanel>
 					<TabPanel value={activeTab} index={1}>
-						<CausasUpdateCicloTab />
-					</TabPanel>
-					<TabPanel value={activeTab} index={2}>
 						<CausasUpdateHistoryTab />
 					</TabPanel>
-					<TabPanel value={activeTab} index={3}>
+					<TabPanel value={activeTab} index={2}>
 						<CausasUpdateStatsTab />
 					</TabPanel>
-					<TabPanel value={activeTab} index={4}>
+					<TabPanel value={activeTab} index={3}>
 						<Stack spacing={2}>
 							<Typography
 								variant="h5"
@@ -182,11 +177,6 @@ const CausasUpdateWorker: React.FC = () => {
 								<strong>Thresholds:</strong> Controlan la frecuencia de actualización por causa y por credencial. El updateThresholdHours
 								define cuántas horas deben pasar antes de volver a procesar una causa. minTimeBetweenRunsMinutes controla el intervalo
 								mínimo entre runs de la misma credencial.
-							</Typography>
-							<Typography variant="body2">
-								<strong>Ciclo por clases y franjas:</strong> Con el ciclo activo (pestaña Ciclo) el umbral de horas deja de usarse: cada
-								causa tiene una clase según sus carpetas y su último movimiento, y se lee solo en las franjas horarias de su clase. Clases,
-								reglas, franjas y topes se editan ahí sin deploy.
 							</Typography>
 							<Typography variant="body2">
 								<strong>Concurrencia:</strong> Si waitForCausaCreation está habilitado, el worker espera a que termine el worker de creación

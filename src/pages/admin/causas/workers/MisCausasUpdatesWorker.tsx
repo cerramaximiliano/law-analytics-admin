@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Box, Typography, Stack, Alert, Button, Skeleton } from "@mui/material";
-import { RefreshSquare, Clock, Warning2, Chart, Refresh } from "iconsax-react";
+import { RefreshSquare, Clock, Warning2, Chart, Refresh, Timer1 } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import { CausasUpdateConfig, CausasUpdateService } from "api/causasUpdate";
 import { useTabIndexParam } from "hooks/useTabParam";
@@ -9,11 +9,13 @@ import CausasUpdateConfigTab from "./CausasUpdateConfigTab";
 import CausasUpdateHistoryTab from "./CausasUpdateHistoryTab";
 import CausasUpdateStatsTab from "./CausasUpdateStatsTab";
 import CausasUpdateIncidentsTab from "./CausasUpdateIncidentsTab";
+import CausasUpdateCicloTab from "./CausasUpdateCicloTab";
 
-const SUB_TABS = ["configuracion", "historial", "incidencias", "estadisticas"] as const;
+const SUB_TABS = ["configuracion", "ciclo", "historial", "incidencias", "estadisticas"] as const;
 
 const TAB_DEFS: SubTabDef[] = [
 	{ label: "Configuración", icon: <RefreshSquare size={18} />, hint: "Thresholds y resume" },
+	{ label: "Ciclo", icon: <Timer1 size={18} />, hint: "Clases, franjas y capacidad" },
 	{ label: "Historial", icon: <Clock size={18} />, hint: "Runs de updates" },
 	{ label: "Incidencias", icon: <Warning2 size={18} />, hint: "Errores con screenshot" },
 	{ label: "Estadísticas", icon: <Chart size={18} />, hint: "Métricas de actualización" },
@@ -69,9 +71,10 @@ const MisCausasUpdatesWorker: React.FC = () => {
 							<Typography variant="body2">No se pudo cargar la configuración de updates.</Typography>
 						</Alert>
 					))}
-				{activeTab === 1 && <CausasUpdateHistoryTab />}
-				{activeTab === 2 && <CausasUpdateIncidentsTab />}
-				{activeTab === 3 && <CausasUpdateStatsTab />}
+				{activeTab === 1 && <CausasUpdateCicloTab />}
+				{activeTab === 2 && <CausasUpdateHistoryTab />}
+				{activeTab === 3 && <CausasUpdateIncidentsTab />}
+				{activeTab === 4 && <CausasUpdateStatsTab />}
 			</Box>
 		</Box>
 	);
