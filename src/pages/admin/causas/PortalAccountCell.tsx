@@ -9,6 +9,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 
 const PERFIL: Record<string, { label: string; color: "primary" | "warning" | "info" | "default" }> = {
 	letrado: { label: "Letrado", color: "primary" },
+	perito: { label: "Perito", color: "info" },
 	parte: { label: "Parte", color: "warning" },
 	autorizado: { label: "Autorizado", color: "info" },
 	otro: { label: "Otro", color: "default" },
@@ -79,7 +80,11 @@ const PortalAccountCell = ({ account, noticesSent }: { account?: PjnPortalAccoun
 		<Tooltip title={tooltip} arrow placement="top">
 			<Stack spacing={0.5} alignItems="flex-start" sx={{ cursor: "help" }}>
 				<Stack direction="row" spacing={0.5}>
-					{perfil ? <Chip size="small" label={perfil.label} color={perfil.color} variant="outlined" /> : <Chip size="small" label="—" />}
+					{perfil ? (
+						<Chip size="small" label={perfil.label} color={perfil.color} variant="outlined" />
+					) : (
+						<Chip size="small" label="Sin rol" variant="outlined" />
+					)}
 					{account.segundoFactor && <Chip size="small" label="2FA" color="error" />}
 				</Stack>
 				{days != null ? (

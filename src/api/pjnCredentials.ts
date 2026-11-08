@@ -2,7 +2,7 @@ import adminAxios from "utils/adminAxios";
 
 // Interfaces
 export interface PjnPortalAccount {
-	perfil: "letrado" | "parte" | "autorizado" | "otro" | null;
+	perfil: "letrado" | "perito" | "parte" | "autorizado" | "otro" | null;
 	scwRoles: string[];
 	apps: string[];
 	tieneBandeja: boolean | null;
