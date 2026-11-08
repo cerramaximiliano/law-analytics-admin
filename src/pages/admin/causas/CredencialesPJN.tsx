@@ -82,6 +82,7 @@ import pjnCredentialsService, {
 } from "api/pjnCredentials";
 import BandejaEvidenciaDialog, { bandejaPagePath } from "./BandejaEvidenciaDialog";
 import PortalAccountCell from "./PortalAccountCell";
+import PortalAccountNoticesPanel from "./PortalAccountNoticesPanel";
 import ListadoHistorialDialog from "./ListadoHistorialDialog";
 import EmailLogsService from "api/emailLogs";
 import { EmailLog } from "types/email-log";
@@ -318,6 +319,9 @@ const PJN_CREDENTIAL_TEMPLATES = [
 	"pjnCredentialReminder",
 	"pjnCredentialRestored",
 	"pjnCausaChanges",
+	"pjnPasswordExpiring",
+	"pjnPortal2faActivado",
+	"pjnPortal2faDisponible",
 ] as const;
 
 const CREDENTIAL_TEMPLATE_LABELS: Record<string, string> = {
@@ -327,6 +331,9 @@ const CREDENTIAL_TEMPLATE_LABELS: Record<string, string> = {
 	pjnCredentialReminder: "Recordatorio",
 	pjnCredentialRestored: "Restaurada",
 	pjnCausaChanges: "Altas/bajas de causas",
+	pjnPasswordExpiring: "Contraseña por vencer",
+	pjnPortal2faActivado: "2FA activado",
+	pjnPortal2faDisponible: "2FA disponible",
 };
 
 const CredencialesPJN = () => {
@@ -2566,6 +2573,9 @@ const CredencialesPJN = () => {
 			{/* Tab 3: Notificaciones de credenciales */}
 			{tabValue === 3 && (
 				<Grid container spacing={{ xs: 1.5, sm: 2 }}>
+					<Grid item xs={12}>
+						<PortalAccountNoticesPanel />
+					</Grid>
 					{/* Filtros */}
 					<Grid item xs={12}>
 						<Stack

@@ -24,6 +24,10 @@ export interface CausasUpdateConfig {
 		delayBetweenCausas: number;
 		delayBetweenCredentials: number;
 		paginationDelay: number;
+		/** Correo al usuario antes de que venza su contraseña del Portal PJN (pjn-mis-causas password-expiry-notifier). Default false. */
+		passwordExpiryEmailEnabled?: boolean;
+		/** Correo al usuario cuando el portal le ofrece o él activa 2FA (portal-2fa-notifier). Default false. */
+		portal2faEmailEnabled?: boolean;
 	};
 	thresholds: {
 		updateThresholdHours: number;
