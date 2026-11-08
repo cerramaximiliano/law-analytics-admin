@@ -81,6 +81,7 @@ import pjnCredentialsService, {
 	PjnAdminAlert,
 } from "api/pjnCredentials";
 import BandejaEvidenciaDialog, { bandejaPagePath } from "./BandejaEvidenciaDialog";
+import PortalAccountCell from "./PortalAccountCell";
 import ListadoHistorialDialog from "./ListadoHistorialDialog";
 import EmailLogsService from "api/emailLogs";
 import { EmailLog } from "types/email-log";
@@ -1255,6 +1256,20 @@ const CredencialesPJN = () => {
 												</Tooltip>
 											</Box>
 										</TableCell>
+										<TableCell>
+											<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+												Portal PJN
+												<Tooltip
+													title="Perfil de la cuenta en el portal (letrado, parte, autorizado: roles del SCW) y vencimiento de su contraseña (200 días desde el último cambio). Lo lee pjn-bandeja-sync en cada login; el detalle está en el tooltip de cada celda."
+													arrow
+													placement="top"
+												>
+													<Box component="span" sx={{ display: "inline-flex", cursor: "help", opacity: 0.5 }}>
+														<InfoCircle size={13} />
+													</Box>
+												</Tooltip>
+											</Box>
+										</TableCell>
 										<TableCell align="center">
 											<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.5 }}>
 												Estado
@@ -1480,13 +1495,13 @@ const CredencialesPJN = () => {
 								<TableBody>
 									{loading ? (
 										<TableRow>
-											<TableCell colSpan={18} align="center" sx={{ py: 4 }}>
+											<TableCell colSpan={19} align="center" sx={{ py: 4 }}>
 												<CircularProgress size={32} />
 											</TableCell>
 										</TableRow>
 									) : credentials.length === 0 ? (
 										<TableRow>
-											<TableCell colSpan={18} align="center" sx={{ py: 4 }}>
+											<TableCell colSpan={19} align="center" sx={{ py: 4 }}>
 												<Typography color="text.secondary">No se encontraron credenciales</Typography>
 											</TableCell>
 										</TableRow>
@@ -1508,6 +1523,9 @@ const CredencialesPJN = () => {
 													<Typography variant="body2" fontFamily="monospace">
 														{cred.cuilMasked}
 													</Typography>
+												</TableCell>
+												<TableCell>
+													<PortalAccountCell account={cred.portalAccount} noticesSent={cred.passwordExpiryNotices?.sent} />
 												</TableCell>
 												<TableCell align="center">
 													{cred.syncStatus === "in_progress" ? (

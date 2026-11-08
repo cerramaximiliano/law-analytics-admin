@@ -1,6 +1,18 @@
 import adminAxios from "utils/adminAxios";
 
 // Interfaces
+export interface PjnPortalAccount {
+	perfil: "letrado" | "parte" | "autorizado" | "otro" | null;
+	scwRoles: string[];
+	apps: string[];
+	tieneBandeja: boolean | null;
+	firmaElectronica: boolean | null;
+	segundoFactor: boolean | null;
+	fechaPassword: string | null;
+	passwordExpiresAt: string | null;
+	checkedAt: string;
+}
+
 export interface PjnCredential {
 	_id: string;
 	userId: string;
@@ -14,6 +26,9 @@ export interface PjnCredential {
 	 * Expedientes "no en trámite" (solo visibles con "Ver todos" en Mis Causas). incluir null = default
 	 * global (OFF). ultimoConteo: cuántos vio update-sync en el portal.
 	 */
+	/** Cuenta del Portal PJN (pjn-bandeja-sync en cada login). null = todavía sin datos. */
+	portalAccount?: PjnPortalAccount | null;
+	passwordExpiryNotices?: { sent: string[]; lastSentAt: string | null } | null;
 	noEnTramite?: {
 		incluir: boolean | null;
 		cambiadoAt: string | null;
