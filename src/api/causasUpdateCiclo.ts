@@ -17,6 +17,7 @@ export interface ReglaClase {
 	movimientosCount?: Rango;
 	fueros?: string[];
 	credenciales?: string[];
+	particion?: { n: number; k: number | number[] };
 }
 
 export interface ClaseCiclo {
@@ -31,6 +32,8 @@ export interface ClaseCiclo {
 export interface CapacidadCiclo {
 	horaCorte: string;
 	margenMin: number;
+	avisoOcupacion?: number;
+	inicialMaxHoras?: number;
 	overheadSegPorCorrida: number;
 	segPorCausaManual: number | null;
 	ritmoDias: number;
@@ -83,6 +86,18 @@ export interface CicloEstado {
 	ritmo?: { global: number; manual: boolean; credenciales: number };
 	proyeccion?: { dia: string; corte: string; instancias: number; carriles: number; franjas: FranjaProyectada[] };
 	alertas?: { type: string; message: string }[];
+	holgura?: {
+		hoyEnVerde: boolean;
+		credencialNuevaMax: number | null;
+		crecimientoMax: number | null;
+		causasExtraMax: number | null;
+		totalCausas?: number;
+	};
+	colaInicial?: {
+		segPorCausa: number;
+		horasTotal: number;
+		items: { credentialsId: string; estado: string; causas: number; horas: number; terminaAt: string }[];
+	};
 	ultimaReclasificacionAt?: string;
 }
 

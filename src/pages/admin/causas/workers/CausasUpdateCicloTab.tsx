@@ -257,6 +257,25 @@ const CausasUpdateCicloTab: React.FC = () => {
 								<Dato label="Ritmo" valor={`${estado.ritmo?.global ?? "—"} s/causa${estado.ritmo?.manual ? " (manual)" : ""}`} />
 								<Dato label="Box (load · RAM libre)" valor={estado.box ? `${estado.box.load1} · ${estado.box.ramLibreGb} GB` : "—"} />
 							</Stack>
+							{estado.holgura && (
+								<Alert severity={estado.holgura.hoyEnVerde ? "success" : "error"} variant="outlined" sx={{ mb: 1 }}>
+									{estado.holgura.hoyEnVerde
+										? `Margen libre sin cambiar nada: entra una credencial nueva de hasta ~${(
+												estado.holgura.credencialNuevaMax ?? 0
+										  ).toLocaleString("es-AR")} causas, o ${Math.round(
+												((estado.holgura.crecimientoMax ?? 1) - 1) * 100,
+										  )}% más de causas en total (+${(estado.holgura.causasExtraMax ?? 0).toLocaleString("es-AR")}).`
+										: "Hoy el día ya no entra en verde: revisá la alerta y el cuello de botella de la tabla."}
+								</Alert>
+							)}
+							{estado.colaInicial && estado.colaInicial.items.length > 0 && (
+								<Alert severity="info" variant="outlined" sx={{ mb: 1 }}>
+									{`Descargas iniciales en cola: ${estado.colaInicial.items.length} credencial(es), ~${estado.colaInicial.horasTotal} h en total (${estado.colaInicial.segPorCausa} s/causa). `}
+									{estado.colaInicial.items
+										.map((it) => `…${it.credentialsId.slice(-6)} ${it.causas} causas, termina ${fecha(it.terminaAt)}`)
+										.join(" · ")}
+								</Alert>
+							)}
 							{(estado.alertas || []).map((a, i) => (
 								<Alert key={i} severity="warning" variant="outlined" sx={{ mb: 1 }}>
 									{a.message}
@@ -450,6 +469,42 @@ const CausasUpdateCicloTab: React.FC = () => {
 													sx={{ flex: 1 }}
 												/>
 											</Stack>
+											<Stack direction="row" spacing={1} alignItems="center">
+												<Tooltip title="Reparte la clase en N partes estables por causa: p.ej. N=2 parte 0 a las 15:00 y otra clase con N=2 parte 1 a las 17:30">
+													<Typography variant="caption" color="text.secondary" sx={{ minWidth: 70 }}>
+														Partición
+													</Typography>
+												</Tooltip>
+												<TextField
+													size="small"
+													type="number"
+													label="Partes (N)"
+													value={k.regla.particion?.n ?? ""}
+													onChange={(e) =>
+														setClase(i, (x) => {
+															const n = numOrNull(e.target.value);
+															if (!n || n < 2) delete x.regla.particion;
+															else x.regla.particion = { n, k: x.regla.particion?.k ?? 0 };
+														})
+													}
+													sx={{ width: 110 }}
+												/>
+												<TextField
+													size="small"
+													type="number"
+													label="Parte (0 a N-1)"
+													disabled={!k.regla.particion}
+													value={
+														k.regla.particion ? (Array.isArray(k.regla.particion.k) ? k.regla.particion.k[0] : k.regla.particion.k) : ""
+													}
+													onChange={(e) =>
+														setClase(i, (x) => {
+															if (x.regla.particion) x.regla.particion.k = Number(e.target.value);
+														})
+													}
+													sx={{ width: 130 }}
+												/>
+											</Stack>
 										</Stack>
 									</Grid>
 									<Grid item xs={12} md={3}>
@@ -526,13 +581,24 @@ const CausasUpdateCicloTab: React.FC = () => {
 					</Typography>
 					<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
 						El manager proyecta cada franja con el ritmo medido y avisa al admin si una franja se pisa con la siguiente o si el día no entra
-						antes de la hora de corte, indicando si conviene subir carriles, instancias o recursos del box.
+						antes de la hora de corte, indicando si conviene subir carriles, instancias o recursos del box. Además avisa antes, cuando una
+						franja supera el umbral de ocupación, con cuánto margen queda, y cuando la cola de descargas iniciales supera su tope.
 					</Typography>
 					<Grid container spacing={2}>
 						<Campo
 							label="Margen antes del corte (min)"
 							value={draft.capacidad.margenMin}
 							onChange={(v) => set((c) => (c.capacidad.margenMin = Number(v)))}
+						/>
+						<Campo
+							label="Aviso preventivo de ocupación (%)"
+							value={Math.round((draft.capacidad.avisoOcupacion ?? 0.8) * 100)}
+							onChange={(v) => set((c) => (c.capacidad.avisoOcupacion = Number(v) / 100))}
+						/>
+						<Campo
+							label="Tope de la cola de descargas iniciales (h)"
+							value={draft.capacidad.inicialMaxHoras ?? 12}
+							onChange={(v) => set((c) => (c.capacidad.inicialMaxHoras = Number(v)))}
 						/>
 						<Campo
 							label="Login fijo por corrida (s)"
