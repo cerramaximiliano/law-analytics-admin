@@ -16,7 +16,7 @@ const AuthGuard = ({ children }: { children: React.ReactNode }) => {
 			navigate("/code-verification", { replace: true });
 		} else if (!isLoggedIn) {
 			navigate("/login", {
-				state: { from: location.pathname },
+				state: { from: location.pathname + location.search },
 				replace: true,
 			});
 		}
