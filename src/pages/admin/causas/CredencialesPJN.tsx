@@ -35,7 +35,9 @@ import {
 	Divider,
 	LinearProgress,
 	InputAdornment,
+	Link,
 } from "@mui/material";
+import { Link as RouterLink } from "react-router-dom";
 import EnhancedTablePagination from "components/EnhancedTablePagination";
 import { useTheme, alpha } from "@mui/material/styles";
 import { BRAND_BLUE, STALE_AMBER, PRO_TEAL, PREMIUM_GOLD, LIVE_GREEN, LIVE_PULSE_KEYFRAMES, headerBorder } from "themes/dashboardTokens";
@@ -78,7 +80,7 @@ import pjnCredentialsService, {
 	CredentialErrorEntry,
 	PjnAdminAlert,
 } from "api/pjnCredentials";
-import BandejaEvidenciaDialog from "./BandejaEvidenciaDialog";
+import BandejaEvidenciaDialog, { bandejaPagePath } from "./BandejaEvidenciaDialog";
 import ListadoHistorialDialog from "./ListadoHistorialDialog";
 import EmailLogsService from "api/emailLogs";
 import { EmailLog } from "types/email-log";
@@ -2836,7 +2838,17 @@ const CredencialesPJN = () => {
 												credential_stuck: "Sin sync (loop)",
 												credential_disabled: "Deshabilitada",
 												transient_streak: "Racha de errores",
+												bandeja_no_access: "Bandeja: sin acceso",
+												bandeja_error_streak: "Bandeja: errores",
 											};
+											// Las de bandeja tienen vista propia; el resto abre la lista filtrada por el usuario.
+											const alertLink =
+												alert.link ||
+												(alert.credentialId && alert.type.startsWith("bandeja_")
+													? bandejaPagePath(alert.credentialId)
+													: alert.userEmail
+													? `/admin/causas/credentials?search=${encodeURIComponent(alert.userEmail)}`
+													: null);
 											return (
 												<TableRow key={alert._id} hover>
 													<TableCell>
@@ -2852,6 +2864,16 @@ const CredencialesPJN = () => {
 															<Typography variant="body2">{alert.userEmail || "—"}</Typography>
 															<CopyButton value={alert.userEmail} label="email" />
 														</Stack>
+														{alertLink && (
+															<Link
+																component={RouterLink}
+																to={alertLink.replace(/^https?:\/\/[^/]+/, "")}
+																variant="caption"
+																underline="hover"
+															>
+																Ver error
+															</Link>
+														)}
 														{alert.credentialId && (
 															<Typography variant="caption" color="text.secondary" sx={{ fontFamily: "monospace" }}>
 																{alert.credentialId.slice(0, 8)}…
@@ -3105,7 +3127,7 @@ const CredencialesPJN = () => {
 			<BandejaEvidenciaDialog
 				open={!!bandejaDialog}
 				credentialId={bandejaDialog?._id || null}
-				title={bandejaDialog ? `${bandejaDialog.userName} — ${bandejaDialog.cuilMasked}` : undefined}
+				title={bandejaDialog ? `${bandejaDialog.userName} · ${bandejaDialog.userEmail} — ${bandejaDialog.cuilMasked}` : undefined}
 				onClose={() => setBandejaDialog(null)}
 			/>
 

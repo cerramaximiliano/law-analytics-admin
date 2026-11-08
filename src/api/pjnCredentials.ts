@@ -929,6 +929,8 @@ export interface PjnAdminAlert {
 	userEmail: string | null;
 	message: string;
 	details: Record<string, string | number>;
+	/** URL de la admin con el registro del error (desde 2026-11-08). */
+	link?: string | null;
 	source: string;
 	firstDetectedAt: string;
 	lastDetectedAt: string;

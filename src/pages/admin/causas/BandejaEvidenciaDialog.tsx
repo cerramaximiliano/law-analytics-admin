@@ -46,6 +46,44 @@ const matchesAt = (e: BandejaErrorEntry, at?: string | null) => {
 	return [e.timestamp, e.capturedAt].some((t) => t && Math.abs(new Date(t).getTime() - target) <= HIGHLIGHT_TOLERANCE_MS);
 };
 
+// Qué muestra cada captura que guarda el worker (bandeja-evidence.js). Sin esto
+// se leen como dos errores distintos: "Listado sin resultados" (portal) no es un
+// fallo y "Error en el servidor" (notif) es cómo la app muestra el 403.
+const SCREENSHOT_INFO: Record<string, { title: string; help: string }> = {
+	portal: {
+		title: "Portal tras el login",
+		help: 'portalpjn.pjn.gov.ar/inicio con la sesión del worker. El menú lista las apps que tiene la cuenta; "Listado sin resultados" es la tabla de Entradas (Mis Eventos) vacía, no un error.',
+	},
+	notif: {
+		title: "App de Notificaciones",
+		help: 'notif.pjn.gov.ar abierta con la misma sesión, como la vería el usuario. Si la API rechaza la cuenta (403), la app lo muestra como "Error en el servidor": no indica una caída del portal.',
+	},
+};
+
+// Diagnóstico a partir de los permisos del token: la bandeja (notificaciones y
+// escritos) es del letrado. Una cuenta con rol r:parte en el SCW es de una parte
+// y el portal nunca le va a dar bandeja: el 403 es permanente.
+const tokenDiagnosis = (token: BandejaErrorEntry["token"]) => {
+	if (!token) return null;
+	const all = Object.entries(token.clientRoles || {}).flatMap(([c, rs]) => rs.map((r) => `${c}:${r}`));
+	const aud = ([] as string[]).concat(token.aud || []);
+	const hasBandejaClient =
+		aud.some((a) => /notif|escrito/i.test(a)) || Object.keys(token.clientRoles || {}).some((c) => /notif|escrito/i.test(c));
+	if (all.some((r) => /:r:parte$/.test(r)) && !hasBandejaClient) {
+		return {
+			severity: "warning" as const,
+			text: "Cuenta de parte (rol r:parte), no de letrado: el token no incluye las apps de notificaciones ni escritos. El 403 es permanente: no es una falla del portal ni de la credencial, y no se resuelve reintentando.",
+		};
+	}
+	if (!hasBandejaClient) {
+		return {
+			severity: "info" as const,
+			text: "El token no incluye las apps de notificaciones ni escritos: la cuenta no tiene bandeja del letrado. Probablemente permanente.",
+		};
+	}
+	return null;
+};
+
 // El body se guarda como string (truncado a 500): si es JSON válido se muestra parseado.
 const parseBody = (body?: string | null): unknown => {
 	if (body == null) return null;
@@ -128,6 +166,7 @@ export const BandejaEvidenciaContent = ({ credentialId, highlightAt }: ContentPr
 		// Chequeo por API: el veredicto sale de la respuesta HTTP de notif/escritos,
 		// no de una pantalla. Las capturas (si hay) son contexto del portal.
 		const isApiCheck = !!(e.http?.notif || e.http?.escritos);
+		const diagnosis = e.code === "NO_BANDEJA_ACCESS" ? tokenDiagnosis(e.token) : null;
 		const highlighted = i === highlightIdx;
 		const permalink = `${window.location.origin}${bandejaPagePath(credentialId, e.timestamp || e.capturedAt)}`;
 		return (
@@ -158,6 +197,11 @@ export const BandejaEvidenciaContent = ({ credentialId, highlightAt }: ContentPr
 						<CopyButton value={permalink} label="link a este error" size={15} />
 					</Stack>
 					{e.message && <Typography variant="body2">{e.message}</Typography>}
+					{diagnosis && (
+						<Alert severity={diagnosis.severity} variant="outlined" sx={{ py: 0 }}>
+							{diagnosis.text}
+						</Alert>
+					)}
 					{isApiCheck && (
 						<Box>
 							<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap sx={{ mb: 0.5 }}>
@@ -218,16 +262,21 @@ export const BandejaEvidenciaContent = ({ credentialId, highlightAt }: ContentPr
 					)}
 					{e.screenshots.length > 0 && isApiCheck && (
 						<Typography variant="caption" color="text.secondary">
-							Capturas del portal tras el login (contexto: qué apps ve la cuenta; no son la verificación).
+							Capturas del portal con la sesión del worker: contexto de qué ve la cuenta, no son la verificación.
 						</Typography>
 					)}
 					{e.screenshots.length > 0 && (
 						<Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
 							{e.screenshots.map((sc, k) => (
-								<Box key={k} sx={{ width: 220 }}>
-									<Typography variant="caption" color="text.secondary">
-										{sc.label || "captura"}
+								<Box key={k} sx={{ width: 260 }}>
+									<Typography variant="caption" fontWeight={600} display="block">
+										{(sc.label && SCREENSHOT_INFO[sc.label]?.title) || sc.label || "captura"}
 									</Typography>
+									{sc.label && SCREENSHOT_INFO[sc.label] && (
+										<Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5, lineHeight: 1.35 }}>
+											{SCREENSHOT_INFO[sc.label].help}
+										</Typography>
+									)}
 									{sc.screenshotUrl ? (
 										<Box
 											component="img"
