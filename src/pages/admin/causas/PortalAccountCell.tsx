@@ -63,6 +63,10 @@ const PortalAccountCell = ({ account, noticesSent }: { account?: PjnPortalAccoun
 				{account.segundoFactor == null ? "—" : account.segundoFactor ? "ACTIVADO (el login automático puede fallar)" : "no"}
 			</div>
 			<div>
+				<strong>2FA ofrecido por el portal:</strong>{" "}
+				{account.segundoFactorDisponible == null ? "—" : account.segundoFactorDisponible ? "sí (el usuario puede activarlo)" : "no"}
+			</div>
+			<div>
 				<strong>Último cambio de contraseña:</strong> {account.fechaPassword ? fmtDay(account.fechaPassword) : "—"}
 			</div>
 			<div>
@@ -85,7 +89,11 @@ const PortalAccountCell = ({ account, noticesSent }: { account?: PjnPortalAccoun
 					) : (
 						<Chip size="small" label="Sin rol" variant="outlined" />
 					)}
-					{account.segundoFactor && <Chip size="small" label="2FA" color="error" />}
+					{account.segundoFactor ? (
+						<Chip size="small" label="2FA" color="error" />
+					) : account.segundoFactorDisponible ? (
+						<Chip size="small" label="2FA disponible" color="warning" variant="outlined" />
+					) : null}
 				</Stack>
 				{days != null ? (
 					<Chip

@@ -8,6 +8,8 @@ export interface PjnPortalAccount {
 	tieneBandeja: boolean | null;
 	firmaElectronica: boolean | null;
 	segundoFactor: boolean | null;
+	/** El portal le ofrece 2FA a la cuenta (hoy false en todas): señal temprana de que el PJN lo habilitó. */
+	segundoFactorDisponible?: boolean | null;
 	fechaPassword: string | null;
 	passwordExpiresAt: string | null;
 	checkedAt: string;
