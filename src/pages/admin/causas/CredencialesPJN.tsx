@@ -351,7 +351,8 @@ const CredencialesPJN = () => {
 	const [syncStatusFilter, setSyncStatusFilter] = useState<string>("todos");
 	const [verifiedFilter, setVerifiedFilter] = useState<string>("todos");
 	const [enabledFilter, setEnabledFilter] = useState<string>("todos");
-	const [searchText, setSearchText] = useState("");
+	// ?search= lo usan los links del correo de alertas de credenciales (email del usuario).
+	const [searchText, setSearchText] = useState(() => new URLSearchParams(window.location.search).get("search") || "");
 
 	// Ordenamiento
 	const [sortBy] = useState<string>("createdAt");

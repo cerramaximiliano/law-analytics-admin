@@ -823,6 +823,9 @@ export interface BandejaHttpResult {
 	status: number | null;
 	message: string | null;
 	body: string | null;
+	/** Request que hizo el worker (registrado desde 2026-11-08; null en entradas previas). */
+	method?: string | null;
+	url?: string | null;
 }
 
 export interface BandejaErrorEntry {
