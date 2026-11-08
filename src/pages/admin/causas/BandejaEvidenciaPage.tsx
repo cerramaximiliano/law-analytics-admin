@@ -63,7 +63,7 @@ const BandejaEvidenciaPage = () => {
 						{cred.userName} · {cred.userEmail} · {cred.cuilMasked}
 					</Typography>
 				)}
-				<BandejaEvidenciaContent credentialId={credentialId} highlightAt={searchParams.get("at")} />
+				<BandejaEvidenciaContent credentialId={credentialId} highlightAt={searchParams.get("at")} userEmail={cred?.userEmail} />
 			</MainCard>
 		</Stack>
 	);

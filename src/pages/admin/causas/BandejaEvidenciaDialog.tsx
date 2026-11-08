@@ -24,6 +24,7 @@ interface Props {
 	open: boolean;
 	credentialId: string | null;
 	title?: string;
+	userEmail?: string | null;
 	onClose: () => void;
 }
 
@@ -31,6 +32,8 @@ interface ContentProps {
 	credentialId: string;
 	/** ISO del error a resaltar (el `?at=` del link del correo de alertas). */
 	highlightAt?: string | null;
+	/** Email del usuario de la credencial: se muestra en cada captura y en el nombre del archivo. */
+	userEmail?: string | null;
 }
 
 export const bandejaPagePath = (credentialId: string, at?: string | null) =>
@@ -127,11 +130,11 @@ const HttpChip = ({ name, r }: { name: string; r?: BandejaHttpResult | null }) =
 	<Chip size="small" color={httpColor(r?.status)} label={`${name}: ${r?.status ?? "sin respuesta"}`} />
 );
 
-export const BandejaEvidenciaContent = ({ credentialId, highlightAt }: ContentProps) => {
+export const BandejaEvidenciaContent = ({ credentialId, highlightAt, userEmail }: ContentProps) => {
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [state, setState] = useState<BandejaState | null>(null);
-	const [lightbox, setLightbox] = useState<{ url: string; label: string } | null>(null);
+	const [lightbox, setLightbox] = useState<{ url: string; label: string; caption: string } | null>(null);
 
 	const highlightRef = useRef<HTMLDivElement | null>(null);
 
@@ -272,6 +275,11 @@ export const BandejaEvidenciaContent = ({ credentialId, highlightAt }: ContentPr
 									<Typography variant="caption" fontWeight={600} display="block">
 										{(sc.label && SCREENSHOT_INFO[sc.label]?.title) || sc.label || "captura"}
 									</Typography>
+									{userEmail && (
+										<Typography variant="caption" display="block" sx={{ fontFamily: "monospace", wordBreak: "break-all" }}>
+											{userEmail}
+										</Typography>
+									)}
 									{sc.label && SCREENSHOT_INFO[sc.label] && (
 										<Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5, lineHeight: 1.35 }}>
 											{SCREENSHOT_INFO[sc.label].help}
@@ -283,7 +291,25 @@ export const BandejaEvidenciaContent = ({ credentialId, highlightAt }: ContentPr
 											src={sc.screenshotUrl}
 											alt={`captura ${sc.label || ""}`}
 											{...clickableProps(
-												() => setLightbox({ url: sc.screenshotUrl as string, label: `bandeja-${sc.label || "captura"}` }),
+												() =>
+													setLightbox({
+														url: sc.screenshotUrl as string,
+														label: [
+															"bandeja",
+															userEmail?.replace(/[^a-z0-9@._-]/gi, "_"),
+															sc.label || "captura",
+															(e.capturedAt || e.timestamp || "").slice(0, 16).replace(/[:T]/g, "-"),
+														]
+															.filter(Boolean)
+															.join("-"),
+														caption: [
+															(sc.label && SCREENSHOT_INFO[sc.label]?.title) || sc.label || "captura",
+															userEmail,
+															fmt(e.capturedAt || e.timestamp),
+														]
+															.filter(Boolean)
+															.join(" · "),
+													}),
 												{
 													label: `Ampliar captura ${sc.label || ""}`.trim(),
 												},
@@ -397,6 +423,11 @@ export const BandejaEvidenciaContent = ({ credentialId, highlightAt }: ContentPr
 			)}
 			<Dialog open={!!lightbox} onClose={() => setLightbox(null)} maxWidth="lg">
 				{lightbox && (
+					<Typography variant="subtitle2" sx={{ px: 2, pt: 1.5, pb: 1 }}>
+						{lightbox.caption}
+					</Typography>
+				)}
+				{lightbox && (
 					<Box
 						component="img"
 						src={lightbox.url}
@@ -413,7 +444,7 @@ export const BandejaEvidenciaContent = ({ credentialId, highlightAt }: ContentPr
 	);
 };
 
-const BandejaEvidenciaDialog = ({ open, credentialId, title, onClose }: Props) => (
+const BandejaEvidenciaDialog = ({ open, credentialId, title, userEmail, onClose }: Props) => (
 	<Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
 		<DialogTitle>
 			<Typography variant="h5">Bandeja — evidencia de fallos</Typography>
@@ -423,7 +454,9 @@ const BandejaEvidenciaDialog = ({ open, credentialId, title, onClose }: Props) =
 				</Typography>
 			)}
 		</DialogTitle>
-		<DialogContent dividers>{open && credentialId && <BandejaEvidenciaContent credentialId={credentialId} />}</DialogContent>
+		<DialogContent dividers>
+			{open && credentialId && <BandejaEvidenciaContent credentialId={credentialId} userEmail={userEmail} />}
+		</DialogContent>
 		<DialogActions>
 			{credentialId && (
 				<Button component={RouterLink} to={bandejaPagePath(credentialId)} onClick={onClose}>

@@ -3128,6 +3128,7 @@ const CredencialesPJN = () => {
 				open={!!bandejaDialog}
 				credentialId={bandejaDialog?._id || null}
 				title={bandejaDialog ? `${bandejaDialog.userName} · ${bandejaDialog.userEmail} — ${bandejaDialog.cuilMasked}` : undefined}
+				userEmail={bandejaDialog?.userEmail}
 				onClose={() => setBandejaDialog(null)}
 			/>
 
