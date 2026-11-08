@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Link as RouterLink } from "react-router-dom";
 import {
 	Alert,
 	Box,
@@ -14,6 +15,7 @@ import {
 	Typography,
 } from "@mui/material";
 import ImageActions from "components/ImageActions";
+import CopyButton from "components/CopyButton";
 import { fetchImageBlob } from "utils/imageActions";
 import { clickableProps } from "utils/a11y";
 import pjnCredentialsService, { BandejaErrorEntry, BandejaHttpResult, BandejaState } from "api/pjnCredentials";
@@ -25,38 +27,78 @@ interface Props {
 	onClose: () => void;
 }
 
+interface ContentProps {
+	credentialId: string;
+	/** ISO del error a resaltar (el `?at=` del link del correo de alertas). */
+	highlightAt?: string | null;
+}
+
+export const bandejaPagePath = (credentialId: string, at?: string | null) =>
+	`/admin/causas/credentials/${credentialId}/bandeja${at ? `?at=${encodeURIComponent(at)}` : ""}`;
+
+// El link del correo lleva el timestamp de la entrada de errorHistory; capturedAt
+// es unos segundos anterior (la evidencia se toma antes de grabar el estado).
+const HIGHLIGHT_TOLERANCE_MS = 60 * 1000;
+const matchesAt = (e: BandejaErrorEntry, at?: string | null) => {
+	if (!at) return false;
+	const target = new Date(at).getTime();
+	if (Number.isNaN(target)) return false;
+	return [e.timestamp, e.capturedAt].some((t) => t && Math.abs(new Date(t).getTime() - target) <= HIGHLIGHT_TOLERANCE_MS);
+};
+
+// El body se guarda como string (truncado a 500): si es JSON válido se muestra parseado.
+const parseBody = (body?: string | null): unknown => {
+	if (body == null) return null;
+	try {
+		return JSON.parse(body);
+	} catch (_) {
+		return body;
+	}
+};
+
+const apiResponseJson = (http: BandejaErrorEntry["http"]) =>
+	JSON.stringify(
+		Object.fromEntries(
+			(
+				[
+					["notificaciones", http?.notif],
+					["escritos", http?.escritos],
+				] as const
+			).map(([k, r]) => [
+				k,
+				r
+					? {
+							...(r.method || r.url ? { request: `${(r.method || "GET").toUpperCase()} ${r.url || "(url no registrada)"}` } : {}),
+							status: r.status,
+							error: r.message,
+							body: parseBody(r.body),
+					  }
+					: null,
+			]),
+		),
+		null,
+		2,
+	);
+
 const fmt = (iso?: string | null) => (iso ? new Date(iso).toLocaleString("es-AR") : "—");
 
 const httpColor = (status?: number | null): "success" | "warning" | "error" | "default" =>
 	status == null ? "default" : status < 300 ? "success" : status < 500 ? "warning" : "error";
 
 const HttpChip = ({ name, r }: { name: string; r?: BandejaHttpResult | null }) => (
-	<Stack spacing={0.5}>
-		<Chip size="small" color={httpColor(r?.status)} label={`${name}: ${r?.status ?? "sin respuesta"}`} sx={{ alignSelf: "flex-start" }} />
-		{r?.message && (
-			<Typography variant="caption" color="text.secondary">
-				{r.message}
-			</Typography>
-		)}
-		{r?.body && (
-			<Box
-				component="pre"
-				sx={{ m: 0, p: 1, fontSize: 11, bgcolor: "action.hover", borderRadius: 1, whiteSpace: "pre-wrap", wordBreak: "break-all" }}
-			>
-				{r.body}
-			</Box>
-		)}
-	</Stack>
+	<Chip size="small" color={httpColor(r?.status)} label={`${name}: ${r?.status ?? "sin respuesta"}`} />
 );
 
-const BandejaEvidenciaDialog = ({ open, credentialId, title, onClose }: Props) => {
+export const BandejaEvidenciaContent = ({ credentialId, highlightAt }: ContentProps) => {
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [state, setState] = useState<BandejaState | null>(null);
 	const [lightbox, setLightbox] = useState<{ url: string; label: string } | null>(null);
 
+	const highlightRef = useRef<HTMLDivElement | null>(null);
+
 	useEffect(() => {
-		if (!open || !credentialId) return;
+		if (!credentialId) return;
 		let alive = true;
 		setLoading(true);
 		setError(null);
@@ -72,25 +114,79 @@ const BandejaEvidenciaDialog = ({ open, credentialId, title, onClose }: Props) =
 		return () => {
 			alive = false;
 		};
-	}, [open, credentialId]);
+	}, [credentialId]);
+
+	useEffect(() => {
+		if (state && highlightRef.current) highlightRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+	}, [state]);
+
+	const highlightIdx = state ? state.errorHistory.findIndex((e) => matchesAt(e, highlightAt)) : -1;
 
 	const renderEntry = (e: BandejaErrorEntry, i: number) => {
 		const roles = e.token?.realmRoles || [];
 		const clientRoles = Object.entries(e.token?.clientRoles || {});
+		// Chequeo por API: el veredicto sale de la respuesta HTTP de notif/escritos,
+		// no de una pantalla. Las capturas (si hay) son contexto del portal.
+		const isApiCheck = !!(e.http?.notif || e.http?.escritos);
+		const highlighted = i === highlightIdx;
+		const permalink = `${window.location.origin}${bandejaPagePath(credentialId, e.timestamp || e.capturedAt)}`;
 		return (
-			<Box key={`${e.timestamp}-${i}`} sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 1.5 }}>
+			<Box
+				key={`${e.timestamp}-${i}`}
+				ref={highlighted ? highlightRef : undefined}
+				sx={{
+					border: highlighted ? 2 : 1,
+					borderColor: highlighted ? "primary.main" : "divider",
+					borderRadius: 1,
+					p: 1.5,
+					scrollMarginTop: 80,
+				}}
+			>
 				<Stack spacing={1}>
 					<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
 						<Chip size="small" color="error" label={e.code || "ERROR"} />
 						<Typography variant="caption">{fmt(e.capturedAt || e.timestamp)}</Typography>
 						{e.consecutiveErrors != null && <Chip size="small" variant="outlined" label={`${e.consecutiveErrors} consecutivos`} />}
+						<Chip
+							size="small"
+							variant="outlined"
+							color={isApiCheck ? "info" : "default"}
+							label={isApiCheck ? "Revisión por API" : "Revisión en el portal"}
+						/>
+						{highlighted && <Chip size="small" color="primary" label="Error de la alerta" />}
+						<Box sx={{ flexGrow: 1 }} />
+						<CopyButton value={permalink} label="link a este error" size={15} />
 					</Stack>
 					{e.message && <Typography variant="body2">{e.message}</Typography>}
-					{e.http && (
-						<Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-							<HttpChip name="Notificaciones" r={e.http.notif} />
-							<HttpChip name="Escritos" r={e.http.escritos} />
-						</Stack>
+					{isApiCheck && (
+						<Box>
+							<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap sx={{ mb: 0.5 }}>
+								<Typography variant="subtitle2">Respuesta de la API</Typography>
+								<HttpChip name="Notificaciones" r={e.http?.notif} />
+								<HttpChip name="Escritos" r={e.http?.escritos} />
+								<CopyButton value={apiResponseJson(e.http)} label="JSON" size={15} />
+							</Stack>
+							<Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5 }}>
+								El worker revisa la bandeja por API (notificaciones y escritos, con el token del login). Esta verificación no tiene
+								screenshot: lo que sigue es la respuesta que devolvió el portal (body truncado a 500 caracteres).
+							</Typography>
+							<Box
+								component="pre"
+								sx={{
+									m: 0,
+									p: 1,
+									fontSize: 11,
+									bgcolor: "action.hover",
+									borderRadius: 1,
+									whiteSpace: "pre-wrap",
+									wordBreak: "break-all",
+									maxHeight: 320,
+									overflow: "auto",
+								}}
+							>
+								{apiResponseJson(e.http)}
+							</Box>
+						</Box>
 					)}
 					{e.token && (
 						<Box>
@@ -113,6 +209,18 @@ const BandejaEvidenciaDialog = ({ open, credentialId, title, onClose }: Props) =
 							</Stack>
 						</Box>
 					)}
+					{e.screenshots.length === 0 && (
+						<Typography variant="caption" color="text.disabled">
+							{isApiCheck
+								? "Sin screenshot: la revisión fue por API (ver respuesta arriba)."
+								: "Sin screenshot registrado para este fallo."}
+						</Typography>
+					)}
+					{e.screenshots.length > 0 && isApiCheck && (
+						<Typography variant="caption" color="text.secondary">
+							Capturas del portal tras el login (contexto: qué apps ve la cuenta; no son la verificación).
+						</Typography>
+					)}
 					{e.screenshots.length > 0 && (
 						<Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
 							{e.screenshots.map((sc, k) => (
@@ -125,9 +233,12 @@ const BandejaEvidenciaDialog = ({ open, credentialId, title, onClose }: Props) =
 											component="img"
 											src={sc.screenshotUrl}
 											alt={`captura ${sc.label || ""}`}
-											{...clickableProps(() => setLightbox({ url: sc.screenshotUrl as string, label: `bandeja-${sc.label || "captura"}` }), {
-												label: `Ampliar captura ${sc.label || ""}`.trim(),
-											})}
+											{...clickableProps(
+												() => setLightbox({ url: sc.screenshotUrl as string, label: `bandeja-${sc.label || "captura"}` }),
+												{
+													label: `Ampliar captura ${sc.label || ""}`.trim(),
+												},
+											)}
 											sx={{
 												display: "block",
 												width: "100%",
@@ -180,73 +291,61 @@ const BandejaEvidenciaDialog = ({ open, credentialId, title, onClose }: Props) =
 
 	return (
 		<>
-			<Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-				<DialogTitle>
-					<Typography variant="h5">Bandeja — evidencia de fallos</Typography>
-					{title && (
-						<Typography variant="caption" color="text.secondary">
-							{title}
-						</Typography>
+			{state && highlightAt && highlightIdx === -1 && (
+				<Alert severity="warning" variant="outlined">
+					El error del link ({fmt(highlightAt)}) ya no está en el historial (se guardan los últimos 10).
+				</Alert>
+			)}
+			{loading && (
+				<Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+					<CircularProgress />
+				</Box>
+			)}
+			{error && <Alert severity="error">{error}</Alert>}
+			{!loading && !error && !state && <Alert severity="info">El worker de bandeja todavía no registró estado para esta credencial.</Alert>}
+			{state && (
+				<Stack spacing={2}>
+					<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+						<Chip
+							size="small"
+							color={state.consecutiveErrors ? "error" : "default"}
+							label={`Errores consecutivos: ${state.consecutiveErrors}`}
+						/>
+						<Chip
+							size="small"
+							color={state.consecutiveNoAccess ? "warning" : "default"}
+							label={`Sin acceso consecutivos: ${state.consecutiveNoAccess}`}
+						/>
+						{state.excludedUntil && new Date(state.excludedUntil) > new Date() && (
+							<Chip
+								size="small"
+								color="warning"
+								label={`Excluida hasta ${fmt(state.excludedUntil)}${state.excludedReason ? ` (${state.excludedReason})` : ""}`}
+							/>
+						)}
+					</Stack>
+					<Typography variant="caption" color="text.secondary">
+						Última corrida: {fmt(state.lastRunAt)} · Último éxito: {fmt(state.lastSuccessAt)}
+						{state.lastPlazos &&
+							` · Plazos: ${Object.entries(state.lastPlazos)
+								.map(([k, v]) => `${k} ${v}`)
+								.join(", ")}`}
+					</Typography>
+					{state.lastError && (
+						<Alert severity="error" variant="outlined">
+							{state.lastError.code}: {state.lastError.message} ({fmt(state.lastError.timestamp)})
+						</Alert>
 					)}
-				</DialogTitle>
-				<DialogContent dividers>
-					{loading && (
-						<Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
-							<CircularProgress />
-						</Box>
+					<Divider />
+					{state.errorHistory.length ? (
+						state.errorHistory.map(renderEntry)
+					) : (
+						<Alert severity="info" variant="outlined">
+							Sin fallos registrados con evidencia. Se guardan a partir de ahora (últimos 10).
+						</Alert>
 					)}
-					{error && <Alert severity="error">{error}</Alert>}
-					{!loading && !error && !state && (
-						<Alert severity="info">El worker de bandeja todavía no registró estado para esta credencial.</Alert>
-					)}
-					{state && (
-						<Stack spacing={2}>
-							<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-								<Chip
-									size="small"
-									color={state.consecutiveErrors ? "error" : "default"}
-									label={`Errores consecutivos: ${state.consecutiveErrors}`}
-								/>
-								<Chip
-									size="small"
-									color={state.consecutiveNoAccess ? "warning" : "default"}
-									label={`Sin acceso consecutivos: ${state.consecutiveNoAccess}`}
-								/>
-								{state.excludedUntil && new Date(state.excludedUntil) > new Date() && (
-									<Chip
-										size="small"
-										color="warning"
-										label={`Excluida hasta ${fmt(state.excludedUntil)}${state.excludedReason ? ` (${state.excludedReason})` : ""}`}
-									/>
-								)}
-							</Stack>
-							<Typography variant="caption" color="text.secondary">
-								Última corrida: {fmt(state.lastRunAt)} · Último éxito: {fmt(state.lastSuccessAt)}
-								{state.lastPlazos &&
-									` · Plazos: ${Object.entries(state.lastPlazos)
-										.map(([k, v]) => `${k} ${v}`)
-										.join(", ")}`}
-							</Typography>
-							{state.lastError && (
-								<Alert severity="error" variant="outlined">
-									{state.lastError.code}: {state.lastError.message} ({fmt(state.lastError.timestamp)})
-								</Alert>
-							)}
-							<Divider />
-							{state.errorHistory.length ? (
-								state.errorHistory.map(renderEntry)
-							) : (
-								<Alert severity="info" variant="outlined">
-									Sin fallos registrados con evidencia. Se guardan a partir de ahora (últimos 10).
-								</Alert>
-							)}
-						</Stack>
-					)}
-				</DialogContent>
-				<DialogActions>
-					<Button onClick={onClose}>Cerrar</Button>
-				</DialogActions>
-			</Dialog>
+				</Stack>
+			)}
 			<Dialog open={!!lightbox} onClose={() => setLightbox(null)} maxWidth="lg">
 				{lightbox && (
 					<Box
@@ -264,5 +363,27 @@ const BandejaEvidenciaDialog = ({ open, credentialId, title, onClose }: Props) =
 		</>
 	);
 };
+
+const BandejaEvidenciaDialog = ({ open, credentialId, title, onClose }: Props) => (
+	<Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+		<DialogTitle>
+			<Typography variant="h5">Bandeja — evidencia de fallos</Typography>
+			{title && (
+				<Typography variant="caption" color="text.secondary">
+					{title}
+				</Typography>
+			)}
+		</DialogTitle>
+		<DialogContent dividers>{open && credentialId && <BandejaEvidenciaContent credentialId={credentialId} />}</DialogContent>
+		<DialogActions>
+			{credentialId && (
+				<Button component={RouterLink} to={bandejaPagePath(credentialId)} onClick={onClose}>
+					Abrir en página
+				</Button>
+			)}
+			<Button onClick={onClose}>Cerrar</Button>
+		</DialogActions>
+	</Dialog>
+);
 
 export default BandejaEvidenciaDialog;

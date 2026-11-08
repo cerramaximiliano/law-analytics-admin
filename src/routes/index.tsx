@@ -35,6 +35,7 @@ const FlujosEcosistema = Loadable(lazyWithRetry(() => import("pages/admin/flujos
 const EmailFunnels = Loadable(lazyWithRetry(() => import("pages/admin/notifications/EmailFunnels")));
 const CausasPendientes = Loadable(lazyWithRetry(() => import("pages/admin/causas/CausasPendientes")));
 const CredencialesPJN = Loadable(lazyWithRetry(() => import("pages/admin/causas/CredencialesPJN")));
+const BandejaEvidenciaPage = Loadable(lazyWithRetry(() => import("pages/admin/causas/BandejaEvidenciaPage")));
 const CausasSyncCredentials = Loadable(lazyWithRetry(() => import("pages/admin/causas/CausasSyncCredentials")));
 const UserViewGuide = Loadable(lazyWithRetry(() => import("pages/admin/causas/UserViewGuide")));
 const CausasUpdateEligible = Loadable(lazyWithRetry(() => import("pages/admin/causas/update-eligible")));
@@ -437,6 +438,14 @@ export default function Routes() {
 							element: (
 								<AdminRoleGuard>
 									<CredencialesPJN />
+								</AdminRoleGuard>
+							),
+						},
+						{
+							path: "causas/credentials/:credentialId/bandeja",
+							element: (
+								<AdminRoleGuard>
+									<BandejaEvidenciaPage />
 								</AdminRoleGuard>
 							),
 						},
