@@ -38,6 +38,13 @@ export interface CapacidadCiclo {
 	boxRamLibreMinGb: number;
 }
 
+export interface InicialCiclo {
+	separado: boolean;
+	carrilesNoche: number;
+	carrilesDia: number;
+	carrilesDiaCargado: number;
+}
+
 export interface CicloConfig {
 	enabled: boolean;
 	timezone: string;
@@ -46,6 +53,7 @@ export interface CicloConfig {
 	reclasificarCadaMin: number;
 	claseDefault: string;
 	clases: ClaseCiclo[];
+	inicial?: InicialCiclo;
 	capacidad: CapacidadCiclo;
 }
 

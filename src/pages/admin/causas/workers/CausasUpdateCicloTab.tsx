@@ -46,6 +46,7 @@ const ESTADOS_CARPETA: { value: EstadoCarpeta; label: string }[] = [
 	{ value: "ninguna", label: "Sin carpeta" },
 ];
 const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
+const INICIAL_DEFAULT = { separado: false, carrilesNoche: 2, carrilesDia: 2, carrilesDiaCargado: 1 };
 const snack = { anchorOrigin: { vertical: "bottom" as const, horizontal: "right" as const } };
 
 const hora = (iso?: string) =>
@@ -568,6 +569,50 @@ const CausasUpdateCicloTab: React.FC = () => {
 							value={draft.reclasificarCadaMin}
 							onChange={(v) => set((c) => (c.reclasificarCadaMin = Number(v)))}
 						/>
+					</Grid>
+				</CardContent>
+			</Card>
+
+			{/* Descarga inicial */}
+			<Card variant="outlined">
+				<CardContent>
+					<Stack direction="row" spacing={1} alignItems="center">
+						<Switch
+							checked={draft.inicial?.separado === true}
+							onChange={(e) =>
+								set((c) => {
+									c.inicial = { ...INICIAL_DEFAULT, ...(c.inicial || {}), separado: e.target.checked };
+								})
+							}
+						/>
+						<Typography variant="subtitle1" fontWeight={600}>
+							Descarga inicial separada
+						</Typography>
+					</Stack>
+					<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+						Con esto activo, las credenciales nuevas y las causas nunca leídas las descarga un proceso propio (pjn-initial-sync, una
+						instancia, las 24 horas) y no compiten con las franjas. De noche usa más carriles; de día los baja si el box supera el load
+						máximo o queda con poca RAM libre.
+					</Typography>
+					<Grid container spacing={2}>
+						{(
+							[
+								["carrilesNoche", "Carriles de noche"],
+								["carrilesDia", "Carriles de día"],
+								["carrilesDiaCargado", "Carriles de día con el box cargado"],
+							] as const
+						).map(([k, label]) => (
+							<Campo
+								key={k}
+								label={label}
+								value={draft.inicial?.[k] ?? INICIAL_DEFAULT[k]}
+								onChange={(v) =>
+									set((c) => {
+										c.inicial = { ...INICIAL_DEFAULT, ...(c.inicial || {}), [k]: Number(v) };
+									})
+								}
+							/>
+						))}
 					</Grid>
 				</CardContent>
 			</Card>
