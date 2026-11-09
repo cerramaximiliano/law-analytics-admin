@@ -38,6 +38,15 @@ export interface PjnCredential {
 		ultimoConteo: number | null;
 		ultimoConteoAt: string | null;
 	};
+	/**
+	 * Listado Relacionados por la API del SCW nuevo en update-sync (causas-update-config.worker.listadoApiScwBeta
+	 * + listadoApiScwBetaCredenciales). efectivo = global ON y (lista vacía o esta credencial en la lista).
+	 */
+	listadoApi?: {
+		global: boolean;
+		enLista: boolean;
+		efectivo: boolean;
+	};
 	verified: boolean;
 	verifiedAt: string | null;
 	isValid: boolean;
@@ -899,6 +908,13 @@ export interface ListingHistoryEntry {
 	listRemovedMarked: number;
 	listRemovedCleared: number;
 	causasNuevas: number;
+	causasPorReconciliacion: number;
+	/** Origen del listado (desde 9/11/2026): "api" = SCW nuevo (evidencia api-listado.json), "browser" = SCW clásico. */
+	listingSource: "api" | "browser" | null;
+	listingMs: number | null;
+	/** Filas del listado en trámite que vio el worker. */
+	portalExpedientes: number | null;
+	outcome: string | null;
 	error: string | null;
 	/** true si el worker guardó el diff por clave de esta corrida (desde 2026-11-02). */
 	hasDiff: boolean;
@@ -1051,6 +1067,18 @@ class PjnCredentialsService {
 	 */
 	async setNoEnTramite(id: string, incluir: boolean): Promise<GenericResponse> {
 		const response = await adminAxios.patch(`/api/pjn-credentials/${id}/no-en-tramite`, { incluir });
+		return response.data;
+	}
+
+	/**
+	 * Sumar/quitar la credencial de la lista del listado por la API del SCW nuevo
+	 * (causas-update-config.worker.listadoApiScwBetaCredenciales). No toca el flag global.
+	 */
+	async setListadoApi(
+		id: string,
+		enabled: boolean,
+	): Promise<GenericResponse & { data?: { _id: string; listadoApi: { global: boolean; enCredenciales: boolean; lista: string[] } } }> {
+		const response = await adminAxios.patch(`/api/pjn-credentials/${id}/listado-api`, { enabled });
 		return response.data;
 	}
 

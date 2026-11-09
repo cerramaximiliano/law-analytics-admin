@@ -5,6 +5,7 @@ import {
 	Button,
 	Chip,
 	CircularProgress,
+	Collapse,
 	Dialog,
 	DialogActions,
 	DialogContent,
@@ -29,6 +30,9 @@ interface Props {
 const fmtDay = (iso?: string | null) =>
 	iso ? new Date(iso).toLocaleDateString("es-AR", { weekday: "short", day: "2-digit", month: "2-digit", year: "numeric" }) : "—";
 const fmtTime = (iso?: string | null) => (iso ? new Date(iso).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" }) : "—");
+const fmtMs = (ms: number) => (ms < 1000 ? `${ms} ms` : ms < 120000 ? `${Math.round(ms / 1000)} s` : `${(ms / 60000).toFixed(1)} min`);
+const fmtBytes = (b: number) => (b < 1024 ? `${b} B` : b < 1048576 ? `${(b / 1024).toFixed(0)} KB` : `${(b / 1048576).toFixed(1)} MB`);
+const isJsonEvidence = (s3Key?: string | null) => !!s3Key && /\.json$/i.test(s3Key);
 
 const statusColor = (s?: string | null): "success" | "warning" | "error" | "default" =>
 	s === "completed"
@@ -60,6 +64,7 @@ const ListadoHistorialDialog = ({ open, credentialId, title, onClose }: Props) =
 	const [data, setData] = useState<ListingHistoryResponse | null>(null);
 	const [loadedAt, setLoadedAt] = useState<number | null>(null);
 	const [lightbox, setLightbox] = useState<{ url: string; label: string } | null>(null);
+	const [showHelp, setShowHelp] = useState(false);
 
 	const load = useCallback(() => {
 		if (!credentialId) return () => {};
@@ -106,6 +111,26 @@ const ListadoHistorialDialog = ({ open, credentialId, title, onClose }: Props) =
 						</Typography>
 						<Chip size="small" color={statusColor(e.status)} label={e.status || "?"} />
 						{e.total != null && <Chip size="small" variant="outlined" label={`${e.total} causas`} />}
+						{e.listingSource && (
+							<Tooltip
+								title={
+									e.listingSource === "api"
+										? `Listado leído por la API del SCW nuevo${e.listingMs != null ? ` en ${fmtMs(e.listingMs)}` : ""}${
+												e.portalExpedientes != null ? ` (${e.portalExpedientes} filas en trámite)` : ""
+										  }. La evidencia es el JSON del listado.`
+										: `Listado paginado por el browser (SCW clásico)${
+												e.listingMs != null ? ` en ${fmtMs(e.listingMs)}` : ""
+										  }. Si la credencial está en la lista de la API, esta corrida entró por el fallback.`
+								}
+							>
+								<Chip
+									size="small"
+									color={e.listingSource === "api" ? "info" : "default"}
+									variant="outlined"
+									label={`Fuente: ${e.listingSource === "api" ? `API${e.listingMs != null ? ` (${fmtMs(e.listingMs)})` : ""}` : "browser"}`}
+								/>
+							</Tooltip>
+						)}
 						{deltaLabel && (
 							<Chip
 								size="small"
@@ -149,45 +174,70 @@ const ListadoHistorialDialog = ({ open, credentialId, title, onClose }: Props) =
 					)}
 					{e.screenshots.length > 0 ? (
 						<Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
-							{e.screenshots.map((sc, k) => (
-								<Box key={sc.s3Key || k} sx={{ width: 180 }}>
-									<Typography variant="caption" color="text.secondary">
-										página {sc.page ?? k + 1}
-									</Typography>
-									{sc.screenshotUrl ? (
-										<Box
-											component="img"
-											src={sc.screenshotUrl}
-											loading="lazy"
-											alt={`listado página ${sc.page ?? k + 1}`}
-											{...clickableProps(
-												() =>
-													setLightbox({
-														url: sc.screenshotUrl as string,
-														label: `listado-${(e.startedAt || "").slice(0, 10)}-p${sc.page ?? k + 1}`,
-													}),
-												{ label: `Ampliar captura página ${sc.page ?? k + 1}` },
-											)}
-											sx={{
-												display: "block",
-												width: "100%",
-												height: 110,
-												objectFit: "cover",
-												objectPosition: "top",
-												border: 1,
-												borderColor: "divider",
-												borderRadius: 1,
-												cursor: "zoom-in",
-												bgcolor: "action.hover",
-											}}
-										/>
-									) : (
-										<Typography variant="caption" display="block" color="text.disabled">
-											{e.expired ? "captura expirada (60 días)" : "captura no disponible"}
+							{e.screenshots.map((sc, k) =>
+								isJsonEvidence(sc.s3Key) ? (
+									<Box key={sc.s3Key || k}>
+										<Typography variant="caption" color="text.secondary" display="block">
+											listado completo (API)
 										</Typography>
-									)}
-								</Box>
-							))}
+										{sc.screenshotUrl ? (
+											<Button
+												size="small"
+												variant="outlined"
+												component="a"
+												href={sc.screenshotUrl}
+												target="_blank"
+												rel="noopener noreferrer"
+												download={`listado-${(e.startedAt || "").slice(0, 10)}.json`}
+											>
+												Descargar listado (JSON){sc.bytes != null ? ` · ${fmtBytes(sc.bytes)}` : ""}
+											</Button>
+										) : (
+											<Typography variant="caption" display="block" color="text.disabled">
+												{e.expired ? "JSON expirado (60 días)" : "JSON no disponible"}
+											</Typography>
+										)}
+									</Box>
+								) : (
+									<Box key={sc.s3Key || k} sx={{ width: 180 }}>
+										<Typography variant="caption" color="text.secondary">
+											página {sc.page ?? k + 1}
+										</Typography>
+										{sc.screenshotUrl ? (
+											<Box
+												component="img"
+												src={sc.screenshotUrl}
+												loading="lazy"
+												alt={`listado página ${sc.page ?? k + 1}`}
+												{...clickableProps(
+													() =>
+														setLightbox({
+															url: sc.screenshotUrl as string,
+															label: `listado-${(e.startedAt || "").slice(0, 10)}-p${sc.page ?? k + 1}`,
+														}),
+													{ label: `Ampliar captura página ${sc.page ?? k + 1}` },
+												)}
+												sx={{
+													display: "block",
+													width: "100%",
+													height: 110,
+													objectFit: "cover",
+													objectPosition: "top",
+													border: 1,
+													borderColor: "divider",
+													borderRadius: 1,
+													cursor: "zoom-in",
+													bgcolor: "action.hover",
+												}}
+											/>
+										) : (
+											<Typography variant="caption" display="block" color="text.disabled">
+												{e.expired ? "captura expirada (60 días)" : "captura no disponible"}
+											</Typography>
+										)}
+									</Box>
+								),
+							)}
 						</Stack>
 					) : (
 						<Typography variant="caption" color="text.disabled">
@@ -203,7 +253,7 @@ const ListadoHistorialDialog = ({ open, credentialId, title, onClose }: Props) =
 		<>
 			<Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
 				<DialogTitle>
-					<Typography variant="h5">Listado "Mis Causas" — historial y capturas</Typography>
+					<Typography variant="h5">Listado "Mis Causas" — historial y evidencia</Typography>
 					{title && (
 						<Typography variant="caption" color="text.secondary">
 							{title}
@@ -226,9 +276,42 @@ const ListadoHistorialDialog = ({ open, credentialId, title, onClose }: Props) =
 								<Chip size="small" variant="outlined" label={`${data.entries.length} corridas en ${data.days} días`} />
 								{stale && <Chip size="small" color="warning" label="Las capturas vencieron (5 min): recargar" onClick={load} />}
 							</Stack>
+							<Alert
+								severity="info"
+								variant="outlined"
+								sx={{ "& .MuiAlert-message": { width: "100%" } }}
+								action={
+									<Button size="small" onClick={() => setShowHelp((v) => !v)}>
+										{showHelp ? "Menos" : "Qué hace el worker"}
+									</Button>
+								}
+							>
+								<Typography variant="body2">
+									update-sync lee el listado Relacionados de la credencial una vez por día y lo compara con el anterior: altas (+) y bajas
+									(−) por clave de expediente.
+								</Typography>
+								<Collapse in={showHelp}>
+									<Stack spacing={0.75} sx={{ mt: 1 }}>
+										<Typography variant="body2">
+											<strong>Fuente browser:</strong> pagina el listado del SCW clásico (1–21 min según el tamaño) y deja una captura por
+											página como evidencia.
+										</Typography>
+										<Typography variant="body2">
+											<strong>Fuente API:</strong> pide el mismo listado a la API del SCW nuevo (~1 min) y deja un JSON con todas las filas;
+											si la API falla o llega incompleto, la corrida vuelve al browser. Con la API también pide «Ver todos» (archivados y no
+											en trámite) <strong>solo para no generar discordancias</strong>: una causa que pasó a archivo no cuenta como baja.
+										</Typography>
+										<Typography variant="body2">
+											La sincronización inicial y las carpetas siguen cubriendo únicamente expedientes <strong>en trámite</strong>: el
+											usuario no ve causas de más por el «Ver todos» de la API.
+										</Typography>
+									</Stack>
+								</Collapse>
+							</Alert>
 							<Typography variant="caption" color="text.secondary">
-								Una entrada por corrida del sync diario. Capturas de cada página del listado tal como lo vio el worker (se conservan 60
-								días). Las altas/bajas por clave se registran desde el 2/11/2026; para corridas anteriores solo hay total y capturas.
+								Una entrada por corrida del sync diario, con la evidencia tal como la vio el worker: capturas de cada página (browser) o el
+								JSON del listado (API); se conservan 60 días. Las altas/bajas por clave se registran desde el 2/11/2026; para corridas
+								anteriores solo hay total y capturas.
 							</Typography>
 							<Divider />
 							{data.entries.length ? (

@@ -506,6 +506,9 @@ const CredencialesPJN = () => {
 	// Confirmación del switch "No en trámite" (credencial + valor que se quiere poner)
 	const [noEnTramiteDialog, setNoEnTramiteDialog] = useState<{ credential: PjnCredential; incluir: boolean } | null>(null);
 	const [noEnTramiteSaving, setNoEnTramiteSaving] = useState(false);
+	// Confirmación del switch "Listado API" (credencial + valor que se quiere poner)
+	const [listadoApiDialog, setListadoApiDialog] = useState<{ credential: PjnCredential; enabled: boolean } | null>(null);
+	const [listadoApiSaving, setListadoApiSaving] = useState(false);
 	const [listadoDialog, setListadoDialog] = useState<PjnCredential | null>(null);
 	// Lightbox para ver el screenshot en grande
 	const [screenshotLightbox, setScreenshotLightbox] = useState<{ url: string; label: string } | null>(null);
@@ -737,6 +740,24 @@ const CredencialesPJN = () => {
 			enqueueSnackbar("Error al actualizar expedientes no en trámite", { variant: "error" });
 		} finally {
 			setNoEnTramiteSaving(false);
+		}
+	};
+
+	const handleConfirmListadoApi = async () => {
+		if (!listadoApiDialog) return;
+		setListadoApiSaving(true);
+		try {
+			const response = await pjnCredentialsService.setListadoApi(listadoApiDialog.credential._id, listadoApiDialog.enabled);
+			if (response.success) {
+				enqueueSnackbar(response.message || "Listado por API actualizado", { variant: "success" });
+				setListadoApiDialog(null);
+				fetchCredentials();
+			}
+		} catch (error) {
+			console.error("Error al actualizar el listado por API:", error);
+			enqueueSnackbar("Error al actualizar el listado por API", { variant: "error" });
+		} finally {
+			setListadoApiSaving(false);
 		}
 	};
 
@@ -1485,6 +1506,20 @@ const CredencialesPJN = () => {
 										</TableCell>
 										<TableCell align="center">
 											<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.5 }}>
+												Listado API
+												<Tooltip
+													title="update-sync lee el listado Relacionados por la API del SCW nuevo (~1 min en vez de 1–21 min por browser). Si la API falla, vuelve al browser en la misma corrida. Requiere el interruptor global (Workers → Mis Causas updates → Configuración); con la lista vacía alcanza a todas las credenciales. El chip muestra lo que efectivamente va a usar la próxima corrida."
+													arrow
+													placement="top"
+												>
+													<Box component="span" sx={{ display: "inline-flex", cursor: "help", opacity: 0.5 }}>
+														<InfoCircle size={13} />
+													</Box>
+												</Tooltip>
+											</Box>
+										</TableCell>
+										<TableCell align="center">
+											<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.5 }}>
 												Acciones
 												<Tooltip
 													title="Ver JSON completo · Activar/Desactivar · Resetear verificación (mantiene carpetas) · Resetear sync completo (elimina carpetas y causas) · Eliminar credencial."
@@ -1813,6 +1848,39 @@ const CredencialesPJN = () => {
 													</Tooltip>
 												</TableCell>
 												<TableCell align="center">
+													<Tooltip
+														arrow
+														title={
+															!cred.listadoApi?.global
+																? "Interruptor global apagado: ninguna credencial lee el listado por la API aunque esté en la lista. Se enciende en Workers → Mis Causas updates → Configuración."
+																: `Lee el listado Relacionados por la API del SCW nuevo (~1 min en vez de 1–21 min). Si la API falla vuelve al browser. Requiere el interruptor global; lista vacía = todas. ${
+																		cred.listadoApi?.enLista
+																			? "Esta credencial está en la lista. Clic para quitarla."
+																			: cred.listadoApi?.efectivo
+																			? "Lista vacía: alcanza a todas. Clic para agregarla explícitamente."
+																			: "Esta credencial no está en la lista: sigue por browser. Clic para agregarla."
+																  }`
+														}
+													>
+														<Stack direction="row" alignItems="center" spacing={0.5} justifyContent="center">
+															<Switch
+																size="small"
+																checked={cred.listadoApi?.enLista === true}
+																disabled={!cred.listadoApi?.global}
+																onChange={(e) => setListadoApiDialog({ credential: cred, enabled: e.target.checked })}
+																inputProps={{ "aria-label": "Listado Relacionados por la API del SCW nuevo" }}
+															/>
+															<Chip
+																label={cred.listadoApi?.efectivo ? "API" : "browser"}
+																size="small"
+																color={cred.listadoApi?.efectivo ? "info" : "default"}
+																variant={cred.listadoApi?.efectivo ? "filled" : "outlined"}
+																sx={{ fontSize: "0.65rem", height: 20, fontWeight: 700 }}
+															/>
+														</Stack>
+													</Tooltip>
+												</TableCell>
+												<TableCell align="center">
 													<Stack direction="row" spacing={0.5} justifyContent="center">
 														<Tooltip title="Ver JSON">
 															<IconButton size="small" onClick={() => handleViewRaw(cred)} color="default">
@@ -1848,7 +1916,7 @@ const CredencialesPJN = () => {
 																<DocumentText size={18} />
 															</IconButton>
 														</Tooltip>
-														<Tooltip title="Listado Mis Causas: historial de 60 días con capturas de cada página">
+														<Tooltip title="Listado Mis Causas: historial de 60 días con la evidencia de cada corrida (capturas por página o JSON de la API)">
 															<IconButton size="small" onClick={() => setListadoDialog(cred)} color="default">
 																<Gallery size={18} />
 															</IconButton>
@@ -3239,6 +3307,55 @@ const CredencialesPJN = () => {
 						disabled={noEnTramiteSaving}
 					>
 						{noEnTramiteSaving ? "Guardando…" : noEnTramiteDialog?.incluir ? "Activar" : "Desactivar"}
+					</Button>
+				</DialogActions>
+			</Dialog>
+
+			{/* Confirmación del switch "Listado API" */}
+			<Dialog open={!!listadoApiDialog} onClose={() => (listadoApiSaving ? null : setListadoApiDialog(null))} maxWidth="sm" fullWidth>
+				<DialogTitle>{listadoApiDialog?.enabled ? "Leer el listado por la API del SCW nuevo" : "Quitar del listado por API"}</DialogTitle>
+				<DialogContent>
+					<DialogContentText component="div">
+						<Typography variant="body2" sx={{ mb: 1.5 }}>
+							Credencial de <strong>{listadoApiDialog?.credential.userName}</strong> ({listadoApiDialog?.credential.userEmail}).
+						</Typography>
+						{listadoApiDialog?.enabled ? (
+							<>
+								<Typography variant="body2" sx={{ mb: 1 }}>
+									Desde la próxima corrida de <strong>update-sync</strong>, el listado Relacionados de esta credencial se lee por la API del
+									SCW nuevo (<code>scw-beta.pjn.gov.ar</code>): las mismas filas que el browser, en ~1 minuto en vez de 1–21. Si la API
+									falla o el listado llega incompleto, la corrida sigue por el browser como siempre.
+								</Typography>
+								<Typography variant="body2" sx={{ mb: 1 }}>
+									La API pide también «Ver todos» (archivados y no en trámite) <strong>solo para no generar discordancias</strong>: una
+									causa que pasó a archivo no cuenta como baja. La sincronización inicial y las carpetas siguen cubriendo únicamente
+									expedientes en trámite, así que el usuario no ve causas de más por esto.
+								</Typography>
+								<Typography variant="body2">
+									La evidencia de la corrida pasa a ser un JSON del listado (en vez de una captura por página), visible en el historial del
+									listado.
+								</Typography>
+							</>
+						) : (
+							<Typography variant="body2">
+								La credencial sale de la lista: vuelve a leer el listado por el browser desde la próxima corrida. Ojo: si la lista queda
+								vacía, el flag global alcanza a <strong>todas</strong> las credenciales (vacía = todas); para dejar todo por browser hay que
+								apagar el interruptor global.
+							</Typography>
+						)}
+					</DialogContentText>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => setListadoApiDialog(null)} disabled={listadoApiSaving}>
+						Cancelar
+					</Button>
+					<Button
+						onClick={handleConfirmListadoApi}
+						variant="contained"
+						color={listadoApiDialog?.enabled ? "primary" : "warning"}
+						disabled={listadoApiSaving}
+					>
+						{listadoApiSaving ? "Guardando…" : listadoApiDialog?.enabled ? "Activar" : "Quitar"}
 					</Button>
 				</DialogActions>
 			</Dialog>

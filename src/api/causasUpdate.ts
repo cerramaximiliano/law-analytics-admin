@@ -28,6 +28,12 @@ export interface CausasUpdateConfig {
 		passwordExpiryEmailEnabled?: boolean;
 		/** Correo al usuario cuando el portal le ofrece o él activa 2FA (portal-2fa-notifier). Default false. */
 		portal2faEmailEnabled?: boolean;
+		/** update-sync lee el listado Relacionados por la API del SCW nuevo (fallback al browser). Default false. */
+		listadoApiScwBeta?: boolean;
+		/** Ids de credenciales alcanzadas por listadoApiScwBeta; vacío = todas. Se edita desde Credenciales PJN. */
+		listadoApiScwBetaCredenciales?: string[];
+		listadoApiScwBetaUpdatedAt?: string | null;
+		listadoApiScwBetaUpdatedBy?: string | null;
 	};
 	thresholds: {
 		updateThresholdHours: number;
