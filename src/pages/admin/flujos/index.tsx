@@ -92,7 +92,7 @@ const TABS: FlowTab[] = [
 		slug: "mis-causas",
 		esWorker: true,
 		intro:
-			"El mapa completo del repositorio: sus 13 procesos y cómo se encadenan alrededor de la credencial del usuario — verificarla, traer sus causas, mantenerlas al día, leer su bandeja y vigilar que nada se caiga.",
+			"El mapa completo del repositorio: sus 20 procesos y cómo se encadenan alrededor de la credencial del usuario — verificarla, traer sus causas, mantenerlas al día, leer su bandeja y vigilar que nada se caiga. Con las tres fuentes del portal: el SCW clásico, la API JSON del SCW nuevo (listado, movimientos y PDFs detrás de flags) y las APIs JSON del portal.",
 		href: "/admin/causas/workers",
 		hrefLabel: "Operar los workers de pjn-mis-causas",
 	},
@@ -101,7 +101,7 @@ const TABS: FlowTab[] = [
 		slug: "credenciales",
 		esWorker: true,
 		intro:
-			"Los dos workers que llevan una fila del listado de Mis Causas hasta una carpeta: la sync completa del alta de credencial y la pasada diaria. Incluye las tres bifurcaciones que dejaban huecos silenciosos — las filas sin prefijo de fuero, quién decide que una causa falta, y el techo del plan.",
+			"Los dos workers que llevan una fila del listado de Mis Causas hasta una carpeta: la sync completa del alta de credencial y la pasada diaria. Incluye las bifurcaciones que dejaban huecos silenciosos — las filas sin prefijo de fuero, quién decide que una causa falta, el techo del plan — y, desde noviembre de 2026, de dónde sale el listado (API del SCW nuevo o browser), para qué se aplica “Ver todos” y qué altas no se avisan.",
 		href: "/admin/causas/workers",
 		hrefLabel: "Operar los workers de pjn-mis-causas",
 	},

@@ -10,8 +10,10 @@ const MisCausasRepoFlow: React.FC = () => (
 	<Box>
 		<FlowDiagram spec={buildMisCausasRepoSpec()} />
 		<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1 }}>
-			Los workers corren con <code>autorestart:false</code>: su ciclo de vida lo controla el manager, no PM2. Los cuatro de vigilancia son la
-			excepción — tienen <code>cron_restart</code> propio y corren aunque el manager esté caído, que es cuando más falta hacen.
+			Los workers del ciclo de la credencial corren con <code>autorestart:false</code>: su ciclo de vida lo controla el manager, no PM2. Los seis
+			de vigilancia, intervinientes, huecos-backfill y bandeja-sync tienen <code>cron_restart</code> propio y los tres de PDFs y expediente-export
+			son always-on: corren aunque el manager esté caído, que es cuando más falta hacen. Los flags de la API del SCW nuevo se operan en Workers →
+			Mis Causas updates y por credencial en Credenciales PJN.
 		</Typography>
 	</Box>
 );
