@@ -32,6 +32,8 @@ import { Eye, SearchNormal1, Setting2, UserAdd } from "iconsax-react";
 import { useSnackbar } from "notistack";
 import discountsService, {
 	DiscountCode,
+	DiscountPack,
+	DiscountPackAddon,
 	CreateDiscountParams,
 	UpdateDiscountParams,
 	StripeEnvironment,
@@ -116,6 +118,14 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 		environments: ["development", "production"] as StripeEnvironment[],
 		targetSegments: [] as string[],
 		purpose: "" as "" | "winback",
+		// Pack (combo): plan + bloques + conector preseleccionados en la tarjeta del usuario
+		packEnabled: false,
+		packPlanId: "premium" as "standard" | "pro" | "premium",
+		packBlocks: 0,
+		packConnector: false,
+		packTitle: "",
+		packSubtitle: "",
+		packCta: "",
 	});
 
 	// Cargar segmentos disponibles desde la API de Marketing
@@ -228,6 +238,13 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 					environments: (discount as any).environments || (["development", "production"] as StripeEnvironment[]),
 					targetSegments: discount.restrictions.targetSegments || [],
 					purpose: (discount as any).purpose || "",
+					packEnabled: !!discount.pack?.planId,
+					packPlanId: discount.pack?.planId || "premium",
+					packBlocks: discount.pack?.addons?.find((a) => a.key === "extra_folders")?.quantity || 0,
+					packConnector: !!discount.pack?.addons?.some((a) => a.key === "mcp_access"),
+					packTitle: discount.pack?.title || "",
+					packSubtitle: discount.pack?.subtitle || "",
+					packCta: discount.pack?.ctaLabel || "",
 				});
 				// Cargar usuarios objetivo existentes para mostrarlos en el Autocomplete
 				if (discount._id) {
@@ -285,6 +302,13 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 					environments: ["development", "production"],
 					targetSegments: [],
 					purpose: "",
+					packEnabled: false,
+					packPlanId: "premium",
+					packBlocks: 0,
+					packConnector: false,
+					packTitle: "",
+					packSubtitle: "",
+					packCta: "",
 				});
 				setPendingTargetUsers([]);
 				setPendingTargetContacts([]);
@@ -295,6 +319,36 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 			}
 		}
 	}, [open, discount]);
+
+	/** Pack (combo) del formulario → payload; null si está apagado (en update lo quita). */
+	const buildPackPayload = (): DiscountPack | null => {
+		if (!formData.packEnabled) return null;
+		const addons: DiscountPackAddon[] = [];
+		if (formData.packConnector) addons.push({ key: "mcp_access", quantity: 1 });
+		if (formData.packPlanId === "premium" && formData.packBlocks > 0) addons.push({ key: "extra_folders", quantity: formData.packBlocks });
+		return {
+			planId: formData.packPlanId,
+			addons,
+			title: formData.packTitle.trim() || undefined,
+			subtitle: formData.packSubtitle.trim() || undefined,
+			ctaLabel: formData.packCta.trim() || undefined,
+		};
+	};
+
+	/** Mensaje de error del pack antes de enviar (misma regla que el backend), o null. */
+	const packValidationError = (): string | null => {
+		if (!formData.packEnabled) return null;
+		if (formData.applicablePlans.length > 0 && !formData.applicablePlans.includes(formData.packPlanId)) {
+			return `El plan del pack (${formData.packPlanId}) tiene que estar entre los planes a los que aplica el cupón.`;
+		}
+		if (
+			formData.packPlanId === "premium" &&
+			(formData.packBlocks < 0 || formData.packBlocks > 20 || !Number.isInteger(formData.packBlocks))
+		) {
+			return "Los bloques del pack tienen que ser un entero entre 0 y 20.";
+		}
+		return null;
+	};
 
 	const handleChange = (field: string, value: any) => {
 		setFormData((prev) => ({ ...prev, [field]: value }));
@@ -406,6 +460,11 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 			enqueueSnackbar("Debe seleccionar al menos un entorno de Stripe", { variant: "error" });
 			return;
 		}
+		const packError = packValidationError();
+		if (packError) {
+			enqueueSnackbar(packError, { variant: "error" });
+			return;
+		}
 
 		try {
 			setLoading(true);
@@ -442,6 +501,7 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 					},
 					isActive: formData.isActive,
 					purpose: formData.purpose || null,
+					pack: buildPackPayload(),
 				};
 
 				await discountsService.updateDiscount(discount!._id, updateData);
@@ -479,6 +539,7 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 					environments: formData.environments,
 					targetSegments: formData.targetSegments.length > 0 ? formData.targetSegments : undefined,
 					purpose: formData.purpose || undefined,
+					pack: buildPackPayload() || undefined,
 				};
 
 				const response = await discountsService.createDiscount(createData);
@@ -684,6 +745,96 @@ const PromotionFormModal = ({ open, onClose, onSuccess, discount }: PromotionFor
 								</FormHelperText>
 							</FormControl>
 						</Grid>
+
+						{/* Pack (combo): plan + add-ons preseleccionados en la tarjeta del usuario */}
+						<Grid item xs={12}>
+							<FormControlLabel
+								control={<Switch checked={formData.packEnabled} onChange={(e) => handleChange("packEnabled", e.target.checked)} />}
+								label="Ofrecer como pack (combo preseleccionado)"
+							/>
+							<FormHelperText sx={{ ml: 0 }}>
+								Con el pack, el usuario ve en Planes una tarjeta propia con el plan, los bloques de causas y el conector ya elegidos, y un
+								solo botón. Puede sumar o quitar ítems antes de pagar; el cupón se aplica a todo lo que incluya.
+							</FormHelperText>
+						</Grid>
+						{formData.packEnabled && (
+							<>
+								<Grid item xs={12} sm={4}>
+									<FormControl fullWidth>
+										<InputLabel id="pack-plan-label">Plan del pack</InputLabel>
+										<Select
+											labelId="pack-plan-label"
+											value={formData.packPlanId}
+											label="Plan del pack"
+											onChange={(e) => {
+												const planId = e.target.value as "standard" | "pro" | "premium";
+												setFormData((prev) => ({ ...prev, packPlanId: planId, packBlocks: planId === "premium" ? prev.packBlocks : 0 }));
+											}}
+										>
+											<MenuItem value="standard">Estándar</MenuItem>
+											<MenuItem value="pro">Pro</MenuItem>
+											<MenuItem value="premium">Premium</MenuItem>
+										</Select>
+										{formData.applicablePlans.length > 0 && !formData.applicablePlans.includes(formData.packPlanId) && (
+											<FormHelperText error>Tiene que estar entre los planes aplicables del cupón.</FormHelperText>
+										)}
+									</FormControl>
+								</Grid>
+								<Grid item xs={12} sm={4}>
+									<TextField
+										fullWidth
+										type="number"
+										label="Bloques de causas (+250 c/u)"
+										value={formData.packBlocks}
+										disabled={formData.packPlanId !== "premium"}
+										onChange={(e) => handleChange("packBlocks", Math.max(0, Math.min(20, Math.floor(Number(e.target.value) || 0))))}
+										inputProps={{ min: 0, max: 20, step: 1 }}
+										helperText={formData.packPlanId === "premium" ? "0 a 20. Solo con Premium." : "Solo disponibles con Premium."}
+									/>
+								</Grid>
+								<Grid item xs={12} sm={4}>
+									<FormControlLabel
+										sx={{ mt: 1 }}
+										control={
+											<Checkbox checked={formData.packConnector} onChange={(e) => handleChange("packConnector", e.target.checked)} />
+										}
+										label="Incluir Conectores de IA"
+									/>
+								</Grid>
+								<Grid item xs={12} sm={6}>
+									<TextField
+										fullWidth
+										label="Título del pack"
+										value={formData.packTitle}
+										onChange={(e) => handleChange("packTitle", e.target.value)}
+										inputProps={{ maxLength: 120 }}
+										helperText="Vacío = «Pack para tu estudio»"
+									/>
+								</Grid>
+								<Grid item xs={12} sm={6}>
+									<TextField
+										fullWidth
+										label="Texto del botón"
+										value={formData.packCta}
+										onChange={(e) => handleChange("packCta", e.target.value)}
+										inputProps={{ maxLength: 40 }}
+										helperText="Vacío = «Contratar el pack»"
+									/>
+								</Grid>
+								<Grid item xs={12}>
+									<TextField
+										fullWidth
+										multiline
+										minRows={2}
+										label="Subtítulo del pack"
+										value={formData.packSubtitle}
+										onChange={(e) => handleChange("packSubtitle", e.target.value)}
+										inputProps={{ maxLength: 300 }}
+										helperText="Una línea que explique a quién va dirigido o qué incluye (opcional)."
+									/>
+								</Grid>
+							</>
+						)}
 
 						<Grid item xs={12} sm={4}>
 							<FormControl fullWidth disabled={isEditing}>

@@ -210,6 +210,25 @@ export interface StripeConfig {
 
 export type TargetEnvironment = "development" | "production" | "both";
 
+/** Add-on incluido en un pack: el conector va siempre con cantidad 1; los bloques de causas, 1..20 (solo Premium). */
+export interface DiscountPackAddon {
+	key: "mcp_access" | "extra_folders";
+	quantity: number;
+}
+
+/**
+ * Pack (combo) que propone el cupón: plan + add-ons preseleccionados. El front del usuario
+ * lo muestra como tarjeta propia con los ítems editables y un solo botón; el checkout de alta
+ * contrata todo junto y el cupón se aplica a cada ítem.
+ */
+export interface DiscountPack {
+	planId: "standard" | "pro" | "premium";
+	addons: DiscountPackAddon[];
+	title?: string | null;
+	subtitle?: string | null;
+	ctaLabel?: string | null;
+}
+
 export interface DiscountCode {
 	_id: string;
 	code: string;
@@ -231,6 +250,8 @@ export interface DiscountCode {
 	isActive: boolean;
 	/** Propósito de sistema único (p.ej. "winback" = cupón de reconquista). Solo uno por propósito. */
 	purpose?: "winback" | null;
+	/** Pack (combo) propuesto por el cupón; ausente o null = cupón sin pack. */
+	pack?: DiscountPack | null;
 	targetEnvironment: TargetEnvironment;
 	stats: DiscountStats;
 	redemptionHistory: RedemptionHistoryItem[];
@@ -282,6 +303,8 @@ export interface CreateDiscountParams {
 	targetContacts?: string[];
 	/** Propósito de sistema único (p.ej. "winback"). Solo puede existir un cupón por propósito. */
 	purpose?: "winback";
+	/** Pack (combo) propuesto: el backend valida plan, add-ons y cantidades (400 INVALID_PACK). */
+	pack?: DiscountPack;
 }
 
 export interface UpdateDiscountParams {
@@ -294,6 +317,8 @@ export interface UpdateDiscountParams {
 	isActive?: boolean;
 	/** Propósito de sistema único. null para quitarlo. */
 	purpose?: "winback" | null;
+	/** Pack (combo) propuesto. null para quitarlo. */
+	pack?: DiscountPack | null;
 }
 
 export interface DiscountResponse {
@@ -833,10 +858,7 @@ class DiscountsService {
 
 	async addTargetContacts(discountId: string, contactIds: string[]): Promise<AddTargetContactsResponse> {
 		try {
-			const response = await adminAxios.post<AddTargetContactsResponse>(
-				`/api/discounts/${discountId}/target-contacts`,
-				{ contactIds },
-			);
+			const response = await adminAxios.post<AddTargetContactsResponse>(`/api/discounts/${discountId}/target-contacts`, { contactIds });
 			return response.data;
 		} catch (error: any) {
 			throw new Error(error.response?.data?.message || "Error al agregar contactos objetivo");
@@ -845,10 +867,9 @@ class DiscountsService {
 
 	async removeTargetContacts(discountId: string, contactIds: string[]): Promise<RemoveTargetContactsResponse> {
 		try {
-			const response = await adminAxios.delete<RemoveTargetContactsResponse>(
-				`/api/discounts/${discountId}/target-contacts`,
-				{ data: { contactIds } },
-			);
+			const response = await adminAxios.delete<RemoveTargetContactsResponse>(`/api/discounts/${discountId}/target-contacts`, {
+				data: { contactIds },
+			});
 			return response.data;
 		} catch (error: any) {
 			throw new Error(error.response?.data?.message || "Error al quitar contactos objetivo");
@@ -857,10 +878,7 @@ class DiscountsService {
 
 	async setTargetContacts(discountId: string, contactIds: string[]): Promise<SetTargetContactsResponse> {
 		try {
-			const response = await adminAxios.put<SetTargetContactsResponse>(
-				`/api/discounts/${discountId}/target-contacts`,
-				{ contactIds },
-			);
+			const response = await adminAxios.put<SetTargetContactsResponse>(`/api/discounts/${discountId}/target-contacts`, { contactIds });
 			return response.data;
 		} catch (error: any) {
 			throw new Error(error.response?.data?.message || "Error al configurar contactos objetivo");
