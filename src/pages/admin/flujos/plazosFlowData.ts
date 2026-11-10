@@ -18,7 +18,7 @@ export interface PlazosFlowLive {
 	entregaEnabled: boolean;
 	dryRun: boolean;
 	userFilter: Record<string, unknown> | null;
-	/** pjn-bandeja-sync (worker-cloud-02) */
+	/** pjn-bandeja-sync (worker-cloud-01) */
 	bandejaEnabled: boolean;
 	/** conteos (Atlas, origen usuario) */
 	cola: Record<string, number>;
@@ -58,7 +58,7 @@ export function buildPlazosSpec(live: PlazosFlowLive): FlowSpec {
 			h: 92,
 			kind: "private",
 			label: "private-causas-update",
-			sub: ["pjn-mis-causas · worker-cloud-02", "causas privadas (credencial)", `cédulas nuevas · ${n(live.porFuente["mis-causas"])}`],
+			sub: ["pjn-mis-causas · worker-cloud-01", "causas privadas (credencial)", `cédulas nuevas · ${n(live.porFuente["mis-causas"])}`],
 		},
 		{
 			id: "bandeja",
@@ -69,7 +69,7 @@ export function buildPlazosSpec(live: PlazosFlowLive): FlowSpec {
 			kind: live.bandejaEnabled || live.sinDatos ? "private" : "warn",
 			label: "pjn-bandeja-sync",
 			sub: [
-				"worker-cloud-02 · 10/16/22 UTC",
+				"worker-cloud-01 · 10/16/22 UTC",
 				"notif.pjn.gov.ar · RECIBIDAS",
 				live.bandejaEnabled || live.sinDatos ? "recepción → pjn-movements" : "APAGADA",
 				`plazo solo de hoy · ${n(live.porFuente.bandeja)}`,

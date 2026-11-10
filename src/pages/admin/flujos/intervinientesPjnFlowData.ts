@@ -4,7 +4,7 @@
 // Son dos workers que escriben la misma colección y un solo consumidor (el hub):
 //   · pjn-extra-info (pjn-workers, worker_02) — causas públicas SIN credencial
 //     activa, por el buscador público con captcha (OCR local).
-//   · pjn-mis-causas-intervinientes (pjn-mis-causas, worker-cloud-02) — causas
+//   · pjn-mis-causas-intervinientes (pjn-mis-causas, worker-cloud-01) — causas
 //     seguidas de credenciales activas, con la sesión del usuario, sin captcha.
 // El reparto es por hasActiveCredential, el mismo que usa app-update.
 //
@@ -84,7 +84,7 @@ export function buildIntervinientesPjnSpec(info: IntervinientesPjnInfo = {}): Fl
 			kind: "private",
 			label: "pjn-mis-causas-intervinientes",
 			sub: [
-				"worker-cloud-02 · diario 05:00 ART",
+				"worker-cloud-01 · diario 05:00 ART",
 				"solo causas seguidas, 28 fueros",
 				"públicas, privadas e incidentes",
 				"lock por credencial · relee cada 30 días",
@@ -205,7 +205,7 @@ export function buildIntervinientesPjnSpec(info: IntervinientesPjnInfo = {}): Fl
 			},
 			{
 				title: "Causas con credencial",
-				text: "pjn-mis-causas-intervinientes corre una vez por día en worker-cloud-02 (05:00 ART, stopped entre corridas es normal). Por cada credencial activa toma las causas seguidas de los 28 fueros del PJN, entra con la sesión del usuario (sin captcha), lee privadas e incidentes desde el listado Relacionados y relee cada 30 días. Comparte el lock por credencial con private-causas-update. Al guardar, avisa al hub (sync-pjn) para que cree los contactos.",
+				text: "pjn-mis-causas-intervinientes corre una vez por día en worker-cloud-01 (05:00 ART, stopped entre corridas es normal). Por cada credencial activa toma las causas seguidas de los 28 fueros del PJN, entra con la sesión del usuario (sin captcha), lee privadas e incidentes desde el listado Relacionados y relee cada 30 días. Comparte el lock por credencial con private-causas-update. Al guardar, avisa al hub (sync-pjn) para que cree los contactos.",
 				nodes: ["causa", "miscausas", "portallogin", "interv", "hub"],
 				edges: ["e1", "e4", "e6", "e8"],
 			},

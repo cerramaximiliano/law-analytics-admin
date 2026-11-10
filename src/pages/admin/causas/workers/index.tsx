@@ -124,7 +124,7 @@ const WORKER_TABS: WorkerTab[] = [
 		value: "intervinientes",
 		icon: <People size={20} />,
 		description:
-			"pjn-extra-info: partes y letrados de las causas públicas sin credencial activa (las de credencial las lee pjn-mis-causas-intervinientes en worker-cloud-02)",
+			"pjn-extra-info: partes y letrados de las causas públicas sin credencial activa (las de credencial las lee pjn-mis-causas-intervinientes en worker-cloud-01)",
 		status: "active",
 		host: "worker_02",
 		ip: "100.98.180.101",
@@ -145,8 +145,8 @@ const WORKER_TABS: WorkerTab[] = [
 		icon: <SecurityUser size={20} />,
 		description: "Captura de causas desde el portal autenticado del PJN (login SSO)",
 		status: "active",
-		host: "worker-cloud-02",
-		ip: "100.102.208.69",
+		host: "worker-cloud-01",
+		ip: "100.90.187.124",
 		flowView: "/admin/flujos?tab=credenciales",
 		dataView: {
 			to: "/admin/causas/credentials",
@@ -159,8 +159,8 @@ const WORKER_TABS: WorkerTab[] = [
 		icon: <RefreshSquare size={20} />,
 		description: "Actualización de las causas ya capturadas del portal autenticado",
 		status: "active",
-		host: "worker-cloud-02",
-		ip: "100.102.208.69",
+		host: "worker-cloud-01",
+		ip: "100.90.187.124",
 		flowView: "/admin/flujos?tab=mis-causas",
 		dataView: {
 			to: "/admin/causas/synced-credentials",

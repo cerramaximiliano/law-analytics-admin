@@ -92,6 +92,8 @@ export interface EligibilityStats {
 	notEligible: number;
 	updatedToday: number;
 	pendingToday?: number;
+	// Las que toca actualizar hoy (eligible − waitingCycle): denominador de coveragePercent
+	dueToday?: number;
 	coveragePercent?: number;
 	// No actualizadas hoy que todavía no vencieron (esperan su ciclo; no cuentan como pendientes)
 	waitingCycle?: number;

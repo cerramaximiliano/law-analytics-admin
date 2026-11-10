@@ -122,7 +122,7 @@ const AppUpdateWorker = () => {
 	const formatDate = (date: any): string => {
 		if (!date) return "N/A";
 		const dateStr = typeof date === "string" ? date : date.$date;
-		return new Date(dateStr).toLocaleString("es-AR");
+		return new Date(dateStr).toLocaleString("es-AR", { hourCycle: "h23" });
 	};
 
 	// Calcular tasa de éxito

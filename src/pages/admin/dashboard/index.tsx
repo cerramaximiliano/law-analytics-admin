@@ -1339,7 +1339,7 @@ const AdminDashboard = () => {
 							<Chip
 								size="small"
 								icon={<Clock size={14} />}
-								label={`${new Date(lastUpdated).toLocaleString("es-AR")}`}
+								label={`${new Date(lastUpdated).toLocaleString("es-AR", { hourCycle: "h23" })}`}
 								variant="outlined"
 								sx={{
 									borderRadius: 1.5,
@@ -2078,7 +2078,7 @@ const AdminDashboard = () => {
 											sx={{ display: "block", textAlign: "center", mt: 1.5, fontSize: { xs: "0.65rem", sm: "0.72rem" } }}
 										>
 											+{(eligibilityStats.waitingArchivo ?? 0).toLocaleString("es-AR")} de carpetas archivadas o sin carpeta · se actualizan cada{" "}
-											{eligibilityStats.archivoThresholdHours ?? 24} h
+											{eligibilityStats.archivoThresholdHours ?? 24} h · no cuentan en la cobertura de hoy
 										</Typography>
 									)}
 								</>
