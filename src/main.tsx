@@ -1,3 +1,5 @@
+// Primero: deja el reloj de 24 h como default de las fechas (ver utils/hora24).
+import "utils/hora24";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";

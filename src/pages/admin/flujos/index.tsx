@@ -154,7 +154,7 @@ const TABS: FlowTab[] = [
 		slug: "intervinientes",
 		esWorker: true,
 		intro:
-			"De la pestaña Intervinientes del PJN al contacto en la carpeta: qué worker lee cada causa según tenga o no credencial activa (pjn-extra-info en worker_02 con captcha, pjn-mis-causas-intervinientes en worker-cloud-02 con login), qué causas no tienen lector, y los cuatro momentos en que el hub convierte partes y letrados en contactos — siempre solo con la preferencia del dueño. Refleja en vivo el cron, los fueros y la relectura de extra-info.",
+			"De la pestaña Intervinientes del PJN al contacto en la carpeta: qué worker lee cada causa según tenga o no credencial activa (pjn-extra-info en worker_02 con captcha, pjn-mis-causas-intervinientes en worker-cloud-01 con login), qué causas no tienen lector, y los cuatro momentos en que el hub convierte partes y letrados en contactos — siempre solo con la preferencia del dueño. Refleja en vivo el cron, los fueros y la relectura de extra-info.",
 		href: "/admin/causas/workers?worker=intervinientes",
 		hrefLabel: "Operar pjn-extra-info (config, estadísticas, usuarios con sync)",
 	},

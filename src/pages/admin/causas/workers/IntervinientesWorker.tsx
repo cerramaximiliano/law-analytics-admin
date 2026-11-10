@@ -372,7 +372,7 @@ const IntervinientesWorker = () => {
 		{
 			field: "hasActiveCredential",
 			condition: "!== true",
-			description: "Sin credencial activa. Las de credencial activa las lee pjn-mis-causas-intervinientes (worker-cloud-02)",
+			description: "Sin credencial activa. Las de credencial activa las lee pjn-mis-causas-intervinientes (worker-cloud-01)",
 			active: true,
 		},
 		{ field: "verified", condition: "=== true", description: "Documento verificado en PJN", active: config?.eligibility?.requireVerified },
