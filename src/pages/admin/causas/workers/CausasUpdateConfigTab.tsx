@@ -5,6 +5,7 @@ import { useSnackbar } from "notistack";
 import { CausasUpdateConfig, CausasUpdateService } from "api/causasUpdate";
 import VinculadosConfigCard from "./VinculadosConfigCard";
 import ListadoApiScwCard from "./ListadoApiScwCard";
+import ScwBetaRunsCard from "./ScwBetaRunsCard";
 
 interface Props {
 	config: CausasUpdateConfig;
@@ -80,6 +81,7 @@ const CausasUpdateConfigTab: React.FC<Props> = ({ config, onConfigUpdate }) => {
 		<Stack spacing={3}>
 			<VinculadosConfigCard foco="misCausas" />
 			<ListadoApiScwCard config={config} onConfigUpdate={onConfigUpdate} />
+			<ScwBetaRunsCard />
 			{/* Worker General */}
 			<Card variant="outlined">
 				<CardContent>

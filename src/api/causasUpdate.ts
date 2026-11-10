@@ -34,6 +34,15 @@ export interface CausasUpdateConfig {
 		listadoApiScwBetaCredenciales?: string[];
 		listadoApiScwBetaUpdatedAt?: string | null;
 		listadoApiScwBetaUpdatedBy?: string | null;
+		/** Sonda diaria de la API del SCW nuevo (pjn-scw-beta-probe). Default true. */
+		scwBetaProbeEnabled?: boolean;
+		/** Ante una falla dura la sonda apaga los flags de la API. Default true. */
+		scwBetaProbeAutoOff?: boolean;
+		/** Id de la credencial con la que corre la sonda; vacío = la primera de listadoApiScwBetaCredenciales. */
+		scwBetaProbeCredencial?: string | null;
+		/** Backfill por el SCW clásico de las históricas que la API no pudo dar (pjn-huecos-backfill). Default false. */
+		huecosBackfillEnabled?: boolean;
+		huecosBackfillMaxCausas?: number;
 	};
 	thresholds: {
 		updateThresholdHours: number;
@@ -217,7 +226,83 @@ export interface VinculadosConfig {
 	misCausas: VinculadosMisCausas;
 }
 
+// ====== API del SCW nuevo: sonda diaria y backfill de huecos (GET /api/causas-update/scw-beta) ======
+
+export interface ScwBetaProbePaso {
+	ok: boolean;
+	ms?: number;
+	/** Paso no ejecutado y por qué (cuenta como ok). */
+	omitido?: string;
+	error?: string;
+	[k: string]: unknown;
+}
+
+export interface ScwBetaProbeRun {
+	_id: string;
+	at: string;
+	ok: boolean;
+	ms: number;
+	/** Portal caído: la sonda no evaluó la API. */
+	abortado?: string;
+	duras: string[];
+	avisos: string[];
+	pasos: Record<string, ScwBetaProbePaso>;
+	credentialId?: string;
+	credentialEmail?: string | null;
+	flagsApagados?: boolean;
+	swagger?: { hash: string } | null;
+	cliente?: { requests: number; reintentos: number; errores5xx: number; refreshes: number; ms: number } | null;
+}
+
+export interface HuecosBackfillRun {
+	_id: string;
+	at: string;
+	ms: number;
+	dryRun?: boolean;
+	instance?: string;
+	pendientesAlInicio: number;
+	credenciales: number;
+	credencialesOcupadas: number;
+	credencialesConError: number;
+	causas: number;
+	agregados: number;
+	errores: number;
+	sinBotonHistoricas: number;
+	noEnListado: number;
+}
+
+export interface ScwBetaPanel {
+	sonda: {
+		enabled: boolean;
+		autoOff: boolean;
+		credencialId: string | null;
+		credencialEmail: string | null;
+		credencialPorDefecto: boolean;
+		flags: Record<string, boolean>;
+		apagadoAutomatico: { at: string; motivo: string; previos: Record<string, boolean> } | null;
+		estado: { ultimaCorrida?: string; ultimoOk?: boolean; ultimoResumen?: string; duras?: string[]; avisos?: string[] } | null;
+		corridas: ScwBetaProbeRun[];
+	};
+	huecos: {
+		enabled: boolean;
+		maxCausas: number;
+		maxIntentos: number;
+		delayMs: number;
+		causasPorSesion: number;
+		corridas: HuecosBackfillRun[];
+	};
+}
+
 export class CausasUpdateService {
+	static async getScwBeta(params?: { limit?: number }): Promise<ApiResponse<ScwBetaPanel>> {
+		try {
+			const response = await adminAxios.get("/api/causas-update/scw-beta", { params });
+			return response.data;
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
 	/** Pestaña Vinculados en pjn-workers (app-update) y pjn-mis-causas (2026-09-30). */
 	static async getVinculadosConfig(): Promise<ApiResponse<VinculadosConfig>> {
 		try {
