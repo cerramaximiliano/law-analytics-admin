@@ -1522,7 +1522,7 @@ const CredencialesPJN = () => {
 											<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.5 }}>
 												Vías del update
 												<Tooltip
-													title="Cómo corre el update diario de la credencial. Apertura: el barrido del listado por HTTP abre cada causa desde su fila (la vía actual); 'navegador' = mismo barrido con el browser; 'por número' = sin listado, búsqueda por número. Movimientos: la tabla de movimientos se lee por la API del SCW nuevo (piloto movimientosApiUpdate) o por HTTP; ante cualquier duda vuelve a HTTP. Selección: hoy todas las causas vencidas por su clase y franja (ciclo); la selección por fecha del listado todavía no está activa."
+													title="Cómo corre el update diario de la credencial. Apertura: el barrido del listado por HTTP abre cada causa desde su fila (la vía actual); 'navegador' = mismo barrido con el browser; 'por número' = sin listado, búsqueda por número. Movimientos: la tabla de movimientos se lee por la API del SCW nuevo (piloto movimientosApiUpdate) o por HTTP; ante cualquier duda vuelve a HTTP. Selección: 'Ciclo' = todas las causas vencidas por su clase y franja (barrido por ciclo, la vía actual); 'Ciclo + sombra' = igual, y además calcula qué abriría el listado sin cambiar nada; 'Sel. listado' = solo las causas cuya fecha del listado cambió, más una pasada completa diaria."
 													arrow
 													placement="top"
 												>
@@ -1907,10 +1907,21 @@ const CredencialesPJN = () => {
 															}. Movimientos: ${
 																cred.vias.movimientos === "api" ? "API del SCW nuevo (fallback HTTP)" : cred.vias.movimientos === "http" ? "HTTP" : "navegador"
 															}${cred.vias.primeraLecturaApi ? "; primera lectura por API" : ""}. Selección: ${
-																cred.vias.seleccion === "listado" ? "solo las causas que el listado marca" : "todas las vencidas por clase y franja"
+																cred.vias.seleccion === "listado"
+																	? "solo las causas que el listado marca (más una pasada completa diaria)"
+																	: cred.vias.seleccion === "sombra"
+																	? "todas las vencidas por clase y franja; en sombra calcula qué abriría el listado"
+																	: "todas las vencidas por clase y franja (barrido por ciclo)"
 															}.`}
 														>
 															<Stack direction="row" spacing={0.5} justifyContent="center" alignItems="center">
+																<Chip
+																	label={cred.vias.seleccion === "listado" ? "Sel. listado" : cred.vias.seleccion === "sombra" ? "Ciclo + sombra" : "Ciclo"}
+																	size="small"
+																	color={cred.vias.seleccion === "listado" ? "success" : cred.vias.seleccion === "sombra" ? "secondary" : "default"}
+																	variant={cred.vias.seleccion === "ciclo" ? "outlined" : "filled"}
+																	sx={{ fontSize: "0.65rem", height: 20, fontWeight: 700 }}
+																/>
 																<Chip
 																	label={cred.vias.apertura === "listado-http" ? "Listado HTTP" : cred.vias.apertura === "listado-navegador" ? "Listado browser" : "Sin listado"}
 																	size="small"

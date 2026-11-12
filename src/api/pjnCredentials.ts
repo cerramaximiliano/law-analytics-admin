@@ -58,7 +58,7 @@ export interface PjnCredential {
 		aperturaTodas: boolean;
 		movimientos: "api" | "http" | "navegador";
 		primeraLecturaApi: boolean;
-		seleccion: "ciclo" | "listado";
+		seleccion: "ciclo" | "sombra" | "listado";
 	};
 	verified: boolean;
 	verifiedAt: string | null;
