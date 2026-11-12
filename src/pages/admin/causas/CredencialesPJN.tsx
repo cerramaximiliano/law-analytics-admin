@@ -1520,6 +1520,20 @@ const CredencialesPJN = () => {
 										</TableCell>
 										<TableCell align="center">
 											<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.5 }}>
+												Vías del update
+												<Tooltip
+													title="Cómo corre el update diario de la credencial. Apertura: el barrido del listado por HTTP abre cada causa desde su fila (la vía actual); 'navegador' = mismo barrido con el browser; 'por número' = sin listado, búsqueda por número. Movimientos: la tabla de movimientos se lee por la API del SCW nuevo (piloto movimientosApiUpdate) o por HTTP; ante cualquier duda vuelve a HTTP. Selección: hoy todas las causas vencidas por su clase y franja (ciclo); la selección por fecha del listado todavía no está activa."
+													arrow
+													placement="top"
+												>
+													<Box component="span" sx={{ display: "inline-flex", cursor: "help", opacity: 0.5 }}>
+														<InfoCircle size={13} />
+													</Box>
+												</Tooltip>
+											</Box>
+										</TableCell>
+										<TableCell align="center">
+											<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.5 }}>
 												Acciones
 												<Tooltip
 													title="Ver JSON completo · Activar/Desactivar · Resetear verificación (mantiene carpetas) · Resetear sync completo (elimina carpetas y causas) · Eliminar credencial."
@@ -1537,13 +1551,13 @@ const CredencialesPJN = () => {
 								<TableBody>
 									{loading ? (
 										<TableRow>
-											<TableCell colSpan={19} align="center" sx={{ py: 4 }}>
+											<TableCell colSpan={20} align="center" sx={{ py: 4 }}>
 												<CircularProgress size={32} />
 											</TableCell>
 										</TableRow>
 									) : credentials.length === 0 ? (
 										<TableRow>
-											<TableCell colSpan={19} align="center" sx={{ py: 4 }}>
+											<TableCell colSpan={20} align="center" sx={{ py: 4 }}>
 												<Typography color="text.secondary">No se encontraron credenciales</Typography>
 											</TableCell>
 										</TableRow>
@@ -1879,6 +1893,45 @@ const CredencialesPJN = () => {
 															/>
 														</Stack>
 													</Tooltip>
+												</TableCell>
+												<TableCell align="center">
+													{cred.vias ? (
+														<Tooltip
+															arrow
+															title={`Apertura: ${
+																cred.vias.apertura === "listado-http"
+																	? `barrido del listado por HTTP${cred.vias.aperturaTodas ? " (todas las causas)" : ""}`
+																	: cred.vias.apertura === "listado-navegador"
+																	? "barrido del listado con el navegador"
+																	: "sin listado, búsqueda por número"
+															}. Movimientos: ${
+																cred.vias.movimientos === "api" ? "API del SCW nuevo (fallback HTTP)" : cred.vias.movimientos === "http" ? "HTTP" : "navegador"
+															}${cred.vias.primeraLecturaApi ? "; primera lectura por API" : ""}. Selección: ${
+																cred.vias.seleccion === "listado" ? "solo las causas que el listado marca" : "todas las vencidas por clase y franja"
+															}.`}
+														>
+															<Stack direction="row" spacing={0.5} justifyContent="center" alignItems="center">
+																<Chip
+																	label={cred.vias.apertura === "listado-http" ? "Listado HTTP" : cred.vias.apertura === "listado-navegador" ? "Listado browser" : "Sin listado"}
+																	size="small"
+																	variant="outlined"
+																	color={cred.vias.apertura === "numero" ? "warning" : "default"}
+																	sx={{ fontSize: "0.65rem", height: 20, fontWeight: 700 }}
+																/>
+																<Chip
+																	label={`Movs ${cred.vias.movimientos === "api" ? "API" : cred.vias.movimientos === "http" ? "HTTP" : "browser"}`}
+																	size="small"
+																	color={cred.vias.movimientos === "api" ? "info" : "default"}
+																	variant={cred.vias.movimientos === "api" ? "filled" : "outlined"}
+																	sx={{ fontSize: "0.65rem", height: 20, fontWeight: 700 }}
+																/>
+															</Stack>
+														</Tooltip>
+													) : (
+														<Typography variant="caption" color="text.secondary">
+															—
+														</Typography>
+													)}
 												</TableCell>
 												<TableCell align="center">
 													<Stack direction="row" spacing={0.5} justifyContent="center">

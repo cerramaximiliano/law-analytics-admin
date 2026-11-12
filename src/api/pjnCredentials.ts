@@ -47,6 +47,19 @@ export interface PjnCredential {
 		enLista: boolean;
 		efectivo: boolean;
 	};
+	/**
+	 * Vías del update de esta credencial, calculadas por el admin-api desde causas-update-config (mismos flags que
+	 * pjn-mis-causas). apertura: cómo se abre cada causa; movimientos: cómo se lee la tabla de movimientos;
+	 * seleccion: qué causas se leen ("ciclo" = todas las vencidas por clase/franja; "listado" llega con el paso 2).
+	 */
+	vias?: {
+		listado: "api" | "navegador";
+		apertura: "listado-http" | "listado-navegador" | "numero";
+		aperturaTodas: boolean;
+		movimientos: "api" | "http" | "navegador";
+		primeraLecturaApi: boolean;
+		seleccion: "ciclo" | "listado";
+	};
 	verified: boolean;
 	verifiedAt: string | null;
 	isValid: boolean;
