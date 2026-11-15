@@ -6,10 +6,10 @@ import { alpha } from "@mui/material/styles";
 import { ArrowLeft2, ArrowRight2 } from "iconsax-react";
 import { BRAND_BLUE } from "themes/dashboardTokens";
 import FlowDiagram from "./FlowDiagram";
-import { FlowSpec } from "./flowTypes";
+import { FlowSpec, NodeLiveState } from "./flowTypes";
 
 // Card de un diagrama con navegación por pasos
-const DiagramCard = ({ spec }: { spec: FlowSpec }) => {
+const DiagramCard = ({ spec, live }: { spec: FlowSpec; live?: Record<string, NodeLiveState> }) => {
 	const theme = useTheme();
 	const isDark = theme.palette.mode === "dark";
 	const [stepIndex, setStepIndex] = useState(0);
@@ -53,7 +53,7 @@ const DiagramCard = ({ spec }: { spec: FlowSpec }) => {
 				))}
 			</Stack>
 
-			<FlowDiagram spec={spec} activeNodes={step.nodes} activeEdges={step.edges} />
+			<FlowDiagram spec={spec} activeNodes={step.nodes} activeEdges={step.edges} live={live} />
 
 			<Box
 				sx={{

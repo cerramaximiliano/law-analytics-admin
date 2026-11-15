@@ -10,6 +10,9 @@ import { Box, Chip, Grid, Stack, Typography } from "@mui/material";
 import { useTheme, alpha } from "@mui/material/styles";
 import { InfoCircle } from "iconsax-react";
 import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER, PRO_TEAL, PREMIUM_GOLD } from "themes/dashboardTokens";
+import { LIVE_TONE_COLOR } from "../causas/flujos/FlowDiagram";
+import { FlowSpec } from "../causas/flujos/flowTypes";
+import { LiveControls, LiveLegend, useLiveMode } from "./live/LiveFlowDiagram";
 import { API_HOP, COLUMNS, LABELS, NODES, SENTENCIAS_DETAILS, buildSentenciasEdges, SFNode, SFEdge, SFLabel } from "./sentenciasFlowData";
 
 const markerFor = (color: string): string => {
@@ -48,8 +51,23 @@ const NodeChip = ({ node }: { node: SFNode }) => {
 	);
 };
 
+// El diagrama de sentencias tiene su propio dibujo; para el modo En vivo alcanza
+// con un spec mínimo que lleve los ids y las fuentes de cada nodo.
+const LIVE_SPEC: FlowSpec = {
+	id: "sentencias",
+	title: "Sentencias",
+	intro: "",
+	width: 1400,
+	height: 500,
+	nodes: NODES.map((n) => ({ id: n.id, x: n.x, y: n.y, w: n.w, h: n.h, kind: "hub" as const, label: n.title, live: n.live })),
+	edges: [],
+	steps: [],
+};
+
 const SentenciasFlow: React.FC = () => {
 	const theme = useTheme();
+	const liveMode = useLiveMode(LIVE_SPEC);
+	const liveStates = liveMode.enVivo ? liveMode.live : null;
 	const isDark = theme.palette.mode === "dark";
 	const [hovered, setHovered] = useState<string | null>(null);
 	const [selected, setSelected] = useState<string | null>(null);
@@ -96,6 +114,9 @@ const SentenciasFlow: React.FC = () => {
 		const accent = n.accent ?? (n.kind === "worker" ? BRAND_BLUE : n.kind === "source" ? (textSecondary as string) : BRAND_BLUE);
 		const hasSub = n.sub && n.sub.length > 0;
 		const titleY = hasSub ? n.y + 21 : n.y + n.h / 2 + 4;
+		const ls = liveStates?.[n.id];
+		const lc = ls ? LIVE_TONE_COLOR[ls.tone] : null;
+		const badgeW = ls ? Math.min(n.w - 8, 12 + ls.badge.length * 4.9) : 0;
 		return (
 			<g
 				key={n.id}
@@ -108,6 +129,22 @@ const SentenciasFlow: React.FC = () => {
 				onMouseEnter={() => setHovered(n.id)}
 				onMouseLeave={() => setHovered((prev) => (prev === n.id ? null : prev))}
 			>
+				{ls && <title>{[n.title, ...ls.detail].join("\n")}</title>}
+				{ls && lc && (
+					<rect
+						x={n.x - 3}
+						y={n.y - 3}
+						width={n.w + 6}
+						height={n.h + 6}
+						rx={10}
+						fill="none"
+						stroke={lc}
+						strokeWidth={ls.tone === "idle" ? 1.25 : 2.25}
+						strokeDasharray={ls.tone === "idle" || ls.tone === "unknown" ? "3 3" : undefined}
+					>
+						{ls.tone === "bad" && <animate attributeName="stroke-opacity" values="1;0.35;1" dur="1.6s" repeatCount="indefinite" />}
+					</rect>
+				)}
 				<rect
 					x={n.x}
 					y={n.y}
@@ -135,7 +172,23 @@ const SentenciasFlow: React.FC = () => {
 						{line}
 					</text>
 				))}
-				<NodeChip node={n} />
+				{!ls && <NodeChip node={n} />}
+				{ls && lc && (
+					<g pointerEvents="none">
+						<rect x={n.x + n.w - badgeW - 4} y={n.y - 8} width={badgeW} height={14} rx={7} fill={lc} />
+						<text
+							x={n.x + n.w - badgeW / 2 - 4}
+							y={n.y + 2}
+							textAnchor="middle"
+							fontSize={8.5}
+							fontWeight={700}
+							fill="#fff"
+							style={{ fontVariantNumeric: "tabular-nums" }}
+						>
+							{ls.badge}
+						</text>
+					</g>
+				)}
 			</g>
 		);
 	};
@@ -153,7 +206,8 @@ const SentenciasFlow: React.FC = () => {
 
 	return (
 		<Stack spacing={2}>
-			<Box sx={{ width: "100%", overflowX: "auto" }}>
+			<LiveControls mode={liveMode} />
+			<Box sx={{ width: "100%", overflowX: "auto", mt: "0 !important" }}>
 				<Box
 					component="svg"
 					viewBox="0 0 1400 500"
@@ -209,6 +263,8 @@ const SentenciasFlow: React.FC = () => {
 					{NODES.map(renderNode)}
 				</Box>
 			</Box>
+
+			{liveMode.enVivo && <LiveLegend />}
 
 			{/* Leyenda */}
 			<Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap sx={{ px: 1 }}>

@@ -2,14 +2,18 @@
 // diagrama de siempre; en vivo cada nodo con fuente de datos muestra un anillo y
 // una pastilla con su estado (procesos PM2, colas, errores) y el detalle al pasar
 // el mouse. La elección queda en la URL (?vivo=1) para poder compartir el enlace.
+//
+// Dos variantes: LiveFlowDiagram (diagrama solo) y LiveDiagramCard (diagrama con
+// navegación por pasos). Comparten useLiveMode, LiveControls y LiveLegend.
 import React, { useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Alert, Box, IconButton, Stack, ToggleButton, ToggleButtonGroup, Tooltip, Typography } from "@mui/material";
 import { Refresh } from "iconsax-react";
 import FlowDiagram, { LIVE_TONE_COLOR } from "pages/admin/causas/flujos/FlowDiagram";
+import DiagramCard from "pages/admin/causas/flujos/DiagramCard";
 import { FlowSpec, LiveTone } from "pages/admin/causas/flujos/flowTypes";
 import { FlowMetrics } from "./computeLive";
-import { LIVE_REFRESH_MS, useFlowLive } from "./useFlowLive";
+import { FlowLiveResult, LIVE_REFRESH_MS, useFlowLive } from "./useFlowLive";
 
 const LEYENDA: { tone: LiveTone; label: string }[] = [
 	{ tone: "ok", label: "funcionando" },
@@ -19,18 +23,23 @@ const LEYENDA: { tone: LiveTone; label: string }[] = [
 	{ tone: "unknown", label: "sin datos" },
 ];
 
-interface Props {
+interface LiveProps {
 	spec: FlowSpec;
 	/** Métricas propias del flujo (colas, cobertura…), por id de nodo. */
 	metrics?: () => Promise<FlowMetrics>;
 }
 
-const LiveFlowDiagram: React.FC<Props> = ({ spec, metrics }) => {
+interface LiveMode extends FlowLiveResult {
+	enVivo: boolean;
+	setModo: (vivo: boolean) => void;
+	tieneFuentes: boolean;
+}
+
+export function useLiveMode(spec: FlowSpec, metrics?: () => Promise<FlowMetrics>): LiveMode {
 	const [params, setParams] = useSearchParams();
 	const enVivo = params.get("vivo") === "1";
 	const tieneFuentes = useMemo(() => !!metrics || spec.nodes.some((n) => n.live), [spec, metrics]);
-	const { live, loading, updatedAt, errors, refresh } = useFlowLive(spec, enVivo && tieneFuentes, metrics);
-
+	const result = useFlowLive(spec, enVivo && tieneFuentes, metrics);
 	const setModo = (vivo: boolean) =>
 		setParams(
 			(prev) => {
@@ -41,15 +50,17 @@ const LiveFlowDiagram: React.FC<Props> = ({ spec, metrics }) => {
 			},
 			{ replace: true },
 		);
+	return { ...result, enVivo, setModo, tieneFuentes };
+}
 
+export const LiveControls: React.FC<{ mode: LiveMode }> = ({ mode }) => {
+	const { enVivo, setModo, live, loading, updatedAt, errors, refresh } = mode;
 	const resumen = useMemo(() => {
 		if (!live) return null;
 		const c: Record<LiveTone, number> = { ok: 0, idle: 0, warn: 0, bad: 0, unknown: 0 };
 		Object.values(live).forEach((s) => (c[s.tone] += 1));
 		return c;
 	}, [live]);
-
-	if (!tieneFuentes) return <FlowDiagram spec={spec} />;
 
 	return (
 		<Box>
@@ -89,22 +100,47 @@ const LiveFlowDiagram: React.FC<Props> = ({ spec, metrics }) => {
 					No respondió: {errors.join(", ")}. El resto del estado se muestra igual.
 				</Alert>
 			)}
-			<FlowDiagram spec={spec} live={enVivo ? live ?? undefined : undefined} />
-			{enVivo && (
-				<Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap sx={{ mt: 1 }}>
-					{LEYENDA.map((l) => (
-						<Stack key={l.tone} direction="row" spacing={0.75} alignItems="center">
-							<Box sx={{ width: 10, height: 10, borderRadius: "50%", bgcolor: LIVE_TONE_COLOR[l.tone] }} />
-							<Typography variant="caption" color="text.secondary">
-								{l.label}
-							</Typography>
-						</Stack>
-					))}
-					<Typography variant="caption" color="text.secondary">
-						Pasá el mouse sobre un nodo para ver el detalle.
-					</Typography>
-				</Stack>
-			)}
+		</Box>
+	);
+};
+
+export const LiveLegend: React.FC = () => (
+	<Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap sx={{ mt: 1 }}>
+		{LEYENDA.map((l) => (
+			<Stack key={l.tone} direction="row" spacing={0.75} alignItems="center">
+				<Box sx={{ width: 10, height: 10, borderRadius: "50%", bgcolor: LIVE_TONE_COLOR[l.tone] }} />
+				<Typography variant="caption" color="text.secondary">
+					{l.label}
+				</Typography>
+			</Stack>
+		))}
+		<Typography variant="caption" color="text.secondary">
+			Pasá el mouse sobre un nodo para ver el detalle.
+		</Typography>
+	</Stack>
+);
+
+const LiveFlowDiagram: React.FC<LiveProps> = ({ spec, metrics }) => {
+	const mode = useLiveMode(spec, metrics);
+	if (!mode.tieneFuentes) return <FlowDiagram spec={spec} />;
+	return (
+		<Box>
+			<LiveControls mode={mode} />
+			<FlowDiagram spec={spec} live={mode.enVivo ? mode.live ?? undefined : undefined} />
+			{mode.enVivo && <LiveLegend />}
+		</Box>
+	);
+};
+
+/** DiagramCard (pasos Anterior/Siguiente) con el mismo interruptor Teórico / En vivo. */
+export const LiveDiagramCard: React.FC<LiveProps> = ({ spec, metrics }) => {
+	const mode = useLiveMode(spec, metrics);
+	if (!mode.tieneFuentes) return <DiagramCard spec={spec} />;
+	return (
+		<Box>
+			<LiveControls mode={mode} />
+			<DiagramCard spec={spec} live={mode.enVivo ? mode.live ?? undefined : undefined} />
+			{mode.enVivo && <LiveLegend />}
 		</Box>
 	);
 };

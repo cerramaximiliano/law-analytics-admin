@@ -24,6 +24,15 @@ export function useFlowLive(spec: FlowSpec, enabled: boolean, metricsProvider?: 
 	const [errors, setErrors] = useState<string[]>([]);
 	const vivo = useRef(true);
 
+	// Varios diagramas arman el spec en cada render: la carga depende solo de qué
+	// nodos tienen fuente (clave estable) y lee el spec vigente de un ref. Si no,
+	// cada render recrearía el intervalo y dispararía otra tanda de pedidos.
+	const specRef = useRef(spec);
+	specRef.current = spec;
+	const metricsRef = useRef(metricsProvider);
+	metricsRef.current = metricsProvider;
+	const claveFuentes = JSON.stringify(spec.nodes.filter((n) => n.live).map((n) => [n.id, n.live]));
+	const tieneMetricas = !!metricsProvider;
 	const usaPm2 = spec.nodes.some((n) => n.live?.procs?.length);
 	const usaCrons = spec.nodes.some((n) => n.live?.crons?.length);
 
@@ -33,7 +42,7 @@ export function useFlowLive(spec: FlowSpec, enabled: boolean, metricsProvider?: 
 			const [inv, crons, metrics] = await Promise.allSettled([
 				usaPm2 ? InfrastructureService.getInventory(force) : Promise.resolve(null),
 				usaCrons ? CronHealthService.getCronHealth() : Promise.resolve(null),
-				metricsProvider ? metricsProvider() : Promise.resolve(null),
+				metricsRef.current ? metricsRef.current() : Promise.resolve(null),
 			]);
 			if (!vivo.current) return;
 			const errs: string[] = [];
@@ -43,12 +52,13 @@ export function useFlowLive(spec: FlowSpec, enabled: boolean, metricsProvider?: 
 			const invData = inv.status === "fulfilled" ? (inv.value as InfraInventory | null) : null;
 			const cronData = crons.status === "fulfilled" && crons.value ? (crons.value.data as CronHealthItem[]) : null;
 			const metricData = metrics.status === "fulfilled" ? (metrics.value as FlowMetrics | null) : null;
-			setLive(computeLive(spec, invData, cronData, metricData));
+			setLive(computeLive(specRef.current, invData, cronData, metricData));
 			setErrors(errs);
 			setUpdatedAt(new Date());
 			setLoading(false);
 		},
-		[spec, usaPm2, usaCrons, metricsProvider],
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[claveFuentes, usaPm2, usaCrons, tieneMetricas],
 	);
 
 	useEffect(() => {

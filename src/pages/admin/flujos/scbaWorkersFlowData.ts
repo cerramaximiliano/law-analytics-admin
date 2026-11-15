@@ -35,6 +35,7 @@ export function buildScbaWorkersSpec(mode: ScbaUpdatePolicyMode, schedule: ScbaU
 		},
 		{
 			id: "manager",
+			live: { box: "workercloud02", procs: ["scba-manager"], alwaysOnline: true },
 			x: 40,
 			y: 330,
 			w: 200,
@@ -45,6 +46,7 @@ export function buildScbaWorkersSpec(mode: ScbaUpdatePolicyMode, schedule: ScbaU
 		},
 		{
 			id: "verification",
+			live: { box: "workercloud02", procs: ["scba-verification"], onDemand: true },
 			x: 320,
 			y: 30,
 			w: 230,
@@ -55,6 +57,7 @@ export function buildScbaWorkersSpec(mode: ScbaUpdatePolicyMode, schedule: ScbaU
 		},
 		{
 			id: "initial",
+			live: { box: "workercloud02", procs: ["scba-initial-scraping-worker"], onDemand: true },
 			x: 320,
 			y: 140,
 			w: 230,
@@ -65,6 +68,7 @@ export function buildScbaWorkersSpec(mode: ScbaUpdatePolicyMode, schedule: ScbaU
 		},
 		{
 			id: "update",
+			live: { box: "workercloud02", procs: ["scba-update"], onDemand: true },
 			x: 320,
 			y: 240,
 			w: 230,
@@ -77,6 +81,7 @@ export function buildScbaWorkersSpec(mode: ScbaUpdatePolicyMode, schedule: ScbaU
 		},
 		{
 			id: "updateArchived",
+			live: { box: "workercloud02", procs: ["scba-update-archived-worker"], onDemand: true },
 			x: 320,
 			y: unified ? 364 : 352,
 			w: 230,
@@ -87,6 +92,7 @@ export function buildScbaWorkersSpec(mode: ScbaUpdatePolicyMode, schedule: ScbaU
 		},
 		{
 			id: "listAudit",
+			live: { box: "workercloud02", procs: ["scba-list-audit-worker"], onDemand: true },
 			x: 320,
 			y: 458,
 			w: 230,
@@ -127,6 +133,7 @@ export function buildScbaWorkersSpec(mode: ScbaUpdatePolicyMode, schedule: ScbaU
 		},
 		{
 			id: "notif",
+			live: { box: "worker-003", procs: ["notification-service"], alwaysOnline: true },
 			x: 930,
 			y: 300,
 			w: 170,

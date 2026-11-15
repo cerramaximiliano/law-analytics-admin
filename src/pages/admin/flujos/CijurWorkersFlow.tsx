@@ -6,7 +6,7 @@
 
 import React from "react";
 import { Box, Chip, Stack, Typography } from "@mui/material";
-import FlowDiagram from "../causas/flujos/FlowDiagram";
+import LiveFlowDiagram from "./live/LiveFlowDiagram";
 import { buildCijurWorkersSpec } from "./cijurWorkersFlowData";
 
 const CijurWorkersFlow: React.FC = () => {
@@ -21,7 +21,7 @@ const CijurWorkersFlow: React.FC = () => {
 					completo, no en el volumen.
 				</Typography>
 			</Stack>
-			<FlowDiagram spec={spec} />
+			<LiveFlowDiagram spec={spec} />
 			<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1 }}>
 				El campo <code>voces</code> es redacción editorial de la Procuración y no se republica, igual que los sumarios de SAIJ. Lo
 				publicable es el PDF —sentencia pública— y los resúmenes propios que se generen sobre su texto.

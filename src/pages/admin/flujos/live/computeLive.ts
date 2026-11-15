@@ -26,24 +26,31 @@ export const peorTono = (...tonos: (LiveTone | undefined)[]): LiveTone =>
 
 const matchProc = (patron: string, nombre: string) => (patron.endsWith("*") ? nombre.startsWith(patron.slice(0, -1)) : nombre === patron);
 
+/** "box:proceso" apunta a otro box que el del nodo (un nodo puede abarcar varios). */
+function separarBox(patron: string, boxPorDefecto?: string): [string | undefined, string] {
+	const i = patron.indexOf(":");
+	return i > 0 ? [patron.slice(0, i), patron.slice(i + 1)] : [boxPorDefecto, patron];
+}
+
 function estadoPm2(ref: FlowNodeLiveRef, inv: InfraInventory | null): NodeLiveState | null {
 	if (!ref.procs?.length) return null;
-	const box = inv?.boxes.find((b) => b.key === ref.box);
-	if (!box || !box.live?.reachable) {
-		return {
-			tone: "unknown",
-			badge: "sin datos",
-			detail: [box ? `${box.label}: el monitor del box no responde` : `Box ${ref.box ?? "?"} sin datos`],
-		};
-	}
 	const detail: string[] = [];
 	const encontrados: InfraProcess[] = [];
 	const faltan: string[] = [];
-	for (const patron of ref.procs) {
+	const sinDatos: string[] = [];
+	for (const patronCompleto of ref.procs) {
+		const [boxKey, patron] = separarBox(patronCompleto, ref.box);
+		const box = inv?.boxes.find((b) => b.key === boxKey);
+		if (!box || !box.live?.reachable) {
+			const msg = box ? `${box.label}: el monitor del box no responde` : `Box ${boxKey ?? "?"} sin datos`;
+			if (!sinDatos.includes(msg)) sinDatos.push(msg);
+			continue;
+		}
 		const m = box.processes.filter((p) => matchProc(patron, p.name));
 		if (m.length) encontrados.push(...m);
-		else faltan.push(patron.replace(/\*$/, ""));
+		else faltan.push(`${patron.replace(/\*$/, "")}${boxKey !== ref.box ? ` (${box.label})` : ""}`);
 	}
+	if (!encontrados.length && !faltan.length) return { tone: "unknown", badge: "sin datos", detail: sinDatos };
 	const online = encontrados.filter((p) => p.status === "online");
 	const errored = encontrados.filter((p) => p.status === "errored");
 	const caidos = ref.alwaysOnline ? encontrados.filter((p) => p.status !== "online") : [];
@@ -55,13 +62,15 @@ function estadoPm2(ref: FlowNodeLiveRef, inv: InfraInventory | null): NodeLiveSt
 		);
 		detail.push(`${p.name}: ${p.status}${extra.length ? ` · ${extra.join(" · ")}` : ""}`);
 	}
-	faltan.forEach((n) => detail.push(`${n}: no está registrado en PM2`));
+	faltan.forEach((n) => detail.push(ref.onDemand ? `${n}: sin instancias (las crea el manager cuando hay trabajo)` : `${n}: no está registrado en PM2`));
+	detail.push(...sinDatos);
 
 	let tone: LiveTone;
 	let badge: string;
-	if (faltan.length || errored.length || caidos.length) {
+	const faltaGrave = faltan.length > 0 && !ref.onDemand;
+	if (faltaGrave || errored.length || caidos.length) {
 		tone = "bad";
-		badge = faltan.length
+		badge = faltaGrave
 			? "falta en PM2"
 			: errored.length
 			? `${errored.length} errored`
@@ -75,12 +84,14 @@ function estadoPm2(ref: FlowNodeLiveRef, inv: InfraInventory | null): NodeLiveSt
 			: `${online.length} corriendo`;
 	} else {
 		tone = "idle";
-		badge = "en espera";
+		badge = encontrados.length ? "en espera" : "sin instancias";
 	}
 	if (erroresLog > 0) {
 		tone = peorTono(tone, "warn");
 		badge = `${badge} · ${erroresLog} err`;
 	}
+	// Un box sin datos no tapa lo que sí se vio, pero lo marca: el estado está incompleto.
+	if (sinDatos.length) tone = peorTono(tone, "unknown");
 	return { tone, badge, detail };
 }
 

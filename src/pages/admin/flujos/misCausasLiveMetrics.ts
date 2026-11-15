@@ -104,3 +104,13 @@ export async function misCausasLiveMetrics(): Promise<FlowMetrics> {
 	}
 	return out;
 }
+
+/** Mismas métricas para el diagrama "Causas PJN por credencial", con sus ids de nodo. */
+export async function misCausasCredencialesMetrics(): Promise<FlowMetrics> {
+	const m = await misCausasLiveMetrics();
+	const out: FlowMetrics = {};
+	if (m.full) out.full = m.full;
+	if (m.daily) out.daily = m.daily;
+	if (m.priv) out.movs = m.priv;
+	return out;
+}

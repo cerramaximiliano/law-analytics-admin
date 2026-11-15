@@ -8,7 +8,7 @@
 
 import React from "react";
 import { Box, Chip, Stack, Typography } from "@mui/material";
-import FlowDiagram from "../causas/flujos/FlowDiagram";
+import LiveFlowDiagram from "./live/LiveFlowDiagram";
 import { buildSaijApareoSpec } from "./saijApareoFlowData";
 
 const SaijApareoFlow: React.FC = () => {
@@ -24,7 +24,7 @@ const SaijApareoFlow: React.FC = () => {
 					metadata del vector — y desvincular lo revierte entero, embedding incluido.
 				</Typography>
 			</Stack>
-			<FlowDiagram spec={spec} />
+			<LiveFlowDiagram spec={spec} />
 			<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1 }}>
 				Al desvincular, la carátula de la SC no "vuelve" de un backup: se reconstruye desde el propio fallo (titulo, o actor c/
 				demandado s/ sobre). El estado previo sí queda respaldado en saij-desvinculacion-backup por si hay que deshacer la

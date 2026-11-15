@@ -10,7 +10,7 @@
 // (causas/workers → Intervinientes → Flujo) sin duplicar la fuente.
 import React, { useEffect, useState } from "react";
 import { Box, Chip, Skeleton, Stack, Typography } from "@mui/material";
-import DiagramCard from "../causas/flujos/DiagramCard";
+import { LiveDiagramCard } from "./live/LiveFlowDiagram";
 import { buildIntervinientesPjnSpec, describirCron, IntervinientesPjnInfo } from "./intervinientesPjnFlowData";
 import ExtraInfoConfigService from "api/extraInfoConfig";
 
@@ -81,7 +81,7 @@ const IntervinientesPjnFlow: React.FC = () => {
 					/>
 				)}
 			</Stack>
-			<DiagramCard spec={spec} />
+			<LiveDiagramCard spec={spec} />
 			<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1 }}>
 				Los dos workers solo leen partes y letrados: no bajan movimientos ni notifican. La preferencia que habilita los contactos es{" "}
 				<code>preferences.pjn.syncContactsFromIntervinientes</code> (Perfil → Integraciones PJN del usuario); sin ella la carpeta igual

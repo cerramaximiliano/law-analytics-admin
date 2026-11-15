@@ -10,7 +10,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Box, Chip, Skeleton, Stack, Typography } from "@mui/material";
-import FlowDiagram from "../causas/flujos/FlowDiagram";
+import LiveFlowDiagram from "./live/LiveFlowDiagram";
 import { buildScbaWorkersSpec, ScbaUpdateScheduleInfo } from "./scbaWorkersFlowData";
 import ScbaManagerService, { ScbaUpdatePolicyMode } from "api/scbaManager";
 
@@ -70,7 +70,7 @@ const ScbaWorkersFlow: React.FC = () => {
 					El modo se cambia en el SCBA manager (Configuración → Política de update) y el diagrama se redibuja al refrescar.
 				</Typography>
 			</Stack>
-			<FlowDiagram spec={spec} />
+			<LiveFlowDiagram spec={spec} />
 			<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1 }}>
 				La política de notificación (<code>notifyArchivedFolders</code>, en Notificaciones → Movimientos judiciales) se evalúa por causa
 				según el estado real de sus folders, sin importar qué worker la procese. Causas sin folder no se procesan en ningún modo.

@@ -80,6 +80,7 @@ export function buildSaijApareoSpec(): FlowSpec {
 		},
 		{
 			id: "emb",
+			live: { box: "worker01", procs: ["sentencias-embeddings"], alwaysOnline: true },
 			x: 1050,
 			y: 230,
 			w: 230,

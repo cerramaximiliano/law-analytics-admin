@@ -42,6 +42,7 @@ export function buildPlazosSpec(live: PlazosFlowLive): FlowSpec {
 		// ── Columna 1: fuentes de la cédula ──
 		{
 			id: "appupdate",
+			live: { box: "pjnworker", procs: ["pjn-app-update-*"] },
 			x: 30,
 			y: 30,
 			w: 230,
@@ -52,6 +53,7 @@ export function buildPlazosSpec(live: PlazosFlowLive): FlowSpec {
 		},
 		{
 			id: "miscausas",
+			live: { box: "workercloud01", procs: ["pjn-private-causas-update*"] },
 			x: 30,
 			y: 160,
 			w: 230,
@@ -62,6 +64,7 @@ export function buildPlazosSpec(live: PlazosFlowLive): FlowSpec {
 		},
 		{
 			id: "bandeja",
+			live: { box: "workercloud01", procs: ["pjn-bandeja-sync"] },
 			x: 30,
 			y: 290,
 			w: 230,
@@ -126,6 +129,7 @@ export function buildPlazosSpec(live: PlazosFlowLive): FlowSpec {
 		// ── Columna 3: procesamiento en worker_02 ──
 		{
 			id: "rag",
+			live: { box: "worker02", procs: ["pjn-rag-cedulas"], alwaysOnline: true },
 			x: 690,
 			y: 12,
 			w: 240,
@@ -136,6 +140,7 @@ export function buildPlazosSpec(live: PlazosFlowLive): FlowSpec {
 		},
 		{
 			id: "calculo",
+			live: { box: "worker02", procs: ["plazos-worker-usuarios"], alwaysOnline: true },
 			x: 670,
 			y: 230,
 			w: 240,
@@ -153,6 +158,7 @@ export function buildPlazosSpec(live: PlazosFlowLive): FlowSpec {
 		// ── Columna 4: entrega ──
 		{
 			id: "entrega",
+			live: { box: "worker02", procs: ["plazos-folders-worker"], alwaysOnline: true },
 			x: 990,
 			y: 230,
 			w: 230,
@@ -168,6 +174,7 @@ export function buildPlazosSpec(live: PlazosFlowLive): FlowSpec {
 		},
 		{
 			id: "hub",
+			live: { box: "hub", procs: ["law-analytics-server-prod"], alwaysOnline: true },
 			x: 990,
 			y: 400,
 			w: 230,
@@ -193,6 +200,7 @@ export function buildPlazosSpec(live: PlazosFlowLive): FlowSpec {
 		},
 		{
 			id: "correo",
+			live: { box: "worker-003", procs: ["notification-service"], alwaysOnline: true },
 			x: 670,
 			y: 530,
 			w: 240,

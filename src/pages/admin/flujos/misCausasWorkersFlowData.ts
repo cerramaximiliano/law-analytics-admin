@@ -64,6 +64,7 @@ export function buildMisCausasWorkersSpec(schedule: MisCausasScheduleInfo = {}):
 		},
 		{
 			id: "full",
+			live: { box: "workercloud01", procs: ["pjn-mis-causas"] },
 			x: 30,
 			y: 150,
 			w: 190,
@@ -74,6 +75,7 @@ export function buildMisCausasWorkersSpec(schedule: MisCausasScheduleInfo = {}):
 		},
 		{
 			id: "daily",
+			live: { box: "workercloud01", procs: ["pjn-update-sync*"] },
 			x: 30,
 			y: 292,
 			w: 190,
@@ -174,6 +176,7 @@ export function buildMisCausasWorkersSpec(schedule: MisCausasScheduleInfo = {}):
 		},
 		{
 			id: "movs",
+			live: { box: "workercloud01", procs: ["pjn-private-causas-update*"] },
 			x: 920,
 			y: 30,
 			w: 200,

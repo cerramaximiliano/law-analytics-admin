@@ -10,7 +10,7 @@
 
 import React from "react";
 import { Box, Chip, Stack, Typography } from "@mui/material";
-import FlowDiagram from "../causas/flujos/FlowDiagram";
+import LiveFlowDiagram from "./live/LiveFlowDiagram";
 import { buildSaijWorkersSpec } from "./saijWorkersFlowData";
 
 const SaijWorkersFlow: React.FC = () => {
@@ -25,7 +25,7 @@ const SaijWorkersFlow: React.FC = () => {
 					bifurcación real es nacional vs. el resto: solo el nacional alimenta el pipeline PJN y las campañas a usuarios.
 				</Typography>
 			</Stack>
-			<FlowDiagram spec={spec} />
+			<LiveFlowDiagram spec={spec} />
 			<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1 }}>
 				El rate limit de SAIJ es por IP y lo comparten los cuatro workers, pero el limitador de velocidad es una instancia por
 				proceso: ninguno ve el tráfico agregado. El ritmo sumado y los rechazos 403 se siguen en el tab Estado.

@@ -25,10 +25,13 @@ export type Side = "left" | "right" | "top" | "bottom";
 export interface FlowNodeLiveRef {
 	/** Box del inventario de infraestructura (key: "hub", "workercloud01"…). */
 	box?: string;
-	/** Procesos PM2 del nodo. Un `*` final matchea por prefijo (copias dinámicas -2, -3…). */
+	/** Procesos PM2 del nodo. Un `*` final matchea por prefijo (copias dinámicas -2, -3…).
+	 *  "box:proceso" lo busca en otro box (un nodo que corre en dos máquinas). */
 	procs?: string[];
 	/** true = deben estar online (APIs, always-on). false/omitido = cron o manager: stopped es normal. */
 	alwaysOnline?: boolean;
+	/** Workers que un manager crea y borra según la cola: no estar en PM2 es normal ("sin instancias"). */
+	onDemand?: boolean;
 	/** Crons in-process con heartbeat en cron-health (admin-api). */
 	crons?: string[];
 }

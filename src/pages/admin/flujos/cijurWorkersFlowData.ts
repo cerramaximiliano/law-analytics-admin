@@ -54,6 +54,7 @@ export function buildCijurWorkersSpec(): FlowSpec {
 		},
 		{
 			id: "worker",
+			live: { box: "worker01", procs: ["worker_CIJUR_0"] },
 			x: 320,
 			y: 400,
 			w: 225,

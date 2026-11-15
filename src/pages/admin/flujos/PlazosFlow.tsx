@@ -6,7 +6,7 @@
 import React, { useEffect, useState } from "react";
 import { Box, Chip, Skeleton, Stack, Typography } from "@mui/material";
 import CrossViewLinks from "components/admin/CrossViewLink";
-import DiagramCard from "../causas/flujos/DiagramCard";
+import { LiveDiagramCard } from "./live/LiveFlowDiagram";
 import { buildPlazosSpec, PlazosFlowLive } from "./plazosFlowData";
 import { getMonitorDe } from "api/plazos";
 import BandejaSyncConfigService from "api/bandejaSyncConfig";
@@ -92,7 +92,7 @@ const PlazosFlow: React.FC = () => {
 			<Box sx={{ mb: 2.5 }}>
 				<PlazosEtapas />
 			</Box>
-			<DiagramCard spec={spec} />
+			<LiveDiagramCard spec={spec} />
 			<Stack
 				direction={{ xs: "column", sm: "row" }}
 				spacing={1.5}

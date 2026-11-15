@@ -11,7 +11,8 @@
 // workers sin duplicar la fuente.
 import React, { useEffect, useState } from "react";
 import { Box, Chip, Skeleton, Stack, Typography } from "@mui/material";
-import FlowDiagram from "../causas/flujos/FlowDiagram";
+import LiveFlowDiagram from "./live/LiveFlowDiagram";
+import { misCausasCredencialesMetrics } from "./misCausasLiveMetrics";
 import { buildMisCausasWorkersSpec, describirListadoApi, MisCausasScheduleInfo } from "./misCausasWorkersFlowData";
 import ScrapingManagerService from "api/scrapingManager";
 import { CausasUpdateService } from "api/causasUpdate";
@@ -86,7 +87,7 @@ const MisCausasWorkersFlow: React.FC = () => {
 					<Chip size="small" variant="outlined" color="warning" label="no se pudo leer parte de la config" sx={{ fontSize: "0.7rem" }} />
 				)}
 			</Stack>
-			<FlowDiagram spec={spec} />
+			<LiveFlowDiagram spec={spec} metrics={misCausasCredencialesMetrics} />
 			<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1 }}>
 				Los dos workers crean causas y carpetas, pero no bajan movimientos ni notifican: eso es de{" "}
 				<code>private-causas-update</code>, que decide qué avisar según <code>firstSyncPolicy</code> (Notificaciones → Movimientos

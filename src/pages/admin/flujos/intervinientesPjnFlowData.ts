@@ -77,6 +77,7 @@ export function buildIntervinientesPjnSpec(info: IntervinientesPjnInfo = {}): Fl
 		},
 		{
 			id: "miscausas",
+			live: { box: "workercloud01", procs: ["pjn-mis-causas-intervinientes"] },
 			x: 290,
 			y: 24,
 			w: 240,
@@ -92,6 +93,7 @@ export function buildIntervinientesPjnSpec(info: IntervinientesPjnInfo = {}): Fl
 		},
 		{
 			id: "extrainfo",
+			live: { box: "worker02", procs: ["pjn-extra-info", "pjn-extra-info-ocr", "workercloud01:pjn-extra-info"] },
 			x: 290,
 			y: 262,
 			w: 240,
@@ -142,6 +144,7 @@ export function buildIntervinientesPjnSpec(info: IntervinientesPjnInfo = {}): Fl
 		},
 		{
 			id: "hub",
+			live: { box: "hub", procs: ["law-analytics-server-prod"], alwaysOnline: true },
 			x: 600,
 			y: 456,
 			w: 240,

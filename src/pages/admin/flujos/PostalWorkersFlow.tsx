@@ -12,7 +12,7 @@
 import React, { useEffect, useState } from "react";
 import { Box, Chip, Skeleton, Stack, Typography } from "@mui/material";
 import CrossViewLinks from "components/admin/CrossViewLink";
-import FlowDiagram from "../causas/flujos/FlowDiagram";
+import LiveFlowDiagram from "./live/LiveFlowDiagram";
 import { buildPostalWorkersSpec, PostalFlowLiveConfig } from "./postalWorkersFlowData";
 import ScraperService from "api/scraperService";
 
@@ -82,7 +82,7 @@ const PostalWorkersFlow: React.FC = () => {
 					El diagrama refleja la configuración en vivo (tab Configuración de este worker) y se redibuja al refrescar.
 				</Typography>
 			</Stack>
-			<FlowDiagram spec={spec} />
+			<LiveFlowDiagram spec={spec} />
 			<Stack
 				direction={{ xs: "column", sm: "row" }}
 				spacing={1.5}

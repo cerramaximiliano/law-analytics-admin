@@ -13,6 +13,8 @@ import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER, PRO_TEAL, PREMIUM_GOLD } from "the
 
 // Mismo rosa que usa el data plane para el salto HTTP. Se repite el valor en vez
 // de importarlo de dataflow.tsx para no acoplar dos páginas por una constante.
+import { FlowNodeLiveRef } from "../causas/flujos/flowTypes";
+
 export const API_HOP = "#DB2777";
 
 export type SFKind = "source" | "worker" | "store" | "api" | "client";
@@ -29,6 +31,8 @@ export interface SFNode {
 	accent?: string;
 	chip?: { text: string; color: string };
 	dim?: boolean;
+	/** Procesos PM2 del nodo para el modo En vivo (mismo formato que FlowNode.live). */
+	live?: FlowNodeLiveRef;
 }
 
 export interface SFEdge {
@@ -103,6 +107,7 @@ export const NODES: SFNode[] = [
 	// ── Captura: las 3 vías por las que entra una sentencia ──
 	{
 		id: "updateMov",
+		live: { box: "worker01", procs: ["update-movimientos-*"] },
 		x: CAP_X,
 		y: 118,
 		w: CAP_W,
@@ -113,6 +118,7 @@ export const NODES: SFNode[] = [
 	},
 	{
 		id: "collector",
+		live: { box: "worker01", procs: ["sentencias-collector"] },
 		x: CAP_X,
 		y: 40,
 		w: CAP_W,
@@ -123,6 +129,7 @@ export const NODES: SFNode[] = [
 	},
 	{
 		id: "saij",
+		live: { box: "worker01", procs: ["worker_SAIJ_*"] },
 		x: CAP_X,
 		y: 240,
 		w: CAP_W,
@@ -136,6 +143,7 @@ export const NODES: SFNode[] = [
 	// ── Procesamiento ──
 	{
 		id: "worker",
+		live: { box: "worker01", procs: ["sentencias-worker*"] },
 		x: PRC_X,
 		y: 40,
 		w: PRC_W,
@@ -146,6 +154,7 @@ export const NODES: SFNode[] = [
 	},
 	{
 		id: "ocr",
+		live: { box: "worker01", procs: ["ocr-worker"] },
 		x: PRC_X,
 		y: 124,
 		w: PRC_W,
@@ -156,6 +165,7 @@ export const NODES: SFNode[] = [
 	},
 	{
 		id: "embeddings",
+		live: { box: "worker01", procs: ["sentencias-embeddings"], alwaysOnline: true },
 		x: PRC_X,
 		y: 206,
 		w: PRC_W,
@@ -167,6 +177,7 @@ export const NODES: SFNode[] = [
 	},
 	{
 		id: "semantic",
+		live: { box: "worker01", procs: ["sentencias-semantic"] },
 		x: PRC_X,
 		y: 292,
 		w: PRC_W,
@@ -178,6 +189,7 @@ export const NODES: SFNode[] = [
 	},
 	{
 		id: "manager",
+		live: { box: "worker01", procs: ["sentencias-manager", "sentencias-retry"] },
 		x: PRC_X,
 		y: 376,
 		w: PRC_W,
@@ -237,6 +249,7 @@ export const NODES: SFNode[] = [
 	// ── APIs ──
 	{
 		id: "ragApi",
+		live: { box: "hub", procs: ["pjn-rag-api"], alwaysOnline: true },
 		x: API_X,
 		y: 52,
 		w: API_W,
@@ -248,6 +261,7 @@ export const NODES: SFNode[] = [
 	},
 	{
 		id: "pjnApi",
+		live: { box: "hub", procs: ["pjn/api"], alwaysOnline: true },
 		x: API_X,
 		y: 156,
 		w: API_W,
@@ -260,6 +274,7 @@ export const NODES: SFNode[] = [
 	},
 	{
 		id: "laServer",
+		live: { box: "hub", procs: ["law-analytics-server-prod"], alwaysOnline: true },
 		x: API_X,
 		y: 260,
 		w: API_W,

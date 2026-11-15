@@ -39,6 +39,7 @@ export function buildPostalWorkersSpec(cfg: PostalFlowLiveConfig): FlowSpec {
 		},
 		{
 			id: "manager",
+			live: { box: "worker01", procs: ["postal-manager"], alwaysOnline: true },
 			x: 40,
 			y: 310,
 			w: 200,
@@ -59,6 +60,7 @@ export function buildPostalWorkersSpec(cfg: PostalFlowLiveConfig): FlowSpec {
 		},
 		{
 			id: "worker",
+			live: { box: "worker01", procs: ["postal-worker*"], onDemand: true },
 			x: 330,
 			y: 140,
 			w: 230,
@@ -93,6 +95,7 @@ export function buildPostalWorkersSpec(cfg: PostalFlowLiveConfig): FlowSpec {
 		},
 		{
 			id: "lanotif",
+			live: { box: "worker-003", procs: ["notification-service"], alwaysOnline: true },
 			x: 650,
 			y: 250,
 			w: 220,

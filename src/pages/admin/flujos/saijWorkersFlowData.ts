@@ -34,6 +34,7 @@ export function buildSaijWorkersSpec(): FlowSpec {
 		// ── Canales: mismo worker.js, distinta config ────────────────────────
 		{
 			id: "nacional",
+			live: { box: "worker01", procs: ["worker_SAIJ_0"], alwaysOnline: true },
 			x: 330,
 			y: 40,
 			w: 240,
@@ -44,6 +45,7 @@ export function buildSaijWorkersSpec(): FlowSpec {
 		},
 		{
 			id: "provincial",
+			live: { box: "worker01", procs: ["worker_SAIJ_PROV_0"], alwaysOnline: true },
 			x: 330,
 			y: 168,
 			w: 240,
@@ -54,6 +56,7 @@ export function buildSaijWorkersSpec(): FlowSpec {
 		},
 		{
 			id: "csjn",
+			live: { box: "worker01", procs: ["worker_SAIJ_CSJN_0"], alwaysOnline: true },
 			x: 330,
 			y: 296,
 			w: 240,
@@ -76,6 +79,7 @@ export function buildSaijWorkersSpec(): FlowSpec {
 		// ── Procesamiento por documento ──────────────────────────────────────
 		{
 			id: "doc",
+			live: { box: "worker01", procs: ["worker_SAIJ_enrich"] },
 			x: 650,
 			y: 168,
 			w: 230,
@@ -121,6 +125,7 @@ export function buildSaijWorkersSpec(): FlowSpec {
 
 		{
 			id: "social",
+			live: { box: "hub", procs: ["jurisprudencia-carrusel-prod", "fallo-explicado-prod"] },
 			x: 1250,
 			y: 150,
 			w: 210,
