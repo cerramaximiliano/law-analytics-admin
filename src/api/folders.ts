@@ -140,6 +140,32 @@ export interface CausaResponse {
 	data: Causa;
 }
 
+export interface ObjetoJuicio {
+	objeto: string;
+	count: number;
+	pct: number;
+}
+
+export interface JurisdiccionObjetos {
+	id: string;
+	label: string;
+	total: number;
+	distintos: number;
+	sinObjeto: number;
+	objetos: ObjetoJuicio[];
+	otros: { objetos: number; count: number };
+}
+
+export type EstadoCarpetas = "todas" | "activas" | "archivadas";
+
+export interface ObjetosPorJurisdiccionResponse {
+	success: boolean;
+	estado: EstadoCarpetas;
+	top: number;
+	total: number;
+	jurisdicciones: JurisdiccionObjetos[];
+}
+
 export interface FolderStatsResponse {
 	success: boolean;
 	data: FolderStats;
@@ -217,6 +243,16 @@ class FoldersService {
 	 */
 	static async deleteFolder(folderId: string): Promise<{ success: boolean; message: string }> {
 		const response = await adminAxios.delete(`/api/folders/${folderId}`);
+		return response.data;
+	}
+
+	/**
+	 * Objetos de juicio (materia) por jurisdicción
+	 */
+	static async getObjetosPorJurisdiccion(estado: EstadoCarpetas, top: number): Promise<ObjetosPorJurisdiccionResponse> {
+		const response = await adminAxios.get<ObjetosPorJurisdiccionResponse>("/api/folders/objetos-por-jurisdiccion", {
+			params: { estado, top },
+		});
 		return response.data;
 	}
 

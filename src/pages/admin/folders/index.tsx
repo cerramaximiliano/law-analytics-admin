@@ -56,6 +56,7 @@ import CausaDetalleModal from "../causas/CausaDetalleModal";
 import FolderEditModal from "./FolderEditModal";
 import CausaEditModal from "./CausaEditModal";
 import FolderDetalleModal from "./FolderDetalleModal";
+import ObjetosPorJurisdiccion from "./ObjetosPorJurisdiccion";
 import ConfirmDialog from "components/admin/ConfirmDialog";
 
 // Mapeo de fueros a nombres legibles
@@ -509,6 +510,8 @@ const FoldersPage = () => {
 					</Grid>
 				</Box>
 			)}
+
+			<ObjetosPorJurisdiccion />
 
 			<Grid container spacing={3}>
 				{/* Filtros */}
