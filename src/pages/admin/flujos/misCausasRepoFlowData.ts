@@ -1,4 +1,4 @@
-// Spec del diagrama GENERAL del repositorio pjn-mis-causas: sus 20 procesos PM2
+// Spec del diagrama GENERAL del repositorio pjn-mis-causas: sus 22 procesos PM2
 // y cómo se relacionan (pm2.mis-causas.config.js, noviembre de 2026).
 //
 // El repo tiene un solo hilo conductor: la credencial del usuario. Todo lo que
@@ -67,7 +67,11 @@ export function buildMisCausasRepoSpec(): FlowSpec {
 			sub: ["cédulas y escritos del letrado", "APIs JSON, 07/13/19 ART", "perfil y vencimiento de clave"],
 		},
 		{
-			id: "interv", x: 760, y: 148, w: 210, h: 70, kind: "private", label: "intervinientes",
+			id: "actos", x: 760, y: 144, w: 210, h: 92, kind: "private", label: "actos-letrado",
+			sub: ["cada 2 h, cron propio, sin login", "cruza actos de la bandeja", "con los movimientos", "→ última actividad del letrado"],
+		},
+		{
+			id: "interv", x: 760, y: 254, w: 210, h: 70, kind: "private", label: "intervinientes",
 			sub: ["partes y letrados", "diario 05 ART, con login"],
 		},
 		{
@@ -99,6 +103,10 @@ export function buildMisCausasRepoSpec(): FlowSpec {
 		{
 			id: "vigilancia", x: 250, y: 420, w: 190, h: 176, kind: "warn", label: "Vigilancia (cron)",
 			sub: ["coverage-monitor · cada hora", "credential-health · cada 6 h", "pre-send-check · 18 ART", "daily-digest · 08 ART", "movements-reconcile · 06 ART", "scw-beta-probe · 06:40 ART"],
+		},
+		{
+			id: "pasada", x: 1030, y: 648, w: 200, h: 100, kind: "private", label: "pasada-nocturna",
+			sub: ["02 ART, cron propio", "lee todo por la API", "marca lecturaForzada", "no escribe movimientos"],
 		},
 		{ id: "admin", x: 250, y: 70, w: 190, h: 90, kind: "ui", label: "UI Admin", sub: ["config del manager", "flags de la API del SCW nuevo", "métricas y alertas"] },
 	];
@@ -134,15 +142,19 @@ export function buildMisCausasRepoSpec(): FlowSpec {
 		{ id: "e28", from: "manager", to: "notif", kind: "ok", label: "digest altas/bajas", fromSide: "bottom", toSide: "bottom", labelDy: 16 },
 		{ id: "e29", from: "export", to: "datos", kind: "ok" },
 		{ id: "e30", from: "vigilancia", to: "api", label: "sonda diaria", fromSide: "top", toSide: "bottom", labelDy: -6 },
+		{ id: "e31", from: "bandeja", to: "actos", label: "actos sin movimiento", fromSide: "bottom", toSide: "top" },
+		{ id: "e32", from: "actos", to: "datos", kind: "ok", label: "ultimaActividadLetrado", fromSide: "right", toSide: "left", labelDy: -10 },
+		{ id: "e33", from: "pasada", to: "priv", kind: "handoff", label: "vencidas → franja 09:30", fromSide: "left", toSide: "right", labelDy: 10 },
+		{ id: "e34", from: "pasada", to: "api", label: "todas las actuaciones", fromSide: "right", toSide: "right", labelDx: -6 },
 	];
 
 	return {
 		id: "pjn-mis-causas-repo",
 		title: "pjn-mis-causas — el repositorio completo",
 		intro:
-			"Los 20 procesos del repo y cómo se encadenan. Todo cuelga de la credencial del usuario: verificarla, traer sus causas, mantenerlas al día, leer su bandeja y vigilar que nada se caiga en el camino. A la derecha, las tres fuentes del portal: el SCW clásico, la API JSON del SCW nuevo y las APIs JSON del portal.",
+			"Los 22 procesos del repo y cómo se encadenan. Todo cuelga de la credencial del usuario: verificarla, traer sus causas, mantenerlas al día, leer su bandeja y vigilar que nada se caiga en el camino. A la derecha, las tres fuentes del portal: el SCW clásico, la API JSON del SCW nuevo y las APIs JSON del portal.",
 		width: 1260,
-		height: 740,
+		height: 770,
 		nodes,
 		edges,
 		steps: [
@@ -152,7 +164,7 @@ export function buildMisCausasRepoSpec(): FlowSpec {
 			},
 			{
 				title: "El manager decide quién corre",
-				text: "pjn-mis-causas-manager escala y apaga los workers según la cola de trabajo y la config de scraping-manager-state. Los workers tienen autorestart:false a propósito: su ciclo de vida lo controla el manager, no PM2. Dentro del manager corren además los barridos que no son workers: el digest de altas y bajas de causas, los avisos de incidentes del portal y el de vencimiento de contraseña. Las excepciones son los procesos con cron propio (vigilancia, intervinientes, huecos-backfill, bandeja) y los always-on (pdf-backfill, expediente-export), que corren aunque el manager esté caído.",
+				text: "pjn-mis-causas-manager escala y apaga los workers según la cola de trabajo y la config de scraping-manager-state. Los workers tienen autorestart:false a propósito: su ciclo de vida lo controla el manager, no PM2. Dentro del manager corren además los barridos que no son workers: el digest de altas y bajas de causas, los avisos de incidentes del portal y el de vencimiento de contraseña. Las excepciones son los procesos con cron propio (vigilancia, pasada-nocturna, intervinientes, actos-letrado, huecos-backfill, bandeja) y los always-on (pdf-backfill, expediente-export), que corren aunque el manager esté caído.",
 				nodes: ["manager", "admin", "credproc", "full", "daily", "priv", "notif"],
 				edges: ["e3", "e6", "e7", "e8", "e22", "e28"],
 			},
@@ -175,16 +187,22 @@ export function buildMisCausasRepoSpec(): FlowSpec {
 				edges: ["e12", "e23", "e24", "e17", "e18"],
 			},
 			{
+				title: "La pasada nocturna",
+				text: "De día, el update solo abre las causas cuya fila del listado cambió o es de hoy. Eso no ve un movimiento cargado con fecha igual o anterior al último que teníamos, como un despacho firmado que se publica días después. pasada-nocturna corre a las 02 ART: lee por la API del SCW nuevo todas las causas de las credenciales con selección por listado, compara todas sus actuaciones con la base y marca lecturaForzada en las que tienen algo que falta, dejándolas vencidas. No escribe movimientos: los lee la franja de las 09:30 por el camino normal (persistencia, espejo, PDFs y notificaciones). Si lo que falta es anterior al último día guardado, pide una lectura completa que solo agrega. Toma el lock de cada credencial para no cruzarse con el updater.",
+				nodes: ["pasada", "api", "priv", "datos"],
+				edges: ["e33", "e34", "e17"],
+			},
+			{
 				title: "Los documentos",
 				text: "Tres procesos siempre encendidos completan los PDFs de los movimientos. pdf-backfill ×2 atiende las causas públicas que entraron por el caché del ecosistema (llegan con movimientos pero sin documentos) por HTTP sin sesión. pdf-backfill-private atiende las causas que exigen sesión: con la API del SCW nuevo baja cada PDF por el identificador de la actuación en tres peticiones, sin posicionar el browser en el listado (que en credenciales grandes costaba hasta 5 minutos por causa), y resuelve la URL del visor que faltaba; el visor del SCW clásico queda de respaldo. expediente-export arma el PDF completo del expediente a pedido del usuario.",
 				nodes: ["pdfpub", "pdfpriv", "export", "api", "datos"],
 				edges: ["e19", "e25", "e26", "e29"],
 			},
 			{
-				title: "La bandeja y los intervinientes",
-				text: "bandeja-sync no scrapea: usa las APIs JSON del portal para levantar cédulas recibidas y escritos enviados, tres veces por día, y de paso guarda el perfil de la cuenta (roles, 2FA, días hasta el vencimiento de la contraseña). Alimenta el mismo email de novedades que los movimientos. intervinientes lee partes y letrados de las causas de las credenciales activas, una vez por día, con login en el SCW clásico.",
-				nodes: ["bandeja", "interv", "portalapi", "scw", "notif"],
-				edges: ["e13", "e20", "e27"],
+				title: "La bandeja, los actos del letrado y los intervinientes",
+				text: "bandeja-sync no scrapea: usa las APIs JSON del portal para levantar cédulas recibidas y escritos enviados, tres veces por día, y de paso guarda el perfil de la cuenta (roles, 2FA, días hasta el vencimiento de la contraseña). Alimenta el mismo email de novedades que los movimientos. Cada escrito, cédula o DEOX queda guardado apenas aparece en la bandeja, pero el movimiento llega días después con el update (los escritos, una mediana de 3,5 a 7 días). actos-letrado, cada 2 horas y sin login, reintenta ese cruce, refresca las carpetas de cada acto y recalcula la última actividad del letrado en la carpeta; se enciende con el mismo interruptor que la lectura de actos (actosLetrado.enabled). intervinientes lee partes y letrados de las causas de las credenciales activas, una vez por día, con login en el SCW clásico.",
+				nodes: ["bandeja", "actos", "interv", "portalapi", "scw", "notif", "datos"],
+				edges: ["e13", "e20", "e27", "e31", "e32"],
 			},
 			{
 				title: "La vigilancia",

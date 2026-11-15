@@ -28,6 +28,7 @@ import MisCausasWorkersFlow from "./MisCausasWorkersFlow";
 import MisCausasRepoFlow from "./MisCausasRepoFlow";
 import PlazosFlow from "./PlazosFlow";
 import IntervinientesPjnFlow from "./IntervinientesPjnFlow";
+import HubProcesosFlow from "./HubProcesosFlow";
 import CausasFlowDiagram from "../causas/flujos/FlowDiagram";
 import { mainSpecs } from "../causas/flujos/flowData";
 import NotificationsFlowDiagram from "../notifications/components/FlowDiagram";
@@ -92,7 +93,7 @@ const TABS: FlowTab[] = [
 		slug: "mis-causas",
 		esWorker: true,
 		intro:
-			"El mapa completo del repositorio: sus 20 procesos y cómo se encadenan alrededor de la credencial del usuario — verificarla, traer sus causas, mantenerlas al día, leer su bandeja y vigilar que nada se caiga. Con las tres fuentes del portal: el SCW clásico, la API JSON del SCW nuevo (listado, movimientos y PDFs detrás de flags) y las APIs JSON del portal.",
+			"El mapa completo del repositorio: sus 22 procesos y cómo se encadenan alrededor de la credencial del usuario — verificarla, traer sus causas, mantenerlas al día, leer su bandeja y vigilar que nada se caiga. Con las tres fuentes del portal: el SCW clásico, la API JSON del SCW nuevo (listado, movimientos y PDFs detrás de flags) y las APIs JSON del portal.",
 		href: "/admin/causas/workers",
 		hrefLabel: "Operar los workers de pjn-mis-causas",
 	},
@@ -159,6 +160,14 @@ const TABS: FlowTab[] = [
 		hrefLabel: "Operar pjn-extra-info (config, estadísticas, usuarios con sync)",
 	},
 	{
+		label: "Procesos del hub",
+		slug: "hub",
+		intro:
+			"Qué corre en el hub además de las APIs de cada jurisdicción: la API principal y la del admin, y los cinco crons PM2 del box — prioridad de causas, reglas de responsables, limpieza de autorizaciones MCP y el ciclo de vida de los usuarios.",
+		href: "/admin/server-status",
+		hrefLabel: "Ver la salud de los crons (Estado del servidor)",
+	},
+	{
 		label: "Data plane",
 		slug: "data-plane",
 		intro:
@@ -189,8 +198,8 @@ const FlujosEcosistema: React.FC = () => {
 		>
 			<Box sx={{ p: 3, pb: 0 }}>
 				<Typography variant="body2" color="text.secondary">
-					Los diagramas que documentan cómo se mueve el dato, juntos. Cada uno sigue viviendo en su sección —acá están para poder
-					leerlos de corrido— y desde cada pestaña se salta a la vista donde ese flujo se opera.
+					Los diagramas que documentan cómo se mueve el dato, juntos. Cada uno sigue viviendo en su sección —acá están para poder leerlos de
+					corrido— y desde cada pestaña se salta a la vista donde ese flujo se opera.
 				</Typography>
 			</Box>
 
@@ -278,7 +287,9 @@ const FlujosEcosistema: React.FC = () => {
 
 					{tab === 11 && <IntervinientesPjnFlow />}
 
-					{tab === 12 && (
+					{tab === 12 && <HubProcesosFlow />}
+
+					{tab === 13 && (
 						// El data plane no se embebe: es una página con panel de detalle propio
 						// y su valor está en poder clickear cada nodo. Duplicar acá una versión
 						// recortada daría dos fuentes de verdad para el mismo diagrama.
