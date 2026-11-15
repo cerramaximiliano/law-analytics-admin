@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { Box, useMediaQuery } from "@mui/material";
 import { useTheme, alpha } from "@mui/material/styles";
 import { BRAND_BLUE, LIVE_GREEN, STALE_AMBER } from "themes/dashboardTokens";
-import { FlowSpec, FlowNode, NodeKind, EdgeKind, Side } from "./flowTypes";
+import { FlowSpec, FlowNode, NodeKind, EdgeKind, Side, LiveTone, NodeLiveState } from "./flowTypes";
 
 // Paleta por tipo de nodo. `solid` es el color de borde/acentos, el fondo se
 // deriva con alpha según el modo del tema.
@@ -24,6 +24,15 @@ const EDGE_COLOR: Record<EdgeKind, string> = {
 	ok: LIVE_GREEN,
 	handoff: "#8B5CF6",
 	problem: "#EF4444",
+};
+
+// Modo en vivo: color del anillo y de la pastilla por severidad.
+export const LIVE_TONE_COLOR: Record<LiveTone, string> = {
+	ok: LIVE_GREEN,
+	idle: "#94A3B8",
+	unknown: "#64748B",
+	warn: STALE_AMBER,
+	bad: "#EF4444",
 };
 
 const DASHED_NODE_KINDS: NodeKind[] = ["ext", "ui", "warn"];
@@ -60,9 +69,11 @@ interface FlowDiagramProps {
 	spec: FlowSpec;
 	activeNodes?: string[];
 	activeEdges?: string[];
+	/** Estado en vivo por id de nodo. Sin esto (modo teórico) el diagrama no cambia. */
+	live?: Record<string, NodeLiveState>;
 }
 
-const FlowDiagram = ({ spec, activeNodes, activeEdges }: FlowDiagramProps) => {
+const FlowDiagram = ({ spec, activeNodes, activeEdges, live }: FlowDiagramProps) => {
 	const theme = useTheme();
 	const isDark = theme.palette.mode === "dark";
 	const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
@@ -169,8 +180,29 @@ const FlowDiagram = ({ spec, activeNodes, activeEdges }: FlowDiagramProps) => {
 					const blockHeight = 16 + subs.length * 13;
 					const startY = node.y + (node.h - blockHeight) / 2 + 12;
 					const filled = node.kind === "hub";
+					const ls = live?.[node.id];
+					const lc = ls ? LIVE_TONE_COLOR[ls.tone] : null;
+					const badgeW = ls ? Math.min(node.w - 8, 16 + ls.badge.length * 6.1) : 0;
 					return (
 						<g key={node.id} opacity={active ? 1 : 0.18} style={{ transition: "opacity 0.35s ease" }}>
+							{ls && <title>{[node.label, ...ls.detail].join("\n")}</title>}
+							{ls && lc && (
+								<rect
+									x={node.x - 3}
+									y={node.y - 3}
+									width={node.w + 6}
+									height={node.h + 6}
+									rx={12}
+									fill="none"
+									stroke={lc}
+									strokeWidth={ls.tone === "idle" ? 1.5 : 2.5}
+									strokeDasharray={ls.tone === "idle" || ls.tone === "unknown" ? "3 3" : undefined}
+								>
+									{ls.tone === "bad" && !reducedMotion && (
+										<animate attributeName="stroke-opacity" values="1;0.35;1" dur="1.6s" repeatCount="indefinite" />
+									)}
+								</rect>
+							)}
 							<rect
 								x={node.x}
 								y={node.y}
@@ -190,6 +222,22 @@ const FlowDiagram = ({ spec, activeNodes, activeEdges }: FlowDiagramProps) => {
 									{line}
 								</text>
 							))}
+							{ls && lc && (
+								<g>
+									<rect x={node.x + node.w - badgeW - 4} y={node.y - 10} width={badgeW} height={18} rx={9} fill={lc} />
+									<text
+										x={node.x + node.w - badgeW / 2 - 4}
+										y={node.y + 3}
+										textAnchor="middle"
+										fontSize={10.5}
+										fontWeight={700}
+										fill="#fff"
+										style={{ fontVariantNumeric: "tabular-nums" }}
+									>
+										{ls.badge}
+									</text>
+								</g>
+							)}
 						</g>
 					);
 				})}

@@ -25,13 +25,13 @@ export function buildMisCausasRepoSpec(): FlowSpec {
 
 		// ── Orquestador
 		{
-			id: "manager", x: 250, y: 220, w: 190, h: 116, kind: "hub", label: "manager",
+			id: "manager", live: { box: "workercloud01", procs: ["pjn-mis-causas-manager"], alwaysOnline: true }, x: 250, y: 220, w: 190, h: 116, kind: "hub", label: "manager",
 			sub: ["pjn-mis-causas-manager", "escala y apaga workers", "digest de altas/bajas", "avisos de portal y contraseña"],
 		},
 
 		// ── Ciclo de la credencial
 		{
-			id: "credproc", x: 500, y: 40, w: 200, h: 96, kind: "private", label: "credentials-processor",
+			id: "credproc", live: { box: "workercloud01", procs: ["pjn-credentials-processor"] }, x: 500, y: 40, w: 200, h: 96, kind: "private", label: "credentials-processor",
 			sub: ["valida la credencial", "listado: API (flag) o browser", "extrae causas → staging"],
 		},
 		{
@@ -39,51 +39,51 @@ export function buildMisCausasRepoSpec(): FlowSpec {
 			sub: ["staging de causas extraídas"],
 		},
 		{
-			id: "queueproc", x: 500, y: 246, w: 200, h: 70, kind: "private", label: "sync-queue-processor",
+			id: "queueproc", live: { box: "workercloud01", procs: ["pjn-sync-queue-processor"] }, x: 500, y: 246, w: 200, h: 70, kind: "private", label: "sync-queue-processor",
 			sub: ["crea causas + carpetas", "desde la staging"],
 		},
 
 		// ── Sincronización del listado
 		{
-			id: "full", x: 500, y: 350, w: 200, h: 74, kind: "private", label: "mis-causas",
+			id: "full", live: { box: "workercloud01", procs: ["pjn-mis-causas"] }, x: 500, y: 350, w: 200, h: 74, kind: "private", label: "mis-causas",
 			sub: ["sync completa on-demand", "todo el listado (browser)"],
 		},
 		{
-			id: "daily", x: 500, y: 450, w: 200, h: 96, kind: "private", label: "update-sync",
+			id: "daily", live: { box: "workercloud01", procs: ["pjn-update-sync*"] }, x: 500, y: 450, w: 200, h: 96, kind: "private", label: "update-sync",
 			sub: ["una pasada por día", "listado: API (flag) o browser", "altas y bajas · evidencia a S3"],
 		},
 		{
-			id: "pdfpub", x: 500, y: 572, w: 200, h: 70, kind: "private", label: "pdf-backfill ×2",
+			id: "pdfpub", live: { box: "workercloud01", procs: ["pjn-mis-causas-pdf-backfill", "pjn-mis-causas-pdf-backfill-2"], alwaysOnline: true }, x: 500, y: 572, w: 200, h: 70, kind: "private", label: "pdf-backfill ×2",
 			sub: ["PDFs de causas públicas", "HTTP sin sesión, always-on"],
 		},
 		{
-			id: "export", x: 500, y: 666, w: 200, h: 56, kind: "private", label: "expediente-export",
+			id: "export", live: { box: "workercloud01", procs: ["pjn-expediente-export"], alwaysOnline: true }, x: 500, y: 666, w: 200, h: 56, kind: "private", label: "expediente-export",
 			sub: ["PDF del expediente (qpdf)"],
 		},
 
 		// ── Actualización
 		{
-			id: "bandeja", x: 760, y: 40, w: 210, h: 84, kind: "private", label: "bandeja-sync",
+			id: "bandeja", live: { box: "workercloud01", procs: ["pjn-bandeja-sync"] }, x: 760, y: 40, w: 210, h: 84, kind: "private", label: "bandeja-sync",
 			sub: ["cédulas y escritos del letrado", "APIs JSON, 07/13/19 ART", "perfil y vencimiento de clave"],
 		},
 		{
-			id: "actos", x: 760, y: 144, w: 210, h: 92, kind: "private", label: "actos-letrado",
+			id: "actos", live: { box: "workercloud01", procs: ["pjn-actos-letrado"] }, x: 760, y: 144, w: 210, h: 92, kind: "private", label: "actos-letrado",
 			sub: ["cada 2 h, cron propio, sin login", "cruza actos de la bandeja", "con los movimientos", "→ última actividad del letrado"],
 		},
 		{
-			id: "interv", x: 760, y: 254, w: 210, h: 70, kind: "private", label: "intervinientes",
+			id: "interv", live: { box: "workercloud01", procs: ["pjn-mis-causas-intervinientes"] }, x: 760, y: 254, w: 210, h: 70, kind: "private", label: "intervinientes",
 			sub: ["partes y letrados", "diario 05 ART, con login"],
 		},
 		{
-			id: "priv", x: 760, y: 350, w: 210, h: 120, kind: "private", label: "private-causas-update",
+			id: "priv", live: { box: "workercloud01", procs: ["pjn-private-causas-update*", "pjn-initial-sync"] }, x: 760, y: 350, w: 210, h: 120, kind: "private", label: "private-causas-update",
 			sub: ["+ initial-sync (sync inicial)", "sweep del listado, lector HTTP", "1ª lectura por API (flag)", "movimientos · PDFs · novedades"],
 		},
 		{
-			id: "huecos", x: 760, y: 494, w: 210, h: 76, kind: "private", label: "huecos-backfill",
+			id: "huecos", live: { box: "workercloud01", procs: ["pjn-huecos-backfill"] }, x: 760, y: 494, w: 210, h: 76, kind: "private", label: "huecos-backfill",
 			sub: ["cada 3 h, cron propio", "históricas que la API da 500", "se completan por el SCW clásico"],
 		},
 		{
-			id: "pdfpriv", x: 760, y: 594, w: 210, h: 84, kind: "private", label: "pdf-backfill-private",
+			id: "pdfpriv", live: { box: "workercloud01", procs: ["pjn-mis-causas-pdf-backfill-private"], alwaysOnline: true }, x: 760, y: 594, w: 210, h: 84, kind: "private", label: "pdf-backfill-private",
 			sub: ["PDFs de causas con sesión", "por la API (idActuacion)", "visor del SCW de respaldo"],
 		},
 
@@ -101,11 +101,11 @@ export function buildMisCausasRepoSpec(): FlowSpec {
 
 		// ── Vigilancia (cron propio)
 		{
-			id: "vigilancia", x: 250, y: 420, w: 190, h: 176, kind: "warn", label: "Vigilancia (cron)",
+			id: "vigilancia", live: { box: "workercloud01", procs: ["pjn-coverage-monitor", "pjn-credential-health-monitor", "pjn-pre-send-check", "pjn-daily-digest", "pjn-movements-reconcile", "pjn-scw-beta-probe"] }, x: 250, y: 420, w: 190, h: 176, kind: "warn", label: "Vigilancia (cron)",
 			sub: ["coverage-monitor · cada hora", "credential-health · cada 6 h", "pre-send-check · 18 ART", "daily-digest · 08 ART", "movements-reconcile · 06 ART", "scw-beta-probe · 06:40 ART"],
 		},
 		{
-			id: "pasada", x: 1030, y: 648, w: 200, h: 100, kind: "private", label: "pasada-nocturna",
+			id: "pasada", live: { box: "workercloud01", procs: ["pjn-pasada-nocturna"] }, x: 1030, y: 648, w: 200, h: 100, kind: "private", label: "pasada-nocturna",
 			sub: ["02 ART, cron propio", "lee todo por la API", "marca lecturaForzada", "no escribe movimientos"],
 		},
 		{ id: "admin", x: 250, y: 70, w: 190, h: 90, kind: "ui", label: "UI Admin", sub: ["config del manager", "flags de la API del SCW nuevo", "métricas y alertas"] },
@@ -145,7 +145,6 @@ export function buildMisCausasRepoSpec(): FlowSpec {
 		{ id: "e31", from: "bandeja", to: "actos", label: "actos sin movimiento", fromSide: "bottom", toSide: "top" },
 		{ id: "e32", from: "actos", to: "datos", kind: "ok", label: "ultimaActividadLetrado", fromSide: "right", toSide: "left", labelDy: -10 },
 		{ id: "e33", from: "pasada", to: "priv", kind: "handoff", label: "vencidas → franja 09:30", fromSide: "left", toSide: "right", labelDy: 10 },
-		{ id: "e34", from: "pasada", to: "api", label: "todas las actuaciones", fromSide: "right", toSide: "right", labelDx: -6 },
 	];
 
 	return {
@@ -190,7 +189,7 @@ export function buildMisCausasRepoSpec(): FlowSpec {
 				title: "La pasada nocturna",
 				text: "De día, el update solo abre las causas cuya fila del listado cambió o es de hoy. Eso no ve un movimiento cargado con fecha igual o anterior al último que teníamos, como un despacho firmado que se publica días después. pasada-nocturna corre a las 02 ART: lee por la API del SCW nuevo todas las causas de las credenciales con selección por listado, compara todas sus actuaciones con la base y marca lecturaForzada en las que tienen algo que falta, dejándolas vencidas. No escribe movimientos: los lee la franja de las 09:30 por el camino normal (persistencia, espejo, PDFs y notificaciones). Si lo que falta es anterior al último día guardado, pide una lectura completa que solo agrega. Toma el lock de cada credencial para no cruzarse con el updater.",
 				nodes: ["pasada", "api", "priv", "datos"],
-				edges: ["e33", "e34", "e17"],
+				edges: ["e33", "e17"],
 			},
 			{
 				title: "Los documentos",

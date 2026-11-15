@@ -9,6 +9,21 @@
 // la-infra-docs/arquitectura/procesos-law-analytics-server.md.
 import { FlowSpec, FlowNode, FlowEdge } from "../causas/flujos/flowTypes";
 
+// Crons in-process del admin-api (admin-api/server.js), con heartbeat en cron-health.
+const ADMIN_API_CRONS = [
+	"healthReportsCron",
+	"incidentDigestCron",
+	"workerContractsCron",
+	"logCoverageCron",
+	"causaReconciliationCron",
+	"healthDigestCron",
+	"discountReconciliationCron",
+	"discountReconciliationDigestCron",
+	"winbackExpiryCron",
+	"marketingProfileSyncCron",
+	"cronHealthCheckCron",
+];
+
 export function buildHubProcesosSpec(): FlowSpec {
 	const nodes: FlowNode[] = [
 		// ── Quién entra
@@ -19,6 +34,7 @@ export function buildHubProcesosSpec(): FlowSpec {
 		// ── Las dos APIs (siempre online)
 		{
 			id: "server",
+			live: { box: "hub", procs: ["law-analytics-server-prod"], alwaysOnline: true },
 			x: 230,
 			y: 30,
 			w: 230,
@@ -35,6 +51,7 @@ export function buildHubProcesosSpec(): FlowSpec {
 		},
 		{
 			id: "adminapi",
+			live: { box: "hub", procs: ["law-analytics-admin-api-prod"], alwaysOnline: true, crons: ADMIN_API_CRONS },
 			x: 230,
 			y: 196,
 			w: 230,
@@ -72,6 +89,7 @@ export function buildHubProcesosSpec(): FlowSpec {
 		},
 		{
 			id: "hydra",
+			live: { box: "hub", procs: ["hydra"], alwaysOnline: true },
 			x: 520,
 			y: 296,
 			w: 200,
@@ -84,8 +102,9 @@ export function buildHubProcesosSpec(): FlowSpec {
 		// ── Crons PM2 (stopped entre corridas)
 		{
 			id: "prio",
+			live: { box: "hub", procs: ["causa-priority-recompute"] },
 			x: 790,
-			y: 20,
+			y: 32,
 			w: 220,
 			h: 84,
 			kind: "hub",
@@ -94,8 +113,9 @@ export function buildHubProcesosSpec(): FlowSpec {
 		},
 		{
 			id: "resp",
+			live: { box: "hub", procs: ["responsables-reglas-apply"], crons: ["responsables-reglas-apply"] },
 			x: 790,
-			y: 126,
+			y: 138,
 			w: 220,
 			h: 84,
 			kind: "hub",
@@ -104,8 +124,9 @@ export function buildHubProcesosSpec(): FlowSpec {
 		},
 		{
 			id: "mcpclean",
+			live: { box: "hub", procs: ["mcp-consent-cleanup"] },
 			x: 790,
-			y: 232,
+			y: 244,
 			w: 220,
 			h: 84,
 			kind: "hub",
@@ -114,8 +135,9 @@ export function buildHubProcesosSpec(): FlowSpec {
 		},
 		{
 			id: "lifecycle",
+			live: { box: "hub", procs: ["la-user-lifecycle"] },
 			x: 790,
-			y: 340,
+			y: 352,
 			w: 220,
 			h: 104,
 			kind: "private",
@@ -124,8 +146,9 @@ export function buildHubProcesosSpec(): FlowSpec {
 		},
 		{
 			id: "early",
+			live: { box: "hub", procs: ["la-user-lifecycle-early"] },
 			x: 790,
-			y: 466,
+			y: 478,
 			w: 220,
 			h: 70,
 			kind: "private",
@@ -143,12 +166,12 @@ export function buildHubProcesosSpec(): FlowSpec {
 		{ id: "e3", from: "ia", to: "hydra", label: "OAuth", fromSide: "right", toSide: "left", labelDy: 10 },
 		{ id: "e4", from: "server", to: "causas", kind: "ok", label: "al vincular o archivar", fromSide: "right", toSide: "left", labelDy: -8 },
 		{ id: "e5", from: "server", to: "atlas", kind: "ok", fromSide: "right", toSide: "left" },
-		{ id: "e6", from: "server", to: "hydra", label: "login y consent", fromSide: "right", toSide: "left", labelDy: 20 },
+		{ id: "e6", from: "server", to: "hydra", label: "login y consent", fromSide: "right", toSide: "left", labelDy: 78 },
 		{ id: "e7", from: "adminapi", to: "atlas", kind: "ok", label: "heartbeat de crons", fromSide: "right", toSide: "left", labelDy: 8 },
 		{ id: "e8", from: "prio", to: "causas", kind: "ok", label: "prioridad", fromSide: "left", toSide: "right" },
 		{ id: "e9", from: "resp", to: "atlas", kind: "ok", label: "responsable", fromSide: "left", toSide: "right" },
 		{ id: "e10", from: "mcpclean", to: "hydra", label: "revoca y borra", fromSide: "left", toSide: "right" },
-		{ id: "e11", from: "lifecycle", to: "atlas", kind: "ok", label: "purga · avisos", fromSide: "left", toSide: "right", labelDy: 10 },
+		{ id: "e11", from: "lifecycle", to: "atlas", kind: "ok", label: "purga · avisos", fromSide: "left", toSide: "right", labelDy: -52 },
 		{ id: "e12", from: "lifecycle", to: "ses", kind: "ok", label: "verificación", fromSide: "right", toSide: "left" },
 		{ id: "e13", from: "early", to: "ses", kind: "ok", label: "24 h", fromSide: "right", toSide: "left" },
 	];
@@ -159,7 +182,7 @@ export function buildHubProcesosSpec(): FlowSpec {
 		intro:
 			"Las dos APIs que corren siempre (la principal, con la autenticación de todo el ecosistema, y la del admin) y los cinco crons PM2 del box: tres de law-analytics-server y dos de la-user-lifecycle. Los crons figuran stopped entre corridas; es lo normal.",
 		width: 1260,
-		height: 560,
+		height: 570,
 		nodes,
 		edges,
 		steps: [

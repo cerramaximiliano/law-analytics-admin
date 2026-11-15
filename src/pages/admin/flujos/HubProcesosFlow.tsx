@@ -2,12 +2,14 @@
 // config: es el mapa estructural y solo cambia si se agrega o saca un proceso.
 import React from "react";
 import { Box, Typography } from "@mui/material";
-import FlowDiagram from "../causas/flujos/FlowDiagram";
+import LiveFlowDiagram from "./live/LiveFlowDiagram";
 import { buildHubProcesosSpec } from "./hubProcesosFlowData";
+
+const SPEC = buildHubProcesosSpec();
 
 const HubProcesosFlow: React.FC = () => (
 	<Box>
-		<FlowDiagram spec={buildHubProcesosSpec()} />
+		<LiveFlowDiagram spec={SPEC} />
 		<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1 }}>
 			Los cinco crons PM2 corren con <code>autorestart:false</code> y <code>cron_restart</code>: figuran stopped entre corridas y
 			cross-monitor solo alerta si desaparecen de PM2. Los crons que corren dentro de las dos APIs no son procesos aparte; su salud se ve en

@@ -18,8 +18,24 @@ export type EdgeKind = "normal" | "ok" | "handoff" | "problem";
 
 export type Side = "left" | "right" | "top" | "bottom";
 
+/**
+ * De dónde sale el estado en vivo de un nodo (modo "En vivo" de /admin/flujos).
+ * Sin esto el nodo se dibuja igual en los dos modos.
+ */
+export interface FlowNodeLiveRef {
+	/** Box del inventario de infraestructura (key: "hub", "workercloud01"…). */
+	box?: string;
+	/** Procesos PM2 del nodo. Un `*` final matchea por prefijo (copias dinámicas -2, -3…). */
+	procs?: string[];
+	/** true = deben estar online (APIs, always-on). false/omitido = cron o manager: stopped es normal. */
+	alwaysOnline?: boolean;
+	/** Crons in-process con heartbeat en cron-health (admin-api). */
+	crons?: string[];
+}
+
 export interface FlowNode {
 	id: string;
+	live?: FlowNodeLiveRef;
 	x: number;
 	y: number;
 	w: number;
@@ -60,4 +76,15 @@ export interface FlowSpec {
 	nodes: FlowNode[];
 	edges: FlowEdge[];
 	steps: FlowStep[];
+}
+
+/** Severidad del estado en vivo de un nodo, de mejor a peor: idle < ok < unknown < warn < bad. */
+export type LiveTone = "idle" | "ok" | "unknown" | "warn" | "bad";
+
+export interface NodeLiveState {
+	tone: LiveTone;
+	/** Texto corto de la pastilla sobre el nodo ("2 online", "cola 14", "en espera"). */
+	badge: string;
+	/** Líneas del detalle (tooltip). */
+	detail: string[];
 }

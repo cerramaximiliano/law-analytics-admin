@@ -3,12 +3,16 @@
 // forma solo cambia si se agrega o saca un proceso.
 import React from "react";
 import { Box, Typography } from "@mui/material";
-import FlowDiagram from "../causas/flujos/FlowDiagram";
+import LiveFlowDiagram from "./live/LiveFlowDiagram";
+import { misCausasLiveMetrics } from "./misCausasLiveMetrics";
 import { buildMisCausasRepoSpec } from "./misCausasRepoFlowData";
+
+// El spec es estático: se arma una vez para que el hook del modo en vivo no lo vea cambiar en cada render.
+const SPEC = buildMisCausasRepoSpec();
 
 const MisCausasRepoFlow: React.FC = () => (
 	<Box>
-		<FlowDiagram spec={buildMisCausasRepoSpec()} />
+		<LiveFlowDiagram spec={SPEC} metrics={misCausasLiveMetrics} />
 		<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1 }}>
 			Los workers del ciclo de la credencial corren con <code>autorestart:false</code>: su ciclo de vida lo controla el manager, no PM2. Los
 			seis de vigilancia, pasada-nocturna, intervinientes, actos-letrado, huecos-backfill y bandeja-sync tienen <code>cron_restart</code>{" "}
