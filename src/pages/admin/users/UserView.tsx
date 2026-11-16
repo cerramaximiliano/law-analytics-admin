@@ -43,6 +43,7 @@ import { User, Subscription, UserLightData } from "types/user";
 import DeleteUserDialog from "./DeleteUserDialog";
 import EditUserModal from "./EditUserModal";
 import UserResourcesTab from "./UserResourcesTab";
+import ManualTrialPanel from "./ManualTrialPanel";
 import { formatCurrency } from "utils/formatCurrency";
 import { formatNumber } from "utils/format";
 
@@ -242,6 +243,18 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 
 	// Obtener la suscripción del entorno seleccionado
 	const currentSubscription = subscriptions?.[selectedEnv] || null;
+	// Prueba sin tarjeta: siempre sobre la suscripción de producción (live).
+	const liveSubscription: any = subscriptions?.live || null;
+	const hasPaidLiveSubscription =
+		!!liveSubscription &&
+		liveSubscription.plan !== "free" &&
+		!!liveSubscription.stripeSubscriptionId &&
+		["active", "trialing", "past_due"].includes(liveSubscription.status);
+	const renderManualTrialPanel = () => {
+		const uid = userData?.id || userData?._id;
+		if (!uid) return null;
+		return <ManualTrialPanel userId={uid} hasPaidSubscription={hasPaidLiveSubscription} onChanged={() => dispatch(getUserById(uid) as any)} />;
+	};
 
 	useEffect(() => {
 		const userId = user?.id || user?._id;
@@ -1232,6 +1245,8 @@ const UserView: React.FC<UserViewProps> = ({ user, onClose }) => {
 					<Typography variant="subtitle1">Estado</Typography>
 					{renderSubscriptionStatusChip(subscription.status)}
 				</Stack>
+
+				{renderManualTrialPanel()}
 
 				<Stack direction="row" justifyContent="space-between" alignItems="center">
 					<Typography variant="subtitle1">ID de Cliente Stripe</Typography>
