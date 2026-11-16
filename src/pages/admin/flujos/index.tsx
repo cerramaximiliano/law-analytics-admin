@@ -28,6 +28,7 @@ import MisCausasWorkersFlow from "./MisCausasWorkersFlow";
 import MisCausasRepoFlow from "./MisCausasRepoFlow";
 import PlazosFlow from "./PlazosFlow";
 import IntervinientesPjnFlow from "./IntervinientesPjnFlow";
+import PresentacionesLetradoFlow from "./PresentacionesLetradoFlow";
 import HubProcesosFlow from "./HubProcesosFlow";
 import CausasFlowDiagram from "../causas/flujos/FlowDiagram";
 import { mainSpecs } from "../causas/flujos/flowData";
@@ -168,6 +169,15 @@ const TABS: FlowTab[] = [
 		hrefLabel: "Ver la salud de los crons (Estado del servidor)",
 	},
 	{
+		label: "Presentaciones del letrado",
+		slug: "presentaciones",
+		esWorker: true,
+		intro:
+			"Del escrito presentado en el portal al contador de días en la carpeta del usuario: pjn-bandeja-sync lee con la credencial los escritos, cédulas y DEOX; el updater trae el movimiento que los registra en el expediente, y pjn-actos-letrado los vincula y recalcula la última presentación de cada carpeta. Refleja en vivo si la lectura está encendida y cuándo corrió cada proceso.",
+		href: "/admin/causas/workers?worker=presentaciones",
+		hrefLabel: "Estado, corridas por día y pendientes",
+	},
+	{
 		label: "Data plane",
 		slug: "data-plane",
 		intro:
@@ -289,7 +299,9 @@ const FlujosEcosistema: React.FC = () => {
 
 					{tab === 12 && <HubProcesosFlow />}
 
-					{tab === 13 && (
+					{tab === 13 && <PresentacionesLetradoFlow />}
+
+					{tab === 14 && (
 						// El data plane no se embebe: es una página con panel de detalle propio
 						// y su valor está en poder clickear cada nodo. Duplicar acá una versión
 						// recortada daría dos fuentes de verdad para el mismo diagrama.

@@ -28,6 +28,7 @@ import {
 	Refresh2,
 	Book1,
 	RefreshSquare,
+	DocumentText1,
 } from "iconsax-react";
 import MainCard from "components/MainCard";
 import { BRAND_BLUE, headerBorder, navActiveBg, navHoverBg, railBorder, LIVE_PULSE_KEYFRAMES } from "themes/dashboardTokens";
@@ -41,6 +42,7 @@ import RetryQueuePanel from "./RetryQueuePanel";
 import MisCausasScrapingWorker from "./MisCausasScrapingWorker";
 import MisCausasUpdatesWorker from "./MisCausasUpdatesWorker";
 import PrivacyCheckerWorker from "./PrivacyCheckerWorker";
+import PresentacionesLetradoWorker from "./PresentacionesLetradoWorker";
 import CaptchaDatasetTab from "./CaptchaDatasetTab";
 import DocumentationTab from "./documentation";
 import CrossViewLinks from "components/admin/CrossViewLink";
@@ -168,6 +170,17 @@ const WORKER_TABS: WorkerTab[] = [
 		},
 	},
 	{
+		label: "Presentaciones del letrado",
+		value: "presentaciones",
+		icon: <DocumentText1 size={20} />,
+		description:
+			"Escritos, cédulas y DEOX presentados con la credencial (lectura en pjn-bandeja-sync) vinculados al movimiento del expediente (pjn-actos-letrado): el contador de días del widget",
+		status: "active",
+		host: "worker-cloud-01",
+		ip: "100.90.187.124",
+		flowView: "/admin/flujos?tab=presentaciones",
+	},
+	{
 		label: "Privacy checker",
 		value: "privacy-checker",
 		icon: <Lock1 size={20} />,
@@ -187,7 +200,7 @@ const WORKER_TABS: WorkerTab[] = [
 const WORKER_GROUPS: { label: string; values: string[] }[] = [
 	{ label: "Captura", values: ["scraping", "retry", "captcha-dataset"] },
 	{ label: "Enriquecimiento", values: ["verification", "app-update", "intervinientes", "stuck-documents"] },
-	{ label: "Portal autenticado", values: ["mis-causas", "mis-causas-updates"] },
+	{ label: "Portal autenticado", values: ["mis-causas", "mis-causas-updates", "presentaciones"] },
 	{ label: "Cumplimiento", values: ["privacy-checker"] },
 ];
 
@@ -208,6 +221,7 @@ const PANELS: Record<string, React.ReactNode> = {
 	"stuck-documents": <StuckDocumentsWorker />,
 	"mis-causas": <MisCausasScrapingWorker />,
 	"mis-causas-updates": <MisCausasUpdatesWorker />,
+	presentaciones: <PresentacionesLetradoWorker />,
 	"privacy-checker": <PrivacyCheckerWorker />,
 	documentation: <DocumentationTab />,
 };
