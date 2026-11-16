@@ -2,7 +2,7 @@
 // cada causa) para el motor FlowDiagram (causas/flujos).
 //
 // Son dos workers que escriben la misma colección y un solo consumidor (el hub):
-//   · pjn-extra-info (pjn-workers, worker_02) — causas públicas SIN credencial
+//   · pjn-extra-info (pjn-workers, worker-cloud-01) — causas públicas SIN credencial
 //     activa, por el buscador público con captcha (OCR local).
 //   · pjn-mis-causas-intervinientes (pjn-mis-causas, worker-cloud-01) — causas
 //     seguidas de credenciales activas, con la sesión del usuario, sin captcha.
@@ -37,7 +37,7 @@ const MODO_FUEROS: Record<string, string> = {
 
 /** "0 4 * * *" → "diario 01:00 ART"; cualquier otra cosa se muestra tal cual.
  *  El worker programa node-cron SIN opción timezone, así que la expresión se evalúa en
- *  la hora del box (worker_02 está en UTC): 04:00 UTC = 01:00 ART. schedule.timezone
+ *  la hora del box (worker-cloud-01 está en UTC): 04:00 UTC = 01:00 ART. schedule.timezone
  *  solo rige el horario laboral (respectWorkingHours), no el cron. */
 export function describirCron(cron?: string): string {
 	if (!cron) return "cron (config)";
@@ -93,14 +93,14 @@ export function buildIntervinientesPjnSpec(info: IntervinientesPjnInfo = {}): Fl
 		},
 		{
 			id: "extrainfo",
-			live: { box: "worker02", procs: ["pjn-extra-info", "pjn-extra-info-ocr", "workercloud01:pjn-extra-info"] },
+			live: { box: "workercloud01", procs: ["pjn-extra-info", "pjn-extra-info-ocr"], alwaysOnline: true },
 			x: 290,
 			y: 262,
 			w: 240,
 			h: 112,
 			kind: extraOff ? "bad" : "public",
 			label: "pjn-extra-info",
-			sub: [`worker_02 · ${cron}`, fueros, "principales + incidentes seguidos", extraOff ? "DESHABILITADO (config.enabled)" : relee],
+			sub: [`worker-cloud-01 · ${cron}`, fueros, "principales + incidentes seguidos", extraOff ? "DESHABILITADO (config.enabled)" : relee],
 		},
 		{
 			id: "portallogin",
@@ -214,7 +214,7 @@ export function buildIntervinientesPjnSpec(info: IntervinientesPjnInfo = {}): Fl
 			},
 			{
 				title: "Causas públicas sin credencial",
-				text: `pjn-extra-info corre en worker_02 (${cron}, batch grande: procesa todo lo pendiente). Solo ${fueros}; principales, más los incidentes que alguien sigue, que abre desde la pestaña Vinculados del principal. El captcha lo resuelve el sidecar OCR propio del box. Este worker crea los contactos él mismo, con la misma regla de preferencia. isValid: true es a propósito: las verificadas sin isValid son registros vacíos que el portal no encuentra.`,
+				text: `pjn-extra-info corre en worker-cloud-01 (${cron}, batch grande: procesa todo lo pendiente). Solo ${fueros}; principales, más los incidentes que alguien sigue, que abre desde la pestaña Vinculados del principal. El captcha lo resuelve su sidecar de OCR (pjn-extra-info-ocr, mismo box): sin él falla siempre. Este worker crea los contactos él mismo, con la misma regla de preferencia. isValid: true es a propósito: las verificadas sin isValid son registros vacíos que el portal no encuentra.`,
 				nodes: ["causa", "extrainfo", "portalpub", "interv", "contacts"],
 				edges: ["e2", "e5", "e7", "e11"],
 			},
