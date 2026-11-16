@@ -56,7 +56,7 @@ const IntervinientesPjnFlow: React.FC = () => {
 			<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }} flexWrap="wrap" useFlexGap>
 				<Chip
 					size="small"
-					label={`pjn-extra-info ${describirCron(info.extraInfoCron)}`}
+					label={`pjn-intervinientes-publicas ${describirCron(info.extraInfoCron)}`}
 					color={info.extraInfoEnabled === false ? "error" : "default"}
 					sx={mono}
 				/>

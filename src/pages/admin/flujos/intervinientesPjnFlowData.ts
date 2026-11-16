@@ -10,7 +10,8 @@
 //       - pjn-intervinientes-credencial: cron diario de respaldo con browser y
 //         login SSO (config enabled de la misma colección).
 //   · SIN credencial activa, solo públicas (pjn-workers, worker-cloud-01):
-//       pjn-extra-info, browser en el buscador público con captcha (OCR local).
+//       pjn-intervinientes-publicas (antes pjn-extra-info), browser en el buscador
+//       público con captcha (OCR local, sidecar pjn-intervinientes-publicas-ocr).
 // Las tres vías leen el SCW CLÁSICO (scw.pjn.gov.ar). La API del SCW nuevo
 // tiene /intervinientes (scw-beta-client.intervinientes) pero ningún lector la usa.
 //
@@ -115,13 +116,13 @@ export function buildIntervinientesPjnSpec(info: IntervinientesPjnInfo = {}): Fl
 		},
 		{
 			id: "extrainfo",
-			live: { box: "workercloud01", procs: ["pjn-extra-info", "pjn-extra-info-ocr"], alwaysOnline: true },
+			live: { box: "workercloud01", procs: ["pjn-intervinientes-publicas", "pjn-intervinientes-publicas-ocr"], alwaysOnline: true },
 			x: 300,
 			y: 360,
 			w: 260,
 			h: 124,
 			kind: extraOff ? "bad" : "public",
-			label: "pjn-extra-info",
+			label: "pjn-intervinientes-publicas",
 			sub: [
 				`SIN credencial · ${cron}`,
 				`solo públicas · ${fueros}`,
@@ -157,7 +158,7 @@ export function buildIntervinientesPjnSpec(info: IntervinientesPjnInfo = {}): Fl
 			h: 104,
 			kind: "ext",
 			label: "SCW clásico · browser público",
-			sub: ["buscador por número", "captcha → sidecar OCR", "(pjn-extra-info-ocr)"],
+			sub: ["buscador por número", "captcha → sidecar OCR", "(…-publicas-ocr)"],
 		},
 		{
 			id: "api",
@@ -273,7 +274,7 @@ export function buildIntervinientesPjnSpec(info: IntervinientesPjnInfo = {}): Fl
 			},
 			{
 				title: "Causas públicas sin credencial",
-				text: `Universo: causas públicas (isPrivate distinto de true) SIN credencial activa, verificadas y con isValid, cargadas desde la app, la caché o pjn-login. pjn-extra-info corre en worker-cloud-01 (${cron}, batch grande: procesa todo lo pendiente) con browser sobre el buscador público del SCW clásico. Solo ${fueros}; principales, más los incidentes que alguien sigue, que abre desde la pestaña Vinculados del principal. El captcha lo resuelve su sidecar de OCR (pjn-extra-info-ocr, mismo box): sin él falla siempre. Este worker crea los contactos él mismo, con la misma regla de preferencia. isValid: true es a propósito: las verificadas sin isValid son registros vacíos que el portal no encuentra.`,
+				text: `Universo: causas públicas (isPrivate distinto de true) SIN credencial activa, verificadas y con isValid, cargadas desde la app, la caché o pjn-login. pjn-intervinientes-publicas (antes pjn-extra-info) corre en worker-cloud-01 (${cron}, batch grande: procesa todo lo pendiente) con browser sobre el buscador público del SCW clásico. Solo ${fueros}; principales, más los incidentes que alguien sigue, que abre desde la pestaña Vinculados del principal. El captcha lo resuelve su sidecar de OCR (pjn-intervinientes-publicas-ocr, mismo box): sin él falla siempre. Este worker crea los contactos él mismo, con la misma regla de preferencia. isValid: true es a propósito: las verificadas sin isValid son registros vacíos que el portal no encuentra.`,
 				nodes: ["causa", "extrainfo", "portalpub", "interv", "contacts"],
 				edges: ["e2", "e5", "e7", "e11"],
 			},

@@ -124,7 +124,7 @@ const WORKER_TABS: WorkerTab[] = [
 		value: "intervinientes",
 		icon: <People size={20} />,
 		description:
-			"pjn-extra-info: partes y letrados de las causas públicas sin credencial activa (las de credencial las lee pjn-intervinientes-credencial en worker-cloud-01)",
+			"pjn-intervinientes-publicas (antes pjn-extra-info): partes y letrados de las causas públicas sin credencial activa (las de credencial las lee pjn-intervinientes-credencial en worker-cloud-01)",
 		status: "active",
 		host: "worker_02",
 		ip: "100.98.180.101",

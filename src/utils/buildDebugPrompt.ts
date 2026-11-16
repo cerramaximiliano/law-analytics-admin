@@ -27,7 +27,7 @@ const REPO_MAPPING: { matcher: RegExp; repo: string; notes?: string }[] = [
 	{ matcher: /^pjn-rag/, repo: "pjn-rag-api", notes: "RAG con causas del PJN (Socket.io + Bull MQ + Pinecone)" },
 	{ matcher: /^pjn-api$|^pjn\/api/, repo: "pjn-api", notes: "API de causas PJN. Si corre en local-worker-01 puede ser un proceso viejo" },
 	{
-		matcher: /^pjn-verify-|^pjn-app-update-|^pjn-scraping-manager|^pjn-extra-info/,
+		matcher: /^pjn-verify-|^pjn-app-update-|^pjn-scraping-manager|^pjn-extra-info|^pjn-intervinientes-publicas/,
 		repo: "pjn-workers",
 		notes: "Workers de scraping PJN (Puppeteer + PM2 cron)",
 	},
