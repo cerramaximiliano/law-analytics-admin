@@ -1,12 +1,18 @@
 // Spec del diagrama del pipeline de intervinientes PJN (partes y letrados de
 // cada causa) para el motor FlowDiagram (causas/flujos).
 //
-// Son dos workers que escriben la misma colección y un solo consumidor (el hub):
-//   · pjn-extra-info (pjn-workers, worker-cloud-01) — causas públicas SIN credencial
-//     activa, por el buscador público con captcha (OCR local).
-//   · pjn-mis-causas-intervinientes (pjn-mis-causas, worker-cloud-01) — causas
-//     seguidas de credenciales activas, con la sesión del usuario, sin captcha.
-// El reparto es por hasActiveCredential, el mismo que usa app-update.
+// Tres lectores escriben la misma colección y un solo consumidor (el hub). El
+// reparto es por hasActiveCredential, el mismo que usa app-update:
+//   · CON credencial activa (pjn-mis-causas, worker-cloud-01), dos vías:
+//       - private-causas-update con el lector HTTP: un POST ajax más sobre la
+//         vista del detalle que el actualizador ya abrió (switch enUpdater de
+//         configuracion-intervinientes-mis-causas, default apagado);
+//       - pjn-mis-causas-intervinientes: cron diario de respaldo con browser y
+//         login SSO (config enabled de la misma colección).
+//   · SIN credencial activa, solo públicas (pjn-workers, worker-cloud-01):
+//       pjn-extra-info, browser en el buscador público con captcha (OCR local).
+// Las tres vías leen el SCW CLÁSICO (scw.pjn.gov.ar). La API del SCW nuevo
+// tiene /intervinientes (scw-beta-client.intervinientes) pero ningún lector la usa.
 //
 // El diagrama muestra explícitamente las dos cosas que explican los huecos:
 // qué causas no tienen lector (privadas sin credencial, fueros fuera de
@@ -58,85 +64,126 @@ export function buildIntervinientesPjnSpec(info: IntervinientesPjnInfo = {}): Fl
 		{
 			id: "causa",
 			x: 30,
-			y: 160,
-			w: 210,
+			y: 236,
+			w: 220,
 			h: 104,
 			kind: "db",
 			label: "Causa PJN (Atlas)",
-			sub: ["verified · isValid", "hasActiveCredential elige el lector", "detailsLoaded marca que ya se leyó"],
+			sub: ["verified · isValid", "hasActiveCredential reparte", "detailsLoaded · detailsLastUpdate"],
 		},
 		{
 			id: "sinlector",
 			x: 30,
-			y: 318,
-			w: 210,
+			y: 410,
+			w: 220,
 			h: 96,
 			kind: "warn",
 			label: "Sin lector",
 			sub: ["privadas sin credencial activa", "públicas de los otros 24 fueros", "(extra-info solo 4)"],
 		},
 		{
+			id: "updhttp",
+			live: { box: "workercloud01", procs: ["pjn-private-causas-update*"] },
+			x: 300,
+			y: 20,
+			w: 260,
+			h: 124,
+			kind: "private",
+			label: "private-causas-update · HTTP",
+			sub: [
+				"CON credencial · dentro del update diario",
+				"seguidas, verificadas, 28 fueros",
+				"públicas, privadas e incidentes",
+				"switch enUpdater (default apagado)",
+			],
+		},
+		{
 			id: "miscausas",
 			live: { box: "workercloud01", procs: ["pjn-mis-causas-intervinientes"] },
-			x: 290,
-			y: 24,
-			w: 240,
-			h: 112,
+			x: 300,
+			y: 182,
+			w: 260,
+			h: 124,
 			kind: "private",
 			label: "pjn-mis-causas-intervinientes",
 			sub: [
-				"worker-cloud-01 · diario 05:00 ART",
-				"solo causas seguidas, 28 fueros",
-				"públicas, privadas e incidentes",
-				"lock por credencial · relee cada 30 días",
+				"CON credencial · cron 05:00 ART",
+				"respaldo de lo que no leyó el HTTP",
+				"mismo universo · lock por credencial",
+				"config enabled (puede estar apagado)",
 			],
 		},
 		{
 			id: "extrainfo",
 			live: { box: "workercloud01", procs: ["pjn-extra-info", "pjn-extra-info-ocr"], alwaysOnline: true },
-			x: 290,
-			y: 262,
-			w: 240,
-			h: 112,
+			x: 300,
+			y: 360,
+			w: 260,
+			h: 124,
 			kind: extraOff ? "bad" : "public",
 			label: "pjn-extra-info",
-			sub: [`worker-cloud-01 · ${cron}`, fueros, "principales + incidentes seguidos", extraOff ? "DESHABILITADO (config.enabled)" : relee],
+			sub: [
+				`SIN credencial · ${cron}`,
+				`solo públicas · ${fueros}`,
+				"principales + incidentes seguidos",
+				extraOff ? "DESHABILITADO (config.enabled)" : relee,
+			],
+		},
+		{
+			id: "scwhttp",
+			x: 620,
+			y: 30,
+			w: 220,
+			h: 104,
+			kind: "ext",
+			label: "SCW clásico · HTTP",
+			sub: ["detalle ya abierto por el update", "POST faces/ajax (~150 ms)", "sin browser ni captcha"],
 		},
 		{
 			id: "portallogin",
-			x: 600,
-			y: 36,
-			w: 200,
-			h: 88,
+			x: 620,
+			y: 192,
+			w: 220,
+			h: 104,
 			kind: "ext",
-			label: "Mis Causas (login)",
-			sub: ["sesión del usuario", "sin captcha"],
+			label: "SCW clásico · browser + login",
+			sub: ["sesión SSO del usuario", "listado Relacionados o búsqueda", "sin captcha"],
 		},
 		{
 			id: "portalpub",
-			x: 600,
-			y: 274,
-			w: 200,
-			h: 88,
+			x: 620,
+			y: 370,
+			w: 220,
+			h: 104,
 			kind: "ext",
-			label: "Portal público SCW",
-			sub: ["buscador por número", "captcha → sidecar OCR local"],
+			label: "SCW clásico · browser público",
+			sub: ["buscador por número", "captcha → sidecar OCR", "(pjn-extra-info-ocr)"],
+		},
+		{
+			id: "api",
+			x: 900,
+			y: 30,
+			w: 250,
+			h: 104,
+			kind: "ext",
+			label: "API del SCW nuevo",
+			sub: ["scw-beta.pjn.gov.ar/api/intervinientes", "existe en el cliente", "NINGÚN lector la usa"],
 		},
 		{
 			id: "interv",
-			x: 870,
-			y: 150,
-			w: 240,
+			x: 900,
+			y: 236,
+			w: 250,
 			h: 112,
 			kind: "db",
 			label: "intervinientes",
-			sub: ["partes y letrados por causaId", "misma forma desde los dos workers", "detailsLoaded · detailsLastUpdate"],
+			sub: ["partes y letrados por causaId", "misma forma desde las tres vías", "detailsLoaded · detailsLastUpdate"],
 		},
 		{
 			id: "panel",
 			x: 30,
-			y: 470,
-			w: 210,
+			y: 580,
+			w: 220,
 			h: 104,
 			kind: "ui",
 			label: "Carpeta → Intervinientes",
@@ -145,8 +192,8 @@ export function buildIntervinientesPjnSpec(info: IntervinientesPjnInfo = {}): Fl
 		{
 			id: "hub",
 			live: { box: "hub", procs: ["law-analytics-server-prod"], alwaysOnline: true },
-			x: 600,
-			y: 456,
+			x: 620,
+			y: 566,
 			w: 240,
 			h: 132,
 			kind: "hub",
@@ -160,9 +207,9 @@ export function buildIntervinientesPjnSpec(info: IntervinientesPjnInfo = {}): Fl
 		},
 		{
 			id: "contacts",
-			x: 870,
-			y: 470,
-			w: 240,
+			x: 900,
+			y: 580,
+			w: 250,
 			h: 104,
 			kind: "db",
 			label: "contacts",
@@ -171,13 +218,25 @@ export function buildIntervinientesPjnSpec(info: IntervinientesPjnInfo = {}): Fl
 	];
 
 	const edges: FlowEdge[] = [
-		{ id: "e1", from: "causa", to: "miscausas", kind: "ok", label: "credencial activa", fromSide: "right", toSide: "left" },
-		{ id: "e2", from: "causa", to: "extrainfo", kind: "ok", label: "sin credencial activa", fromSide: "right", toSide: "left" },
+		{ id: "e1b", from: "causa", to: "updhttp", kind: "ok", label: "credencial activa", fromSide: "right", toSide: "left", labelDy: -10 },
+		{ id: "e1", from: "causa", to: "miscausas", kind: "ok", fromSide: "right", toSide: "left" },
+		{
+			id: "e2",
+			from: "causa",
+			to: "extrainfo",
+			kind: "ok",
+			label: "sin credencial",
+			fromSide: "right",
+			toSide: "left",
+			labelDy: 10,
+		},
 		{ id: "e3", from: "causa", to: "sinlector", kind: "problem", label: "nadie la lee", fromSide: "bottom", toSide: "top" },
+		{ id: "e4b", from: "updhttp", to: "scwhttp", label: "misma sesión" },
 		{ id: "e4", from: "miscausas", to: "portallogin", label: "login SSO" },
 		{ id: "e5", from: "extrainfo", to: "portalpub", label: "captcha" },
-		{ id: "e6", from: "portallogin", to: "interv", kind: "ok", label: "pestaña Intervinientes" },
-		{ id: "e7", from: "portalpub", to: "interv", kind: "ok", label: "pestaña Intervinientes" },
+		{ id: "e6b", from: "scwhttp", to: "interv", kind: "ok", fromSide: "right", toSide: "left" },
+		{ id: "e6", from: "portallogin", to: "interv", kind: "ok", label: "pestaña Intervinientes", fromSide: "right", toSide: "left" },
+		{ id: "e7", from: "portalpub", to: "interv", kind: "ok", fromSide: "right", toSide: "left" },
 		{ id: "e8", from: "interv", to: "hub", kind: "handoff", label: "partes ya descargadas", fromSide: "bottom", toSide: "top" },
 		{ id: "e9", from: "panel", to: "hub", label: "lista / agrega", fromSide: "right", toSide: "left" },
 		{ id: "e10", from: "hub", to: "contacts", kind: "ok", label: "crea / vincula" },
@@ -196,27 +255,33 @@ export function buildIntervinientesPjnSpec(info: IntervinientesPjnInfo = {}): Fl
 		id: "intervinientes-pjn",
 		title: "Intervinientes PJN: de la causa al contacto",
 		intro:
-			"Dos workers leen la pestaña Intervinientes del PJN y escriben la misma colección; el hub la muestra en la carpeta y, solo con la preferencia del dueño, convierte partes y letrados en contactos.",
-		width: 1160,
-		height: 610,
+			"Tres vías leen la pestaña Intervinientes del SCW clásico y escriben la misma colección: dos para las causas con credencial activa (HTTP dentro del actualizador y un cron de respaldo con login) y una para las públicas sin credencial (buscador público con captcha). La API del SCW nuevo no se usa. El hub muestra las partes en la carpeta y, solo con la preferencia del dueño, las convierte en contactos.",
+		width: 1180,
+		height: 710,
 		nodes,
 		edges,
 		steps: [
 			{
 				title: "Vista completa",
-				text: "La causa decide su lector por hasActiveCredential. Los dos workers dejan las partes en intervinientes con la misma forma y marcan detailsLoaded en la causa. De ahí en adelante todo es del hub: la carpeta siempre las muestra, y los contactos se crean solo si el dueño activó la preferencia.",
+				text: "La causa decide su lector por hasActiveCredential. Las tres vías dejan las partes en intervinientes con la misma forma y marcan detailsLoaded en la causa. De ahí en adelante todo es del hub: la carpeta siempre las muestra, y los contactos se crean solo si el dueño activó la preferencia.",
 			},
 			{
 				title: "Causas con credencial",
-				text: "pjn-mis-causas-intervinientes corre una vez por día en worker-cloud-01 (05:00 ART, stopped entre corridas es normal). Por cada credencial activa toma las causas seguidas de los 28 fueros del PJN, entra con la sesión del usuario (sin captcha), lee privadas e incidentes desde el listado Relacionados y relee cada 30 días. Comparte el lock por credencial con private-causas-update. Al guardar, avisa al hub (sync-pjn) para que cree los contactos.",
-				nodes: ["causa", "miscausas", "portallogin", "interv", "hub"],
-				edges: ["e1", "e4", "e6", "e8"],
+				text: "Universo: las causas que la credencial ve en su listado (linkedCredentials, sin removedFromSync), verificadas y seguidas en alguna carpeta, de los 28 fueros del PJN: públicas, privadas e incidentes; nunca leídas o con la relectura vencida (reextractAfterDays). Dos vías sobre el SCW clásico. La principal, si el switch enUpdater está encendido: private-causas-update, que ya abre cada causa por HTTP en su corrida diaria, pide la pestaña con un POST ajax más (~150 ms, sin otro login ni el lock). El respaldo: pjn-mis-causas-intervinientes, cron de las 05:00 ART con browser y login SSO, que abre las privadas e incidentes desde el listado Relacionados y comparte el lock por credencial con el actualizador; solo corre con enabled en su config. Al guardar, avisan al hub (sync-pjn) para los contactos.",
+				nodes: ["causa", "updhttp", "miscausas", "scwhttp", "portallogin", "interv", "hub"],
+				edges: ["e1b", "e1", "e4b", "e4", "e6b", "e6", "e8"],
 			},
 			{
 				title: "Causas públicas sin credencial",
-				text: `pjn-extra-info corre en worker-cloud-01 (${cron}, batch grande: procesa todo lo pendiente). Solo ${fueros}; principales, más los incidentes que alguien sigue, que abre desde la pestaña Vinculados del principal. El captcha lo resuelve su sidecar de OCR (pjn-extra-info-ocr, mismo box): sin él falla siempre. Este worker crea los contactos él mismo, con la misma regla de preferencia. isValid: true es a propósito: las verificadas sin isValid son registros vacíos que el portal no encuentra.`,
+				text: `Universo: causas públicas (isPrivate distinto de true) SIN credencial activa, verificadas y con isValid, cargadas desde la app, la caché o pjn-login. pjn-extra-info corre en worker-cloud-01 (${cron}, batch grande: procesa todo lo pendiente) con browser sobre el buscador público del SCW clásico. Solo ${fueros}; principales, más los incidentes que alguien sigue, que abre desde la pestaña Vinculados del principal. El captcha lo resuelve su sidecar de OCR (pjn-extra-info-ocr, mismo box): sin él falla siempre. Este worker crea los contactos él mismo, con la misma regla de preferencia. isValid: true es a propósito: las verificadas sin isValid son registros vacíos que el portal no encuentra.`,
 				nodes: ["causa", "extrainfo", "portalpub", "interv", "contacts"],
 				edges: ["e2", "e5", "e7", "e11"],
+			},
+			{
+				title: "De dónde sale cada dato",
+				text: "Las tres vías leen la misma pestaña Intervinientes del SCW clásico (scw.pjn.gov.ar) y guardan lo mismo: tipo, nombre, tomo/folio e IEJ de cada parte, y tipo, nombre, matrícula y estado IEJ de cada letrado. Cambia solo cómo llegan: por HTTP sobre la sesión del actualizador, con browser y login, o con browser en el buscador público resolviendo el captcha. La API del SCW nuevo expone /intervinientes y el cliente ya tiene el método, pero hoy ningún lector la usa.",
+				nodes: ["updhttp", "miscausas", "extrainfo", "scwhttp", "portallogin", "portalpub", "api", "interv"],
+				edges: ["e4b", "e4", "e5", "e6b", "e6", "e7"],
 			},
 			{
 				title: "Quién no tiene lector",
