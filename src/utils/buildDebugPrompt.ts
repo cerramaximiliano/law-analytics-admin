@@ -31,6 +31,8 @@ const REPO_MAPPING: { matcher: RegExp; repo: string; notes?: string }[] = [
 		repo: "pjn-workers",
 		notes: "Workers de scraping PJN (Puppeteer + PM2 cron)",
 	},
+	{ matcher: /^pjn-intervinientes-credencial/, repo: "pjn-mis-causas", notes: "Intervinientes de causas con credencial activa, con login (cron diario)" },
+	{ matcher: /^pjn-intervinientes-publicas/, repo: "pjn-workers", notes: "Intervinientes de causas públicas sin credencial, portal público con captcha (+ sidecar -ocr)" },
 	{ matcher: /^pjn-email/, repo: "pjn-email-workers" },
 	{ matcher: /^pjn-mis-causas/, repo: "pjn-mis-causas" },
 	{ matcher: /^eje-api/, repo: "eje-api" },

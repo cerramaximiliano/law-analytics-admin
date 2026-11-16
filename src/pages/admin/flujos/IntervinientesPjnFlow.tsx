@@ -70,7 +70,7 @@ const IntervinientesPjnFlow: React.FC = () => {
 					sx={mono}
 				/>
 				{info.extraInfoRunning && <Chip size="small" label="ciclo en curso" color="info" sx={mono} />}
-				<Chip size="small" label="pjn-mis-causas-intervinientes diario 05:00 ART" sx={mono} />
+				<Chip size="small" label="pjn-intervinientes-credencial diario 05:00 ART" sx={mono} />
 				{failed && (
 					<Chip
 						size="small"

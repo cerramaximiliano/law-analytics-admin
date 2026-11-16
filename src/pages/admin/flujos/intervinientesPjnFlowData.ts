@@ -7,7 +7,7 @@
 //       - private-causas-update con el lector HTTP: un POST ajax más sobre la
 //         vista del detalle que el actualizador ya abrió (switch enUpdater de
 //         configuracion-intervinientes-mis-causas, default apagado);
-//       - pjn-mis-causas-intervinientes: cron diario de respaldo con browser y
+//       - pjn-intervinientes-credencial: cron diario de respaldo con browser y
 //         login SSO (config enabled de la misma colección).
 //   · SIN credencial activa, solo públicas (pjn-workers, worker-cloud-01):
 //       pjn-extra-info, browser en el buscador público con captcha (OCR local).
@@ -99,13 +99,13 @@ export function buildIntervinientesPjnSpec(info: IntervinientesPjnInfo = {}): Fl
 		},
 		{
 			id: "miscausas",
-			live: { box: "workercloud01", procs: ["pjn-mis-causas-intervinientes"] },
+			live: { box: "workercloud01", procs: ["pjn-intervinientes-credencial"] },
 			x: 300,
 			y: 182,
 			w: 260,
 			h: 124,
 			kind: "private",
-			label: "pjn-mis-causas-intervinientes",
+			label: "pjn-intervinientes-credencial",
 			sub: [
 				"CON credencial · cron 05:00 ART",
 				"respaldo de lo que no leyó el HTTP",
@@ -267,7 +267,7 @@ export function buildIntervinientesPjnSpec(info: IntervinientesPjnInfo = {}): Fl
 			},
 			{
 				title: "Causas con credencial",
-				text: "Universo: las causas que la credencial ve en su listado (linkedCredentials, sin removedFromSync), verificadas y seguidas en alguna carpeta, de los 28 fueros del PJN: públicas, privadas e incidentes; nunca leídas o con la relectura vencida (reextractAfterDays). Dos vías sobre el SCW clásico. La principal, si el switch enUpdater está encendido: private-causas-update, que ya abre cada causa por HTTP en su corrida diaria, pide la pestaña con un POST ajax más (~150 ms, sin otro login ni el lock). El respaldo: pjn-mis-causas-intervinientes, cron de las 05:00 ART con browser y login SSO, que abre las privadas e incidentes desde el listado Relacionados y comparte el lock por credencial con el actualizador; solo corre con enabled en su config. Al guardar, avisan al hub (sync-pjn) para los contactos.",
+				text: "Universo: las causas que la credencial ve en su listado (linkedCredentials, sin removedFromSync), verificadas y seguidas en alguna carpeta, de los 28 fueros del PJN: públicas, privadas e incidentes; nunca leídas o con la relectura vencida (reextractAfterDays). Dos vías sobre el SCW clásico. La principal, si el switch enUpdater está encendido: private-causas-update, que ya abre cada causa por HTTP en su corrida diaria, pide la pestaña con un POST ajax más (~150 ms, sin otro login ni el lock). El respaldo: pjn-intervinientes-credencial, cron de las 05:00 ART con browser y login SSO, que abre las privadas e incidentes desde el listado Relacionados y comparte el lock por credencial con el actualizador; solo corre con enabled en su config. Al guardar, avisan al hub (sync-pjn) para los contactos.",
 				nodes: ["causa", "updhttp", "miscausas", "scwhttp", "portallogin", "interv", "hub"],
 				edges: ["e1b", "e1", "e4b", "e4", "e6b", "e6", "e8"],
 			},

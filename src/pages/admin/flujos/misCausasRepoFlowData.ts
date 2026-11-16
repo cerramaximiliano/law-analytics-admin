@@ -71,7 +71,7 @@ export function buildMisCausasRepoSpec(): FlowSpec {
 			sub: ["cada 2 h, cron propio, sin login", "cruza actos de la bandeja", "con los movimientos", "→ última actividad del letrado"],
 		},
 		{
-			id: "interv", live: { box: "workercloud01", procs: ["pjn-mis-causas-intervinientes"] }, x: 760, y: 254, w: 210, h: 70, kind: "private", label: "intervinientes",
+			id: "interv", live: { box: "workercloud01", procs: ["pjn-intervinientes-credencial"] }, x: 760, y: 254, w: 210, h: 70, kind: "private", label: "intervinientes",
 			sub: ["partes y letrados", "diario 05 ART, con login"],
 		},
 		{
