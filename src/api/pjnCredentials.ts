@@ -733,6 +733,8 @@ export interface SyncedCausasFilters {
 	conErrores?: boolean;
 	/** Solo causas con movimiento fechado HOY (novedad judicial real) */
 	movimientosHoy?: boolean;
+	/** Texto a buscar en la carátula (sin distinguir mayúsculas ni acentos) */
+	search?: string;
 	page?: number;
 	limit?: number;
 	sortBy?: string;

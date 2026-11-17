@@ -25,6 +25,9 @@ import {
 	Button,
 	Checkbox,
 	FormControlLabel,
+	TextField,
+	InputAdornment,
+	TableSortLabel,
 	Dialog,
 	DialogTitle,
 	DialogContent,
@@ -127,6 +130,15 @@ const INCIDENT_TYPE_COLORS: Record<string, "default" | "warning" | "error" | "in
 	other: "default",
 };
 
+// Campos por los que el backend sabe ordenar el listado.
+const SORT_OPTIONS: { value: string; label: string }[] = [
+	{ value: "year", label: "Año" },
+	{ value: "caratula", label: "Carátula" },
+	{ value: "lastUpdate", label: "Última actualización" },
+	{ value: "fechaUltimoMovimiento", label: "Último movimiento" },
+	{ value: "movimientosCount", label: "Cantidad de movimientos" },
+];
+
 const getArgentinaDate = (): string => {
 	const now = new Date();
 	const argentinaOffset = -3 * 60;
@@ -195,9 +207,9 @@ const CausasSyncCredentials = () => {
 	const [conErroresFilter, setConErroresFilter] = useState<boolean>(() => searchParams.get("conErrores") === "1");
 	// Solo causas con movimiento fechado HOY (novedad judicial real del día)
 	const [movHoyFilter, setMovHoyFilter] = useState<boolean>(false);
-	// El orden es fijo por ahora; si en algún momento se hace configurable,
-	// hay que volver a exponer el setter y colgarlo de un control.
-	const [sortBy] = useState<string>("year");
+	// Buscador por carátula: se aplica con "Buscar" o Enter (como el resto de los filtros).
+	const [caratulaSearch, setCaratulaSearch] = useState<string>("");
+	const [sortBy, setSortBy] = useState<string>("year");
 	const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
 	// Diálogo de historial de estado (click en el chip Estado)
@@ -273,6 +285,9 @@ const CausasSyncCredentials = () => {
 				sortBy,
 				sortOrder,
 			};
+			// La carátula se busca en ambas vistas (normal y "no actualizables").
+			const search = caratulaSearch.trim();
+			if (search) params.search = search;
 			if (noActFilter) {
 				// Vista "no actualizables": bypassa los demás filtros de scope.
 				params.noActualizables = true;
@@ -327,6 +342,7 @@ const CausasSyncCredentials = () => {
 	};
 
 	const handleClear = () => {
+		setCaratulaSearch("");
 		setCredentialId("");
 		setFueroFilter("");
 		setMovementsFilter("");
@@ -363,6 +379,22 @@ const CausasSyncCredentials = () => {
 	const handleSortOrderToggle = () => {
 		setSortOrder(sortOrder === "asc" ? "desc" : "asc");
 		setPage(0);
+	};
+
+	const handleSortByChange = (value: string) => {
+		setSortBy(value);
+		// Un texto se lee naturalmente de la A a la Z; el resto arranca por lo más reciente/mayor.
+		setSortOrder(value === "caratula" ? "asc" : "desc");
+		setPage(0);
+	};
+
+	// Click en el encabezado "Carátula": ordena por carátula o invierte el sentido.
+	const handleCaratulaHeaderSort = () => {
+		if (sortBy === "caratula") {
+			handleSortOrderToggle();
+		} else {
+			handleSortByChange("caratula");
+		}
 	};
 
 	const formatDate = (date: string | null | undefined): string => {
@@ -598,6 +630,40 @@ const CausasSyncCredentials = () => {
 				{/* Filtros */}
 				<Box sx={{ mb: 2 }}>
 					<Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" sx={{ "& > *": { my: 0.5 } }}>
+						<TextField
+							size="small"
+							label="Carátula"
+							placeholder="Buscar por carátula…"
+							value={caratulaSearch}
+							onChange={(e) => setCaratulaSearch(e.target.value)}
+							onKeyDown={(e) => {
+								if (e.key === "Enter") handleSearch();
+							}}
+							sx={{ minWidth: 260 }}
+							InputProps={{
+								startAdornment: (
+									<InputAdornment position="start">
+										<SearchNormal1 size={16} />
+									</InputAdornment>
+								),
+								endAdornment: caratulaSearch ? (
+									<InputAdornment position="end">
+										<IconButton
+											aria-label="Borrar búsqueda por carátula"
+											size="small"
+											edge="end"
+											onClick={() => {
+												setCaratulaSearch("");
+												handleSearch();
+											}}
+										>
+											<CloseCircle size={16} />
+										</IconButton>
+									</InputAdornment>
+								) : undefined,
+							}}
+						/>
+
 						<FormControl size="small" sx={{ minWidth: 220 }}>
 							<InputLabel>Credencial</InputLabel>
 							<Select value={credentialId} onChange={(e) => setCredentialId(e.target.value)} label="Credencial">
@@ -630,8 +696,23 @@ const CausasSyncCredentials = () => {
 							</Select>
 						</FormControl>
 
+						<FormControl size="small" sx={{ minWidth: 200 }}>
+							<InputLabel>Ordenar por</InputLabel>
+							<Select value={sortBy} onChange={(e) => handleSortByChange(e.target.value)} label="Ordenar por">
+								{SORT_OPTIONS.map((opt) => (
+									<MenuItem key={opt.value} value={opt.value}>
+										{opt.label}
+									</MenuItem>
+								))}
+							</Select>
+						</FormControl>
+
 						<Tooltip title={sortOrder === "asc" ? "Ascendente" : "Descendente"}>
-							<IconButton onClick={handleSortOrderToggle} size="small">
+							<IconButton
+								aria-label={sortOrder === "asc" ? "Orden ascendente, cambiar a descendente" : "Orden descendente, cambiar a ascendente"}
+								onClick={handleSortOrderToggle}
+								size="small"
+							>
 								{sortOrder === "asc" ? <ArrowUp size={20} /> : <ArrowDown size={20} />}
 							</IconButton>
 						</Tooltip>
@@ -696,7 +777,15 @@ const CausasSyncCredentials = () => {
 									>
 										<TableCell>Expediente</TableCell>
 										<TableCell>Fuero</TableCell>
-										<TableCell>Carátula</TableCell>
+										<TableCell sortDirection={sortBy === "caratula" ? sortOrder : false}>
+											<TableSortLabel
+												active={sortBy === "caratula"}
+												direction={sortBy === "caratula" ? sortOrder : "asc"}
+												onClick={handleCaratulaHeaderSort}
+											>
+												Carátula
+											</TableSortLabel>
+										</TableCell>
 										<TableCell>Source</TableCell>
 										<TableCell align="center">Vía</TableCell>
 										<TableCell align="center">Estado</TableCell>
