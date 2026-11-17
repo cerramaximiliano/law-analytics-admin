@@ -971,6 +971,21 @@ const CausasSyncCredentials = () => {
 														{causa.credential.userEmail}
 														<CopyButton value={causa.credential.userEmail} label="email" />
 													</Typography>
+													{causa.credential.userId && (
+														<Stack direction="row" alignItems="center">
+															<Tooltip title={`_id del usuario: ${causa.credential.userId}`}>
+																<Typography
+																	variant="caption"
+																	color="text.secondary"
+																	noWrap
+																	sx={{ maxWidth: 150, fontFamily: "monospace", fontSize: "0.68rem" }}
+																>
+																	{causa.credential.userId}
+																</Typography>
+															</Tooltip>
+															<CopyButton value={causa.credential.userId} label="_id del usuario" />
+														</Stack>
+													)}
 													{causa.credential.removedFromSync && (
 														<Tooltip
 															title={

@@ -359,6 +359,8 @@ export interface SyncedCausa {
 	} | null;
 	credential: {
 		credentialId?: string;
+		/** _id del usuario dueño de la credencial */
+		userId?: string | null;
 		userName: string;
 		userEmail: string;
 		initialMovementsSync: string | null;
