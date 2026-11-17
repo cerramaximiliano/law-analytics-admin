@@ -458,7 +458,10 @@ const CausasSyncCredentials = () => {
 
 	return (
 		<>
-			<MainCard title="Causas Sincronizadas por Credenciales" secondary={<CrossViewLinks current="datos" to={{ worker: "/admin/causas/workers?worker=mis-causas-updates" }} />}>
+			<MainCard
+				title="Causas Sincronizadas por Credenciales"
+				secondary={<CrossViewLinks current="datos" to={{ worker: "/admin/causas/workers?worker=mis-causas-updates" }} />}
+			>
 				{/* Summary Cards */}
 				{summary && (
 					<Box sx={{ mb: 3 }}>
@@ -971,20 +974,27 @@ const CausasSyncCredentials = () => {
 														{causa.credential.userEmail}
 														<CopyButton value={causa.credential.userEmail} label="email" />
 													</Typography>
+													{causa.credential.credentialId && (
+														<Typography
+															variant="caption"
+															color="text.secondary"
+															noWrap
+															sx={{ fontFamily: "monospace", fontSize: "0.68rem" }}
+														>
+															cred: {causa.credential.credentialId}
+															<CopyButton value={causa.credential.credentialId} label="_id de la credencial" />
+														</Typography>
+													)}
 													{causa.credential.userId && (
-														<Stack direction="row" alignItems="center">
-															<Tooltip title={`_id del usuario: ${causa.credential.userId}`}>
-																<Typography
-																	variant="caption"
-																	color="text.secondary"
-																	noWrap
-																	sx={{ maxWidth: 150, fontFamily: "monospace", fontSize: "0.68rem" }}
-																>
-																	{causa.credential.userId}
-																</Typography>
-															</Tooltip>
+														<Typography
+															variant="caption"
+															color="text.secondary"
+															noWrap
+															sx={{ fontFamily: "monospace", fontSize: "0.68rem" }}
+														>
+															user: {causa.credential.userId}
 															<CopyButton value={causa.credential.userId} label="_id del usuario" />
-														</Stack>
+														</Typography>
 													)}
 													{causa.credential.removedFromSync && (
 														<Tooltip

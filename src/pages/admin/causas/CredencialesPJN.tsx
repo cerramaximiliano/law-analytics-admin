@@ -1573,6 +1573,28 @@ const CredencialesPJN = () => {
 															{cred.userEmail}
 															<CopyButton value={cred.userEmail} label="email" />
 														</Typography>
+														{cred._id && (
+															<Typography
+																variant="caption"
+																color="text.secondary"
+																noWrap
+																sx={{ fontFamily: "monospace", fontSize: "0.68rem" }}
+															>
+																cred: {cred._id}
+																<CopyButton value={cred._id} label="_id de la credencial" />
+															</Typography>
+														)}
+														{cred.userId && (
+															<Typography
+																variant="caption"
+																color="text.secondary"
+																noWrap
+																sx={{ fontFamily: "monospace", fontSize: "0.68rem" }}
+															>
+																user: {cred.userId}
+																<CopyButton value={cred.userId} label="_id del usuario" />
+															</Typography>
+														)}
 													</Stack>
 												</TableCell>
 												<TableCell>
@@ -1905,7 +1927,11 @@ const CredencialesPJN = () => {
 																	? "barrido del listado con el navegador"
 																	: "sin listado, búsqueda por número"
 															}. Movimientos: ${
-																cred.vias.movimientos === "api" ? "API del SCW nuevo (fallback HTTP)" : cred.vias.movimientos === "http" ? "HTTP" : "navegador"
+																cred.vias.movimientos === "api"
+																	? "API del SCW nuevo (fallback HTTP)"
+																	: cred.vias.movimientos === "http"
+																	? "HTTP"
+																	: "navegador"
 															}${cred.vias.primeraLecturaApi ? "; primera lectura por API" : ""}. Selección: ${
 																cred.vias.seleccion === "listado"
 																	? "solo las causas que el listado marca (más una pasada completa diaria)"
@@ -1916,21 +1942,41 @@ const CredencialesPJN = () => {
 														>
 															<Stack direction="row" spacing={0.5} justifyContent="center" alignItems="center">
 																<Chip
-																	label={cred.vias.seleccion === "listado" ? "Sel. listado" : cred.vias.seleccion === "sombra" ? "Ciclo + sombra" : "Ciclo"}
+																	label={
+																		cred.vias.seleccion === "listado"
+																			? "Sel. listado"
+																			: cred.vias.seleccion === "sombra"
+																			? "Ciclo + sombra"
+																			: "Ciclo"
+																	}
 																	size="small"
-																	color={cred.vias.seleccion === "listado" ? "success" : cred.vias.seleccion === "sombra" ? "secondary" : "default"}
+																	color={
+																		cred.vias.seleccion === "listado"
+																			? "success"
+																			: cred.vias.seleccion === "sombra"
+																			? "secondary"
+																			: "default"
+																	}
 																	variant={cred.vias.seleccion === "ciclo" ? "outlined" : "filled"}
 																	sx={{ fontSize: "0.65rem", height: 20, fontWeight: 700 }}
 																/>
 																<Chip
-																	label={cred.vias.apertura === "listado-http" ? "Listado HTTP" : cred.vias.apertura === "listado-navegador" ? "Listado browser" : "Sin listado"}
+																	label={
+																		cred.vias.apertura === "listado-http"
+																			? "Listado HTTP"
+																			: cred.vias.apertura === "listado-navegador"
+																			? "Listado browser"
+																			: "Sin listado"
+																	}
 																	size="small"
 																	variant="outlined"
 																	color={cred.vias.apertura === "numero" ? "warning" : "default"}
 																	sx={{ fontSize: "0.65rem", height: 20, fontWeight: 700 }}
 																/>
 																<Chip
-																	label={`Movs ${cred.vias.movimientos === "api" ? "API" : cred.vias.movimientos === "http" ? "HTTP" : "browser"}`}
+																	label={`Movs ${
+																		cred.vias.movimientos === "api" ? "API" : cred.vias.movimientos === "http" ? "HTTP" : "browser"
+																	}`}
 																	size="small"
 																	color={cred.vias.movimientos === "api" ? "info" : "default"}
 																	variant={cred.vias.movimientos === "api" ? "filled" : "outlined"}
