@@ -3,6 +3,7 @@ import { Box, Typography, Paper, Chip, Skeleton, alpha } from "@mui/material";
 import { ArrowRight2, Cloud } from "iconsax-react";
 import { useTheme } from "@mui/material/styles";
 import { Link as RouterLink } from "react-router-dom";
+import authAxios from "utils/authAxios";
 import { LIVE_GREEN, STALE_AMBER, LIVE_PULSE_KEYFRAMES, headerBorder, headerShadow } from "themes/dashboardTokens";
 
 type ServiceStatus = "online" | "offline" | "checking";
@@ -68,17 +69,10 @@ const ServicesStatusWidget = () => {
 					if (error instanceof TypeError && error.message.includes("Failed to fetch") && service.corsRestricted) {
 						// Intentar via proxy
 						try {
-							const proxyUrl = `${import.meta.env.VITE_AUTH_URL}/api/server-status/check-external`;
-							const proxyResponse = await fetch(proxyUrl, {
-								method: "POST",
-								credentials: "include",
-								headers: { "Content-Type": "application/json" },
-								body: JSON.stringify({ url: service.url }),
-							});
-							if (proxyResponse.ok) {
-								const proxyData = await proxyResponse.json();
-								return { name: service.name, shortName: service.shortName, status: proxyData.online ? "online" : "offline" };
-							}
+							// authAxios y no fetch pelado: el panel se autentica con Bearer
+							// (no con cookie) y authAxios además renueva el token vencido.
+							const { data: proxyData } = await authAxios.post("/api/server-status/check-external", { url: service.url });
+							return { name: service.name, shortName: service.shortName, status: proxyData.online ? "online" : "offline" };
 						} catch {
 							// El proxy tampoco pudo: queda indeterminado, ver abajo.
 						}

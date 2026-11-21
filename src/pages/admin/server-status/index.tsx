@@ -8,6 +8,7 @@ import { useRequestQueueRefresh } from "hooks/useRequestQueueRefresh";
 import { LIVE_GREEN, STALE_AMBER, LIVE_PULSE_KEYFRAMES } from "themes/dashboardTokens";
 import CronHealthService, { CronHealthItem, CronHealthStatus } from "api/cronHealth";
 import { formatNumber } from "utils/format";
+import authAxios from "utils/authAxios";
 
 // Types
 interface ServiceStatus {
@@ -223,25 +224,15 @@ const ServerStatus = () => {
 						) {
 							// Intentar verificar a través de nuestro backend
 							try {
-								const proxyUrl = `${import.meta.env.VITE_AUTH_URL}/api/server-status/check-external`;
-								const proxyResponse = await fetch(proxyUrl, {
-									method: "POST",
-									credentials: "include",
-									headers: {
-										"Content-Type": "application/json",
-									},
-									body: JSON.stringify({ url: service.url }),
-								});
-
-								if (proxyResponse.ok) {
-									const proxyData = await proxyResponse.json();
-									return {
-										...service,
-										status: proxyData.online ? ("online" as const) : ("offline" as const),
-										timestamp: proxyData.timestamp || new Date().toISOString(),
-										message: proxyData.message || "Verificado a través de proxy",
-									};
-								}
+								// authAxios y no fetch pelado: el panel se autentica con Bearer
+								// (no con cookie) y authAxios además renueva el token vencido.
+								const { data: proxyData } = await authAxios.post("/api/server-status/check-external", { url: service.url });
+								return {
+									...service,
+									status: proxyData.online ? ("online" as const) : ("offline" as const),
+									timestamp: proxyData.timestamp || new Date().toISOString(),
+									message: proxyData.message || "Verificado a través de proxy",
+								};
 							} catch (proxyError) {
 								// Error con proxy, continuar
 							}
