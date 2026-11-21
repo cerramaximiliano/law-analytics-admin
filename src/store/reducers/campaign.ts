@@ -1,4 +1,5 @@
 import mktAxios from "utils/mktAxios";
+import { PendientesAdsState } from "types/campaign";
 import {
 	Campaign,
 	CampaignResponse,
@@ -634,5 +635,17 @@ export const SchedulerFrequencyService = {
 	updateFrequency: async (config: SchedulerFrequencyPatch): Promise<SchedulerFrequencyConfig> => {
 		const response = await mktAxios.put("/api/scheduler/frequency", config);
 		return normalizeFrequencyConfig(response.data);
+	},
+};
+
+// Automatización /pendientes-ads (la-ads): latido de cada corrida y aviso si se cae (email-health de la-marketing-service).
+export const PendientesAdsService = {
+	get: async (): Promise<PendientesAdsState> => {
+		const response = await mktAxios.get("/api/scheduler/pendientes-ads");
+		return response.data.data as PendientesAdsState;
+	},
+	update: async (patch: { avisar?: boolean; maxHoras?: number }): Promise<PendientesAdsState> => {
+		const response = await mktAxios.put("/api/scheduler/pendientes-ads", patch);
+		return response.data.data as PendientesAdsState;
 	},
 };

@@ -10,6 +10,7 @@ import PrioritiesTable from "sections/admin/marketing/coordination/PrioritiesTab
 import FlowsChart from "sections/admin/marketing/coordination/FlowsChart";
 import DailyDeferredCard from "sections/admin/marketing/coordination/DailyDeferredCard";
 import QuotaRampCard from "sections/admin/marketing/coordination/QuotaRampCard";
+import AutomationCard from "sections/admin/marketing/coordination/AutomationCard";
 import { CampaignService, SchedulerFrequencyService } from "store/reducers/campaign";
 import { Campaign, SchedulerFrequencyState } from "types/campaign";
 import { LIVE_GREEN } from "themes/dashboardTokens";
@@ -118,6 +119,9 @@ const CampaignCoordination = () => {
 				</Grid>
 				<Grid item xs={12} lg={5}>
 					<DailyDeferredCard frequency={frequency} campaigns={campaigns} />
+				</Grid>
+				<Grid item xs={12}>
+					<AutomationCard />
 				</Grid>
 				<Grid item xs={12}>
 					<QuotaRampCard

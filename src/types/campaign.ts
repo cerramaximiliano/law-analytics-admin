@@ -669,3 +669,17 @@ export interface ConversionUserJourney {
 	subscriptionPlan: string;
 	firstPaidAt: string | null;
 }
+
+// === Automatización /pendientes-ads (la-ads): GET/PUT /api/scheduler/pendientes-ads ===
+export interface PendientesAdsState {
+	existe: boolean;
+	ultimaCorrida: string | null;
+	modo: string | null;
+	resumen: string | null;
+	host: string | null;
+	maxHoras: number;
+	avisar: boolean;
+	horasDesdeUltima: number | null;
+	caido: boolean;
+	mensaje: string | null;
+}
