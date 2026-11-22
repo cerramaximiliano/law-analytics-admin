@@ -59,6 +59,12 @@ export interface PjnCredential {
 		movimientos: "api" | "http" | "navegador";
 		primeraLecturaApi: boolean;
 		seleccion: "ciclo" | "sombra" | "listado";
+		/** Modo de lectura de movimientos (lecturaMovimientos): mixto = API del SCW nuevo con HTTP de respaldo. */
+		lectura?: "mixto" | "http" | "legado";
+		/** Franjas en que la selección por lista lee todas las causas (red diaria), p. ej. ["14:00"]. */
+		franjasCompletas?: string[];
+		/** Bloqueo vigente de la API del SCW nuevo por CAPTCHA: hasta `hasta` los movimientos van por HTTP. */
+		captcha?: { at: string | null; hasta: string; clave: string | null } | null;
 	};
 	verified: boolean;
 	verifiedAt: string | null;

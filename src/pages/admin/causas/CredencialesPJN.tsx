@@ -1522,7 +1522,7 @@ const CredencialesPJN = () => {
 											<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.5 }}>
 												Vías del update
 												<Tooltip
-													title="Cómo corre el update diario de la credencial. Apertura: el barrido del listado por HTTP abre cada causa desde su fila (la vía actual); 'navegador' = mismo barrido con el browser; 'por número' = sin listado, búsqueda por número. Movimientos: la tabla de movimientos se lee por la API del SCW nuevo (piloto movimientosApiUpdate) o por HTTP; ante cualquier duda vuelve a HTTP. Selección: 'Ciclo' = todas las causas vencidas por su clase y franja (barrido por ciclo, la vía actual); 'Ciclo + sombra' = igual, y además calcula qué abriría el listado sin cambiar nada; 'Sel. listado' = solo las causas cuya fecha del listado cambió, más una pasada completa diaria."
+													title="Cómo corre el update diario de la credencial. Primer chip, selección: 'Lista API' = lee el listado Relacionados por la API del SCW nuevo y abre solo las causas que marca (cambio de fecha, actividad reciente, fila nueva), con una lectura completa diaria; 'Ciclo' = todas las vencidas por clase y franja; 'Ciclo + sombra' = igual, y además calcula qué abriría la lista. Segundo chip, actualización de movimientos: 'Mixta' = por la API del SCW nuevo con el SCW clásico (HTTP) de respaldo; 'Mixta · CAPTCHA' = la API pidió CAPTCHA y hasta el fin del día va por HTTP; 'HTTP' = SCW clásico. 'Sin listado' = búsqueda por número. El detalle está en el tooltip de cada fila."
 													arrow
 													placement="top"
 												>
@@ -1920,31 +1920,41 @@ const CredencialesPJN = () => {
 													{cred.vias ? (
 														<Tooltip
 															arrow
-															title={`Apertura: ${
+															title={`Selección: ${
+																cred.vias.seleccion === "listado"
+																	? `por lista: lee el listado Relacionados por la API del SCW nuevo y abre solo las causas que marca${
+																			cred.vias.franjasCompletas?.length
+																				? `; lectura completa en la franja de ${cred.vias.franjasCompletas.join(", ")}`
+																				: ""
+																	  }`
+																	: cred.vias.seleccion === "sombra"
+																	? "todas las vencidas por clase y franja; en sombra calcula qué abriría la lista"
+																	: "todas las vencidas por clase y franja (barrido por ciclo)"
+															}. Actualización: ${
+																cred.vias.lectura === "mixto"
+																	? cred.vias.captcha
+																		? `mixta, pero la API del SCW nuevo pidió CAPTCHA: movimientos por HTTP hasta ${new Date(
+																				cred.vias.captcha.hasta,
+																		  ).toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" })}`
+																		: "mixta: movimientos por la API del SCW nuevo, con el SCW clásico (HTTP) de respaldo"
+																	: cred.vias.movimientos === "api"
+																	? "API del SCW nuevo (fallback HTTP)"
+																	: cred.vias.movimientos === "http"
+																	? "SCW clásico por HTTP"
+																	: "SCW clásico con el navegador"
+															}${cred.vias.primeraLecturaApi ? "; primera lectura por API" : ""}. Apertura: ${
 																cred.vias.apertura === "listado-http"
 																	? `barrido del listado por HTTP${cred.vias.aperturaTodas ? " (todas las causas)" : ""}`
 																	: cred.vias.apertura === "listado-navegador"
 																	? "barrido del listado con el navegador"
 																	: "sin listado, búsqueda por número"
-															}. Movimientos: ${
-																cred.vias.movimientos === "api"
-																	? "API del SCW nuevo (fallback HTTP)"
-																	: cred.vias.movimientos === "http"
-																	? "HTTP"
-																	: "navegador"
-															}${cred.vias.primeraLecturaApi ? "; primera lectura por API" : ""}. Selección: ${
-																cred.vias.seleccion === "listado"
-																	? "solo las causas que el listado marca (más una pasada completa diaria)"
-																	: cred.vias.seleccion === "sombra"
-																	? "todas las vencidas por clase y franja; en sombra calcula qué abriría el listado"
-																	: "todas las vencidas por clase y franja (barrido por ciclo)"
 															}.`}
 														>
 															<Stack direction="row" spacing={0.5} justifyContent="center" alignItems="center">
 																<Chip
 																	label={
 																		cred.vias.seleccion === "listado"
-																			? "Sel. listado"
+																			? "Lista API"
 																			: cred.vias.seleccion === "sombra"
 																			? "Ciclo + sombra"
 																			: "Ciclo"
@@ -1962,26 +1972,38 @@ const CredencialesPJN = () => {
 																/>
 																<Chip
 																	label={
-																		cred.vias.apertura === "listado-http"
-																			? "Listado HTTP"
-																			: cred.vias.apertura === "listado-navegador"
-																			? "Listado browser"
-																			: "Sin listado"
+																		cred.vias.lectura === "mixto"
+																			? cred.vias.captcha
+																				? "Mixta · CAPTCHA"
+																				: "Mixta"
+																			: cred.vias.movimientos === "api"
+																			? "Movs API"
+																			: cred.vias.movimientos === "http"
+																			? "HTTP"
+																			: "Browser"
 																	}
 																	size="small"
-																	variant="outlined"
-																	color={cred.vias.apertura === "numero" ? "warning" : "default"}
+																	color={
+																		cred.vias.lectura === "mixto"
+																			? cred.vias.captcha
+																				? "warning"
+																				: "info"
+																			: cred.vias.movimientos === "api"
+																			? "info"
+																			: "default"
+																	}
+																	variant={cred.vias.lectura === "mixto" || cred.vias.movimientos === "api" ? "filled" : "outlined"}
 																	sx={{ fontSize: "0.65rem", height: 20, fontWeight: 700 }}
 																/>
-																<Chip
-																	label={`Movs ${
-																		cred.vias.movimientos === "api" ? "API" : cred.vias.movimientos === "http" ? "HTTP" : "browser"
-																	}`}
-																	size="small"
-																	color={cred.vias.movimientos === "api" ? "info" : "default"}
-																	variant={cred.vias.movimientos === "api" ? "filled" : "outlined"}
-																	sx={{ fontSize: "0.65rem", height: 20, fontWeight: 700 }}
-																/>
+																{cred.vias.apertura === "numero" && (
+																	<Chip
+																		label="Sin listado"
+																		size="small"
+																		variant="outlined"
+																		color="warning"
+																		sx={{ fontSize: "0.65rem", height: 20, fontWeight: 700 }}
+																	/>
+																)}
 															</Stack>
 														</Tooltip>
 													) : (
