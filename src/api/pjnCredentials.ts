@@ -64,6 +64,7 @@ export interface PjnCredential {
 		/** Franjas en que la selección por lista lee todas las causas (red diaria), p. ej. ["14:00"]. */
 		franjasCompletas?: string[];
 		lecturaDiariaHttp?: boolean;
+		viaPublica?: { vigenciaDias: number; carriles: number; maxPorFranja: number } | null;
 		/** Bloqueo vigente de la API del SCW nuevo por CAPTCHA: hasta `hasta` los movimientos van por HTTP. */
 		captcha?: { at: string | null; hasta: string; clave: string | null } | null;
 	};
@@ -1103,6 +1104,15 @@ class PjnCredentialsService {
 		enabled: boolean,
 	): Promise<GenericResponse & { data?: { _id: string; listadoApi: { global: boolean; enCredenciales: boolean; lista: string[] } } }> {
 		const response = await adminAxios.patch(`/api/pjn-credentials/${id}/listado-api`, { enabled });
+		return response.data;
+	}
+
+	/**
+	 * De día, las causas públicas comprobadas de la credencial por la vista pública (sin login) o todo por login
+	 * (causas-update-config.worker.lecturaPorVia).
+	 */
+	async setLecturaPublica(id: string, enabled: boolean): Promise<GenericResponse> {
+		const response = await adminAxios.patch(`/api/pjn-credentials/${id}/lectura-publica`, { enabled });
 		return response.data;
 	}
 
