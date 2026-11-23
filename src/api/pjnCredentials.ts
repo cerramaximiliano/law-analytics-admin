@@ -52,6 +52,16 @@ export interface PjnCredential {
 	 * pjn-mis-causas). apertura: cómo se abre cada causa; movimientos: cómo se lee la tabla de movimientos;
 	 * seleccion: qué causas se leen ("ciclo" = todas las vencidas por clase/franja; "listado" llega con el paso 2).
 	 */
+	/** Públicas/privadas de la credencial (pasada nocturna de pjn-mis-causas, services/privacidad-resumen.js). */
+	privacidadResumen?: {
+		total: number;
+		publicas: number;
+		privadas: number;
+		sinClasificar: number;
+		incidentes: number;
+		publicasComprobadas: number;
+		at: string;
+	} | null;
 	vias?: {
 		listado: "api" | "navegador";
 		apertura: "listado-http" | "listado-navegador" | "numero";

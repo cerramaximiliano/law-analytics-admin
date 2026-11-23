@@ -1541,6 +1541,20 @@ const CredencialesPJN = () => {
 										</TableCell>
 										<TableCell align="center">
 											<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.5 }}>
+												Públicas / privadas
+												<Tooltip
+													title="Causas vinculadas a la credencial según la consulta pública (sin login), que la pasada nocturna corre de madrugada: públicas, privadas (reservadas: solo con login) y sin clasificar. 'Comprobadas' = públicas confirmadas por la consulta pública en los últimos 30 días: las que la vista pública puede leer sin login. Los incidentes se cuentan dentro de cada clase y aparte en el tooltip de la fila."
+													arrow
+													placement="top"
+												>
+													<Box component="span" sx={{ display: "inline-flex", cursor: "help", opacity: 0.5 }}>
+														<InfoCircle size={13} />
+													</Box>
+												</Tooltip>
+											</Box>
+										</TableCell>
+										<TableCell align="center">
+											<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.5 }}>
 												Vías del update
 												<Tooltip
 													title="Cómo corre el update diario de la credencial. Primer chip, selección: 'Lista API' = lee el listado Relacionados por la API del SCW nuevo y abre solo las causas que marca (cambio de fecha, actividad reciente, fila nueva), con una lectura completa diaria; 'Lista API · red HTTP' = igual, pero la lectura completa diaria es la primera franja del día por el SCW clásico (HTTP), sin franja completa por la API, para no disparar el CAPTCHA del SCW nuevo; 'Ciclo' = todas las vencidas por clase y franja; 'Ciclo + sombra' = igual, y además calcula qué abriría la lista. Segundo chip, actualización de movimientos: 'Mixta' = por la API del SCW nuevo con el SCW clásico (HTTP) de respaldo; 'Mixta · CAPTCHA' = la API pidió CAPTCHA y hasta el fin del día va por HTTP; 'HTTP' = SCW clásico. 'Sin listado' = búsqueda por número. El detalle está en el tooltip de cada fila."
@@ -1936,6 +1950,58 @@ const CredencialesPJN = () => {
 															/>
 														</Stack>
 													</Tooltip>
+												</TableCell>
+												<TableCell align="center">
+													{cred.privacidadResumen ? (
+														<Tooltip
+															arrow
+															title={`${cred.privacidadResumen.total.toLocaleString(
+																"es-AR",
+															)} causas: ${cred.privacidadResumen.publicas.toLocaleString(
+																"es-AR",
+															)} públicas (${cred.privacidadResumen.publicasComprobadas.toLocaleString(
+																"es-AR",
+															)} comprobadas en 30 días), ${cred.privacidadResumen.privadas.toLocaleString(
+																"es-AR",
+															)} privadas, ${cred.privacidadResumen.sinClasificar.toLocaleString(
+																"es-AR",
+															)} sin clasificar; ${cred.privacidadResumen.incidentes.toLocaleString(
+																"es-AR",
+															)} incidentes (siempre con login). Actualizado ${new Date(cred.privacidadResumen.at).toLocaleString("es-AR", {
+																dateStyle: "short",
+																timeStyle: "short",
+															})}.`}
+														>
+															<Stack direction="row" spacing={0.5} justifyContent="center" alignItems="center">
+																<Chip
+																	label={`${cred.privacidadResumen.publicas.toLocaleString("es-AR")} púb.`}
+																	size="small"
+																	color="success"
+																	variant={cred.privacidadResumen.publicasComprobadas > 0 ? "filled" : "outlined"}
+																	sx={{ fontSize: "0.65rem", height: 20, fontWeight: 700 }}
+																/>
+																<Chip
+																	label={`${cred.privacidadResumen.privadas.toLocaleString("es-AR")} priv.`}
+																	size="small"
+																	color="warning"
+																	variant="outlined"
+																	sx={{ fontSize: "0.65rem", height: 20, fontWeight: 700 }}
+																/>
+																{cred.privacidadResumen.sinClasificar > 0 && (
+																	<Chip
+																		label={`${cred.privacidadResumen.sinClasificar.toLocaleString("es-AR")} s/c`}
+																		size="small"
+																		variant="outlined"
+																		sx={{ fontSize: "0.65rem", height: 20, fontWeight: 700 }}
+																	/>
+																)}
+															</Stack>
+														</Tooltip>
+													) : (
+														<Typography variant="caption" color="text.secondary">
+															—
+														</Typography>
+													)}
 												</TableCell>
 												<TableCell align="center">
 													{cred.vias ? (
