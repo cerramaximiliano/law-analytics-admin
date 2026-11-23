@@ -509,6 +509,9 @@ const CredencialesPJN = () => {
 	// Confirmación del switch "Listado API" (credencial + valor que se quiere poner)
 	const [listadoApiDialog, setListadoApiDialog] = useState<{ credential: PjnCredential; enabled: boolean } | null>(null);
 	const [listadoApiSaving, setListadoApiSaving] = useState(false);
+	// Confirmación del switch de la vista pública (lecturaPorVia)
+	const [lecturaPublicaDialog, setLecturaPublicaDialog] = useState<{ credential: PjnCredential; enabled: boolean } | null>(null);
+	const [lecturaPublicaSaving, setLecturaPublicaSaving] = useState(false);
 	const [listadoDialog, setListadoDialog] = useState<PjnCredential | null>(null);
 	// Lightbox para ver el screenshot en grande
 	const [screenshotLightbox, setScreenshotLightbox] = useState<{ url: string; label: string } | null>(null);
@@ -758,6 +761,24 @@ const CredencialesPJN = () => {
 			enqueueSnackbar("Error al actualizar el listado por API", { variant: "error" });
 		} finally {
 			setListadoApiSaving(false);
+		}
+	};
+
+	const handleConfirmLecturaPublica = async () => {
+		if (!lecturaPublicaDialog) return;
+		setLecturaPublicaSaving(true);
+		try {
+			const response = await pjnCredentialsService.setLecturaPublica(lecturaPublicaDialog.credential._id, lecturaPublicaDialog.enabled);
+			if (response.success) {
+				enqueueSnackbar(response.message || "Vía de lectura actualizada", { variant: "success" });
+				setLecturaPublicaDialog(null);
+				fetchCredentials();
+			}
+		} catch (error: any) {
+			console.error("Error al actualizar la vía de lectura:", error);
+			enqueueSnackbar(error?.response?.data?.message || "Error al actualizar la vía de lectura", { variant: "error" });
+		} finally {
+			setLecturaPublicaSaving(false);
 		}
 	};
 
@@ -1918,102 +1939,131 @@ const CredencialesPJN = () => {
 												</TableCell>
 												<TableCell align="center">
 													{cred.vias ? (
-														<Tooltip
-															arrow
-															title={`Selección: ${
-																cred.vias.seleccion === "listado"
-																	? `por lista: lee el listado Relacionados por la API del SCW nuevo y abre solo las causas que marca${
-																			cred.vias.lecturaDiariaHttp
-																				? "; red diaria: la primera franja del día lee todas las causas por el SCW clásico (HTTP), sin la API"
-																				: ""
-																	  }${
-																			cred.vias.franjasCompletas?.length
-																				? `; lectura completa por la API en la franja de ${cred.vias.franjasCompletas.join(", ")}`
-																				: cred.vias.lecturaDiariaHttp
-																				? "; sin franja completa por la API (evita el CAPTCHA del SCW nuevo)"
-																				: "; sin lectura completa diaria"
-																	  }`
-																	: cred.vias.seleccion === "sombra"
-																	? "todas las vencidas por clase y franja; en sombra calcula qué abriría la lista"
-																	: "todas las vencidas por clase y franja (barrido por ciclo)"
-															}. Actualización: ${
-																cred.vias.lectura === "mixto"
-																	? cred.vias.captcha
-																		? `mixta, pero la API del SCW nuevo pidió CAPTCHA: movimientos por HTTP hasta ${new Date(
-																				cred.vias.captcha.hasta,
-																		  ).toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" })}`
-																		: "mixta: movimientos por la API del SCW nuevo, con el SCW clásico (HTTP) de respaldo"
-																	: cred.vias.movimientos === "api"
-																	? "API del SCW nuevo (fallback HTTP)"
-																	: cred.vias.movimientos === "http"
-																	? "SCW clásico por HTTP"
-																	: "SCW clásico con el navegador"
-															}${cred.vias.primeraLecturaApi ? "; primera lectura por API" : ""}. Apertura: ${
-																cred.vias.apertura === "listado-http"
-																	? `barrido del listado por HTTP${cred.vias.aperturaTodas ? " (todas las causas)" : ""}`
-																	: cred.vias.apertura === "listado-navegador"
-																	? "barrido del listado con el navegador"
-																	: "sin listado, búsqueda por número"
-															}.`}
-														>
-															<Stack direction="row" spacing={0.5} justifyContent="center" alignItems="center">
-																<Chip
-																	label={
-																		cred.vias.seleccion === "listado"
-																			? cred.vias.lecturaDiariaHttp
-																				? "Lista API · red HTTP"
-																				: "Lista API"
-																			: cred.vias.seleccion === "sombra"
-																			? "Ciclo + sombra"
-																			: "Ciclo"
-																	}
-																	size="small"
-																	color={
-																		cred.vias.seleccion === "listado"
-																			? "success"
-																			: cred.vias.seleccion === "sombra"
-																			? "secondary"
-																			: "default"
-																	}
-																	variant={cred.vias.seleccion === "ciclo" ? "outlined" : "filled"}
-																	sx={{ fontSize: "0.65rem", height: 20, fontWeight: 700 }}
-																/>
-																<Chip
-																	label={
-																		cred.vias.lectura === "mixto"
-																			? cred.vias.captcha
-																				? "Mixta · CAPTCHA"
-																				: "Mixta"
-																			: cred.vias.movimientos === "api"
-																			? "Movs API"
-																			: cred.vias.movimientos === "http"
-																			? "HTTP"
-																			: "Browser"
-																	}
-																	size="small"
-																	color={
-																		cred.vias.lectura === "mixto"
-																			? cred.vias.captcha
-																				? "warning"
-																				: "info"
-																			: cred.vias.movimientos === "api"
-																			? "info"
-																			: "default"
-																	}
-																	variant={cred.vias.lectura === "mixto" || cred.vias.movimientos === "api" ? "filled" : "outlined"}
-																	sx={{ fontSize: "0.65rem", height: 20, fontWeight: 700 }}
-																/>
-																{cred.vias.apertura === "numero" && (
+														<>
+															<Tooltip
+																arrow
+																title={`Selección: ${
+																	cred.vias.seleccion === "listado"
+																		? `por lista: lee el listado Relacionados por la API del SCW nuevo y abre solo las causas que marca${
+																				cred.vias.lecturaDiariaHttp
+																					? "; red diaria: la primera franja del día lee todas las causas por el SCW clásico (HTTP), sin la API"
+																					: ""
+																		  }${
+																				cred.vias.franjasCompletas?.length
+																					? `; lectura completa por la API en la franja de ${cred.vias.franjasCompletas.join(", ")}`
+																					: cred.vias.lecturaDiariaHttp
+																					? "; sin franja completa por la API (evita el CAPTCHA del SCW nuevo)"
+																					: "; sin lectura completa diaria"
+																		  }`
+																		: cred.vias.seleccion === "sombra"
+																		? "todas las vencidas por clase y franja; en sombra calcula qué abriría la lista"
+																		: "todas las vencidas por clase y franja (barrido por ciclo)"
+																}. Actualización: ${
+																	cred.vias.lectura === "mixto"
+																		? cred.vias.captcha
+																			? `mixta, pero la API del SCW nuevo pidió CAPTCHA: movimientos por HTTP hasta ${new Date(
+																					cred.vias.captcha.hasta,
+																			  ).toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" })}`
+																			: "mixta: movimientos por la API del SCW nuevo, con el SCW clásico (HTTP) de respaldo"
+																		: cred.vias.movimientos === "api"
+																		? "API del SCW nuevo (fallback HTTP)"
+																		: cred.vias.movimientos === "http"
+																		? "SCW clásico por HTTP"
+																		: "SCW clásico con el navegador"
+																}${cred.vias.primeraLecturaApi ? "; primera lectura por API" : ""}. Apertura: ${
+																	cred.vias.apertura === "listado-http"
+																		? `barrido del listado por HTTP${cred.vias.aperturaTodas ? " (todas las causas)" : ""}`
+																		: cred.vias.apertura === "listado-navegador"
+																		? "barrido del listado con el navegador"
+																		: "sin listado, búsqueda por número"
+																}.`}
+															>
+																<Stack direction="row" spacing={0.5} justifyContent="center" alignItems="center">
 																	<Chip
-																		label="Sin listado"
+																		label={
+																			cred.vias.seleccion === "listado"
+																				? cred.vias.lecturaDiariaHttp
+																					? "Lista API · red HTTP"
+																					: "Lista API"
+																				: cred.vias.seleccion === "sombra"
+																				? "Ciclo + sombra"
+																				: "Ciclo"
+																		}
 																		size="small"
-																		variant="outlined"
-																		color="warning"
+																		color={
+																			cred.vias.seleccion === "listado"
+																				? "success"
+																				: cred.vias.seleccion === "sombra"
+																				? "secondary"
+																				: "default"
+																		}
+																		variant={cred.vias.seleccion === "ciclo" ? "outlined" : "filled"}
 																		sx={{ fontSize: "0.65rem", height: 20, fontWeight: 700 }}
 																	/>
-																)}
-															</Stack>
-														</Tooltip>
+																	<Chip
+																		label={
+																			cred.vias.lectura === "mixto"
+																				? cred.vias.captcha
+																					? "Mixta · CAPTCHA"
+																					: "Mixta"
+																				: cred.vias.movimientos === "api"
+																				? "Movs API"
+																				: cred.vias.movimientos === "http"
+																				? "HTTP"
+																				: "Browser"
+																		}
+																		size="small"
+																		color={
+																			cred.vias.lectura === "mixto"
+																				? cred.vias.captcha
+																					? "warning"
+																					: "info"
+																				: cred.vias.movimientos === "api"
+																				? "info"
+																				: "default"
+																		}
+																		variant={cred.vias.lectura === "mixto" || cred.vias.movimientos === "api" ? "filled" : "outlined"}
+																		sx={{ fontSize: "0.65rem", height: 20, fontWeight: 700 }}
+																	/>
+																	{cred.vias.apertura === "numero" && (
+																		<Chip
+																			label="Sin listado"
+																			size="small"
+																			variant="outlined"
+																			color="warning"
+																			sx={{ fontSize: "0.65rem", height: 20, fontWeight: 700 }}
+																		/>
+																	)}
+																	{cred.vias.viaPublica && (
+																		<Chip
+																			label="Públicas: vista pública"
+																			size="small"
+																			color="success"
+																			variant="outlined"
+																			sx={{ fontSize: "0.65rem", height: 20, fontWeight: 700 }}
+																		/>
+																	)}
+																</Stack>
+															</Tooltip>
+															<Tooltip
+																arrow
+																title={`De día, las causas públicas comprobadas (consulta pública de los últimos 30 días, sin incidentes ni Corte) se leen por la vista pública: captcha por OCR y lectura por HTTP, sin login. Privadas, sin clasificar e incidentes siguen con login; si la vista pública falla, la causa vuelve a login en la misma franja. ${
+																	cred.vias.viaPublica ? "Activo. Clic para volver todo a login." : "Todo por login. Clic para activar."
+																}`}
+															>
+																<Stack direction="row" alignItems="center" justifyContent="center" spacing={0.5} sx={{ mt: 0.5 }}>
+																	<Switch
+																		size="small"
+																		checked={!!cred.vias.viaPublica}
+																		onChange={(e) => setLecturaPublicaDialog({ credential: cred, enabled: e.target.checked })}
+																		inputProps={{ "aria-label": "Causas públicas por la vista pública" }}
+																	/>
+																	<Typography variant="caption" color="text.secondary">
+																		Vista pública
+																	</Typography>
+																</Stack>
+															</Tooltip>
+														</>
 													) : (
 														<Typography variant="caption" color="text.secondary">
 															—
@@ -3496,6 +3546,39 @@ const CredencialesPJN = () => {
 						disabled={listadoApiSaving}
 					>
 						{listadoApiSaving ? "Guardando…" : listadoApiDialog?.enabled ? "Activar" : "Quitar"}
+					</Button>
+				</DialogActions>
+			</Dialog>
+
+			{/* Confirmación del switch de la vista pública */}
+			<Dialog
+				open={!!lecturaPublicaDialog}
+				onClose={() => (lecturaPublicaSaving ? null : setLecturaPublicaDialog(null))}
+				maxWidth="sm"
+				fullWidth
+			>
+				<DialogTitle>{lecturaPublicaDialog?.enabled ? "Leer las causas públicas por la vista pública" : "Volver todo a login"}</DialogTitle>
+				<DialogContent>
+					<Typography variant="body2" sx={{ mb: 1 }}>
+						Credencial de <strong>{lecturaPublicaDialog?.credential.userName}</strong> ({lecturaPublicaDialog?.credential.userEmail}).
+					</Typography>
+					<Typography variant="body2" color="text.secondary">
+						{lecturaPublicaDialog?.enabled
+							? "Desde la próxima franja, las causas públicas comprobadas que marque la selección se leen por la consulta pública (un captcha por OCR por causa, ~5 s) en vez de abrirse con la sesión de la cuenta. Las privadas, sin clasificar, incidentes y Corte siguen con login, y cualquier falla vuelve a login en la misma franja."
+							: "Desde la próxima franja, todas las causas de la credencial vuelven a leerse con login."}
+					</Typography>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => setLecturaPublicaDialog(null)} disabled={lecturaPublicaSaving}>
+						Cancelar
+					</Button>
+					<Button
+						onClick={handleConfirmLecturaPublica}
+						variant="contained"
+						color={lecturaPublicaDialog?.enabled ? "primary" : "warning"}
+						disabled={lecturaPublicaSaving}
+					>
+						{lecturaPublicaSaving ? "Guardando…" : lecturaPublicaDialog?.enabled ? "Activar" : "Volver a login"}
 					</Button>
 				</DialogActions>
 			</Dialog>
