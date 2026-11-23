@@ -1522,7 +1522,7 @@ const CredencialesPJN = () => {
 											<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.5 }}>
 												Vías del update
 												<Tooltip
-													title="Cómo corre el update diario de la credencial. Primer chip, selección: 'Lista API' = lee el listado Relacionados por la API del SCW nuevo y abre solo las causas que marca (cambio de fecha, actividad reciente, fila nueva), con una lectura completa diaria; 'Ciclo' = todas las vencidas por clase y franja; 'Ciclo + sombra' = igual, y además calcula qué abriría la lista. Segundo chip, actualización de movimientos: 'Mixta' = por la API del SCW nuevo con el SCW clásico (HTTP) de respaldo; 'Mixta · CAPTCHA' = la API pidió CAPTCHA y hasta el fin del día va por HTTP; 'HTTP' = SCW clásico. 'Sin listado' = búsqueda por número. El detalle está en el tooltip de cada fila."
+													title="Cómo corre el update diario de la credencial. Primer chip, selección: 'Lista API' = lee el listado Relacionados por la API del SCW nuevo y abre solo las causas que marca (cambio de fecha, actividad reciente, fila nueva), con una lectura completa diaria; 'Lista API · red HTTP' = igual, pero la lectura completa diaria es la primera franja del día por el SCW clásico (HTTP), sin franja completa por la API, para no disparar el CAPTCHA del SCW nuevo; 'Ciclo' = todas las vencidas por clase y franja; 'Ciclo + sombra' = igual, y además calcula qué abriría la lista. Segundo chip, actualización de movimientos: 'Mixta' = por la API del SCW nuevo con el SCW clásico (HTTP) de respaldo; 'Mixta · CAPTCHA' = la API pidió CAPTCHA y hasta el fin del día va por HTTP; 'HTTP' = SCW clásico. 'Sin listado' = búsqueda por número. El detalle está en el tooltip de cada fila."
 													arrow
 													placement="top"
 												>
@@ -1923,9 +1923,15 @@ const CredencialesPJN = () => {
 															title={`Selección: ${
 																cred.vias.seleccion === "listado"
 																	? `por lista: lee el listado Relacionados por la API del SCW nuevo y abre solo las causas que marca${
-																			cred.vias.franjasCompletas?.length
-																				? `; lectura completa en la franja de ${cred.vias.franjasCompletas.join(", ")}`
+																			cred.vias.lecturaDiariaHttp
+																				? "; red diaria: la primera franja del día lee todas las causas por el SCW clásico (HTTP), sin la API"
 																				: ""
+																	  }${
+																			cred.vias.franjasCompletas?.length
+																				? `; lectura completa por la API en la franja de ${cred.vias.franjasCompletas.join(", ")}`
+																				: cred.vias.lecturaDiariaHttp
+																				? "; sin franja completa por la API (evita el CAPTCHA del SCW nuevo)"
+																				: "; sin lectura completa diaria"
 																	  }`
 																	: cred.vias.seleccion === "sombra"
 																	? "todas las vencidas por clase y franja; en sombra calcula qué abriría la lista"
@@ -1954,7 +1960,9 @@ const CredencialesPJN = () => {
 																<Chip
 																	label={
 																		cred.vias.seleccion === "listado"
-																			? "Lista API"
+																			? cred.vias.lecturaDiariaHttp
+																				? "Lista API · red HTTP"
+																				: "Lista API"
 																			: cred.vias.seleccion === "sombra"
 																			? "Ciclo + sombra"
 																			: "Ciclo"
