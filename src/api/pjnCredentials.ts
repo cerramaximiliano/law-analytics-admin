@@ -48,6 +48,18 @@ export interface PjnCredential {
 		efectivo: boolean;
 	};
 	/**
+	 * Lector del listado «Relacionados» por etapa (25/11/2026). configurado: lo que hará la próxima corrida según
+	 * causas-update-config (cargaInicialApi / listadoApiScwBeta). usado: lo que el worker registró en su última
+	 * corrida; null = sin registro (credencial anterior al registro, o todavía sin correr).
+	 */
+	listados?: {
+		inicial: { configurado: "api" | "navegador"; usado: { fuente: "api" | "navegador"; at: string | null; total: number | null } | null };
+		sync: {
+			configurado: "api" | "navegador";
+			usado: { fuente: "api" | "navegador"; at: string | null; total: number | null; completo: boolean } | null;
+		};
+	};
+	/**
 	 * Vías del update de esta credencial, calculadas por el admin-api desde causas-update-config (mismos flags que
 	 * pjn-mis-causas). apertura: cómo se abre cada causa; movimientos: cómo se lee la tabla de movimientos;
 	 * seleccion: qué causas se leen ("ciclo" = todas las vencidas por clase/franja; "listado" llega con el paso 2).

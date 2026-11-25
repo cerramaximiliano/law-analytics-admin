@@ -1527,9 +1527,9 @@ const CredencialesPJN = () => {
 										</TableCell>
 										<TableCell align="center">
 											<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.5 }}>
-												Listado API
+												Listado
 												<Tooltip
-													title="update-sync lee el listado Relacionados por la API del SCW nuevo (~1 min en vez de 1–21 min por browser). Si la API falla, vuelve al browser en la misma corrida. Requiere el interruptor global (Workers → Mis Causas updates → Configuración); con la lista vacía alcanza a todas las credenciales. El chip muestra lo que efectivamente va a usar la próxima corrida."
+													title="Con qué lector se lee el listado Relacionados en cada etapa. Carga inicial (al dar de alta la credencial): la hace credentials-processor. Sync diario (altas y bajas): lo hace update-sync; el interruptor y el chip de esta columna son los del sync diario. Debajo, lo que cada etapa usó en su última corrida. Detalle del sync diario: update-sync lee el listado Relacionados por la API del SCW nuevo (~1 min en vez de 1–21 min por browser). Si la API falla, vuelve al browser en la misma corrida. Requiere el interruptor global (Workers → Mis Causas updates → Configuración); con la lista vacía alcanza a todas las credenciales. El chip muestra lo que efectivamente va a usar la próxima corrida."
 													arrow
 													placement="top"
 												>
@@ -1950,6 +1950,59 @@ const CredencialesPJN = () => {
 															/>
 														</Stack>
 													</Tooltip>
+													{cred.listados && (
+														<Stack spacing={0} sx={{ mt: 0.25 }}>
+															{(
+																[
+																	["Inicial", cred.listados.inicial, null],
+																	["Diario", cred.listados.sync, cred.listados.sync.usado?.completo === false ? "incompleto" : null],
+																] as const
+															).map(([etapa, l, nota]) => {
+																const nombre = (f: "api" | "navegador") => (f === "api" ? "API" : "navegador");
+																const fecha = l.usado?.at
+																	? new Date(l.usado.at).toLocaleString("es-AR", {
+																			day: "2-digit",
+																			month: "2-digit",
+																			hour: "2-digit",
+																			minute: "2-digit",
+																			hour12: false,
+																	  })
+																	: null;
+																return (
+																	<Tooltip
+																		key={etapa}
+																		arrow
+																		placement="left"
+																		title={
+																			l.usado
+																				? `${
+																						etapa === "Inicial" ? "Carga inicial" : "Sync diario"
+																				  }: la última corrida leyó el listado por ${
+																						l.usado.fuente === "api" ? "la API del SCW nuevo" : "el navegador (SCW clásico)"
+																				  }${l.usado.total != null ? `, ${l.usado.total} expedientes` : ""}${
+																						nota ? `, ${nota}` : ""
+																				  }. Configurado para la próxima: ${nombre(l.configurado)}.`
+																				: `${
+																						etapa === "Inicial" ? "Carga inicial" : "Sync diario"
+																				  }: sin registro de la última corrida (el dato se guarda desde el 25/11/2026). Configurado: ${nombre(
+																						l.configurado,
+																				  )}.`
+																		}
+																	>
+																		<Typography
+																			variant="caption"
+																			sx={{ fontSize: "0.65rem", lineHeight: 1.3, whiteSpace: "nowrap" }}
+																			color={nota ? "warning.main" : "text.secondary"}
+																		>
+																			{etapa}: {l.usado ? nombre(l.usado.fuente) : `${nombre(l.configurado)} (config.)`}
+																			{fecha ? ` · ${fecha}` : ""}
+																			{nota ? ` · ${nota}` : ""}
+																		</Typography>
+																	</Tooltip>
+																);
+															})}
+														</Stack>
+													)}
 												</TableCell>
 												<TableCell align="center">
 													{cred.privacidadResumen ? (
