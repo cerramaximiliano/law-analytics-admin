@@ -76,16 +76,43 @@ export async function misCausasLiveMetrics(): Promise<FlowMetrics> {
 
 	if (cov.status === "fulfilled" && cov.value?.data) {
 		const c = cov.value.data;
-		const linea = (n: string, b?: { total: number; updatedToday: number; pending: number; withErrors: number; coveragePercent: number }) =>
-			b
-				? `${n}: ${nf(b.updatedToday)}/${nf(b.total)} al día (${b.coveragePercent}%) · ${nf(b.pending)} pendientes · ${nf(
-						b.withErrors,
-				  )} con error`
+		const linea = (n: string, b?: typeof c.publicas) => {
+			if (!b) return null;
+			// Backend viejo (sin desglose): leídas/total y pendientes.
+			if (b.late == null)
+				return `${n}: ${nf(b.updatedToday)}/${nf(b.total)} al día (${b.coveragePercent}%) · ${nf(b.pending)} pendientes · ${nf(
+					b.withErrors,
+				)} con error`;
+			const partes = [
+				`${nf(b.updatedToday)} leídas hoy`,
+				b.verifiedByListing ? `${nf(b.verifiedByListing)} sin novedad según listado` : "",
+				b.scheduledLater ? `${nf(b.scheduledLater)} programadas` : "",
+				b.inSlot ? `${nf(b.inSlot)} en la franja en curso` : "",
+				b.late ? `${nf(b.late)} atrasadas` : "",
+				b.withErrors ? `${nf(b.withErrors)} con error` : "",
+			].filter(Boolean);
+			return `${n}: ${b.coveragePercent}% en término de ${nf(b.total)} · ${partes.join(" · ")}`;
+		};
+		const atrasadas = c.late ?? 0;
+		const fr = c.franja;
+		const lineaFranja = fr
+			? fr.working
+				? `Franja ${fr.franja} en curso: ${nf(fr.pending)} de ${nf(fr.planned)} pendientes`
+				: `Última franja ${fr.franja}: ${fr.incomplete ? "incompleta" : "completa"}`
+			: null;
+		const cc = c.credencialCaida;
+		const lineaCaida =
+			cc && cc.total + cc.privateNoAccess > 0
+				? `Credencial caída (pjn-workers): ${nf(cc.updatedLast24h)}/${nf(cc.total)} leídas en 24 h${
+						cc.late ? ` · ${nf(cc.late)} atrasadas` : ""
+				  }${cc.privateNoAccess ? ` · ${nf(cc.privateNoAccess)} privadas sin acceso` : ""}`
 				: null;
 		out.datos = {
-			tone: c.withErrors > 0 ? "warn" : "ok",
-			badge: `${c.coveragePercent}% al día${c.withErrors ? ` · ${nf(c.withErrors)} err` : ""}`,
-			detail: [linea("Públicas", c.publicas), linea("Privadas", c.privadas)].filter((x): x is string => !!x),
+			tone: c.withErrors > 0 || atrasadas > 0 || fr?.incomplete ? "warn" : "ok",
+			badge: `${c.coveragePercent}% ${c.late != null ? "en término" : "al día"}${fr?.working ? ` · franja ${fr.franja}` : ""}${
+				c.withErrors ? ` · ${nf(c.withErrors)} err` : ""
+			}`,
+			detail: [lineaFranja, linea("Públicas", c.publicas), linea("Privadas", c.privadas), lineaCaida].filter((x): x is string => !!x),
 		};
 	}
 

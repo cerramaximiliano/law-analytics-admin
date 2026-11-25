@@ -58,7 +58,7 @@ import {
 	WorkerStatsResponse as PjMendozaWorkerStatsResponse,
 	EligibilityStatsResponse as PjMendozaEligibilityStatsResponse,
 } from "api/causasPjMendoza";
-import pjnCredentialsService, { MisCausasCoverage, HealthAnomaly } from "api/pjnCredentials";
+import pjnCredentialsService, { MisCausasCoverage, MisCausasCoverageBucket, HealthAnomaly } from "api/pjnCredentials";
 import scbaCausasService, { ScbaUpdateCoverage } from "api/scbaCausas";
 import { ManagerConfigService, PjnSiteStatus } from "api/managerConfig";
 import LinearProgress from "@mui/material/LinearProgress";
@@ -3244,11 +3244,11 @@ const AdminDashboard = () => {
 										arrow
 										title={
 											misCausasCoverage?.updatePolicy
-												? `Política de update: un mismo worker (SSO) refresca públicas y privadas dentro de la ventana ${
+												? `El porcentaje es "en término": causas que no están atrasadas sobre el total, las lea pjn-mis-causas (credencial vigente, por ${
 														misCausasCoverage.updatePolicy.schedule
 												  }${
 														misCausasCoverage.updatePolicy.everyDay ? ", todos los días" : ", solo días hábiles"
-												  }. Fuera de esa ventana la cobertura no avanza — no es un error.${
+												  }) o pjn-workers (credencial caída, consulta pública). Una causa está al día si se leyó hoy o si el listado del portal no mostró novedad; las de la franja en curso no cuentan como atraso. Atrasada = vencida de una franja anterior.${
 														misCausasCoverage.updatePolicy.enabled ? "" : " El schedule está deshabilitado en la config."
 												  } Configurable en Workers → PJN manager.`
 												: "Política de update: un mismo worker (SSO) refresca públicas y privadas dentro de su ventana horaria. Configurable en Workers → PJN manager."
@@ -3331,7 +3331,14 @@ const AdminDashboard = () => {
 										schedule: "08:00–23:00 h",
 									};
 									const barColor = (p: number) => (p >= 99 ? COLORS.success.main : p > 70 ? COLORS.warning.main : COLORS.error.main);
-									const renderLine = (label: string, b: typeof publicas, accent: string) => (
+									const nfAR = (n: number) => n.toLocaleString("es-AR");
+									const horaAR = (iso?: string | null) =>
+										iso
+											? new Date(iso).toLocaleTimeString("es-AR", { timeZone: "America/Argentina/Buenos_Aires", hour: "2-digit", minute: "2-digit" })
+											: "";
+									const franja = misCausasCoverage.franja;
+									const caida = misCausasCoverage.credencialCaida;
+									const renderLine = (label: string, b: MisCausasCoverageBucket, accent: string) => (
 										<Box sx={{ mb: 1.5 }}>
 											<Box sx={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", mb: 0.25, gap: 1 }}>
 												<Box sx={{ display: "flex", alignItems: "baseline", gap: 0.75, minWidth: 0 }}>
@@ -3357,8 +3364,22 @@ const AdminDashboard = () => {
 												}}
 											/>
 											<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.25 }}>
-												{b.updatedToday.toLocaleString("es-AR")}/{b.total.toLocaleString("es-AR")} actualizadas hoy
-												{b.pending > 0 ? ` · ${b.pending.toLocaleString("es-AR")} pendientes` : ""}
+												{b.late == null
+													? `${nfAR(b.updatedToday)}/${nfAR(b.total)} actualizadas hoy${b.pending > 0 ? ` · ${nfAR(b.pending)} pendientes` : ""}`
+													: [
+															`${nfAR(b.total)} causas`,
+															`${nfAR(b.updatedToday)} leídas hoy`,
+															b.verifiedByListing ? `${nfAR(b.verifiedByListing)} sin novedad según listado` : "",
+															b.scheduledLater ? `${nfAR(b.scheduledLater)} programadas` : "",
+															b.inSlot ? `${nfAR(b.inSlot)} en la franja en curso` : "",
+													  ]
+															.filter(Boolean)
+															.join(" · ")}
+												{!!b.late && (
+													<Box component="span" sx={{ color: COLORS.error.main, fontWeight: 600 }}>
+														{` · ${nfAR(b.late)} atrasadas`}
+													</Box>
+												)}
 												{b.withErrors > 0 && (
 													<Box
 														component="span"
@@ -3381,8 +3402,95 @@ const AdminDashboard = () => {
 									);
 									return (
 										<>
+											{franja && (
+												<Box sx={{ mb: 1.5 }}>
+													<Box sx={{ display: "flex", alignItems: "center", gap: 0.75, flexWrap: "wrap" }}>
+														<Box
+															sx={{
+																width: 8,
+																height: 8,
+																borderRadius: "50%",
+																flexShrink: 0,
+																bgcolor: franja.working ? BRAND_BLUE : franja.incomplete ? COLORS.warning.main : COLORS.success.main,
+															}}
+														/>
+														<Typography variant="caption" fontWeight={600}>
+															{franja.working
+																? `Franja ${franja.franja} en curso`
+																: `Última franja ${franja.franja}: ${franja.incomplete ? "incompleta" : "completa"}`}
+														</Typography>
+														<Typography variant="caption" color="text.secondary">
+															{franja.working
+																? `${nfAR(franja.pending)} de ${nfAR(franja.planned)} pendientes`
+																: `${franja.finishedAt ? `terminó ${horaAR(franja.finishedAt)}` : ""}${
+																		franja.next ? `${franja.finishedAt ? " · " : ""}próxima ${horaAR(franja.next)}` : ""
+																  }`}
+															{franja.errors > 0 ? ` · ${nfAR(franja.errors)} con error` : ""}
+														</Typography>
+													</Box>
+													{franja.working && (
+														<LinearProgress
+															variant="determinate"
+															value={franja.progressPercent || 0}
+															sx={{
+																mt: 0.5,
+																height: 4,
+																borderRadius: 2,
+																backgroundColor: alpha(COLORS.neutral.light, 0.3),
+																"& .MuiLinearProgress-bar": { borderRadius: 2, backgroundColor: BRAND_BLUE },
+															}}
+														/>
+													)}
+												</Box>
+											)}
 											{renderLine("Públicas", publicas, barColor(publicas.coveragePercent || 0))}
 											{renderLine("Privadas", privadas, barColor(privadas.coveragePercent || 0))}
+											{caida && caida.total + caida.privateNoAccess + caida.withoutFolder > 0 && (
+												<Tooltip
+													arrow
+													title="Causas cuya credencial está apagada o inválida. Las públicas con carpeta las sigue pjn-workers por la consulta pública (al día = leída en las últimas 24 h). Las privadas no se pueden leer hasta que el usuario renueve la contraseña. Las públicas sin carpeta no se siguen."
+												>
+													<Box sx={{ mb: 1.5 }}>
+														<Box sx={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", mb: 0.25, gap: 1 }}>
+															<Box sx={{ display: "flex", alignItems: "baseline", gap: 0.75, minWidth: 0 }}>
+																<Typography variant="body2" fontWeight={600}>
+																	Credencial caída
+																</Typography>
+																<Typography variant="caption" color="text.secondary" noWrap>
+																	pjn-workers · 24 h
+																</Typography>
+															</Box>
+															<Typography
+																variant="h6"
+																fontWeight="bold"
+																sx={{ color: barColor(caida.coveragePercent || 0), flexShrink: 0 }}
+															>
+																{caida.total > 0 ? `${caida.coveragePercent}%` : "—"}
+															</Typography>
+														</Box>
+														<LinearProgress
+															variant="determinate"
+															value={caida.total > 0 ? caida.coveragePercent || 0 : 0}
+															sx={{
+																height: 8,
+																borderRadius: 4,
+																backgroundColor: alpha(COLORS.neutral.light, 0.3),
+																"& .MuiLinearProgress-bar": { borderRadius: 4, backgroundColor: barColor(caida.coveragePercent || 0) },
+															}}
+														/>
+														<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.25 }}>
+															{`${nfAR(caida.updatedLast24h)}/${nfAR(caida.total)} públicas leídas en 24 h`}
+															{!!caida.late && (
+																<Box component="span" sx={{ color: COLORS.error.main, fontWeight: 600 }}>
+																	{` · ${nfAR(caida.late)} atrasadas`}
+																</Box>
+															)}
+															{caida.privateNoAccess > 0 ? ` · ${nfAR(caida.privateNoAccess)} privadas sin acceso` : ""}
+															{caida.withoutFolder > 0 ? ` · ${nfAR(caida.withoutFolder)} sin carpeta` : ""}
+														</Typography>
+													</Box>
+												</Tooltip>
+											)}
 											{misCausasCoverage.activeCredentials != null && (
 												<CredentialsStat
 													count={misCausasCoverage.activeCredentials}

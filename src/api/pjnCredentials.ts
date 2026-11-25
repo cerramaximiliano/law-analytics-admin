@@ -820,17 +820,55 @@ export interface PortalStatusResponse {
 
 export interface MisCausasCoverageBucket {
 	total: number;
+	/** Leídas hoy del portal y no vencidas ahora. */
 	updatedToday: number;
+	/** Sin abrir hoy porque el listado del portal no mostró novedad (selección por listado). */
+	verifiedByListing?: number;
+	/** Su próxima franja todavía no llegó. */
+	scheduledLater?: number;
+	/** Vencidas que son trabajo de la franja en curso. */
+	inSlot?: number;
+	/** Vencidas de una franja anterior, o sin una franja trabajando. */
+	late?: number;
+	/** inSlot + late (compat). */
 	pending: number;
 	withErrors: number;
+	/** "En término": causas no atrasadas sobre el total. La franja en curso no lo baja. */
 	coveragePercent: number;
 	schedule: string;
+}
+
+/** Causas cuya credencial cayó: las públicas con carpeta las sigue pjn-workers por la consulta pública. */
+export interface MisCausasCoverageCaida {
+	total: number;
+	updatedLast24h: number;
+	late: number;
+	coveragePercent: number;
+	withoutFolder: number;
+	privateNoAccess: number;
+}
+
+/** Franja del ciclo: la que trabaja ahora, o la última y cómo cerró. */
+export interface MisCausasCoverageFranja {
+	franja: string;
+	working: boolean;
+	startedAt: string | null;
+	finishedAt: string | null;
+	planned: number;
+	pending: number;
+	progressPercent: number;
+	incomplete: boolean;
+	errors: number;
+	next: string | null;
 }
 
 export interface MisCausasCoverage {
 	// Split nuevo: públicas (isPrivate≠true) vs privadas (isPrivate===true).
 	publicas?: MisCausasCoverageBucket;
 	privadas?: MisCausasCoverageBucket;
+	credencialCaida?: MisCausasCoverageCaida;
+	franja?: MisCausasCoverageFranja | null;
+	late?: number;
 	// Globales (compat)
 	total: number;
 	updatedToday: number;
