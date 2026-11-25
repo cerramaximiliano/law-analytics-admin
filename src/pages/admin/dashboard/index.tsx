@@ -58,7 +58,7 @@ import {
 	WorkerStatsResponse as PjMendozaWorkerStatsResponse,
 	EligibilityStatsResponse as PjMendozaEligibilityStatsResponse,
 } from "api/causasPjMendoza";
-import pjnCredentialsService, { MisCausasCoverage, HealthAnomaly } from "api/pjnCredentials";
+import pjnCredentialsService, { MisCausasCoverage, MisCausasCoverageBucket, HealthAnomaly } from "api/pjnCredentials";
 import scbaCausasService, { ScbaUpdateCoverage } from "api/scbaCausas";
 import { ManagerConfigService, PjnSiteStatus } from "api/managerConfig";
 import LinearProgress from "@mui/material/LinearProgress";
@@ -366,7 +366,16 @@ const PrimaryKPICard: React.FC<PrimaryKPICardProps> = ({ title, value, icon, val
 			}}
 		>
 			{/* Header: Icon chip + Title + Info */}
-			<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: { xs: 0, sm: 1.75 }, minWidth: 0, flex: { xs: 1, sm: "initial" } }}>
+			<Box
+				sx={{
+					display: "flex",
+					alignItems: "center",
+					justifyContent: "space-between",
+					mb: { xs: 0, sm: 1.75 },
+					minWidth: 0,
+					flex: { xs: 1, sm: "initial" },
+				}}
+			>
 				<Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.75, sm: 1.25 }, minWidth: 0 }}>
 					<Box
 						sx={{
@@ -1384,7 +1393,7 @@ const AdminDashboard = () => {
 						subtitle="Tareas por vencer, consultas de soporte y feedback sin moderar"
 						icon={<TaskSquare size={16} variant="Bold" />}
 					>
-					<PendingWorkWidget />
+						<PendingWorkWidget />
 					</CollapsibleSection>
 				</Box>
 
@@ -1397,371 +1406,43 @@ const AdminDashboard = () => {
 						subtitle="Usuarios, suscripciones y causas de la plataforma"
 						icon={<Chart size={16} variant="Bold" />}
 					>
-					<Grid container spacing={{ xs: 1, sm: 2 }}>
-						<Grid item xs={12} sm={6} md={3}>
-							<PrimaryKPICard
-								title="Total Usuarios"
-								value={data?.users.total || 0}
-								icon={<UserSquare size={18} />}
-								loading={loading}
-								infoKey="totalUsers"
-								linkTo="/admin/users"
-							/>
-						</Grid>
-						<Grid item xs={12} sm={6} md={3}>
-							<PrimaryKPICard
-								title="Suscripciones Activas"
-								value={data?.subscriptions.active || 0}
-								icon={<ReceiptItem size={18} />}
-								loading={loading}
-								infoKey="activeSubscriptions"
-								linkTo="/admin/usuarios/suscripciones"
-							/>
-						</Grid>
-						<Grid item xs={12} sm={6} md={3}>
-							<Paper
-								elevation={0}
-								sx={{
-									p: { xs: 1.5, sm: 2.5 },
-									borderRadius: 2,
-									bgcolor: theme.palette.background.paper,
-									border: `1px solid ${theme.palette.divider}`,
-									height: "100%",
-									display: { xs: "grid", sm: "block" },
-									gridTemplateColumns: "1fr auto",
-									alignItems: "center",
-									columnGap: 1.5,
-								}}
-							>
-								<Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.75, sm: 1.25 }, mb: { xs: 0, sm: 1.75 }, minWidth: 0 }}>
-									<Box
-										sx={{
-											width: 34,
-											height: 34,
-											borderRadius: 1.25,
-											display: "flex",
-											alignItems: "center",
-											justifyContent: "center",
-											flexShrink: 0,
-											bgcolor: alpha(BRAND_BLUE, isDark ? 0.18 : 0.1),
-											border: `1px solid ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
-											color: BRAND_BLUE,
-										}}
-									>
-										<Folder size={18} />
-									</Box>
-									<Typography
-										variant="body2"
-										sx={{
-											color: theme.palette.text.secondary,
-											fontWeight: 500,
-											fontSize: { xs: "0.75rem", sm: "0.875rem" },
-											letterSpacing: "-0.005em",
-											whiteSpace: "nowrap",
-											overflow: "hidden",
-											textOverflow: "ellipsis",
-										}}
-									>
-										Carpetas Verificadas
-									</Typography>
-									<InfoTooltip metricKey="verifiedFolders" />
-								</Box>
-								{loading || loadingEjeStats || loadingPjsaltaStats || loadingPjcatamarcaStats || loadingPjmendozaStats ? (
-									<Skeleton variant="text" width={80} height={48} />
-								) : (
-									<>
-										<Typography
-											variant="h3"
-											sx={{
-												fontWeight: 700,
-												mb: { xs: 0, sm: 1 },
-												lineHeight: 1,
-												fontSize: { xs: "1.5rem", sm: "2rem" },
-												letterSpacing: "-0.02em",
-												fontVariantNumeric: "tabular-nums",
-											}}
-										>
-											{(
-												(data?.folders.pjn?.verified || 0) +
-												(data?.folders.mev?.verified || 0) +
-												(ejeStats?.status.valid || 0) +
-												(pjsaltaStats?.status.valid || 0) +
-												(pjcatamarcaStats?.status.valid || 0) +
-												(pjmendozaStats?.status.valid || 0)
-											).toLocaleString("es-AR")}
-										</Typography>
-										<Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap", gridColumn: "1 / -1", mt: { xs: 1, sm: 0 } }}>
-											{[
-												{ label: `PJN ${(data?.folders.pjn?.verified || 0).toLocaleString("es-AR")}`, to: "/admin/causas/verified-app" },
-												{ label: `MEV ${(data?.folders.mev?.verified || 0).toLocaleString("es-AR")}`, to: "/admin/mev/verified-app" },
-												{ label: `EJE ${(ejeStats?.status.valid || 0).toLocaleString("es-AR")}`, to: "/admin/eje/verified-app" },
-												{ label: `Salta ${(pjsaltaStats?.status.valid || 0).toLocaleString("es-AR")}`, to: "/admin/pjsalta/verified-app" },
-												{
-													label: `Catamarca ${(pjcatamarcaStats?.status.valid || 0).toLocaleString("es-AR")}`,
-													to: "/admin/pjcatamarca/verified-app",
-												},
-												{
-													label: `Mendoza ${(pjmendozaStats?.status.valid || 0).toLocaleString("es-AR")}`,
-													to: "/admin/pjmendoza/verified-app",
-												},
-											].map((chip) => (
-												<Chip
-													key={chip.to}
-													label={chip.label}
-													size="small"
-													component={RouterLink}
-													to={chip.to}
-													clickable
-													sx={{
-														bgcolor: alpha(BRAND_BLUE, isDark ? 0.15 : 0.09),
-														color: BRAND_BLUE,
-														fontWeight: 600,
-														fontSize: "0.65rem",
-														height: 20,
-														cursor: "pointer",
-														border: `1px solid ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
-														"&:hover": { bgcolor: alpha(BRAND_BLUE, isDark ? 0.25 : 0.16) },
-													}}
-												/>
-											))}
-										</Box>
-									</>
-								)}
-							</Paper>
-						</Grid>
-						<Grid item xs={12} sm={6} md={3}>
-							<PrimaryKPICard
-								title="Carpetas Pendientes"
-								value={data?.folders.pending || 0}
-								icon={<Folder size={18} />}
-								valueColor={(data?.folders.pending || 0) > 0 ? theme.palette.warning.main : undefined}
-								loading={loading}
-								infoKey="pendingFolders"
-								linkTo="/admin/causas/pending"
-							/>
-						</Grid>
-					</Grid>
-
-					{/* Métricas de contexto - una sola superficie con divisores, sin muro de cards */}
-					<Box sx={{ mt: { xs: 1, sm: 2 } }}>
-						<StatStrip
-							items={[
-								{ label: "Carpetas totales", value: data?.folders.total || 0, infoKey: "totalFolders", loading },
-								{ label: "Contactos", value: data?.contacts?.total || 0, infoKey: "userContacts", loading },
-								{ label: "Calculadores", value: data?.calculators?.total || 0, infoKey: "userCalculators", loading },
-								{
-									label: "Contactos marketing",
-									value: data?.marketing.contacts.total || 0,
-									infoKey: "totalContacts",
-									linkTo: "/admin/marketing/contacts",
-									loading,
-								},
-								{
-									label: "Grupos activos",
-									value: activeGroupsCount,
-									infoKey: "activeGroups",
-									linkTo: "/admin/groups",
-									loading: loadingGroups,
-								},
-							]}
-						/>
-					</Box>
-					</CollapsibleSection>
-				</Box>
-
-				{/* Créditos y recursos - saldos de servicios externos y datasets internos */}
-				<Box sx={{ mb: { xs: 2, sm: 4 } }}>
-					<CollapsibleSection
-						id="creditos"
-						title="Créditos y recursos"
-						subtitle="Saldos de servicios externos y datasets internos"
-						icon={<Wallet2 size={16} variant="Bold" />}
-					>
-					<Grid container spacing={{ xs: 1, sm: 2 }}>
-						<Grid item xs={12} sm={6} md={4} lg={2.4}>
-							<PrimaryKPICard
-								title="Créditos NeverBounce"
-								value={neverBounceCredits || 0}
-								icon={<Wallet2 size={18} />}
-								loading={loadingCredits}
-								infoKey="neverBounceCredits"
-								linkTo="/admin/workers/email-verification"
-							/>
-						</Grid>
-						<Grid item xs={12} sm={6} md={4} lg={2.4}>
-							<PrimaryKPICard
-								title="Saldo Capsolver"
-								value={capsolverBalance !== null ? Number(capsolverBalance.toFixed(2)) : 0}
-								icon={<Wallet2 size={18} />}
-								prefix="US$"
-								loading={loadingCapsolver}
-								infoKey="capsolverBalance"
-								linkTo="/admin/causas/workers"
-							/>
-						</Grid>
-						<Grid item xs={12} sm={6} md={4} lg={2.4}>
-							<PrimaryKPICard
-								title={openaiBalance !== null ? "Saldo OpenAI" : "OpenAI (sin config)"}
-								value={openaiBalance !== null ? Number(openaiBalance.toFixed(2)) : 0}
-								icon={<Wallet2 size={18} />}
-								prefix="US$"
-								loading={loadingOpenai}
-								infoKey="openaiBalance"
-								linkTo="/admin/expenses"
-							/>
-						</Grid>
-						{/* Tasas de Interés widget */}
-						<Grid item xs={12} sm={6} md={4} lg={2.4}>
-							<Paper
-								elevation={0}
-								component={RouterLink}
-								to="/recursos/tasas"
-								sx={{
-									textDecoration: "none",
-									color: "inherit",
-									display: "block",
-									p: { xs: 1.5, sm: 2.5 },
-									borderRadius: 2,
-									bgcolor: theme.palette.background.paper,
-									border: `1px solid ${tasasStatus && tasasStatus.noActualizadas > 0 ? theme.palette.error.main : theme.palette.divider}`,
-									height: "100%",
-									cursor: "pointer",
-									transition: "transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease",
-									"&:hover": {
-										boxShadow: headerShadow(isDark),
-										borderColor:
-											tasasStatus && tasasStatus.noActualizadas > 0 ? theme.palette.error.dark : alpha(BRAND_BLUE, isDark ? 0.32 : 0.22),
-										transform: "translateY(-2px)",
-									},
-								}}
-							>
-								{/* Header */}
-								<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: { xs: 1.25, sm: 1.75 } }}>
-									<Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.75, sm: 1.25 }, minWidth: 0 }}>
-										<Box
-											sx={{
-												width: 34,
-												height: 34,
-												borderRadius: 1.25,
-												display: "flex",
-												alignItems: "center",
-												justifyContent: "center",
-												flexShrink: 0,
-												bgcolor:
-													tasasStatus && tasasStatus.noActualizadas > 0
-														? alpha(theme.palette.error.main, isDark ? 0.18 : 0.1)
-														: alpha(BRAND_BLUE, isDark ? 0.18 : 0.1),
-												border: `1px solid ${
-													tasasStatus && tasasStatus.noActualizadas > 0
-														? alpha(theme.palette.error.main, isDark ? 0.32 : 0.18)
-														: alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)
-												}`,
-												color: tasasStatus && tasasStatus.noActualizadas > 0 ? theme.palette.error.main : BRAND_BLUE,
-											}}
-										>
-											{tasasStatus && tasasStatus.noActualizadas > 0 ? <Warning2 size={18} /> : <Chart size={18} />}
-										</Box>
-										<Typography
-											variant="body2"
-											sx={{
-												color: theme.palette.text.secondary,
-												fontWeight: 500,
-												fontSize: { xs: "0.75rem", sm: "0.875rem" },
-												letterSpacing: "-0.005em",
-												overflow: "hidden",
-												textOverflow: "ellipsis",
-												whiteSpace: "nowrap",
-											}}
-										>
-											Tasas de Interés
-										</Typography>
-									</Box>
-									<ArrowRight2 size={14} style={{ color: theme.palette.text.secondary, opacity: 0.6 }} />
-								</Box>
-								{/* Value */}
-								{loadingTasasStatus ? (
-									<Skeleton variant="text" width={80} height={48} />
-								) : (
-									<>
-										<Box sx={{ display: "flex", alignItems: "baseline", gap: 0.5, mb: 0.5 }}>
-											<Typography
-												variant="h3"
-												sx={{
-													fontWeight: 700,
-													color: tasasStatus && tasasStatus.noActualizadas > 0 ? COLORS.error.main : COLORS.success.main,
-													lineHeight: 1,
-													fontSize: { xs: "1.5rem", sm: "2rem" },
-												}}
-											>
-												{tasasStatus?.actualizadas ?? 0}
-											</Typography>
-											<Typography variant="body2" color="text.secondary">
-												/ {tasasStatus?.total ?? 0} al día
-											</Typography>
-										</Box>
-										{tasasStatus && tasasStatus.noActualizadas > 0 && (
-											<Tooltip
-												title={
-													<Box>
-														<Typography variant="caption" fontWeight={600}>
-															Sin actualizar:
-														</Typography>
-														{tasasStatus.desactualizadas.map((d) => (
-															<Typography key={d.tipoTasa} variant="caption" display="block">
-																• {d.tipoTasa}
-																{d.fechaUltima ? ` (${d.fechaUltima})` : ""}
-															</Typography>
-														))}
-													</Box>
-												}
-												arrow
-												placement="top"
-											>
-												<Chip
-													label={`${tasasStatus.noActualizadas} sin actualizar`}
-													size="small"
-													color="error"
-													variant="outlined"
-													sx={{ fontSize: "0.65rem", cursor: "pointer" }}
-												/>
-											</Tooltip>
-										)}
-									</>
-								)}
-							</Paper>
-						</Grid>
-						{/* Datos Previsionales widget */}
-						<Grid item xs={12} sm={6} md={4} lg={2.4}>
-							<Paper
-								elevation={0}
-								component={RouterLink}
-								to="/recursos/datos-previsionales"
-								sx={{
-									textDecoration: "none",
-									color: "inherit",
-									display: "block",
-									p: { xs: 1.5, sm: 2.5 },
-									borderRadius: 2,
-									bgcolor: theme.palette.background.paper,
-									border: `1px solid ${
-										datosPrevsStats && datosPrevsStats.mesesFaltantes > 0 ? theme.palette.warning.main : theme.palette.divider
-									}`,
-									height: "100%",
-									cursor: "pointer",
-									transition: "transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease",
-									"&:hover": {
-										boxShadow: headerShadow(isDark),
-										borderColor:
-											datosPrevsStats && datosPrevsStats.mesesFaltantes > 0
-												? theme.palette.warning.dark
-												: alpha(BRAND_BLUE, isDark ? 0.32 : 0.22),
-										transform: "translateY(-2px)",
-									},
-								}}
-							>
-								{/* Header */}
-								<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: { xs: 1.25, sm: 1.75 } }}>
-									<Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.75, sm: 1.25 }, minWidth: 0 }}>
+						<Grid container spacing={{ xs: 1, sm: 2 }}>
+							<Grid item xs={12} sm={6} md={3}>
+								<PrimaryKPICard
+									title="Total Usuarios"
+									value={data?.users.total || 0}
+									icon={<UserSquare size={18} />}
+									loading={loading}
+									infoKey="totalUsers"
+									linkTo="/admin/users"
+								/>
+							</Grid>
+							<Grid item xs={12} sm={6} md={3}>
+								<PrimaryKPICard
+									title="Suscripciones Activas"
+									value={data?.subscriptions.active || 0}
+									icon={<ReceiptItem size={18} />}
+									loading={loading}
+									infoKey="activeSubscriptions"
+									linkTo="/admin/usuarios/suscripciones"
+								/>
+							</Grid>
+							<Grid item xs={12} sm={6} md={3}>
+								<Paper
+									elevation={0}
+									sx={{
+										p: { xs: 1.5, sm: 2.5 },
+										borderRadius: 2,
+										bgcolor: theme.palette.background.paper,
+										border: `1px solid ${theme.palette.divider}`,
+										height: "100%",
+										display: { xs: "grid", sm: "block" },
+										gridTemplateColumns: "1fr auto",
+										alignItems: "center",
+										columnGap: 1.5,
+									}}
+								>
+									<Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.75, sm: 1.25 }, mb: { xs: 0, sm: 1.75 }, minWidth: 0 }}>
 										<Box
 											sx={{
 												width: 34,
@@ -1776,7 +1457,7 @@ const AdminDashboard = () => {
 												color: BRAND_BLUE,
 											}}
 										>
-											<DocumentText size={18} />
+											<Folder size={18} />
 										</Box>
 										<Typography
 											variant="body2"
@@ -1785,52 +1466,383 @@ const AdminDashboard = () => {
 												fontWeight: 500,
 												fontSize: { xs: "0.75rem", sm: "0.875rem" },
 												letterSpacing: "-0.005em",
+												whiteSpace: "nowrap",
 												overflow: "hidden",
 												textOverflow: "ellipsis",
-												whiteSpace: "nowrap",
 											}}
 										>
-											Datos Previsionales
+											Carpetas Verificadas
 										</Typography>
+										<InfoTooltip metricKey="verifiedFolders" />
 									</Box>
-									<ArrowRight2 size={14} style={{ color: theme.palette.text.secondary, opacity: 0.6 }} />
-								</Box>
-								{/* Value */}
-								{loadingDatosPrevsStats ? (
-									<Skeleton variant="text" width={80} height={48} />
-								) : (
-									<>
-										<Box sx={{ display: "flex", alignItems: "baseline", gap: 0.5, mb: 0.5 }}>
+									{loading || loadingEjeStats || loadingPjsaltaStats || loadingPjcatamarcaStats || loadingPjmendozaStats ? (
+										<Skeleton variant="text" width={80} height={48} />
+									) : (
+										<>
 											<Typography
 												variant="h3"
 												sx={{
 													fontWeight: 700,
+													mb: { xs: 0, sm: 1 },
 													lineHeight: 1,
 													fontSize: { xs: "1.5rem", sm: "2rem" },
 													letterSpacing: "-0.02em",
 													fontVariantNumeric: "tabular-nums",
 												}}
 											>
-												{datosPrevsStats?.total ?? 0}
+												{(
+													(data?.folders.pjn?.verified || 0) +
+													(data?.folders.mev?.verified || 0) +
+													(ejeStats?.status.valid || 0) +
+													(pjsaltaStats?.status.valid || 0) +
+													(pjcatamarcaStats?.status.valid || 0) +
+													(pjmendozaStats?.status.valid || 0)
+												).toLocaleString("es-AR")}
 											</Typography>
-											<Typography variant="body2" color="text.secondary">
-												registros
+											<Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap", gridColumn: "1 / -1", mt: { xs: 1, sm: 0 } }}>
+												{[
+													{ label: `PJN ${(data?.folders.pjn?.verified || 0).toLocaleString("es-AR")}`, to: "/admin/causas/verified-app" },
+													{ label: `MEV ${(data?.folders.mev?.verified || 0).toLocaleString("es-AR")}`, to: "/admin/mev/verified-app" },
+													{ label: `EJE ${(ejeStats?.status.valid || 0).toLocaleString("es-AR")}`, to: "/admin/eje/verified-app" },
+													{
+														label: `Salta ${(pjsaltaStats?.status.valid || 0).toLocaleString("es-AR")}`,
+														to: "/admin/pjsalta/verified-app",
+													},
+													{
+														label: `Catamarca ${(pjcatamarcaStats?.status.valid || 0).toLocaleString("es-AR")}`,
+														to: "/admin/pjcatamarca/verified-app",
+													},
+													{
+														label: `Mendoza ${(pjmendozaStats?.status.valid || 0).toLocaleString("es-AR")}`,
+														to: "/admin/pjmendoza/verified-app",
+													},
+												].map((chip) => (
+													<Chip
+														key={chip.to}
+														label={chip.label}
+														size="small"
+														component={RouterLink}
+														to={chip.to}
+														clickable
+														sx={{
+															bgcolor: alpha(BRAND_BLUE, isDark ? 0.15 : 0.09),
+															color: BRAND_BLUE,
+															fontWeight: 600,
+															fontSize: "0.65rem",
+															height: 20,
+															cursor: "pointer",
+															border: `1px solid ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
+															"&:hover": { bgcolor: alpha(BRAND_BLUE, isDark ? 0.25 : 0.16) },
+														}}
+													/>
+												))}
+											</Box>
+										</>
+									)}
+								</Paper>
+							</Grid>
+							<Grid item xs={12} sm={6} md={3}>
+								<PrimaryKPICard
+									title="Carpetas Pendientes"
+									value={data?.folders.pending || 0}
+									icon={<Folder size={18} />}
+									valueColor={(data?.folders.pending || 0) > 0 ? theme.palette.warning.main : undefined}
+									loading={loading}
+									infoKey="pendingFolders"
+									linkTo="/admin/causas/pending"
+								/>
+							</Grid>
+						</Grid>
+
+						{/* Métricas de contexto - una sola superficie con divisores, sin muro de cards */}
+						<Box sx={{ mt: { xs: 1, sm: 2 } }}>
+							<StatStrip
+								items={[
+									{ label: "Carpetas totales", value: data?.folders.total || 0, infoKey: "totalFolders", loading },
+									{ label: "Contactos", value: data?.contacts?.total || 0, infoKey: "userContacts", loading },
+									{ label: "Calculadores", value: data?.calculators?.total || 0, infoKey: "userCalculators", loading },
+									{
+										label: "Contactos marketing",
+										value: data?.marketing.contacts.total || 0,
+										infoKey: "totalContacts",
+										linkTo: "/admin/marketing/contacts",
+										loading,
+									},
+									{
+										label: "Grupos activos",
+										value: activeGroupsCount,
+										infoKey: "activeGroups",
+										linkTo: "/admin/groups",
+										loading: loadingGroups,
+									},
+								]}
+							/>
+						</Box>
+					</CollapsibleSection>
+				</Box>
+
+				{/* Créditos y recursos - saldos de servicios externos y datasets internos */}
+				<Box sx={{ mb: { xs: 2, sm: 4 } }}>
+					<CollapsibleSection
+						id="creditos"
+						title="Créditos y recursos"
+						subtitle="Saldos de servicios externos y datasets internos"
+						icon={<Wallet2 size={16} variant="Bold" />}
+					>
+						<Grid container spacing={{ xs: 1, sm: 2 }}>
+							<Grid item xs={12} sm={6} md={4} lg={2.4}>
+								<PrimaryKPICard
+									title="Créditos NeverBounce"
+									value={neverBounceCredits || 0}
+									icon={<Wallet2 size={18} />}
+									loading={loadingCredits}
+									infoKey="neverBounceCredits"
+									linkTo="/admin/workers/email-verification"
+								/>
+							</Grid>
+							<Grid item xs={12} sm={6} md={4} lg={2.4}>
+								<PrimaryKPICard
+									title="Saldo Capsolver"
+									value={capsolverBalance !== null ? Number(capsolverBalance.toFixed(2)) : 0}
+									icon={<Wallet2 size={18} />}
+									prefix="US$"
+									loading={loadingCapsolver}
+									infoKey="capsolverBalance"
+									linkTo="/admin/causas/workers"
+								/>
+							</Grid>
+							<Grid item xs={12} sm={6} md={4} lg={2.4}>
+								<PrimaryKPICard
+									title={openaiBalance !== null ? "Saldo OpenAI" : "OpenAI (sin config)"}
+									value={openaiBalance !== null ? Number(openaiBalance.toFixed(2)) : 0}
+									icon={<Wallet2 size={18} />}
+									prefix="US$"
+									loading={loadingOpenai}
+									infoKey="openaiBalance"
+									linkTo="/admin/expenses"
+								/>
+							</Grid>
+							{/* Tasas de Interés widget */}
+							<Grid item xs={12} sm={6} md={4} lg={2.4}>
+								<Paper
+									elevation={0}
+									component={RouterLink}
+									to="/recursos/tasas"
+									sx={{
+										textDecoration: "none",
+										color: "inherit",
+										display: "block",
+										p: { xs: 1.5, sm: 2.5 },
+										borderRadius: 2,
+										bgcolor: theme.palette.background.paper,
+										border: `1px solid ${tasasStatus && tasasStatus.noActualizadas > 0 ? theme.palette.error.main : theme.palette.divider}`,
+										height: "100%",
+										cursor: "pointer",
+										transition: "transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease",
+										"&:hover": {
+											boxShadow: headerShadow(isDark),
+											borderColor:
+												tasasStatus && tasasStatus.noActualizadas > 0 ? theme.palette.error.dark : alpha(BRAND_BLUE, isDark ? 0.32 : 0.22),
+											transform: "translateY(-2px)",
+										},
+									}}
+								>
+									{/* Header */}
+									<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: { xs: 1.25, sm: 1.75 } }}>
+										<Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.75, sm: 1.25 }, minWidth: 0 }}>
+											<Box
+												sx={{
+													width: 34,
+													height: 34,
+													borderRadius: 1.25,
+													display: "flex",
+													alignItems: "center",
+													justifyContent: "center",
+													flexShrink: 0,
+													bgcolor:
+														tasasStatus && tasasStatus.noActualizadas > 0
+															? alpha(theme.palette.error.main, isDark ? 0.18 : 0.1)
+															: alpha(BRAND_BLUE, isDark ? 0.18 : 0.1),
+													border: `1px solid ${
+														tasasStatus && tasasStatus.noActualizadas > 0
+															? alpha(theme.palette.error.main, isDark ? 0.32 : 0.18)
+															: alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)
+													}`,
+													color: tasasStatus && tasasStatus.noActualizadas > 0 ? theme.palette.error.main : BRAND_BLUE,
+												}}
+											>
+												{tasasStatus && tasasStatus.noActualizadas > 0 ? <Warning2 size={18} /> : <Chart size={18} />}
+											</Box>
+											<Typography
+												variant="body2"
+												sx={{
+													color: theme.palette.text.secondary,
+													fontWeight: 500,
+													fontSize: { xs: "0.75rem", sm: "0.875rem" },
+													letterSpacing: "-0.005em",
+													overflow: "hidden",
+													textOverflow: "ellipsis",
+													whiteSpace: "nowrap",
+												}}
+											>
+												Tasas de Interés
 											</Typography>
 										</Box>
-										{datosPrevsStats && datosPrevsStats.mesesFaltantes > 0 && (
-											<Chip
-												label={`${datosPrevsStats.mesesFaltantes} meses faltantes`}
-												size="small"
-												color="warning"
-												variant="outlined"
-												sx={{ fontSize: "0.65rem", cursor: "pointer" }}
-											/>
-										)}
-									</>
-								)}
-							</Paper>
+										<ArrowRight2 size={14} style={{ color: theme.palette.text.secondary, opacity: 0.6 }} />
+									</Box>
+									{/* Value */}
+									{loadingTasasStatus ? (
+										<Skeleton variant="text" width={80} height={48} />
+									) : (
+										<>
+											<Box sx={{ display: "flex", alignItems: "baseline", gap: 0.5, mb: 0.5 }}>
+												<Typography
+													variant="h3"
+													sx={{
+														fontWeight: 700,
+														color: tasasStatus && tasasStatus.noActualizadas > 0 ? COLORS.error.main : COLORS.success.main,
+														lineHeight: 1,
+														fontSize: { xs: "1.5rem", sm: "2rem" },
+													}}
+												>
+													{tasasStatus?.actualizadas ?? 0}
+												</Typography>
+												<Typography variant="body2" color="text.secondary">
+													/ {tasasStatus?.total ?? 0} al día
+												</Typography>
+											</Box>
+											{tasasStatus && tasasStatus.noActualizadas > 0 && (
+												<Tooltip
+													title={
+														<Box>
+															<Typography variant="caption" fontWeight={600}>
+																Sin actualizar:
+															</Typography>
+															{tasasStatus.desactualizadas.map((d) => (
+																<Typography key={d.tipoTasa} variant="caption" display="block">
+																	• {d.tipoTasa}
+																	{d.fechaUltima ? ` (${d.fechaUltima})` : ""}
+																</Typography>
+															))}
+														</Box>
+													}
+													arrow
+													placement="top"
+												>
+													<Chip
+														label={`${tasasStatus.noActualizadas} sin actualizar`}
+														size="small"
+														color="error"
+														variant="outlined"
+														sx={{ fontSize: "0.65rem", cursor: "pointer" }}
+													/>
+												</Tooltip>
+											)}
+										</>
+									)}
+								</Paper>
+							</Grid>
+							{/* Datos Previsionales widget */}
+							<Grid item xs={12} sm={6} md={4} lg={2.4}>
+								<Paper
+									elevation={0}
+									component={RouterLink}
+									to="/recursos/datos-previsionales"
+									sx={{
+										textDecoration: "none",
+										color: "inherit",
+										display: "block",
+										p: { xs: 1.5, sm: 2.5 },
+										borderRadius: 2,
+										bgcolor: theme.palette.background.paper,
+										border: `1px solid ${
+											datosPrevsStats && datosPrevsStats.mesesFaltantes > 0 ? theme.palette.warning.main : theme.palette.divider
+										}`,
+										height: "100%",
+										cursor: "pointer",
+										transition: "transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease",
+										"&:hover": {
+											boxShadow: headerShadow(isDark),
+											borderColor:
+												datosPrevsStats && datosPrevsStats.mesesFaltantes > 0
+													? theme.palette.warning.dark
+													: alpha(BRAND_BLUE, isDark ? 0.32 : 0.22),
+											transform: "translateY(-2px)",
+										},
+									}}
+								>
+									{/* Header */}
+									<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: { xs: 1.25, sm: 1.75 } }}>
+										<Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.75, sm: 1.25 }, minWidth: 0 }}>
+											<Box
+												sx={{
+													width: 34,
+													height: 34,
+													borderRadius: 1.25,
+													display: "flex",
+													alignItems: "center",
+													justifyContent: "center",
+													flexShrink: 0,
+													bgcolor: alpha(BRAND_BLUE, isDark ? 0.18 : 0.1),
+													border: `1px solid ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
+													color: BRAND_BLUE,
+												}}
+											>
+												<DocumentText size={18} />
+											</Box>
+											<Typography
+												variant="body2"
+												sx={{
+													color: theme.palette.text.secondary,
+													fontWeight: 500,
+													fontSize: { xs: "0.75rem", sm: "0.875rem" },
+													letterSpacing: "-0.005em",
+													overflow: "hidden",
+													textOverflow: "ellipsis",
+													whiteSpace: "nowrap",
+												}}
+											>
+												Datos Previsionales
+											</Typography>
+										</Box>
+										<ArrowRight2 size={14} style={{ color: theme.palette.text.secondary, opacity: 0.6 }} />
+									</Box>
+									{/* Value */}
+									{loadingDatosPrevsStats ? (
+										<Skeleton variant="text" width={80} height={48} />
+									) : (
+										<>
+											<Box sx={{ display: "flex", alignItems: "baseline", gap: 0.5, mb: 0.5 }}>
+												<Typography
+													variant="h3"
+													sx={{
+														fontWeight: 700,
+														lineHeight: 1,
+														fontSize: { xs: "1.5rem", sm: "2rem" },
+														letterSpacing: "-0.02em",
+														fontVariantNumeric: "tabular-nums",
+													}}
+												>
+													{datosPrevsStats?.total ?? 0}
+												</Typography>
+												<Typography variant="body2" color="text.secondary">
+													registros
+												</Typography>
+											</Box>
+											{datosPrevsStats && datosPrevsStats.mesesFaltantes > 0 && (
+												<Chip
+													label={`${datosPrevsStats.mesesFaltantes} meses faltantes`}
+													size="small"
+													color="warning"
+													variant="outlined"
+													sx={{ fontSize: "0.65rem", cursor: "pointer" }}
+												/>
+											)}
+										</>
+									)}
+								</Paper>
+							</Grid>
 						</Grid>
-					</Grid>
 					</CollapsibleSection>
 				</Box>
 
@@ -1842,23 +1854,23 @@ const AdminDashboard = () => {
 						subtitle="Salud de servicios, crons e integraciones"
 						icon={<MessageProgramming size={16} variant="Bold" />}
 					>
-					<Grid container spacing={{ xs: 1, sm: 2 }}>
-						<Grid item xs={12} sm={6} md={2.4}>
-							<ServicesStatusWidget />
+						<Grid container spacing={{ xs: 1, sm: 2 }}>
+							<Grid item xs={12} sm={6} md={2.4}>
+								<ServicesStatusWidget />
+							</Grid>
+							<Grid item xs={12} sm={6} md={2.4}>
+								<CronsStatusWidget />
+							</Grid>
+							<Grid item xs={12} sm={6} md={2.4}>
+								<IntegrationsStatusWidget />
+							</Grid>
+							<Grid item xs={12} sm={6} md={2.4}>
+								<PrivacyStatsWidget summary />
+							</Grid>
+							<Grid item xs={12} sm={6} md={2.4}>
+								<PostalTrackingWidget />
+							</Grid>
 						</Grid>
-						<Grid item xs={12} sm={6} md={2.4}>
-							<CronsStatusWidget />
-						</Grid>
-						<Grid item xs={12} sm={6} md={2.4}>
-							<IntegrationsStatusWidget />
-						</Grid>
-						<Grid item xs={12} sm={6} md={2.4}>
-							<PrivacyStatsWidget summary />
-						</Grid>
-						<Grid item xs={12} sm={6} md={2.4}>
-							<PostalTrackingWidget />
-						</Grid>
-					</Grid>
 					</CollapsibleSection>
 				</Box>
 
@@ -1869,1777 +1881,2154 @@ const AdminDashboard = () => {
 					subtitle="Actualización de causas por jurisdicción y salud de credenciales"
 					icon={<Refresh size={16} variant="Bold" />}
 				>
-								<CoverageSummary
-					loading={loadingEligibility || loadingMevEligibility || loadingEjeEligibility || loadingPjsaltaEligibility || loadingPjcatamarcaEligibility || loadingPjmendozaEligibility}
-					detailOpen={coverageDetailOpen}
-					onToggleDetail={() => setCoverageDetailOpen((v) => !v)}
-					rows={[
-						{ label: "PJN", percent: eligibilityStats?.coveragePercent ?? null, to: "/admin/causas/verified-app" },
-						{ label: "MEV", percent: mevEligibilityStats?.coveragePercent ?? null, to: "/admin/mev/verified-app" },
-						{ label: "EJE", percent: ejeEligibilityStats?.coveragePercent ?? null, to: "/admin/eje/verified-app" },
-						{ label: "Salta", percent: pjsaltaEligibilityStats?.coveragePercent ?? null, to: "/admin/pjsalta/verified-app" },
-						{ label: "Catamarca", percent: pjcatamarcaEligibilityStats?.coveragePercent ?? null, to: "/admin/pjcatamarca/verified-app" },
-						{ label: "Mendoza", percent: pjmendozaEligibilityStats?.coveragePercent ?? null, to: "/admin/pjmendoza/verified-app" },
-					]}
-				/>
-				<Box sx={{ display: { xs: coverageDetailOpen ? "block" : "none", sm: "block" } }}>
-<Grid container spacing={{ xs: 1, sm: 2 }} sx={{ mb: { xs: 2, sm: 4 } }}>
-					{/* PJN Update Coverage Widget */}
-					<Grid item xs={12} sm={6} md={4}>
-						<Paper
-							elevation={0}
-							onClick={() => navigate("/admin/causas/verified-app")}
-							sx={{
-								p: { xs: 1.5, sm: 2.5 },
-								borderRadius: 2,
-								bgcolor: theme.palette.background.paper,
-								border: `1px solid ${theme.palette.divider}`,
-								cursor: "pointer",
-								transition: "transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease",
-								height: "100%",
-								"&:hover": {
-									boxShadow: headerShadow(isDark),
-									borderColor: alpha(BRAND_BLUE, isDark ? 0.32 : 0.22),
-									transform: "translateY(-2px)",
-								},
-							}}
-						>
-							<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5, flexWrap: "wrap", gap: 0.5 }}>
-								<Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
-									<Box
-										sx={{
-											width: 28,
-											height: 28,
-											borderRadius: 1,
-											display: "flex",
-											alignItems: "center",
-											justifyContent: "center",
-											flexShrink: 0,
-											bgcolor: alpha(BRAND_BLUE, isDark ? 0.18 : 0.1),
-											border: `1px solid ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
-											color: BRAND_BLUE,
-										}}
-									>
-										<Refresh size={15} />
-									</Box>
-									<Typography
-										variant="subtitle1"
-										fontWeight={600}
-										sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" }, letterSpacing: "-0.005em" }}
-									>
-										Actualización PJN
-									</Typography>
-									{pjnSiteStatus && pjnSiteStatus.status === "maintenance" && (
-										<Tooltip
-											title={`Sitio PJN en mantenimiento desde ${
-												pjnSiteStatus.maintenanceSince
-													? new Date(pjnSiteStatus.maintenanceSince).toLocaleString("es-AR", {
-															timeZone: "America/Argentina/Buenos_Aires",
-													  })
-													: "—"
-											}${pjnSiteStatus.message ? ` — ${pjnSiteStatus.message}` : ""}${
-												pjnSiteStatus.lastDetectedBy ? ` (detectado por ${pjnSiteStatus.lastDetectedBy})` : ""
-											}`}
-										>
-											<Chip
-												label="PJN en mantenimiento"
-												size="small"
-												color="warning"
-												icon={<Warning2 size={12} />}
-												onClick={(e) => {
-													e.stopPropagation();
-													navigate("/admin/causas/workers");
+					<CoverageSummary
+						loading={
+							loadingEligibility ||
+							loadingMevEligibility ||
+							loadingEjeEligibility ||
+							loadingPjsaltaEligibility ||
+							loadingPjcatamarcaEligibility ||
+							loadingPjmendozaEligibility
+						}
+						detailOpen={coverageDetailOpen}
+						onToggleDetail={() => setCoverageDetailOpen((v) => !v)}
+						rows={[
+							{ label: "PJN", percent: eligibilityStats?.coveragePercent ?? null, to: "/admin/causas/verified-app" },
+							{ label: "MEV", percent: mevEligibilityStats?.coveragePercent ?? null, to: "/admin/mev/verified-app" },
+							{ label: "EJE", percent: ejeEligibilityStats?.coveragePercent ?? null, to: "/admin/eje/verified-app" },
+							{ label: "Salta", percent: pjsaltaEligibilityStats?.coveragePercent ?? null, to: "/admin/pjsalta/verified-app" },
+							{ label: "Catamarca", percent: pjcatamarcaEligibilityStats?.coveragePercent ?? null, to: "/admin/pjcatamarca/verified-app" },
+							{ label: "Mendoza", percent: pjmendozaEligibilityStats?.coveragePercent ?? null, to: "/admin/pjmendoza/verified-app" },
+						]}
+					/>
+					<Box sx={{ display: { xs: coverageDetailOpen ? "block" : "none", sm: "block" } }}>
+						<Grid container spacing={{ xs: 1, sm: 2 }} sx={{ mb: { xs: 2, sm: 4 } }}>
+							{/* PJN Update Coverage Widget */}
+							<Grid item xs={12} sm={6} md={4}>
+								<Paper
+									elevation={0}
+									onClick={() => navigate("/admin/causas/verified-app")}
+									sx={{
+										p: { xs: 1.5, sm: 2.5 },
+										borderRadius: 2,
+										bgcolor: theme.palette.background.paper,
+										border: `1px solid ${theme.palette.divider}`,
+										cursor: "pointer",
+										transition: "transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease",
+										height: "100%",
+										"&:hover": {
+											boxShadow: headerShadow(isDark),
+											borderColor: alpha(BRAND_BLUE, isDark ? 0.32 : 0.22),
+											transform: "translateY(-2px)",
+										},
+									}}
+								>
+									<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5, flexWrap: "wrap", gap: 0.5 }}>
+										<Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
+											<Box
+												sx={{
+													width: 28,
+													height: 28,
+													borderRadius: 1,
+													display: "flex",
+													alignItems: "center",
+													justifyContent: "center",
+													flexShrink: 0,
+													bgcolor: alpha(BRAND_BLUE, isDark ? 0.18 : 0.1),
+													border: `1px solid ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
+													color: BRAND_BLUE,
 												}}
-												sx={{ fontSize: "0.65rem", fontWeight: 500 }}
-											/>
-										</Tooltip>
-									)}
-								</Box>
-								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-									<Chip
-										label="PJN"
-										size="small"
-										sx={{
-											bgcolor: alpha(BRAND_BLUE, isDark ? 0.15 : 0.09),
-											color: BRAND_BLUE,
-											fontWeight: 600,
-											fontSize: "0.65rem",
-											height: 20,
-											border: `1px solid ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
-										}}
-									/>
-									<ArrowRight2 size={16} style={{ color: COLORS.neutral.light }} />
-								</Box>
-							</Box>
-
-							{loadingEligibility ? (
-								<Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
-									<Skeleton variant="rectangular" width="100%" height={60} sx={{ borderRadius: 1 }} />
-								</Box>
-							) : eligibilityStats ? (
-								<>
-									<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
-										<Typography variant="body2" color="text.secondary">
-											Cobertura hoy
-										</Typography>
-										<Typography
-											variant="h6"
-											fontWeight="bold"
-											sx={{
-												fontVariantNumeric: "tabular-nums",
-												color:
-													(eligibilityStats.coveragePercent || 0) > 90
-														? COLORS.success.main
-														: (eligibilityStats.coveragePercent || 0) > 70
-														? COLORS.warning.main
-														: COLORS.error.main,
-											}}
-										>
-											{eligibilityStats.coveragePercent}%
-										</Typography>
-									</Box>
-									<LinearProgress
-										variant="determinate"
-										value={eligibilityStats.coveragePercent || 0}
-										sx={{
-											height: 8,
-											borderRadius: 4,
-											mb: 2,
-											backgroundColor: alpha(COLORS.neutral.light, 0.3),
-											"& .MuiLinearProgress-bar": {
-												borderRadius: 4,
-												backgroundColor:
-													(eligibilityStats.coveragePercent || 0) > 90
-														? COLORS.success.main
-														: (eligibilityStats.coveragePercent || 0) > 70
-														? COLORS.warning.main
-														: COLORS.error.main,
-											},
-										}}
-									/>
-									<Grid container spacing={{ xs: 0.5, sm: 2 }}>
-										<Grid item xs={3}>
-											<Box sx={{ textAlign: "center" }}>
-												<Typography
-													variant="h5"
-													sx={{ fontWeight: 700, color: COLORS.success.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
-												>
-													{eligibilityStats.updatedToday.toLocaleString("es-AR")}
-												</Typography>
-												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
-													Actualizados hoy
-												</Typography>
+											>
+												<Refresh size={15} />
 											</Box>
-										</Grid>
-										<Grid item xs={3}>
-											<Box sx={{ textAlign: "center" }}>
-												<Typography
-													variant="h5"
-													sx={{ fontWeight: 700, color: COLORS.warning.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
-												>
-													{(
-														eligibilityStats.pendingToday ??
-														eligibilityStats.eligible - eligibilityStats.updatedToday - eligibilityStats.eligibleWithErrors
-													).toLocaleString("es-AR")}
-												</Typography>
-												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
-													Pendientes hoy
-												</Typography>
-											</Box>
-										</Grid>
-										<Grid item xs={3}>
-											<Box sx={{ textAlign: "center" }}>
-												<Typography
-													variant="h5"
-													sx={{ fontWeight: 700, color: COLORS.error.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
-												>
-													{eligibilityStats.eligibleWithErrors.toLocaleString("es-AR")}
-												</Typography>
-												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
-													Con errores
-												</Typography>
-											</Box>
-										</Grid>
-										<Grid item xs={3}>
-											<Box sx={{ textAlign: "center" }}>
-												<Typography variant="h5" sx={{ fontWeight: 700, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>
-													{eligibilityStats.eligible.toLocaleString("es-AR")}
-												</Typography>
-												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
-													Total elegibles
-												</Typography>
-											</Box>
-										</Grid>
-									</Grid>
-									{(eligibilityStats.waitingArchivo ?? 0) > 0 && (
-										<Typography
-											variant="caption"
-											color="text.secondary"
-											sx={{ display: "block", textAlign: "center", mt: 1.5, fontSize: { xs: "0.65rem", sm: "0.72rem" } }}
-										>
-											+{(eligibilityStats.waitingArchivo ?? 0).toLocaleString("es-AR")} de carpetas archivadas o sin carpeta · se actualizan cada{" "}
-											{eligibilityStats.archivoThresholdHours ?? 24} h · no cuentan en la cobertura de hoy
-										</Typography>
-									)}
-								</>
-							) : (
-								<Typography variant="body2" color="text.secondary" textAlign="center">
-									No se pudieron cargar las estadísticas
-								</Typography>
-							)}
-						</Paper>
-					</Grid>
-
-					{/* MEV Update Coverage Widget */}
-					<Grid item xs={12} sm={6} md={4}>
-						<Paper
-							elevation={0}
-							component={RouterLink}
-							to="/admin/mev/verified-app"
-							sx={{
-								textDecoration: "none",
-								color: "inherit",
-								display: "block",
-								p: { xs: 1.5, sm: 2.5 },
-								borderRadius: 2,
-								bgcolor: theme.palette.background.paper,
-								border: `1px solid ${theme.palette.divider}`,
-								cursor: "pointer",
-								transition: "transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease",
-								height: "100%",
-								"&:hover": {
-									boxShadow: headerShadow(isDark),
-									borderColor: alpha(BRAND_BLUE, isDark ? 0.32 : 0.22),
-									transform: "translateY(-2px)",
-								},
-							}}
-						>
-							<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
-								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-									<Box
-										sx={{
-											width: 28,
-											height: 28,
-											borderRadius: 1,
-											display: "flex",
-											alignItems: "center",
-											justifyContent: "center",
-											flexShrink: 0,
-											bgcolor: alpha(BRAND_BLUE, isDark ? 0.18 : 0.1),
-											border: `1px solid ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
-											color: BRAND_BLUE,
-										}}
-									>
-										<Refresh size={15} />
-									</Box>
-									<Typography
-										variant="subtitle1"
-										fontWeight={600}
-										sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" }, letterSpacing: "-0.005em" }}
-									>
-										Actualización MEV
-									</Typography>
-								</Box>
-								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-									<Chip
-										label="MEV"
-										size="small"
-										sx={{
-											bgcolor: alpha(COLORS.neutral.main, 0.1),
-											color: COLORS.neutral.main,
-											fontWeight: 500,
-											fontSize: "0.65rem",
-										}}
-									/>
-									<ArrowRight2 size={16} style={{ color: COLORS.neutral.light }} />
-								</Box>
-							</Box>
-
-							{loadingMevEligibility ? (
-								<Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
-									<Skeleton variant="rectangular" width="100%" height={60} sx={{ borderRadius: 1 }} />
-								</Box>
-							) : mevEligibilityStats ? (
-								<>
-									<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
-										<Typography variant="body2" color="text.secondary">
-											Cobertura hoy
-										</Typography>
-										<Typography
-											variant="h6"
-											fontWeight="bold"
-											sx={{
-												fontVariantNumeric: "tabular-nums",
-												color:
-													(mevEligibilityStats.coveragePercent || 0) > 90
-														? COLORS.success.main
-														: (mevEligibilityStats.coveragePercent || 0) > 70
-														? COLORS.warning.main
-														: COLORS.error.main,
-											}}
-										>
-											{mevEligibilityStats.coveragePercent}%
-										</Typography>
-									</Box>
-									<LinearProgress
-										variant="determinate"
-										value={mevEligibilityStats.coveragePercent || 0}
-										sx={{
-											height: 8,
-											borderRadius: 4,
-											mb: 2,
-											backgroundColor: alpha(COLORS.neutral.light, 0.3),
-											"& .MuiLinearProgress-bar": {
-												borderRadius: 4,
-												backgroundColor:
-													(mevEligibilityStats.coveragePercent || 0) > 90
-														? COLORS.success.main
-														: (mevEligibilityStats.coveragePercent || 0) > 70
-														? COLORS.warning.main
-														: COLORS.error.main,
-											},
-										}}
-									/>
-									<Grid container spacing={{ xs: 0.5, sm: 2 }}>
-										<Grid item xs={3}>
-											<Box sx={{ textAlign: "center" }}>
-												<Typography
-													variant="h5"
-													sx={{ fontWeight: 700, color: COLORS.success.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
-												>
-													{mevEligibilityStats.updatedToday.toLocaleString("es-AR")}
-												</Typography>
-												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
-													Actualizados hoy
-												</Typography>
-											</Box>
-										</Grid>
-										<Grid item xs={3}>
-											<Box sx={{ textAlign: "center" }}>
-												<Typography
-													variant="h5"
-													sx={{ fontWeight: 700, color: COLORS.warning.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
-												>
-													{(
-														mevEligibilityStats.pendingToday ??
-														mevEligibilityStats.eligible - mevEligibilityStats.updatedToday - mevEligibilityStats.eligibleWithErrors
-													).toLocaleString("es-AR")}
-												</Typography>
-												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
-													Pendientes hoy
-												</Typography>
-											</Box>
-										</Grid>
-										<Grid item xs={3}>
-											<Box sx={{ textAlign: "center" }}>
-												<Typography
-													variant="h5"
-													sx={{ fontWeight: 700, color: COLORS.error.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
-												>
-													{mevEligibilityStats.eligibleWithErrors.toLocaleString("es-AR")}
-												</Typography>
-												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
-													Con errores
-												</Typography>
-											</Box>
-										</Grid>
-										<Grid item xs={3}>
-											<Box sx={{ textAlign: "center" }}>
-												<Typography
-													variant="h5"
-													sx={{ fontWeight: 700, color: COLORS.neutral.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
-												>
-													{mevEligibilityStats.eligible.toLocaleString("es-AR")}
-												</Typography>
-												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
-													Total elegibles
-												</Typography>
-											</Box>
-										</Grid>
-									</Grid>
-									{(mevEligibilityStats.noCredential ?? 0) > 0 && (
-										<Tooltip
-											arrow
-											title="Elegibles cuyo usuario no tiene credencial MEV habilitada. Los workers las omiten (no se puede entrar al portal sin credencial), así que no cuentan como pendientes ni en la cobertura."
-										>
-											<Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 0.5, mt: 1.5, cursor: "help" }}>
-												<LockSlash size={13} color={COLORS.neutral.main} />
-												<Typography variant="caption" color="text.secondary">
-													<strong>{(mevEligibilityStats.noCredential ?? 0).toLocaleString("es-AR")}</strong> sin credencial (no actualizables)
-												</Typography>
-											</Box>
-										</Tooltip>
-									)}
-								</>
-							) : (
-								<Typography variant="body2" color="text.secondary" textAlign="center">
-									No se pudieron cargar las estadísticas
-								</Typography>
-							)}
-						</Paper>
-					</Grid>
-
-					{/* EJE Update Coverage Widget */}
-					<Grid item xs={12} sm={6} md={4}>
-						<Paper
-							elevation={0}
-							component={RouterLink}
-							to="/admin/eje/verified-app"
-							sx={{
-								textDecoration: "none",
-								color: "inherit",
-								display: "block",
-								p: { xs: 1.5, sm: 2.5 },
-								borderRadius: 2,
-								bgcolor: theme.palette.background.paper,
-								border: `1px solid ${theme.palette.divider}`,
-								cursor: "pointer",
-								transition: "transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease",
-								height: "100%",
-								"&:hover": {
-									boxShadow: headerShadow(isDark),
-									borderColor: alpha(BRAND_BLUE, isDark ? 0.32 : 0.22),
-									transform: "translateY(-2px)",
-								},
-							}}
-						>
-							<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
-								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-									<Box
-										sx={{
-											width: 28,
-											height: 28,
-											borderRadius: 1,
-											display: "flex",
-											alignItems: "center",
-											justifyContent: "center",
-											flexShrink: 0,
-											bgcolor: alpha(BRAND_BLUE, isDark ? 0.18 : 0.1),
-											border: `1px solid ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
-											color: BRAND_BLUE,
-										}}
-									>
-										<Refresh size={15} />
-									</Box>
-									<Typography
-										variant="subtitle1"
-										fontWeight={600}
-										sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" }, letterSpacing: "-0.005em" }}
-									>
-										Actualización EJE
-									</Typography>
-								</Box>
-								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-									<Chip
-										label="EJE"
-										size="small"
-										sx={{
-											bgcolor: alpha(COLORS.success.main, 0.1),
-											color: COLORS.success.main,
-											fontWeight: 500,
-											fontSize: "0.65rem",
-										}}
-									/>
-									<ArrowRight2 size={16} style={{ color: COLORS.neutral.light }} />
-								</Box>
-							</Box>
-
-							{loadingEjeEligibility ? (
-								<Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
-									<Skeleton variant="rectangular" width="100%" height={60} sx={{ borderRadius: 1 }} />
-								</Box>
-							) : ejeEligibilityStats ? (
-								<>
-									<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
-										<Typography variant="body2" color="text.secondary">
-											Cobertura hoy
-										</Typography>
-										<Typography
-											variant="h6"
-											fontWeight="bold"
-											sx={{
-												fontVariantNumeric: "tabular-nums",
-												color:
-													(ejeEligibilityStats.coveragePercent || 0) > 90
-														? COLORS.success.main
-														: (ejeEligibilityStats.coveragePercent || 0) > 70
-														? COLORS.warning.main
-														: COLORS.error.main,
-											}}
-										>
-											{formatPercent(ejeEligibilityStats.coveragePercent, 1)}
-										</Typography>
-									</Box>
-									<LinearProgress
-										variant="determinate"
-										value={ejeEligibilityStats.coveragePercent || 0}
-										sx={{
-											height: 8,
-											borderRadius: 4,
-											mb: 2,
-											backgroundColor: alpha(COLORS.neutral.light, 0.3),
-											"& .MuiLinearProgress-bar": {
-												borderRadius: 4,
-												backgroundColor:
-													(ejeEligibilityStats.coveragePercent || 0) > 90
-														? COLORS.success.main
-														: (ejeEligibilityStats.coveragePercent || 0) > 70
-														? COLORS.warning.main
-														: COLORS.error.main,
-											},
-										}}
-									/>
-									<Grid container spacing={{ xs: 0.5, sm: 2 }}>
-										<Grid item xs={3}>
-											<Box sx={{ textAlign: "center" }}>
-												<Typography
-													variant="h5"
-													sx={{ fontWeight: 700, color: COLORS.success.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
-												>
-													{ejeEligibilityStats.actualizadosHoy.toLocaleString("es-AR")}
-												</Typography>
-												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
-													Actualizados hoy
-												</Typography>
-											</Box>
-										</Grid>
-										<Grid item xs={3}>
-											<Box sx={{ textAlign: "center" }}>
-												<Typography
-													variant="h5"
-													sx={{ fontWeight: 700, color: COLORS.warning.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
-												>
-													{ejeEligibilityStats.pendientesHoy.toLocaleString("es-AR")}
-												</Typography>
-												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
-													Pendientes hoy
-												</Typography>
-											</Box>
-										</Grid>
-										<Grid item xs={3}>
-											<Box sx={{ textAlign: "center" }}>
-												<Typography
-													variant="h5"
-													sx={{ fontWeight: 700, color: COLORS.success.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
-												>
-													{ejeEligibilityStats.totalElegibles.toLocaleString("es-AR")}
-												</Typography>
-												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
-													Total elegibles
-												</Typography>
-											</Box>
-										</Grid>
-										<Grid item xs={3}>
-											<Box sx={{ textAlign: "center" }}>
-												<Typography
-													variant="h5"
-													sx={{ fontWeight: 700, color: COLORS.neutral.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
-												>
-													{ejeEligibilityStats.noElegibles.toLocaleString("es-AR")}
-												</Typography>
-												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
-													No elegibles
-												</Typography>
-											</Box>
-										</Grid>
-									</Grid>
-								</>
-							) : (
-								<Typography variant="body2" color="text.secondary" textAlign="center">
-									No se pudieron cargar las estadísticas
-								</Typography>
-							)}
-						</Paper>
-					</Grid>
-
-					{/* PJ Salta Update Coverage Widget */}
-					<Grid item xs={12} sm={6} md={4}>
-						<Paper
-							elevation={0}
-							component={RouterLink}
-							to="/admin/pjsalta/verified-app"
-							sx={{
-								textDecoration: "none",
-								color: "inherit",
-								display: "block",
-								p: { xs: 1.5, sm: 2.5 },
-								borderRadius: 2,
-								bgcolor: theme.palette.background.paper,
-								border: `1px solid ${theme.palette.divider}`,
-								cursor: "pointer",
-								transition: "transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease",
-								height: "100%",
-								"&:hover": {
-									boxShadow: headerShadow(isDark),
-									borderColor: alpha(BRAND_BLUE, isDark ? 0.32 : 0.22),
-									transform: "translateY(-2px)",
-								},
-							}}
-						>
-							<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
-								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-									<Box
-										sx={{
-											width: 28,
-											height: 28,
-											borderRadius: 1,
-											display: "flex",
-											alignItems: "center",
-											justifyContent: "center",
-											flexShrink: 0,
-											bgcolor: alpha(BRAND_BLUE, isDark ? 0.18 : 0.1),
-											border: `1px solid ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
-											color: BRAND_BLUE,
-										}}
-									>
-										<Refresh size={15} />
-									</Box>
-									<Typography
-										variant="subtitle1"
-										fontWeight={600}
-										sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" }, letterSpacing: "-0.005em" }}
-									>
-										Actualización Salta
-									</Typography>
-								</Box>
-								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-									<Chip
-										label="Salta"
-										size="small"
-										sx={{
-											bgcolor: alpha(COLORS.success.main, 0.1),
-											color: COLORS.success.main,
-											fontWeight: 500,
-											fontSize: "0.65rem",
-										}}
-									/>
-									<ArrowRight2 size={16} style={{ color: COLORS.neutral.light }} />
-								</Box>
-							</Box>
-
-							{loadingPjsaltaEligibility ? (
-								<Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
-									<Skeleton variant="rectangular" width="100%" height={60} sx={{ borderRadius: 1 }} />
-								</Box>
-							) : pjsaltaEligibilityStats ? (
-								<>
-									<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
-										<Typography variant="body2" color="text.secondary">
-											Cobertura hoy
-										</Typography>
-										<Typography
-											variant="h6"
-											fontWeight="bold"
-											sx={{
-												fontVariantNumeric: "tabular-nums",
-												color:
-													(pjsaltaEligibilityStats.coveragePercent || 0) > 90
-														? COLORS.success.main
-														: (pjsaltaEligibilityStats.coveragePercent || 0) > 70
-														? COLORS.warning.main
-														: COLORS.error.main,
-											}}
-										>
-											{formatPercent(pjsaltaEligibilityStats.coveragePercent, 1)}
-										</Typography>
-									</Box>
-									<LinearProgress
-										variant="determinate"
-										value={pjsaltaEligibilityStats.coveragePercent || 0}
-										sx={{
-											height: 8,
-											borderRadius: 4,
-											mb: 2,
-											backgroundColor: alpha(COLORS.neutral.light, 0.3),
-											"& .MuiLinearProgress-bar": {
-												borderRadius: 4,
-												backgroundColor:
-													(pjsaltaEligibilityStats.coveragePercent || 0) > 90
-														? COLORS.success.main
-														: (pjsaltaEligibilityStats.coveragePercent || 0) > 70
-														? COLORS.warning.main
-														: COLORS.error.main,
-											},
-										}}
-									/>
-									{/* Ventana de trabajo y umbral, leídos de la config del manager
-									    (no hardcodeados): sin esto no se puede saber si una cobertura
-									    baja es un problema o simplemente que la jornada no empezó. */}
-									<Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1.5 }}>
-										Ventana {pjsaltaEligibilityStats.schedule ?? "—"}
-										{pjsaltaEligibilityStats.thresholdHours ? ` · cada ${pjsaltaEligibilityStats.thresholdHours} h` : ""}
-									</Typography>
-									<Grid container spacing={{ xs: 0.5, sm: 2 }}>
-										<Grid item xs={3}>
-											<Box sx={{ textAlign: "center" }}>
-												<Typography
-													variant="h5"
-													sx={{ fontWeight: 700, color: COLORS.success.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
-												>
-													{pjsaltaEligibilityStats.actualizadosHoy.toLocaleString("es-AR")}
-												</Typography>
-												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
-													Actualizados hoy
-												</Typography>
-											</Box>
-										</Grid>
-										<Grid item xs={3}>
-											<Box sx={{ textAlign: "center" }}>
-												<Typography
-													variant="h5"
-													sx={{ fontWeight: 700, color: COLORS.warning.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
-												>
-													{pjsaltaEligibilityStats.pendientesHoy.toLocaleString("es-AR")}
-												</Typography>
-												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
-													Pendientes hoy
-												</Typography>
-											</Box>
-										</Grid>
-										<Grid item xs={3}>
-											<Box sx={{ textAlign: "center" }}>
-												<Typography
-													variant="h5"
-													sx={{ fontWeight: 700, color: COLORS.success.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
-												>
-													{pjsaltaEligibilityStats.totalElegibles.toLocaleString("es-AR")}
-												</Typography>
-												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
-													Total elegibles
-												</Typography>
-											</Box>
-										</Grid>
-										<Grid item xs={3}>
-											<Box sx={{ textAlign: "center" }}>
-												<Typography
-													variant="h5"
-													sx={{ fontWeight: 700, color: COLORS.neutral.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
-												>
-													{pjsaltaEligibilityStats.noElegibles.toLocaleString("es-AR")}
-												</Typography>
-												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
-													No elegibles
-												</Typography>
-											</Box>
-										</Grid>
-									</Grid>
-								</>
-							) : (
-								<Typography variant="body2" color="text.secondary" textAlign="center">
-									No se pudieron cargar las estadísticas
-								</Typography>
-							)}
-						</Paper>
-					</Grid>
-
-					{/* PJ Catamarca Update Coverage Widget */}
-					<Grid item xs={12} sm={6} md={4}>
-						<Paper
-							elevation={0}
-							component={RouterLink}
-							to="/admin/pjcatamarca/verified-app"
-							sx={{
-								textDecoration: "none",
-								color: "inherit",
-								display: "block",
-								p: { xs: 1.5, sm: 2.5 },
-								borderRadius: 2,
-								bgcolor: theme.palette.background.paper,
-								border: `1px solid ${theme.palette.divider}`,
-								cursor: "pointer",
-								transition: "transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease",
-								height: "100%",
-								"&:hover": {
-									boxShadow: headerShadow(isDark),
-									borderColor: alpha(BRAND_BLUE, isDark ? 0.32 : 0.22),
-									transform: "translateY(-2px)",
-								},
-							}}
-						>
-							<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
-								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-									<Box
-										sx={{
-											width: 28,
-											height: 28,
-											borderRadius: 1,
-											display: "flex",
-											alignItems: "center",
-											justifyContent: "center",
-											flexShrink: 0,
-											bgcolor: alpha(BRAND_BLUE, isDark ? 0.18 : 0.1),
-											border: `1px solid ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
-											color: BRAND_BLUE,
-										}}
-									>
-										<Refresh size={15} />
-									</Box>
-									<Typography
-										variant="subtitle1"
-										fontWeight={600}
-										sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" }, letterSpacing: "-0.005em" }}
-									>
-										Actualización Catamarca
-									</Typography>
-								</Box>
-								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-									<Chip
-										label="Catamarca"
-										size="small"
-										sx={{
-											bgcolor: alpha(COLORS.success.main, 0.1),
-											color: COLORS.success.main,
-											fontWeight: 500,
-											fontSize: "0.65rem",
-										}}
-									/>
-									<ArrowRight2 size={16} style={{ color: COLORS.neutral.light }} />
-								</Box>
-							</Box>
-
-							{loadingPjcatamarcaEligibility ? (
-								<Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
-									<Skeleton variant="rectangular" width="100%" height={60} sx={{ borderRadius: 1 }} />
-								</Box>
-							) : pjcatamarcaEligibilityStats ? (
-								<>
-									<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
-										<Typography variant="body2" color="text.secondary">
-											Cobertura hoy
-										</Typography>
-										<Typography
-											variant="h6"
-											fontWeight="bold"
-											sx={{
-												fontVariantNumeric: "tabular-nums",
-												color:
-													(pjcatamarcaEligibilityStats.coveragePercent || 0) > 90
-														? COLORS.success.main
-														: (pjcatamarcaEligibilityStats.coveragePercent || 0) > 70
-														? COLORS.warning.main
-														: COLORS.error.main,
-											}}
-										>
-											{formatPercent(pjcatamarcaEligibilityStats.coveragePercent, 1)}
-										</Typography>
-									</Box>
-									<LinearProgress
-										variant="determinate"
-										value={pjcatamarcaEligibilityStats.coveragePercent || 0}
-										sx={{
-											height: 8,
-											borderRadius: 4,
-											mb: 2,
-											backgroundColor: alpha(COLORS.neutral.light, 0.3),
-											"& .MuiLinearProgress-bar": {
-												borderRadius: 4,
-												backgroundColor:
-													(pjcatamarcaEligibilityStats.coveragePercent || 0) > 90
-														? COLORS.success.main
-														: (pjcatamarcaEligibilityStats.coveragePercent || 0) > 70
-														? COLORS.warning.main
-														: COLORS.error.main,
-											},
-										}}
-									/>
-									{/* Ventana de trabajo y umbral, leídos de la config del manager
-									    (no hardcodeados): sin esto no se puede saber si una cobertura
-									    baja es un problema o simplemente que la jornada no empezó. */}
-									<Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1.5 }}>
-										Ventana {pjcatamarcaEligibilityStats.schedule ?? "—"}
-										{pjcatamarcaEligibilityStats.thresholdHours ? ` · cada ${pjcatamarcaEligibilityStats.thresholdHours} h` : ""}
-									</Typography>
-									<Grid container spacing={{ xs: 0.5, sm: 2 }}>
-										<Grid item xs={3}>
-											<Box sx={{ textAlign: "center" }}>
-												<Typography
-													variant="h5"
-													sx={{ fontWeight: 700, color: COLORS.success.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
-												>
-													{pjcatamarcaEligibilityStats.actualizadosHoy.toLocaleString("es-AR")}
-												</Typography>
-												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
-													Actualizados hoy
-												</Typography>
-											</Box>
-										</Grid>
-										<Grid item xs={3}>
-											<Box sx={{ textAlign: "center" }}>
-												<Typography
-													variant="h5"
-													sx={{ fontWeight: 700, color: COLORS.warning.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
-												>
-													{pjcatamarcaEligibilityStats.pendientesHoy.toLocaleString("es-AR")}
-												</Typography>
-												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
-													Pendientes hoy
-												</Typography>
-											</Box>
-										</Grid>
-										<Grid item xs={3}>
-											<Box sx={{ textAlign: "center" }}>
-												<Typography
-													variant="h5"
-													sx={{ fontWeight: 700, color: COLORS.success.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
-												>
-													{pjcatamarcaEligibilityStats.totalElegibles.toLocaleString("es-AR")}
-												</Typography>
-												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
-													Total elegibles
-												</Typography>
-											</Box>
-										</Grid>
-										<Grid item xs={3}>
-											<Box sx={{ textAlign: "center" }}>
-												<Typography
-													variant="h5"
-													sx={{ fontWeight: 700, color: COLORS.neutral.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
-												>
-													{pjcatamarcaEligibilityStats.noElegibles.toLocaleString("es-AR")}
-												</Typography>
-												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
-													No elegibles
-												</Typography>
-											</Box>
-										</Grid>
-									</Grid>
-								</>
-							) : (
-								<Typography variant="body2" color="text.secondary" textAlign="center">
-									No se pudieron cargar las estadísticas
-								</Typography>
-							)}
-						</Paper>
-					</Grid>
-
-					{/* PJ Mendoza Update Coverage Widget */}
-					<Grid item xs={12} sm={6} md={4}>
-						<Paper
-							elevation={0}
-							component={RouterLink}
-							to="/admin/pjmendoza/verified-app"
-							sx={{
-								textDecoration: "none",
-								color: "inherit",
-								display: "block",
-								p: { xs: 1.5, sm: 2.5 },
-								borderRadius: 2,
-								bgcolor: theme.palette.background.paper,
-								border: `1px solid ${theme.palette.divider}`,
-								cursor: "pointer",
-								transition: "transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease",
-								height: "100%",
-								"&:hover": {
-									boxShadow: headerShadow(isDark),
-									borderColor: alpha(BRAND_BLUE, isDark ? 0.32 : 0.22),
-									transform: "translateY(-2px)",
-								},
-							}}
-						>
-							<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
-								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-									<Box
-										sx={{
-											width: 28,
-											height: 28,
-											borderRadius: 1,
-											display: "flex",
-											alignItems: "center",
-											justifyContent: "center",
-											flexShrink: 0,
-											bgcolor: alpha(BRAND_BLUE, isDark ? 0.18 : 0.1),
-											border: `1px solid ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
-											color: BRAND_BLUE,
-										}}
-									>
-										<Refresh size={15} />
-									</Box>
-									<Typography
-										variant="subtitle1"
-										fontWeight={600}
-										sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" }, letterSpacing: "-0.005em" }}
-									>
-										Actualización Mendoza
-									</Typography>
-								</Box>
-								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-									<Chip
-										label="Mendoza"
-										size="small"
-										sx={{
-											bgcolor: alpha(COLORS.success.main, 0.1),
-											color: COLORS.success.main,
-											fontWeight: 500,
-											fontSize: "0.65rem",
-										}}
-									/>
-									<ArrowRight2 size={16} style={{ color: COLORS.neutral.light }} />
-								</Box>
-							</Box>
-
-							{loadingPjmendozaEligibility ? (
-								<Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
-									<Skeleton variant="rectangular" width="100%" height={60} sx={{ borderRadius: 1 }} />
-								</Box>
-							) : pjmendozaEligibilityStats ? (
-								<>
-									<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
-										<Typography variant="body2" color="text.secondary">
-											Cobertura hoy
-										</Typography>
-										<Typography
-											variant="h6"
-											fontWeight="bold"
-											sx={{
-												fontVariantNumeric: "tabular-nums",
-												color:
-													(pjmendozaEligibilityStats.coveragePercent || 0) > 90
-														? COLORS.success.main
-														: (pjmendozaEligibilityStats.coveragePercent || 0) > 70
-														? COLORS.warning.main
-														: COLORS.error.main,
-											}}
-										>
-											{formatPercent(pjmendozaEligibilityStats.coveragePercent, 1)}
-										</Typography>
-									</Box>
-									<LinearProgress
-										variant="determinate"
-										value={pjmendozaEligibilityStats.coveragePercent || 0}
-										sx={{
-											height: 8,
-											borderRadius: 4,
-											mb: 2,
-											backgroundColor: alpha(COLORS.neutral.light, 0.3),
-											"& .MuiLinearProgress-bar": {
-												borderRadius: 4,
-												backgroundColor:
-													(pjmendozaEligibilityStats.coveragePercent || 0) > 90
-														? COLORS.success.main
-														: (pjmendozaEligibilityStats.coveragePercent || 0) > 70
-														? COLORS.warning.main
-														: COLORS.error.main,
-											},
-										}}
-									/>
-									{/* Ventana de trabajo y umbral, leídos de la config del manager
-									    (no hardcodeados): sin esto no se puede saber si una cobertura
-									    baja es un problema o simplemente que la jornada no empezó. */}
-									<Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1.5 }}>
-										Ventana {pjmendozaEligibilityStats.schedule ?? "—"}
-										{pjmendozaEligibilityStats.thresholdHours ? ` · cada ${pjmendozaEligibilityStats.thresholdHours} h` : ""}
-									</Typography>
-									<Grid container spacing={{ xs: 0.5, sm: 2 }}>
-										<Grid item xs={3}>
-											<Box sx={{ textAlign: "center" }}>
-												<Typography
-													variant="h5"
-													sx={{ fontWeight: 700, color: COLORS.success.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
-												>
-													{pjmendozaEligibilityStats.actualizadosHoy.toLocaleString("es-AR")}
-												</Typography>
-												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
-													Actualizados hoy
-												</Typography>
-											</Box>
-										</Grid>
-										<Grid item xs={3}>
-											<Box sx={{ textAlign: "center" }}>
-												<Typography
-													variant="h5"
-													sx={{ fontWeight: 700, color: COLORS.warning.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
-												>
-													{pjmendozaEligibilityStats.pendientesHoy.toLocaleString("es-AR")}
-												</Typography>
-												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
-													Pendientes hoy
-												</Typography>
-											</Box>
-										</Grid>
-										<Grid item xs={3}>
-											<Box sx={{ textAlign: "center" }}>
-												<Typography
-													variant="h5"
-													sx={{ fontWeight: 700, color: COLORS.success.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
-												>
-													{pjmendozaEligibilityStats.totalElegibles.toLocaleString("es-AR")}
-												</Typography>
-												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
-													Total elegibles
-												</Typography>
-											</Box>
-										</Grid>
-										<Grid item xs={3}>
-											<Box sx={{ textAlign: "center" }}>
-												<Typography
-													variant="h5"
-													sx={{ fontWeight: 700, color: COLORS.neutral.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
-												>
-													{pjmendozaEligibilityStats.noElegibles.toLocaleString("es-AR")}
-												</Typography>
-												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
-													No elegibles
-												</Typography>
-											</Box>
-										</Grid>
-									</Grid>
-								</>
-							) : (
-								<Typography variant="body2" color="text.secondary" textAlign="center">
-									No se pudieron cargar las estadísticas
-								</Typography>
-							)}
-						</Paper>
-					</Grid>
-
-					{/* Stuck Documents Worker Widget */}
-					<Grid item xs={12} sm={6} md={4}>
-						<Paper
-							elevation={0}
-							component={RouterLink}
-							to="/admin/causas/workers"
-							sx={{
-								textDecoration: "none",
-								color: "inherit",
-								display: "block",
-								p: { xs: 1.5, sm: 2.5 },
-								borderRadius: 2,
-								bgcolor: theme.palette.background.paper,
-								border: `1px solid ${theme.palette.divider}`,
-								cursor: "pointer",
-								transition: "transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease",
-								height: "100%",
-								"&:hover": {
-									boxShadow: headerShadow(isDark),
-									borderColor: alpha(BRAND_BLUE, isDark ? 0.32 : 0.22),
-									transform: "translateY(-2px)",
-								},
-							}}
-						>
-							<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
-								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-									<Box
-										sx={{
-											width: 28,
-											height: 28,
-											borderRadius: 1,
-											display: "flex",
-											alignItems: "center",
-											justifyContent: "center",
-											flexShrink: 0,
-											bgcolor: alpha(BRAND_BLUE, isDark ? 0.18 : 0.1),
-											border: `1px solid ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
-											color: BRAND_BLUE,
-										}}
-									>
-										<Warning2 size={15} />
-									</Box>
-									<Typography variant="subtitle1" fontWeight={600} sx={{ letterSpacing: "-0.005em" }}>
-										Stuck Documents Worker
-									</Typography>
-									{stuckDocumentsStats?.worker && (
-										<Chip
-											size="small"
-											label={stuckDocumentsStats.worker.enabled ? "Activo" : "Deshabilitado"}
-											sx={{
-												bgcolor: stuckDocumentsStats.worker.enabled ? alpha(COLORS.success.main, 0.15) : alpha(COLORS.neutral.main, 0.15),
-												color: stuckDocumentsStats.worker.enabled ? COLORS.success.main : COLORS.neutral.main,
-												fontWeight: 600,
-												fontSize: "0.65rem",
-											}}
-										/>
-									)}
-								</Box>
-								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-									<Chip
-										label="PJN"
-										size="small"
-										sx={{
-											bgcolor: alpha(BRAND_BLUE, isDark ? 0.15 : 0.09),
-											color: BRAND_BLUE,
-											fontWeight: 600,
-											fontSize: "0.65rem",
-											height: 20,
-											border: `1px solid ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
-										}}
-									/>
-									<ArrowRight2 size={16} style={{ color: COLORS.neutral.light }} />
-								</Box>
-							</Box>
-
-							{loadingStuckDocuments ? (
-								<Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
-									<Skeleton variant="rectangular" width="100%" height={60} sx={{ borderRadius: 1 }} />
-								</Box>
-							) : stuckDocumentsStats ? (
-								<>
-									<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
-										<Typography variant="body2" color="text.secondary">
-											Tasa de éxito (últimas 24h)
-										</Typography>
-										<Typography
-											variant="h6"
-											fontWeight="bold"
-											sx={{
-												fontVariantNumeric: "tabular-nums",
-												color:
-													parseFloat(stuckDocumentsStats.recent.successRate) > 50
-														? COLORS.success.main
-														: parseFloat(stuckDocumentsStats.recent.successRate) > 20
-														? COLORS.warning.main
-														: COLORS.error.main,
-											}}
-										>
-											{stuckDocumentsStats.recent.successRate}
-										</Typography>
-									</Box>
-									<LinearProgress
-										variant="determinate"
-										value={parseFloat(stuckDocumentsStats.recent.successRate) || 0}
-										sx={{
-											height: 8,
-											borderRadius: 4,
-											mb: 2,
-											backgroundColor: alpha(COLORS.neutral.light, 0.3),
-											"& .MuiLinearProgress-bar": {
-												borderRadius: 4,
-												backgroundColor:
-													parseFloat(stuckDocumentsStats.recent.successRate) > 50
-														? COLORS.success.main
-														: parseFloat(stuckDocumentsStats.recent.successRate) > 20
-														? COLORS.warning.main
-														: COLORS.error.main,
-											},
-										}}
-									/>
-									<Grid container spacing={{ xs: 0.5, sm: 2 }}>
-										<Grid item xs={3}>
-											<Box sx={{ textAlign: "center" }}>
-												<Typography
-													variant="h5"
-													sx={{ fontWeight: 700, color: COLORS.warning.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
-												>
-													{stuckDocumentsStats.pending.total.toLocaleString("es-AR")}
-												</Typography>
-												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
-													Pendientes
-												</Typography>
-											</Box>
-										</Grid>
-										<Grid item xs={3}>
-											<Box sx={{ textAlign: "center" }}>
-												<Typography
-													variant="h5"
-													sx={{ fontWeight: 700, color: COLORS.success.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
-												>
-													{stuckDocumentsStats.totals.fixed.toLocaleString("es-AR")}
-												</Typography>
-												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
-													Reparados
-												</Typography>
-											</Box>
-										</Grid>
-										<Grid item xs={3}>
-											<Box sx={{ textAlign: "center" }}>
-												<Typography
-													variant="h5"
-													sx={{ fontWeight: 700, color: COLORS.error.main, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}
-												>
-													{stuckDocumentsStats.totals.failed.toLocaleString("es-AR")}
-												</Typography>
-												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
-													Fallidos
-												</Typography>
-											</Box>
-										</Grid>
-										<Grid item xs={3}>
-											<Box sx={{ textAlign: "center" }}>
-												<Typography variant="h5" sx={{ fontWeight: 700, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>
-													{stuckDocumentsStats.totals.processed.toLocaleString("es-AR")}
-												</Typography>
-												<Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}>
-													Total procesados
-												</Typography>
-											</Box>
-										</Grid>
-									</Grid>
-									{stuckDocumentsStats.repeatedFailures && stuckDocumentsStats.repeatedFailures.length > 0 && (
-										<Box sx={{ mt: 2, pt: 2, borderTop: `1px dashed ${theme.palette.divider}` }}>
-											<Typography variant="caption" color="error.main" fontWeight="bold">
-												{stuckDocumentsStats.repeatedFailures.length} documento(s) con fallos repetidos
+											<Typography
+												variant="subtitle1"
+												fontWeight={600}
+												sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" }, letterSpacing: "-0.005em" }}
+											>
+												Actualización PJN
 											</Typography>
+											{pjnSiteStatus && pjnSiteStatus.status === "maintenance" && (
+												<Tooltip
+													title={`Sitio PJN en mantenimiento desde ${
+														pjnSiteStatus.maintenanceSince
+															? new Date(pjnSiteStatus.maintenanceSince).toLocaleString("es-AR", {
+																	timeZone: "America/Argentina/Buenos_Aires",
+															  })
+															: "—"
+													}${pjnSiteStatus.message ? ` — ${pjnSiteStatus.message}` : ""}${
+														pjnSiteStatus.lastDetectedBy ? ` (detectado por ${pjnSiteStatus.lastDetectedBy})` : ""
+													}`}
+												>
+													<Chip
+														label="PJN en mantenimiento"
+														size="small"
+														color="warning"
+														icon={<Warning2 size={12} />}
+														onClick={(e) => {
+															e.stopPropagation();
+															navigate("/admin/causas/workers");
+														}}
+														sx={{ fontSize: "0.65rem", fontWeight: 500 }}
+													/>
+												</Tooltip>
+											)}
 										</Box>
-									)}
-									{stuckDocumentsStats.chronicStuck && stuckDocumentsStats.chronicStuck.length > 0 && (
-										<Box
-											sx={{
-												mt: stuckDocumentsStats.repeatedFailures?.length ? 1 : 2,
-												pt: stuckDocumentsStats.repeatedFailures?.length ? 0 : 2,
-												borderTop: stuckDocumentsStats.repeatedFailures?.length ? "none" : `1px dashed ${theme.palette.divider}`,
-											}}
-										>
-											<Typography variant="caption" color="error.main" fontWeight="bold">
-												{stuckDocumentsStats.chronicStuck.length} documento(s) crónicamente atorados
-												{stuckDocumentsStats.chronicStuck.some((d) => d.daysSinceFirst && d.daysSinceFirst >= 7) && (
-													<span style={{ marginLeft: 4 }}>(algunos por más de 7 días)</span>
-												)}
-											</Typography>
-										</Box>
-									)}
-								</>
-							) : (
-								<Typography variant="body2" color="text.secondary" textAlign="center">
-									No se pudieron cargar las estadísticas
-								</Typography>
-							)}
-						</Paper>
-					</Grid>
-
-					{/* Mis Causas (SSO) Update Coverage Widget */}
-					<Grid item xs={12} sm={6} md={4}>
-						<Paper
-							elevation={0}
-							onClick={() => navigate("/admin/causas/synced-credentials")}
-							sx={{
-								p: { xs: 1.5, sm: 2.5 },
-								borderRadius: 2,
-								bgcolor: theme.palette.background.paper,
-								border: `1px solid ${theme.palette.divider}`,
-								cursor: "pointer",
-								transition: "transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease",
-								height: "100%",
-								"&:hover": {
-									boxShadow: headerShadow(isDark),
-									borderColor: alpha(BRAND_BLUE, isDark ? 0.32 : 0.22),
-									transform: "translateY(-2px)",
-								},
-							}}
-						>
-							<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5, flexWrap: "wrap", gap: 0.5 }}>
-								<Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
-									<Box
-										sx={{
-											width: 28,
-											height: 28,
-											borderRadius: 1,
-											display: "flex",
-											alignItems: "center",
-											justifyContent: "center",
-											flexShrink: 0,
-											bgcolor: alpha(BRAND_BLUE, isDark ? 0.18 : 0.1),
-											border: `1px solid ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
-											color: BRAND_BLUE,
-										}}
-									>
-										<Refresh size={15} />
-									</Box>
-									<Typography
-										variant="subtitle1"
-										fontWeight={600}
-										sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" }, letterSpacing: "-0.005em" }}
-									>
-										Credenciales PJN
-									</Typography>
-									<Tooltip
-										arrow
-										title={
-											misCausasCoverage?.updatePolicy
-												? `Política de update: un mismo worker (SSO) refresca públicas y privadas dentro de la ventana ${
-														misCausasCoverage.updatePolicy.schedule
-												  }${
-														misCausasCoverage.updatePolicy.everyDay ? ", todos los días" : ", solo días hábiles"
-												  }. Fuera de esa ventana la cobertura no avanza — no es un error.${
-														misCausasCoverage.updatePolicy.enabled ? "" : " El schedule está deshabilitado en la config."
-												  } Configurable en Workers → PJN manager.`
-												: "Política de update: un mismo worker (SSO) refresca públicas y privadas dentro de su ventana horaria. Configurable en Workers → PJN manager."
-										}
-									>
-										<Box
-											component="span"
-											onClick={(e) => e.stopPropagation()}
-											sx={{ display: "inline-flex", alignItems: "center", cursor: "help", color: COLORS.neutral.light }}
-										>
-											<InfoCircle size={15} />
-										</Box>
-									</Tooltip>
-									{pjnSiteStatus && pjnSiteStatus.status === "maintenance" && (
-										<Tooltip
-											title={`Sitio PJN en mantenimiento desde ${
-												pjnSiteStatus.maintenanceSince
-													? new Date(pjnSiteStatus.maintenanceSince).toLocaleString("es-AR", {
-															timeZone: "America/Argentina/Buenos_Aires",
-													  })
-													: "—"
-											}${pjnSiteStatus.message ? ` — ${pjnSiteStatus.message}` : ""}${
-												pjnSiteStatus.lastDetectedBy ? ` (detectado por ${pjnSiteStatus.lastDetectedBy})` : ""
-											}`}
-										>
+										<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
 											<Chip
-												label="PJN en mantenimiento"
+												label="PJN"
 												size="small"
-												color="warning"
-												icon={<Warning2 size={12} />}
-												onClick={(e) => {
-													e.stopPropagation();
-													navigate("/admin/causas/workers");
+												sx={{
+													bgcolor: alpha(BRAND_BLUE, isDark ? 0.15 : 0.09),
+													color: BRAND_BLUE,
+													fontWeight: 600,
+													fontSize: "0.65rem",
+													height: 20,
+													border: `1px solid ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
 												}}
-												sx={{ fontSize: "0.65rem", fontWeight: 500 }}
 											/>
-										</Tooltip>
-									)}
-								</Box>
-								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-									<Chip
-										label="SSO"
-										size="small"
-										sx={{
-											bgcolor: alpha(BRAND_BLUE, isDark ? 0.15 : 0.09),
-											color: BRAND_BLUE,
-											fontWeight: 600,
-											fontSize: "0.65rem",
-											height: 20,
-											border: `1px solid ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
-										}}
-									/>
-									<ArrowRight2 size={16} style={{ color: COLORS.neutral.light }} />
-								</Box>
-							</Box>
+											<ArrowRight2 size={16} style={{ color: COLORS.neutral.light }} />
+										</Box>
+									</Box>
 
-							{loadingMisCausasCoverage ? (
-								<Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
-									<Skeleton variant="rectangular" width="100%" height={60} sx={{ borderRadius: 1 }} />
-								</Box>
-							) : misCausasCoverage ? (
-								(() => {
-									// Doble barra: públicas (isPrivate≠true) + privadas (isPrivate===true).
-									// Juntas cubren la totalidad de causas de pjn-mis-causas. Fallback al
-									// shape viejo (sin split) mientras el backend no devuelva los buckets.
-									const publicas = misCausasCoverage.publicas ?? {
-										coveragePercent: misCausasCoverage.coveragePercent,
-										updatedToday: misCausasCoverage.updatedToday,
-										total: misCausasCoverage.total,
-										pending: misCausasCoverage.pending,
-										withErrors: misCausasCoverage.withErrors,
-										schedule: "08:00–23:00 h",
-									};
-									const privadas = misCausasCoverage.privadas ?? {
-										coveragePercent: 0,
-										updatedToday: 0,
-										total: 0,
-										pending: 0,
-										withErrors: 0,
-										schedule: "08:00–23:00 h",
-									};
-									const barColor = (p: number) => (p >= 99 ? COLORS.success.main : p > 70 ? COLORS.warning.main : COLORS.error.main);
-									const renderLine = (label: string, b: typeof publicas, accent: string) => (
-										<Box sx={{ mb: 1.5 }}>
-											<Box sx={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", mb: 0.25, gap: 1 }}>
-												<Box sx={{ display: "flex", alignItems: "baseline", gap: 0.75, minWidth: 0 }}>
-													<Typography variant="body2" fontWeight={600}>
-														{label}
-													</Typography>
-													<Typography variant="caption" color="text.secondary" noWrap>
-														{b.schedule}
-													</Typography>
-												</Box>
-												<Typography variant="h6" fontWeight="bold" sx={{ color: accent, flexShrink: 0 }}>
-													{b.coveragePercent}%
+									{loadingEligibility ? (
+										<Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
+											<Skeleton variant="rectangular" width="100%" height={60} sx={{ borderRadius: 1 }} />
+										</Box>
+									) : eligibilityStats ? (
+										<>
+											<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
+												<Typography variant="body2" color="text.secondary">
+													Cobertura hoy
+												</Typography>
+												<Typography
+													variant="h6"
+													fontWeight="bold"
+													sx={{
+														fontVariantNumeric: "tabular-nums",
+														color:
+															(eligibilityStats.coveragePercent || 0) > 90
+																? COLORS.success.main
+																: (eligibilityStats.coveragePercent || 0) > 70
+																? COLORS.warning.main
+																: COLORS.error.main,
+													}}
+												>
+													{eligibilityStats.coveragePercent}%
 												</Typography>
 											</Box>
 											<LinearProgress
 												variant="determinate"
-												value={b.coveragePercent || 0}
+												value={eligibilityStats.coveragePercent || 0}
 												sx={{
 													height: 8,
 													borderRadius: 4,
+													mb: 2,
 													backgroundColor: alpha(COLORS.neutral.light, 0.3),
-													"& .MuiLinearProgress-bar": { borderRadius: 4, backgroundColor: accent },
+													"& .MuiLinearProgress-bar": {
+														borderRadius: 4,
+														backgroundColor:
+															(eligibilityStats.coveragePercent || 0) > 90
+																? COLORS.success.main
+																: (eligibilityStats.coveragePercent || 0) > 70
+																? COLORS.warning.main
+																: COLORS.error.main,
+													},
 												}}
 											/>
-											<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.25 }}>
-												{b.updatedToday.toLocaleString("es-AR")}/{b.total.toLocaleString("es-AR")} actualizadas hoy
-												{b.pending > 0 ? ` · ${b.pending.toLocaleString("es-AR")} pendientes` : ""}
-												{b.withErrors > 0 && (
-													<Box
-														component="span"
-														onClick={(e) => {
-															e.stopPropagation();
-															navigate("/admin/causas/synced-credentials?conErrores=1");
-														}}
-														sx={{
-															color: COLORS.error.main,
-															fontWeight: 600,
-															cursor: "pointer",
-															"&:hover": { textDecoration: "underline" },
-														}}
-													>
-														{` · ${b.withErrors.toLocaleString("es-AR")} con errores`}
+											<Grid container spacing={{ xs: 0.5, sm: 2 }}>
+												<Grid item xs={3}>
+													<Box sx={{ textAlign: "center" }}>
+														<Typography
+															variant="h5"
+															sx={{
+																fontWeight: 700,
+																color: COLORS.success.main,
+																letterSpacing: "-0.02em",
+																fontVariantNumeric: "tabular-nums",
+															}}
+														>
+															{eligibilityStats.updatedToday.toLocaleString("es-AR")}
+														</Typography>
+														<Typography
+															variant="caption"
+															color="text.secondary"
+															sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}
+														>
+															Actualizados hoy
+														</Typography>
 													</Box>
-												)}
-											</Typography>
-										</Box>
-									);
-									return (
-										<>
-											{renderLine("Públicas", publicas, barColor(publicas.coveragePercent || 0))}
-											{renderLine("Privadas", privadas, barColor(privadas.coveragePercent || 0))}
-											{misCausasCoverage.activeCredentials != null && (
-												<CredentialsStat
-													count={misCausasCoverage.activeCredentials}
-													tooltip="Credenciales PJN activas (habilitadas y válidas)"
-												/>
+												</Grid>
+												<Grid item xs={3}>
+													<Box sx={{ textAlign: "center" }}>
+														<Typography
+															variant="h5"
+															sx={{
+																fontWeight: 700,
+																color: COLORS.warning.main,
+																letterSpacing: "-0.02em",
+																fontVariantNumeric: "tabular-nums",
+															}}
+														>
+															{(
+																eligibilityStats.pendingToday ??
+																eligibilityStats.eligible - eligibilityStats.updatedToday - eligibilityStats.eligibleWithErrors
+															).toLocaleString("es-AR")}
+														</Typography>
+														<Typography
+															variant="caption"
+															color="text.secondary"
+															sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}
+														>
+															Pendientes hoy
+														</Typography>
+													</Box>
+												</Grid>
+												<Grid item xs={3}>
+													<Box sx={{ textAlign: "center" }}>
+														<Typography
+															variant="h5"
+															sx={{
+																fontWeight: 700,
+																color: COLORS.error.main,
+																letterSpacing: "-0.02em",
+																fontVariantNumeric: "tabular-nums",
+															}}
+														>
+															{eligibilityStats.eligibleWithErrors.toLocaleString("es-AR")}
+														</Typography>
+														<Typography
+															variant="caption"
+															color="text.secondary"
+															sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}
+														>
+															Con errores
+														</Typography>
+													</Box>
+												</Grid>
+												<Grid item xs={3}>
+													<Box sx={{ textAlign: "center" }}>
+														<Typography variant="h5" sx={{ fontWeight: 700, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>
+															{eligibilityStats.eligible.toLocaleString("es-AR")}
+														</Typography>
+														<Typography
+															variant="caption"
+															color="text.secondary"
+															sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}
+														>
+															Total elegibles
+														</Typography>
+													</Box>
+												</Grid>
+											</Grid>
+											{(eligibilityStats.waitingArchivo ?? 0) > 0 && (
+												<Typography
+													variant="caption"
+													color="text.secondary"
+													sx={{ display: "block", textAlign: "center", mt: 1.5, fontSize: { xs: "0.65rem", sm: "0.72rem" } }}
+												>
+													+{(eligibilityStats.waitingArchivo ?? 0).toLocaleString("es-AR")} de carpetas archivadas o sin carpeta · se
+													actualizan cada {eligibilityStats.archivoThresholdHours ?? 24} h · no cuentan en la cobertura de hoy
+												</Typography>
 											)}
 										</>
-									);
-								})()
-							) : (
-								<Typography variant="body2" color="text.secondary" textAlign="center">
-									No se pudieron cargar las estadísticas
-								</Typography>
-							)}
-						</Paper>
-					</Grid>
+									) : (
+										<Typography variant="body2" color="text.secondary" textAlign="center">
+											No se pudieron cargar las estadísticas
+										</Typography>
+									)}
+								</Paper>
+							</Grid>
 
-					{/* Card: salud por credencial — credenciales sanas con causas en problema.
-					    Cubre el caso "credencial verde pero 100% de sus causas rotas", invisible
-					    en el agregado global. Datos del cron credential-health-monitor. */}
-					{healthAnomalies.length > 0 && (
-						<Grid item xs={12}>
-							<Paper
-								elevation={0}
-								sx={{
-									p: { xs: 1.5, sm: 2.5 },
-									borderRadius: 2,
-									bgcolor: theme.palette.background.paper,
-									border: `1px solid ${alpha(theme.palette.warning.main, 0.5)}`,
-								}}
-							>
-								<Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
-									<Box
-										sx={{
-											width: 28,
-											height: 28,
-											borderRadius: 1,
-											display: "flex",
-											alignItems: "center",
-											justifyContent: "center",
-											flexShrink: 0,
-											bgcolor: alpha(theme.palette.warning.main, isDark ? 0.18 : 0.1),
-											border: `1px solid ${alpha(theme.palette.warning.main, isDark ? 0.32 : 0.18)}`,
-											color: theme.palette.warning.main,
-										}}
-									>
-										<Warning2 size={15} />
-									</Box>
-									<Typography variant="subtitle1" fontWeight={600} sx={{ letterSpacing: "-0.005em" }}>
-										Credenciales con causas en problema
-									</Typography>
-									<Box sx={{ ml: "auto" }}>
-										<Typography variant="caption" color="text.secondary">
-											{healthAnomaliesMeta?.lastEvaluatedAt
-												? `Último chequeo: ${new Date(healthAnomaliesMeta.lastEvaluatedAt).toLocaleString("es-AR")}`
-												: ""}
-										</Typography>
-									</Box>
-								</Box>
-								<Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-									Credenciales habilitadas y válidas con ≥50% de sus causas con error o sin captura. Clic para ver sus causas.
-								</Typography>
-								{healthAnomalies.map((a) => (
-									<Box
-										key={a.credentialId}
-										component={RouterLink}
-										to={`/admin/causas/synced-credentials?credentialId=${a.credentialId}&conErrores=1`}
-										sx={{
-											textDecoration: "none",
-											color: "inherit",
-											display: "flex",
-											alignItems: "center",
-											justifyContent: "space-between",
-											gap: 1,
-											py: 0.75,
-											px: 1,
-											borderRadius: 1,
-											cursor: "pointer",
-											transition: "background-color 0.15s ease",
-											"&:hover": { bgcolor: theme.palette.action.hover },
-										}}
-									>
-										<Typography variant="body2" fontWeight={500} noWrap sx={{ minWidth: 0 }}>
-											{a.userEmail || a.userName || a.credentialId}
-										</Typography>
-										<Box sx={{ display: "flex", alignItems: "center", gap: 2, flexShrink: 0 }}>
-											<Typography variant="caption" color="error.main">
-												{a.problem}/{a.total} con problema
-												{a.sinCaptura > 0 ? ` · ${a.sinCaptura} sin captura` : ""}
-											</Typography>
-											<Typography variant="caption" color="text.secondary">
-												cobertura {a.coveragePercent ?? "—"}%
+							{/* MEV Update Coverage Widget */}
+							<Grid item xs={12} sm={6} md={4}>
+								<Paper
+									elevation={0}
+									component={RouterLink}
+									to="/admin/mev/verified-app"
+									sx={{
+										textDecoration: "none",
+										color: "inherit",
+										display: "block",
+										p: { xs: 1.5, sm: 2.5 },
+										borderRadius: 2,
+										bgcolor: theme.palette.background.paper,
+										border: `1px solid ${theme.palette.divider}`,
+										cursor: "pointer",
+										transition: "transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease",
+										height: "100%",
+										"&:hover": {
+											boxShadow: headerShadow(isDark),
+											borderColor: alpha(BRAND_BLUE, isDark ? 0.32 : 0.22),
+											transform: "translateY(-2px)",
+										},
+									}}
+								>
+									<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
+										<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+											<Box
+												sx={{
+													width: 28,
+													height: 28,
+													borderRadius: 1,
+													display: "flex",
+													alignItems: "center",
+													justifyContent: "center",
+													flexShrink: 0,
+													bgcolor: alpha(BRAND_BLUE, isDark ? 0.18 : 0.1),
+													border: `1px solid ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
+													color: BRAND_BLUE,
+												}}
+											>
+												<Refresh size={15} />
+											</Box>
+											<Typography
+												variant="subtitle1"
+												fontWeight={600}
+												sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" }, letterSpacing: "-0.005em" }}
+											>
+												Actualización MEV
 											</Typography>
 										</Box>
-									</Box>
-								))}
-							</Paper>
-						</Grid>
-					)}
-
-					{/* SCBA Update Coverage Widget */}
-					<Grid item xs={12} sm={6} md={4}>
-						<Paper
-							elevation={0}
-							onClick={() => navigate("/admin/mev/causes-by-credential")}
-							sx={{
-								p: { xs: 1.5, sm: 2.5 },
-								borderRadius: 2,
-								bgcolor: theme.palette.background.paper,
-								border: `1px solid ${theme.palette.divider}`,
-								cursor: "pointer",
-								transition: "transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease",
-								height: "100%",
-								"&:hover": {
-									boxShadow: headerShadow(isDark),
-									borderColor: alpha(BRAND_BLUE, isDark ? 0.32 : 0.22),
-									transform: "translateY(-2px)",
-								},
-							}}
-						>
-							<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
-								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-									<Box
-										sx={{
-											width: 28,
-											height: 28,
-											borderRadius: 1,
-											display: "flex",
-											alignItems: "center",
-											justifyContent: "center",
-											flexShrink: 0,
-											bgcolor: alpha(BRAND_BLUE, isDark ? 0.18 : 0.1),
-											border: `1px solid ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
-											color: BRAND_BLUE,
-										}}
-									>
-										<Refresh size={15} />
-									</Box>
-									<Typography
-										variant="subtitle1"
-										fontWeight={600}
-										sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" }, letterSpacing: "-0.005em" }}
-									>
-										Credenciales SCBA
-									</Typography>
-									<Tooltip
-										arrow
-										title={
-											scbaCoverage?.updatePolicyMode === "unified"
-												? `Política de update UNIFICADA: activas y archivadas se refrescan juntas en la ventana del update (${scbaCoverage?.active?.schedule ?? "ver SCBA manager"}). El desglose se mantiene para ver cada segmento por separado. Configurable en Workers → SCBA manager.`
-												: `Política de update DIVIDIDA: las causas con carpeta activa se refrescan en la ventana del update (${scbaCoverage?.active?.schedule ?? "ver SCBA manager"}). Las de carpeta archivada se actualizan en su ventana propia (${scbaCoverage?.archived?.schedule ?? "madrugada"}) y solo si pasaron +24 h, por eso no suman a la cobertura del día hasta esa ventana — no es un error. Configurable en Workers → SCBA manager.`
-										}
-									>
-										<Box
-											component="span"
-											onClick={(e) => e.stopPropagation()}
-											sx={{ display: "inline-flex", alignItems: "center", cursor: "help", color: COLORS.neutral.light }}
-										>
-											<InfoCircle size={15} />
+										<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+											<Chip
+												label="MEV"
+												size="small"
+												sx={{
+													bgcolor: alpha(COLORS.neutral.main, 0.1),
+													color: COLORS.neutral.main,
+													fontWeight: 500,
+													fontSize: "0.65rem",
+												}}
+											/>
+											<ArrowRight2 size={16} style={{ color: COLORS.neutral.light }} />
 										</Box>
-									</Tooltip>
-								</Box>
-								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-									<Chip
-										label="SCBA"
-										size="small"
-										sx={{
-											bgcolor: alpha(BRAND_BLUE, isDark ? 0.15 : 0.09),
-											color: BRAND_BLUE,
-											fontWeight: 600,
-											fontSize: "0.65rem",
-											height: 20,
-											border: `1px solid ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
-										}}
-									/>
-									<ArrowRight2 size={16} style={{ color: COLORS.neutral.light }} />
-								</Box>
-							</Box>
+									</Box>
 
-							{loadingScbaCoverage ? (
-								<Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
-									<Skeleton variant="rectangular" width="100%" height={60} sx={{ borderRadius: 1 }} />
-								</Box>
-							) : scbaCoverage ? (
-								(() => {
-									const unified = scbaCoverage.updatePolicyMode === "unified";
-									const active = scbaCoverage.active ?? {
-										coveragePercent: scbaCoverage.coveragePercent,
-										updatedToday: scbaCoverage.updatedToday,
-										total: scbaCoverage.total,
-										pending: scbaCoverage.pending,
-										withErrors: scbaCoverage.withErrors,
-										schedule: "ventana del update (ver SCBA manager)",
-									};
-									const archived = scbaCoverage.archived ?? {
-										coveragePercent: 0,
-										updatedToday: 0,
-										total: 0,
-										pending: 0,
-										withErrors: 0,
-										schedule: unified ? "ventana del update (unificado)" : "madrugada (4-6 h)",
-									};
-									const barColor = (p: number) => (p >= 99 ? COLORS.success.main : p > 70 ? COLORS.warning.main : COLORS.error.main);
-									const renderLine = (label: string, b: typeof active, big: boolean, accent: string) => (
-										<Box sx={{ mb: big ? 1.5 : 0 }}>
-											<Box sx={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", mb: 0.25, gap: 1 }}>
-												<Box sx={{ display: "flex", alignItems: "baseline", gap: 0.75, minWidth: 0 }}>
-													<Typography variant="body2" fontWeight={600}>
-														{label}
-													</Typography>
-													<Typography variant="caption" color="text.secondary" noWrap>
-														{b.schedule}
-													</Typography>
-												</Box>
-												<Typography variant={big ? "h6" : "subtitle2"} fontWeight="bold" sx={{ color: accent, flexShrink: 0 }}>
-													{b.coveragePercent}%
+									{loadingMevEligibility ? (
+										<Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
+											<Skeleton variant="rectangular" width="100%" height={60} sx={{ borderRadius: 1 }} />
+										</Box>
+									) : mevEligibilityStats ? (
+										<>
+											<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
+												<Typography variant="body2" color="text.secondary">
+													Cobertura hoy
+												</Typography>
+												<Typography
+													variant="h6"
+													fontWeight="bold"
+													sx={{
+														fontVariantNumeric: "tabular-nums",
+														color:
+															(mevEligibilityStats.coveragePercent || 0) > 90
+																? COLORS.success.main
+																: (mevEligibilityStats.coveragePercent || 0) > 70
+																? COLORS.warning.main
+																: COLORS.error.main,
+													}}
+												>
+													{mevEligibilityStats.coveragePercent}%
 												</Typography>
 											</Box>
 											<LinearProgress
 												variant="determinate"
-												value={b.coveragePercent || 0}
+												value={mevEligibilityStats.coveragePercent || 0}
 												sx={{
-													height: big ? 8 : 6,
+													height: 8,
 													borderRadius: 4,
+													mb: 2,
 													backgroundColor: alpha(COLORS.neutral.light, 0.3),
-													"& .MuiLinearProgress-bar": { borderRadius: 4, backgroundColor: accent },
+													"& .MuiLinearProgress-bar": {
+														borderRadius: 4,
+														backgroundColor:
+															(mevEligibilityStats.coveragePercent || 0) > 90
+																? COLORS.success.main
+																: (mevEligibilityStats.coveragePercent || 0) > 70
+																? COLORS.warning.main
+																: COLORS.error.main,
+													},
 												}}
 											/>
-											<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.25 }}>
-												{b.updatedToday.toLocaleString("es-AR")}/{b.total.toLocaleString("es-AR")} actualizadas hoy
-												{b.withErrors > 0 ? ` · ${b.withErrors} con errores` : ""}
-											</Typography>
-										</Box>
-									);
-									return (
-										<>
-											{renderLine("Activas", active, true, barColor(active.coveragePercent || 0))}
-											{/* En modo unificado las archivadas se refrescan en el día: aplica el mismo semáforo. En split, color neutro (su ventana es nocturna). */}
-											{renderLine("Archivadas", archived, false, unified ? barColor(archived.coveragePercent || 0) : COLORS.primary.light)}
-											{scbaCoverage.activeCredentials !== undefined && (
-												<CredentialsStat
-													count={scbaCoverage.activeCredentials}
-													tooltip="Credenciales SCBA activas (habilitadas y válidas)"
-												/>
+											<Grid container spacing={{ xs: 0.5, sm: 2 }}>
+												<Grid item xs={3}>
+													<Box sx={{ textAlign: "center" }}>
+														<Typography
+															variant="h5"
+															sx={{
+																fontWeight: 700,
+																color: COLORS.success.main,
+																letterSpacing: "-0.02em",
+																fontVariantNumeric: "tabular-nums",
+															}}
+														>
+															{mevEligibilityStats.updatedToday.toLocaleString("es-AR")}
+														</Typography>
+														<Typography
+															variant="caption"
+															color="text.secondary"
+															sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}
+														>
+															Actualizados hoy
+														</Typography>
+													</Box>
+												</Grid>
+												<Grid item xs={3}>
+													<Box sx={{ textAlign: "center" }}>
+														<Typography
+															variant="h5"
+															sx={{
+																fontWeight: 700,
+																color: COLORS.warning.main,
+																letterSpacing: "-0.02em",
+																fontVariantNumeric: "tabular-nums",
+															}}
+														>
+															{(
+																mevEligibilityStats.pendingToday ??
+																mevEligibilityStats.eligible - mevEligibilityStats.updatedToday - mevEligibilityStats.eligibleWithErrors
+															).toLocaleString("es-AR")}
+														</Typography>
+														<Typography
+															variant="caption"
+															color="text.secondary"
+															sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}
+														>
+															Pendientes hoy
+														</Typography>
+													</Box>
+												</Grid>
+												<Grid item xs={3}>
+													<Box sx={{ textAlign: "center" }}>
+														<Typography
+															variant="h5"
+															sx={{
+																fontWeight: 700,
+																color: COLORS.error.main,
+																letterSpacing: "-0.02em",
+																fontVariantNumeric: "tabular-nums",
+															}}
+														>
+															{mevEligibilityStats.eligibleWithErrors.toLocaleString("es-AR")}
+														</Typography>
+														<Typography
+															variant="caption"
+															color="text.secondary"
+															sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}
+														>
+															Con errores
+														</Typography>
+													</Box>
+												</Grid>
+												<Grid item xs={3}>
+													<Box sx={{ textAlign: "center" }}>
+														<Typography
+															variant="h5"
+															sx={{
+																fontWeight: 700,
+																color: COLORS.neutral.main,
+																letterSpacing: "-0.02em",
+																fontVariantNumeric: "tabular-nums",
+															}}
+														>
+															{mevEligibilityStats.eligible.toLocaleString("es-AR")}
+														</Typography>
+														<Typography
+															variant="caption"
+															color="text.secondary"
+															sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}
+														>
+															Total elegibles
+														</Typography>
+													</Box>
+												</Grid>
+											</Grid>
+											{(mevEligibilityStats.noCredential ?? 0) > 0 && (
+												<Tooltip
+													arrow
+													title="Elegibles cuyo usuario no tiene credencial MEV habilitada. Los workers las omiten (no se puede entrar al portal sin credencial), así que no cuentan como pendientes ni en la cobertura."
+												>
+													<Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 0.5, mt: 1.5, cursor: "help" }}>
+														<LockSlash size={13} color={COLORS.neutral.main} />
+														<Typography variant="caption" color="text.secondary">
+															<strong>{(mevEligibilityStats.noCredential ?? 0).toLocaleString("es-AR")}</strong> sin credencial (no
+															actualizables)
+														</Typography>
+													</Box>
+												</Tooltip>
 											)}
 										</>
-									);
-								})()
-							) : (
-								<Typography variant="body2" color="text.secondary" textAlign="center">
-									No se pudieron cargar las estadísticas
-								</Typography>
+									) : (
+										<Typography variant="body2" color="text.secondary" textAlign="center">
+											No se pudieron cargar las estadísticas
+										</Typography>
+									)}
+								</Paper>
+							</Grid>
+
+							{/* EJE Update Coverage Widget */}
+							<Grid item xs={12} sm={6} md={4}>
+								<Paper
+									elevation={0}
+									component={RouterLink}
+									to="/admin/eje/verified-app"
+									sx={{
+										textDecoration: "none",
+										color: "inherit",
+										display: "block",
+										p: { xs: 1.5, sm: 2.5 },
+										borderRadius: 2,
+										bgcolor: theme.palette.background.paper,
+										border: `1px solid ${theme.palette.divider}`,
+										cursor: "pointer",
+										transition: "transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease",
+										height: "100%",
+										"&:hover": {
+											boxShadow: headerShadow(isDark),
+											borderColor: alpha(BRAND_BLUE, isDark ? 0.32 : 0.22),
+											transform: "translateY(-2px)",
+										},
+									}}
+								>
+									<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
+										<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+											<Box
+												sx={{
+													width: 28,
+													height: 28,
+													borderRadius: 1,
+													display: "flex",
+													alignItems: "center",
+													justifyContent: "center",
+													flexShrink: 0,
+													bgcolor: alpha(BRAND_BLUE, isDark ? 0.18 : 0.1),
+													border: `1px solid ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
+													color: BRAND_BLUE,
+												}}
+											>
+												<Refresh size={15} />
+											</Box>
+											<Typography
+												variant="subtitle1"
+												fontWeight={600}
+												sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" }, letterSpacing: "-0.005em" }}
+											>
+												Actualización EJE
+											</Typography>
+										</Box>
+										<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+											<Chip
+												label="EJE"
+												size="small"
+												sx={{
+													bgcolor: alpha(COLORS.success.main, 0.1),
+													color: COLORS.success.main,
+													fontWeight: 500,
+													fontSize: "0.65rem",
+												}}
+											/>
+											<ArrowRight2 size={16} style={{ color: COLORS.neutral.light }} />
+										</Box>
+									</Box>
+
+									{loadingEjeEligibility ? (
+										<Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
+											<Skeleton variant="rectangular" width="100%" height={60} sx={{ borderRadius: 1 }} />
+										</Box>
+									) : ejeEligibilityStats ? (
+										<>
+											<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
+												<Typography variant="body2" color="text.secondary">
+													Cobertura hoy
+												</Typography>
+												<Typography
+													variant="h6"
+													fontWeight="bold"
+													sx={{
+														fontVariantNumeric: "tabular-nums",
+														color:
+															(ejeEligibilityStats.coveragePercent || 0) > 90
+																? COLORS.success.main
+																: (ejeEligibilityStats.coveragePercent || 0) > 70
+																? COLORS.warning.main
+																: COLORS.error.main,
+													}}
+												>
+													{formatPercent(ejeEligibilityStats.coveragePercent, 1)}
+												</Typography>
+											</Box>
+											<LinearProgress
+												variant="determinate"
+												value={ejeEligibilityStats.coveragePercent || 0}
+												sx={{
+													height: 8,
+													borderRadius: 4,
+													mb: 2,
+													backgroundColor: alpha(COLORS.neutral.light, 0.3),
+													"& .MuiLinearProgress-bar": {
+														borderRadius: 4,
+														backgroundColor:
+															(ejeEligibilityStats.coveragePercent || 0) > 90
+																? COLORS.success.main
+																: (ejeEligibilityStats.coveragePercent || 0) > 70
+																? COLORS.warning.main
+																: COLORS.error.main,
+													},
+												}}
+											/>
+											<Grid container spacing={{ xs: 0.5, sm: 2 }}>
+												<Grid item xs={3}>
+													<Box sx={{ textAlign: "center" }}>
+														<Typography
+															variant="h5"
+															sx={{
+																fontWeight: 700,
+																color: COLORS.success.main,
+																letterSpacing: "-0.02em",
+																fontVariantNumeric: "tabular-nums",
+															}}
+														>
+															{ejeEligibilityStats.actualizadosHoy.toLocaleString("es-AR")}
+														</Typography>
+														<Typography
+															variant="caption"
+															color="text.secondary"
+															sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}
+														>
+															Actualizados hoy
+														</Typography>
+													</Box>
+												</Grid>
+												<Grid item xs={3}>
+													<Box sx={{ textAlign: "center" }}>
+														<Typography
+															variant="h5"
+															sx={{
+																fontWeight: 700,
+																color: COLORS.warning.main,
+																letterSpacing: "-0.02em",
+																fontVariantNumeric: "tabular-nums",
+															}}
+														>
+															{ejeEligibilityStats.pendientesHoy.toLocaleString("es-AR")}
+														</Typography>
+														<Typography
+															variant="caption"
+															color="text.secondary"
+															sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}
+														>
+															Pendientes hoy
+														</Typography>
+													</Box>
+												</Grid>
+												<Grid item xs={3}>
+													<Box sx={{ textAlign: "center" }}>
+														<Typography
+															variant="h5"
+															sx={{
+																fontWeight: 700,
+																color: COLORS.success.main,
+																letterSpacing: "-0.02em",
+																fontVariantNumeric: "tabular-nums",
+															}}
+														>
+															{ejeEligibilityStats.totalElegibles.toLocaleString("es-AR")}
+														</Typography>
+														<Typography
+															variant="caption"
+															color="text.secondary"
+															sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}
+														>
+															Total elegibles
+														</Typography>
+													</Box>
+												</Grid>
+												<Grid item xs={3}>
+													<Box sx={{ textAlign: "center" }}>
+														<Typography
+															variant="h5"
+															sx={{
+																fontWeight: 700,
+																color: COLORS.neutral.main,
+																letterSpacing: "-0.02em",
+																fontVariantNumeric: "tabular-nums",
+															}}
+														>
+															{ejeEligibilityStats.noElegibles.toLocaleString("es-AR")}
+														</Typography>
+														<Typography
+															variant="caption"
+															color="text.secondary"
+															sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}
+														>
+															No elegibles
+														</Typography>
+													</Box>
+												</Grid>
+											</Grid>
+										</>
+									) : (
+										<Typography variant="body2" color="text.secondary" textAlign="center">
+											No se pudieron cargar las estadísticas
+										</Typography>
+									)}
+								</Paper>
+							</Grid>
+
+							{/* PJ Salta Update Coverage Widget */}
+							<Grid item xs={12} sm={6} md={4}>
+								<Paper
+									elevation={0}
+									component={RouterLink}
+									to="/admin/pjsalta/verified-app"
+									sx={{
+										textDecoration: "none",
+										color: "inherit",
+										display: "block",
+										p: { xs: 1.5, sm: 2.5 },
+										borderRadius: 2,
+										bgcolor: theme.palette.background.paper,
+										border: `1px solid ${theme.palette.divider}`,
+										cursor: "pointer",
+										transition: "transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease",
+										height: "100%",
+										"&:hover": {
+											boxShadow: headerShadow(isDark),
+											borderColor: alpha(BRAND_BLUE, isDark ? 0.32 : 0.22),
+											transform: "translateY(-2px)",
+										},
+									}}
+								>
+									<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
+										<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+											<Box
+												sx={{
+													width: 28,
+													height: 28,
+													borderRadius: 1,
+													display: "flex",
+													alignItems: "center",
+													justifyContent: "center",
+													flexShrink: 0,
+													bgcolor: alpha(BRAND_BLUE, isDark ? 0.18 : 0.1),
+													border: `1px solid ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
+													color: BRAND_BLUE,
+												}}
+											>
+												<Refresh size={15} />
+											</Box>
+											<Typography
+												variant="subtitle1"
+												fontWeight={600}
+												sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" }, letterSpacing: "-0.005em" }}
+											>
+												Actualización Salta
+											</Typography>
+										</Box>
+										<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+											<Chip
+												label="Salta"
+												size="small"
+												sx={{
+													bgcolor: alpha(COLORS.success.main, 0.1),
+													color: COLORS.success.main,
+													fontWeight: 500,
+													fontSize: "0.65rem",
+												}}
+											/>
+											<ArrowRight2 size={16} style={{ color: COLORS.neutral.light }} />
+										</Box>
+									</Box>
+
+									{loadingPjsaltaEligibility ? (
+										<Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
+											<Skeleton variant="rectangular" width="100%" height={60} sx={{ borderRadius: 1 }} />
+										</Box>
+									) : pjsaltaEligibilityStats ? (
+										<>
+											<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
+												<Typography variant="body2" color="text.secondary">
+													Cobertura hoy
+												</Typography>
+												<Typography
+													variant="h6"
+													fontWeight="bold"
+													sx={{
+														fontVariantNumeric: "tabular-nums",
+														color:
+															(pjsaltaEligibilityStats.coveragePercent || 0) > 90
+																? COLORS.success.main
+																: (pjsaltaEligibilityStats.coveragePercent || 0) > 70
+																? COLORS.warning.main
+																: COLORS.error.main,
+													}}
+												>
+													{formatPercent(pjsaltaEligibilityStats.coveragePercent, 1)}
+												</Typography>
+											</Box>
+											<LinearProgress
+												variant="determinate"
+												value={pjsaltaEligibilityStats.coveragePercent || 0}
+												sx={{
+													height: 8,
+													borderRadius: 4,
+													mb: 2,
+													backgroundColor: alpha(COLORS.neutral.light, 0.3),
+													"& .MuiLinearProgress-bar": {
+														borderRadius: 4,
+														backgroundColor:
+															(pjsaltaEligibilityStats.coveragePercent || 0) > 90
+																? COLORS.success.main
+																: (pjsaltaEligibilityStats.coveragePercent || 0) > 70
+																? COLORS.warning.main
+																: COLORS.error.main,
+													},
+												}}
+											/>
+											{/* Ventana de trabajo y umbral, leídos de la config del manager
+									    (no hardcodeados): sin esto no se puede saber si una cobertura
+									    baja es un problema o simplemente que la jornada no empezó. */}
+											<Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1.5 }}>
+												Ventana {pjsaltaEligibilityStats.schedule ?? "—"}
+												{pjsaltaEligibilityStats.thresholdHours ? ` · cada ${pjsaltaEligibilityStats.thresholdHours} h` : ""}
+											</Typography>
+											<Grid container spacing={{ xs: 0.5, sm: 2 }}>
+												<Grid item xs={3}>
+													<Box sx={{ textAlign: "center" }}>
+														<Typography
+															variant="h5"
+															sx={{
+																fontWeight: 700,
+																color: COLORS.success.main,
+																letterSpacing: "-0.02em",
+																fontVariantNumeric: "tabular-nums",
+															}}
+														>
+															{pjsaltaEligibilityStats.actualizadosHoy.toLocaleString("es-AR")}
+														</Typography>
+														<Typography
+															variant="caption"
+															color="text.secondary"
+															sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}
+														>
+															Actualizados hoy
+														</Typography>
+													</Box>
+												</Grid>
+												<Grid item xs={3}>
+													<Box sx={{ textAlign: "center" }}>
+														<Typography
+															variant="h5"
+															sx={{
+																fontWeight: 700,
+																color: COLORS.warning.main,
+																letterSpacing: "-0.02em",
+																fontVariantNumeric: "tabular-nums",
+															}}
+														>
+															{pjsaltaEligibilityStats.pendientesHoy.toLocaleString("es-AR")}
+														</Typography>
+														<Typography
+															variant="caption"
+															color="text.secondary"
+															sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}
+														>
+															Pendientes hoy
+														</Typography>
+													</Box>
+												</Grid>
+												<Grid item xs={3}>
+													<Box sx={{ textAlign: "center" }}>
+														<Typography
+															variant="h5"
+															sx={{
+																fontWeight: 700,
+																color: COLORS.success.main,
+																letterSpacing: "-0.02em",
+																fontVariantNumeric: "tabular-nums",
+															}}
+														>
+															{pjsaltaEligibilityStats.totalElegibles.toLocaleString("es-AR")}
+														</Typography>
+														<Typography
+															variant="caption"
+															color="text.secondary"
+															sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}
+														>
+															Total elegibles
+														</Typography>
+													</Box>
+												</Grid>
+												<Grid item xs={3}>
+													<Box sx={{ textAlign: "center" }}>
+														<Typography
+															variant="h5"
+															sx={{
+																fontWeight: 700,
+																color: COLORS.neutral.main,
+																letterSpacing: "-0.02em",
+																fontVariantNumeric: "tabular-nums",
+															}}
+														>
+															{pjsaltaEligibilityStats.noElegibles.toLocaleString("es-AR")}
+														</Typography>
+														<Typography
+															variant="caption"
+															color="text.secondary"
+															sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}
+														>
+															No elegibles
+														</Typography>
+													</Box>
+												</Grid>
+											</Grid>
+										</>
+									) : (
+										<Typography variant="body2" color="text.secondary" textAlign="center">
+											No se pudieron cargar las estadísticas
+										</Typography>
+									)}
+								</Paper>
+							</Grid>
+
+							{/* PJ Catamarca Update Coverage Widget */}
+							<Grid item xs={12} sm={6} md={4}>
+								<Paper
+									elevation={0}
+									component={RouterLink}
+									to="/admin/pjcatamarca/verified-app"
+									sx={{
+										textDecoration: "none",
+										color: "inherit",
+										display: "block",
+										p: { xs: 1.5, sm: 2.5 },
+										borderRadius: 2,
+										bgcolor: theme.palette.background.paper,
+										border: `1px solid ${theme.palette.divider}`,
+										cursor: "pointer",
+										transition: "transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease",
+										height: "100%",
+										"&:hover": {
+											boxShadow: headerShadow(isDark),
+											borderColor: alpha(BRAND_BLUE, isDark ? 0.32 : 0.22),
+											transform: "translateY(-2px)",
+										},
+									}}
+								>
+									<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
+										<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+											<Box
+												sx={{
+													width: 28,
+													height: 28,
+													borderRadius: 1,
+													display: "flex",
+													alignItems: "center",
+													justifyContent: "center",
+													flexShrink: 0,
+													bgcolor: alpha(BRAND_BLUE, isDark ? 0.18 : 0.1),
+													border: `1px solid ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
+													color: BRAND_BLUE,
+												}}
+											>
+												<Refresh size={15} />
+											</Box>
+											<Typography
+												variant="subtitle1"
+												fontWeight={600}
+												sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" }, letterSpacing: "-0.005em" }}
+											>
+												Actualización Catamarca
+											</Typography>
+										</Box>
+										<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+											<Chip
+												label="Catamarca"
+												size="small"
+												sx={{
+													bgcolor: alpha(COLORS.success.main, 0.1),
+													color: COLORS.success.main,
+													fontWeight: 500,
+													fontSize: "0.65rem",
+												}}
+											/>
+											<ArrowRight2 size={16} style={{ color: COLORS.neutral.light }} />
+										</Box>
+									</Box>
+
+									{loadingPjcatamarcaEligibility ? (
+										<Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
+											<Skeleton variant="rectangular" width="100%" height={60} sx={{ borderRadius: 1 }} />
+										</Box>
+									) : pjcatamarcaEligibilityStats ? (
+										<>
+											<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
+												<Typography variant="body2" color="text.secondary">
+													Cobertura hoy
+												</Typography>
+												<Typography
+													variant="h6"
+													fontWeight="bold"
+													sx={{
+														fontVariantNumeric: "tabular-nums",
+														color:
+															(pjcatamarcaEligibilityStats.coveragePercent || 0) > 90
+																? COLORS.success.main
+																: (pjcatamarcaEligibilityStats.coveragePercent || 0) > 70
+																? COLORS.warning.main
+																: COLORS.error.main,
+													}}
+												>
+													{formatPercent(pjcatamarcaEligibilityStats.coveragePercent, 1)}
+												</Typography>
+											</Box>
+											<LinearProgress
+												variant="determinate"
+												value={pjcatamarcaEligibilityStats.coveragePercent || 0}
+												sx={{
+													height: 8,
+													borderRadius: 4,
+													mb: 2,
+													backgroundColor: alpha(COLORS.neutral.light, 0.3),
+													"& .MuiLinearProgress-bar": {
+														borderRadius: 4,
+														backgroundColor:
+															(pjcatamarcaEligibilityStats.coveragePercent || 0) > 90
+																? COLORS.success.main
+																: (pjcatamarcaEligibilityStats.coveragePercent || 0) > 70
+																? COLORS.warning.main
+																: COLORS.error.main,
+													},
+												}}
+											/>
+											{/* Ventana de trabajo y umbral, leídos de la config del manager
+									    (no hardcodeados): sin esto no se puede saber si una cobertura
+									    baja es un problema o simplemente que la jornada no empezó. */}
+											<Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1.5 }}>
+												Ventana {pjcatamarcaEligibilityStats.schedule ?? "—"}
+												{pjcatamarcaEligibilityStats.thresholdHours ? ` · cada ${pjcatamarcaEligibilityStats.thresholdHours} h` : ""}
+											</Typography>
+											<Grid container spacing={{ xs: 0.5, sm: 2 }}>
+												<Grid item xs={3}>
+													<Box sx={{ textAlign: "center" }}>
+														<Typography
+															variant="h5"
+															sx={{
+																fontWeight: 700,
+																color: COLORS.success.main,
+																letterSpacing: "-0.02em",
+																fontVariantNumeric: "tabular-nums",
+															}}
+														>
+															{pjcatamarcaEligibilityStats.actualizadosHoy.toLocaleString("es-AR")}
+														</Typography>
+														<Typography
+															variant="caption"
+															color="text.secondary"
+															sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}
+														>
+															Actualizados hoy
+														</Typography>
+													</Box>
+												</Grid>
+												<Grid item xs={3}>
+													<Box sx={{ textAlign: "center" }}>
+														<Typography
+															variant="h5"
+															sx={{
+																fontWeight: 700,
+																color: COLORS.warning.main,
+																letterSpacing: "-0.02em",
+																fontVariantNumeric: "tabular-nums",
+															}}
+														>
+															{pjcatamarcaEligibilityStats.pendientesHoy.toLocaleString("es-AR")}
+														</Typography>
+														<Typography
+															variant="caption"
+															color="text.secondary"
+															sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}
+														>
+															Pendientes hoy
+														</Typography>
+													</Box>
+												</Grid>
+												<Grid item xs={3}>
+													<Box sx={{ textAlign: "center" }}>
+														<Typography
+															variant="h5"
+															sx={{
+																fontWeight: 700,
+																color: COLORS.success.main,
+																letterSpacing: "-0.02em",
+																fontVariantNumeric: "tabular-nums",
+															}}
+														>
+															{pjcatamarcaEligibilityStats.totalElegibles.toLocaleString("es-AR")}
+														</Typography>
+														<Typography
+															variant="caption"
+															color="text.secondary"
+															sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}
+														>
+															Total elegibles
+														</Typography>
+													</Box>
+												</Grid>
+												<Grid item xs={3}>
+													<Box sx={{ textAlign: "center" }}>
+														<Typography
+															variant="h5"
+															sx={{
+																fontWeight: 700,
+																color: COLORS.neutral.main,
+																letterSpacing: "-0.02em",
+																fontVariantNumeric: "tabular-nums",
+															}}
+														>
+															{pjcatamarcaEligibilityStats.noElegibles.toLocaleString("es-AR")}
+														</Typography>
+														<Typography
+															variant="caption"
+															color="text.secondary"
+															sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}
+														>
+															No elegibles
+														</Typography>
+													</Box>
+												</Grid>
+											</Grid>
+										</>
+									) : (
+										<Typography variant="body2" color="text.secondary" textAlign="center">
+											No se pudieron cargar las estadísticas
+										</Typography>
+									)}
+								</Paper>
+							</Grid>
+
+							{/* PJ Mendoza Update Coverage Widget */}
+							<Grid item xs={12} sm={6} md={4}>
+								<Paper
+									elevation={0}
+									component={RouterLink}
+									to="/admin/pjmendoza/verified-app"
+									sx={{
+										textDecoration: "none",
+										color: "inherit",
+										display: "block",
+										p: { xs: 1.5, sm: 2.5 },
+										borderRadius: 2,
+										bgcolor: theme.palette.background.paper,
+										border: `1px solid ${theme.palette.divider}`,
+										cursor: "pointer",
+										transition: "transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease",
+										height: "100%",
+										"&:hover": {
+											boxShadow: headerShadow(isDark),
+											borderColor: alpha(BRAND_BLUE, isDark ? 0.32 : 0.22),
+											transform: "translateY(-2px)",
+										},
+									}}
+								>
+									<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
+										<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+											<Box
+												sx={{
+													width: 28,
+													height: 28,
+													borderRadius: 1,
+													display: "flex",
+													alignItems: "center",
+													justifyContent: "center",
+													flexShrink: 0,
+													bgcolor: alpha(BRAND_BLUE, isDark ? 0.18 : 0.1),
+													border: `1px solid ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
+													color: BRAND_BLUE,
+												}}
+											>
+												<Refresh size={15} />
+											</Box>
+											<Typography
+												variant="subtitle1"
+												fontWeight={600}
+												sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" }, letterSpacing: "-0.005em" }}
+											>
+												Actualización Mendoza
+											</Typography>
+										</Box>
+										<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+											<Chip
+												label="Mendoza"
+												size="small"
+												sx={{
+													bgcolor: alpha(COLORS.success.main, 0.1),
+													color: COLORS.success.main,
+													fontWeight: 500,
+													fontSize: "0.65rem",
+												}}
+											/>
+											<ArrowRight2 size={16} style={{ color: COLORS.neutral.light }} />
+										</Box>
+									</Box>
+
+									{loadingPjmendozaEligibility ? (
+										<Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
+											<Skeleton variant="rectangular" width="100%" height={60} sx={{ borderRadius: 1 }} />
+										</Box>
+									) : pjmendozaEligibilityStats ? (
+										<>
+											<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
+												<Typography variant="body2" color="text.secondary">
+													Cobertura hoy
+												</Typography>
+												<Typography
+													variant="h6"
+													fontWeight="bold"
+													sx={{
+														fontVariantNumeric: "tabular-nums",
+														color:
+															(pjmendozaEligibilityStats.coveragePercent || 0) > 90
+																? COLORS.success.main
+																: (pjmendozaEligibilityStats.coveragePercent || 0) > 70
+																? COLORS.warning.main
+																: COLORS.error.main,
+													}}
+												>
+													{formatPercent(pjmendozaEligibilityStats.coveragePercent, 1)}
+												</Typography>
+											</Box>
+											<LinearProgress
+												variant="determinate"
+												value={pjmendozaEligibilityStats.coveragePercent || 0}
+												sx={{
+													height: 8,
+													borderRadius: 4,
+													mb: 2,
+													backgroundColor: alpha(COLORS.neutral.light, 0.3),
+													"& .MuiLinearProgress-bar": {
+														borderRadius: 4,
+														backgroundColor:
+															(pjmendozaEligibilityStats.coveragePercent || 0) > 90
+																? COLORS.success.main
+																: (pjmendozaEligibilityStats.coveragePercent || 0) > 70
+																? COLORS.warning.main
+																: COLORS.error.main,
+													},
+												}}
+											/>
+											{/* Ventana de trabajo y umbral, leídos de la config del manager
+									    (no hardcodeados): sin esto no se puede saber si una cobertura
+									    baja es un problema o simplemente que la jornada no empezó. */}
+											<Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1.5 }}>
+												Ventana {pjmendozaEligibilityStats.schedule ?? "—"}
+												{pjmendozaEligibilityStats.thresholdHours ? ` · cada ${pjmendozaEligibilityStats.thresholdHours} h` : ""}
+											</Typography>
+											<Grid container spacing={{ xs: 0.5, sm: 2 }}>
+												<Grid item xs={3}>
+													<Box sx={{ textAlign: "center" }}>
+														<Typography
+															variant="h5"
+															sx={{
+																fontWeight: 700,
+																color: COLORS.success.main,
+																letterSpacing: "-0.02em",
+																fontVariantNumeric: "tabular-nums",
+															}}
+														>
+															{pjmendozaEligibilityStats.actualizadosHoy.toLocaleString("es-AR")}
+														</Typography>
+														<Typography
+															variant="caption"
+															color="text.secondary"
+															sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}
+														>
+															Actualizados hoy
+														</Typography>
+													</Box>
+												</Grid>
+												<Grid item xs={3}>
+													<Box sx={{ textAlign: "center" }}>
+														<Typography
+															variant="h5"
+															sx={{
+																fontWeight: 700,
+																color: COLORS.warning.main,
+																letterSpacing: "-0.02em",
+																fontVariantNumeric: "tabular-nums",
+															}}
+														>
+															{pjmendozaEligibilityStats.pendientesHoy.toLocaleString("es-AR")}
+														</Typography>
+														<Typography
+															variant="caption"
+															color="text.secondary"
+															sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}
+														>
+															Pendientes hoy
+														</Typography>
+													</Box>
+												</Grid>
+												<Grid item xs={3}>
+													<Box sx={{ textAlign: "center" }}>
+														<Typography
+															variant="h5"
+															sx={{
+																fontWeight: 700,
+																color: COLORS.success.main,
+																letterSpacing: "-0.02em",
+																fontVariantNumeric: "tabular-nums",
+															}}
+														>
+															{pjmendozaEligibilityStats.totalElegibles.toLocaleString("es-AR")}
+														</Typography>
+														<Typography
+															variant="caption"
+															color="text.secondary"
+															sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}
+														>
+															Total elegibles
+														</Typography>
+													</Box>
+												</Grid>
+												<Grid item xs={3}>
+													<Box sx={{ textAlign: "center" }}>
+														<Typography
+															variant="h5"
+															sx={{
+																fontWeight: 700,
+																color: COLORS.neutral.main,
+																letterSpacing: "-0.02em",
+																fontVariantNumeric: "tabular-nums",
+															}}
+														>
+															{pjmendozaEligibilityStats.noElegibles.toLocaleString("es-AR")}
+														</Typography>
+														<Typography
+															variant="caption"
+															color="text.secondary"
+															sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}
+														>
+															No elegibles
+														</Typography>
+													</Box>
+												</Grid>
+											</Grid>
+										</>
+									) : (
+										<Typography variant="body2" color="text.secondary" textAlign="center">
+											No se pudieron cargar las estadísticas
+										</Typography>
+									)}
+								</Paper>
+							</Grid>
+
+							{/* Stuck Documents Worker Widget */}
+							<Grid item xs={12} sm={6} md={4}>
+								<Paper
+									elevation={0}
+									component={RouterLink}
+									to="/admin/causas/workers"
+									sx={{
+										textDecoration: "none",
+										color: "inherit",
+										display: "block",
+										p: { xs: 1.5, sm: 2.5 },
+										borderRadius: 2,
+										bgcolor: theme.palette.background.paper,
+										border: `1px solid ${theme.palette.divider}`,
+										cursor: "pointer",
+										transition: "transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease",
+										height: "100%",
+										"&:hover": {
+											boxShadow: headerShadow(isDark),
+											borderColor: alpha(BRAND_BLUE, isDark ? 0.32 : 0.22),
+											transform: "translateY(-2px)",
+										},
+									}}
+								>
+									<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
+										<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+											<Box
+												sx={{
+													width: 28,
+													height: 28,
+													borderRadius: 1,
+													display: "flex",
+													alignItems: "center",
+													justifyContent: "center",
+													flexShrink: 0,
+													bgcolor: alpha(BRAND_BLUE, isDark ? 0.18 : 0.1),
+													border: `1px solid ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
+													color: BRAND_BLUE,
+												}}
+											>
+												<Warning2 size={15} />
+											</Box>
+											<Typography variant="subtitle1" fontWeight={600} sx={{ letterSpacing: "-0.005em" }}>
+												Stuck Documents Worker
+											</Typography>
+											{stuckDocumentsStats?.worker && (
+												<Chip
+													size="small"
+													label={stuckDocumentsStats.worker.enabled ? "Activo" : "Deshabilitado"}
+													sx={{
+														bgcolor: stuckDocumentsStats.worker.enabled
+															? alpha(COLORS.success.main, 0.15)
+															: alpha(COLORS.neutral.main, 0.15),
+														color: stuckDocumentsStats.worker.enabled ? COLORS.success.main : COLORS.neutral.main,
+														fontWeight: 600,
+														fontSize: "0.65rem",
+													}}
+												/>
+											)}
+										</Box>
+										<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+											<Chip
+												label="PJN"
+												size="small"
+												sx={{
+													bgcolor: alpha(BRAND_BLUE, isDark ? 0.15 : 0.09),
+													color: BRAND_BLUE,
+													fontWeight: 600,
+													fontSize: "0.65rem",
+													height: 20,
+													border: `1px solid ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
+												}}
+											/>
+											<ArrowRight2 size={16} style={{ color: COLORS.neutral.light }} />
+										</Box>
+									</Box>
+
+									{loadingStuckDocuments ? (
+										<Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
+											<Skeleton variant="rectangular" width="100%" height={60} sx={{ borderRadius: 1 }} />
+										</Box>
+									) : stuckDocumentsStats ? (
+										<>
+											<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
+												<Typography variant="body2" color="text.secondary">
+													Tasa de éxito (últimas 24h)
+												</Typography>
+												<Typography
+													variant="h6"
+													fontWeight="bold"
+													sx={{
+														fontVariantNumeric: "tabular-nums",
+														color:
+															parseFloat(stuckDocumentsStats.recent.successRate) > 50
+																? COLORS.success.main
+																: parseFloat(stuckDocumentsStats.recent.successRate) > 20
+																? COLORS.warning.main
+																: COLORS.error.main,
+													}}
+												>
+													{stuckDocumentsStats.recent.successRate}
+												</Typography>
+											</Box>
+											<LinearProgress
+												variant="determinate"
+												value={parseFloat(stuckDocumentsStats.recent.successRate) || 0}
+												sx={{
+													height: 8,
+													borderRadius: 4,
+													mb: 2,
+													backgroundColor: alpha(COLORS.neutral.light, 0.3),
+													"& .MuiLinearProgress-bar": {
+														borderRadius: 4,
+														backgroundColor:
+															parseFloat(stuckDocumentsStats.recent.successRate) > 50
+																? COLORS.success.main
+																: parseFloat(stuckDocumentsStats.recent.successRate) > 20
+																? COLORS.warning.main
+																: COLORS.error.main,
+													},
+												}}
+											/>
+											<Grid container spacing={{ xs: 0.5, sm: 2 }}>
+												<Grid item xs={3}>
+													<Box sx={{ textAlign: "center" }}>
+														<Typography
+															variant="h5"
+															sx={{
+																fontWeight: 700,
+																color: COLORS.warning.main,
+																letterSpacing: "-0.02em",
+																fontVariantNumeric: "tabular-nums",
+															}}
+														>
+															{stuckDocumentsStats.pending.total.toLocaleString("es-AR")}
+														</Typography>
+														<Typography
+															variant="caption"
+															color="text.secondary"
+															sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}
+														>
+															Pendientes
+														</Typography>
+													</Box>
+												</Grid>
+												<Grid item xs={3}>
+													<Box sx={{ textAlign: "center" }}>
+														<Typography
+															variant="h5"
+															sx={{
+																fontWeight: 700,
+																color: COLORS.success.main,
+																letterSpacing: "-0.02em",
+																fontVariantNumeric: "tabular-nums",
+															}}
+														>
+															{stuckDocumentsStats.totals.fixed.toLocaleString("es-AR")}
+														</Typography>
+														<Typography
+															variant="caption"
+															color="text.secondary"
+															sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}
+														>
+															Reparados
+														</Typography>
+													</Box>
+												</Grid>
+												<Grid item xs={3}>
+													<Box sx={{ textAlign: "center" }}>
+														<Typography
+															variant="h5"
+															sx={{
+																fontWeight: 700,
+																color: COLORS.error.main,
+																letterSpacing: "-0.02em",
+																fontVariantNumeric: "tabular-nums",
+															}}
+														>
+															{stuckDocumentsStats.totals.failed.toLocaleString("es-AR")}
+														</Typography>
+														<Typography
+															variant="caption"
+															color="text.secondary"
+															sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}
+														>
+															Fallidos
+														</Typography>
+													</Box>
+												</Grid>
+												<Grid item xs={3}>
+													<Box sx={{ textAlign: "center" }}>
+														<Typography variant="h5" sx={{ fontWeight: 700, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>
+															{stuckDocumentsStats.totals.processed.toLocaleString("es-AR")}
+														</Typography>
+														<Typography
+															variant="caption"
+															color="text.secondary"
+															sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" }, lineHeight: 1.2, display: "block" }}
+														>
+															Total procesados
+														</Typography>
+													</Box>
+												</Grid>
+											</Grid>
+											{stuckDocumentsStats.repeatedFailures && stuckDocumentsStats.repeatedFailures.length > 0 && (
+												<Box sx={{ mt: 2, pt: 2, borderTop: `1px dashed ${theme.palette.divider}` }}>
+													<Typography variant="caption" color="error.main" fontWeight="bold">
+														{stuckDocumentsStats.repeatedFailures.length} documento(s) con fallos repetidos
+													</Typography>
+												</Box>
+											)}
+											{stuckDocumentsStats.chronicStuck && stuckDocumentsStats.chronicStuck.length > 0 && (
+												<Box
+													sx={{
+														mt: stuckDocumentsStats.repeatedFailures?.length ? 1 : 2,
+														pt: stuckDocumentsStats.repeatedFailures?.length ? 0 : 2,
+														borderTop: stuckDocumentsStats.repeatedFailures?.length ? "none" : `1px dashed ${theme.palette.divider}`,
+													}}
+												>
+													<Typography variant="caption" color="error.main" fontWeight="bold">
+														{stuckDocumentsStats.chronicStuck.length} documento(s) crónicamente atorados
+														{stuckDocumentsStats.chronicStuck.some((d) => d.daysSinceFirst && d.daysSinceFirst >= 7) && (
+															<span style={{ marginLeft: 4 }}>(algunos por más de 7 días)</span>
+														)}
+													</Typography>
+												</Box>
+											)}
+										</>
+									) : (
+										<Typography variant="body2" color="text.secondary" textAlign="center">
+											No se pudieron cargar las estadísticas
+										</Typography>
+									)}
+								</Paper>
+							</Grid>
+
+							{/* Mis Causas (SSO) Update Coverage Widget */}
+							<Grid item xs={12} sm={6} md={4}>
+								<Paper
+									elevation={0}
+									onClick={() => navigate("/admin/causas/synced-credentials")}
+									sx={{
+										p: { xs: 1.5, sm: 2.5 },
+										borderRadius: 2,
+										bgcolor: theme.palette.background.paper,
+										border: `1px solid ${theme.palette.divider}`,
+										cursor: "pointer",
+										transition: "transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease",
+										height: "100%",
+										"&:hover": {
+											boxShadow: headerShadow(isDark),
+											borderColor: alpha(BRAND_BLUE, isDark ? 0.32 : 0.22),
+											transform: "translateY(-2px)",
+										},
+									}}
+								>
+									<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5, flexWrap: "wrap", gap: 0.5 }}>
+										<Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
+											<Box
+												sx={{
+													width: 28,
+													height: 28,
+													borderRadius: 1,
+													display: "flex",
+													alignItems: "center",
+													justifyContent: "center",
+													flexShrink: 0,
+													bgcolor: alpha(BRAND_BLUE, isDark ? 0.18 : 0.1),
+													border: `1px solid ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
+													color: BRAND_BLUE,
+												}}
+											>
+												<Refresh size={15} />
+											</Box>
+											<Typography
+												variant="subtitle1"
+												fontWeight={600}
+												sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" }, letterSpacing: "-0.005em" }}
+											>
+												Credenciales PJN
+											</Typography>
+											<Tooltip
+												arrow
+												title={
+													misCausasCoverage?.updatePolicy
+														? `El porcentaje es "en término": causas que no están atrasadas sobre el total, las lea pjn-mis-causas (credencial vigente, por ${
+																misCausasCoverage.updatePolicy.schedule
+														  }${
+																misCausasCoverage.updatePolicy.everyDay ? ", todos los días" : ", solo días hábiles"
+														  }) o pjn-workers (credencial caída, consulta pública). Una causa está al día si se leyó hoy o si el listado del portal no mostró novedad; las de la franja en curso no cuentan como atraso. Atrasada = vencida de una franja anterior.${
+																misCausasCoverage.updatePolicy.enabled ? "" : " El schedule está deshabilitado en la config."
+														  } Configurable en Workers → PJN manager.`
+														: "Política de update: un mismo worker (SSO) refresca públicas y privadas dentro de su ventana horaria. Configurable en Workers → PJN manager."
+												}
+											>
+												<Box
+													component="span"
+													onClick={(e) => e.stopPropagation()}
+													sx={{ display: "inline-flex", alignItems: "center", cursor: "help", color: COLORS.neutral.light }}
+												>
+													<InfoCircle size={15} />
+												</Box>
+											</Tooltip>
+											{pjnSiteStatus && pjnSiteStatus.status === "maintenance" && (
+												<Tooltip
+													title={`Sitio PJN en mantenimiento desde ${
+														pjnSiteStatus.maintenanceSince
+															? new Date(pjnSiteStatus.maintenanceSince).toLocaleString("es-AR", {
+																	timeZone: "America/Argentina/Buenos_Aires",
+															  })
+															: "—"
+													}${pjnSiteStatus.message ? ` — ${pjnSiteStatus.message}` : ""}${
+														pjnSiteStatus.lastDetectedBy ? ` (detectado por ${pjnSiteStatus.lastDetectedBy})` : ""
+													}`}
+												>
+													<Chip
+														label="PJN en mantenimiento"
+														size="small"
+														color="warning"
+														icon={<Warning2 size={12} />}
+														onClick={(e) => {
+															e.stopPropagation();
+															navigate("/admin/causas/workers");
+														}}
+														sx={{ fontSize: "0.65rem", fontWeight: 500 }}
+													/>
+												</Tooltip>
+											)}
+										</Box>
+										<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+											<Chip
+												label="SSO"
+												size="small"
+												sx={{
+													bgcolor: alpha(BRAND_BLUE, isDark ? 0.15 : 0.09),
+													color: BRAND_BLUE,
+													fontWeight: 600,
+													fontSize: "0.65rem",
+													height: 20,
+													border: `1px solid ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
+												}}
+											/>
+											<ArrowRight2 size={16} style={{ color: COLORS.neutral.light }} />
+										</Box>
+									</Box>
+
+									{loadingMisCausasCoverage ? (
+										<Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
+											<Skeleton variant="rectangular" width="100%" height={60} sx={{ borderRadius: 1 }} />
+										</Box>
+									) : misCausasCoverage ? (
+										(() => {
+											// Doble barra: públicas (isPrivate≠true) + privadas (isPrivate===true).
+											// Juntas cubren la totalidad de causas de pjn-mis-causas. Fallback al
+											// shape viejo (sin split) mientras el backend no devuelva los buckets.
+											const publicas = misCausasCoverage.publicas ?? {
+												coveragePercent: misCausasCoverage.coveragePercent,
+												updatedToday: misCausasCoverage.updatedToday,
+												total: misCausasCoverage.total,
+												pending: misCausasCoverage.pending,
+												withErrors: misCausasCoverage.withErrors,
+												schedule: "08:00–23:00 h",
+											};
+											const privadas = misCausasCoverage.privadas ?? {
+												coveragePercent: 0,
+												updatedToday: 0,
+												total: 0,
+												pending: 0,
+												withErrors: 0,
+												schedule: "08:00–23:00 h",
+											};
+											const barColor = (p: number) => (p >= 99 ? COLORS.success.main : p > 70 ? COLORS.warning.main : COLORS.error.main);
+											const nfAR = (n: number) => n.toLocaleString("es-AR");
+											const horaAR = (iso?: string | null) =>
+												iso
+													? new Date(iso).toLocaleTimeString("es-AR", {
+															timeZone: "America/Argentina/Buenos_Aires",
+															hour: "2-digit",
+															minute: "2-digit",
+													  })
+													: "";
+											const franja = misCausasCoverage.franja;
+											const caida = misCausasCoverage.credencialCaida;
+											const renderLine = (label: string, b: MisCausasCoverageBucket, accent: string) => (
+												<Box sx={{ mb: 1.5 }}>
+													<Box sx={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", mb: 0.25, gap: 1 }}>
+														<Box sx={{ display: "flex", alignItems: "baseline", gap: 0.75, minWidth: 0 }}>
+															<Typography variant="body2" fontWeight={600}>
+																{label}
+															</Typography>
+															<Typography variant="caption" color="text.secondary" noWrap>
+																{b.schedule}
+															</Typography>
+														</Box>
+														<Typography variant="h6" fontWeight="bold" sx={{ color: accent, flexShrink: 0 }}>
+															{b.coveragePercent}%
+														</Typography>
+													</Box>
+													<LinearProgress
+														variant="determinate"
+														value={b.coveragePercent || 0}
+														sx={{
+															height: 8,
+															borderRadius: 4,
+															backgroundColor: alpha(COLORS.neutral.light, 0.3),
+															"& .MuiLinearProgress-bar": { borderRadius: 4, backgroundColor: accent },
+														}}
+													/>
+													<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.25 }}>
+														{b.late == null
+															? `${nfAR(b.updatedToday)}/${nfAR(b.total)} actualizadas hoy${
+																	b.pending > 0 ? ` · ${nfAR(b.pending)} pendientes` : ""
+															  }`
+															: [
+																	`${nfAR(b.total)} causas`,
+																	`${nfAR(b.updatedToday)} leídas hoy`,
+																	b.verifiedByListing ? `${nfAR(b.verifiedByListing)} sin novedad según listado` : "",
+																	b.scheduledLater ? `${nfAR(b.scheduledLater)} programadas` : "",
+																	b.inSlot ? `${nfAR(b.inSlot)} en la franja en curso` : "",
+															  ]
+																	.filter(Boolean)
+																	.join(" · ")}
+														{!!b.late && (
+															<Box component="span" sx={{ color: COLORS.error.main, fontWeight: 600 }}>
+																{` · ${nfAR(b.late)} atrasadas`}
+															</Box>
+														)}
+														{b.withErrors > 0 && (
+															<Box
+																component="span"
+																onClick={(e) => {
+																	e.stopPropagation();
+																	navigate("/admin/causas/synced-credentials?conErrores=1");
+																}}
+																sx={{
+																	color: COLORS.error.main,
+																	fontWeight: 600,
+																	cursor: "pointer",
+																	"&:hover": { textDecoration: "underline" },
+																}}
+															>
+																{` · ${b.withErrors.toLocaleString("es-AR")} con errores`}
+															</Box>
+														)}
+													</Typography>
+												</Box>
+											);
+											return (
+												<>
+													{franja && (
+														<Box sx={{ mb: 1.5 }}>
+															<Box sx={{ display: "flex", alignItems: "center", gap: 0.75, flexWrap: "wrap" }}>
+																<Box
+																	sx={{
+																		width: 8,
+																		height: 8,
+																		borderRadius: "50%",
+																		flexShrink: 0,
+																		bgcolor: franja.working ? BRAND_BLUE : franja.incomplete ? COLORS.warning.main : COLORS.success.main,
+																	}}
+																/>
+																<Typography variant="caption" fontWeight={600}>
+																	{franja.working
+																		? `Franja ${franja.franja} en curso`
+																		: `Última franja ${franja.franja}: ${franja.incomplete ? "incompleta" : "completa"}`}
+																</Typography>
+																<Typography variant="caption" color="text.secondary">
+																	{franja.working
+																		? `${nfAR(franja.pending)} de ${nfAR(franja.planned)} pendientes`
+																		: `${franja.finishedAt ? `terminó ${horaAR(franja.finishedAt)}` : ""}${
+																				franja.next ? `${franja.finishedAt ? " · " : ""}próxima ${horaAR(franja.next)}` : ""
+																		  }`}
+																	{franja.errors > 0 ? ` · ${nfAR(franja.errors)} con error` : ""}
+																</Typography>
+															</Box>
+															{franja.working && (
+																<LinearProgress
+																	variant="determinate"
+																	value={franja.progressPercent || 0}
+																	sx={{
+																		mt: 0.5,
+																		height: 4,
+																		borderRadius: 2,
+																		backgroundColor: alpha(COLORS.neutral.light, 0.3),
+																		"& .MuiLinearProgress-bar": { borderRadius: 2, backgroundColor: BRAND_BLUE },
+																	}}
+																/>
+															)}
+														</Box>
+													)}
+													{renderLine("Públicas", publicas, barColor(publicas.coveragePercent || 0))}
+													{renderLine("Privadas", privadas, barColor(privadas.coveragePercent || 0))}
+													{caida && caida.total + caida.privateNoAccess + caida.withoutFolder > 0 && (
+														<Tooltip
+															arrow
+															title="Causas cuya credencial está apagada o inválida. Las públicas con carpeta las sigue pjn-workers por la consulta pública (al día = leída en las últimas 24 h). Las privadas no se pueden leer hasta que el usuario renueve la contraseña. Las públicas sin carpeta no se siguen."
+														>
+															<Box sx={{ mb: 1.5 }}>
+																<Box sx={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", mb: 0.25, gap: 1 }}>
+																	<Box sx={{ display: "flex", alignItems: "baseline", gap: 0.75, minWidth: 0 }}>
+																		<Typography variant="body2" fontWeight={600}>
+																			Credencial caída
+																		</Typography>
+																		<Typography variant="caption" color="text.secondary" noWrap>
+																			pjn-workers · 24 h
+																		</Typography>
+																	</Box>
+																	<Typography
+																		variant="h6"
+																		fontWeight="bold"
+																		sx={{ color: barColor(caida.coveragePercent || 0), flexShrink: 0 }}
+																	>
+																		{caida.total > 0 ? `${caida.coveragePercent}%` : "—"}
+																	</Typography>
+																</Box>
+																<LinearProgress
+																	variant="determinate"
+																	value={caida.total > 0 ? caida.coveragePercent || 0 : 0}
+																	sx={{
+																		height: 8,
+																		borderRadius: 4,
+																		backgroundColor: alpha(COLORS.neutral.light, 0.3),
+																		"& .MuiLinearProgress-bar": { borderRadius: 4, backgroundColor: barColor(caida.coveragePercent || 0) },
+																	}}
+																/>
+																<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.25 }}>
+																	{`${nfAR(caida.updatedLast24h)}/${nfAR(caida.total)} públicas leídas en 24 h`}
+																	{!!caida.late && (
+																		<Box component="span" sx={{ color: COLORS.error.main, fontWeight: 600 }}>
+																			{` · ${nfAR(caida.late)} atrasadas`}
+																		</Box>
+																	)}
+																	{caida.privateNoAccess > 0 ? ` · ${nfAR(caida.privateNoAccess)} privadas sin acceso` : ""}
+																	{caida.withoutFolder > 0 ? ` · ${nfAR(caida.withoutFolder)} sin carpeta` : ""}
+																</Typography>
+															</Box>
+														</Tooltip>
+													)}
+													{misCausasCoverage.activeCredentials != null && (
+														<CredentialsStat
+															count={misCausasCoverage.activeCredentials}
+															tooltip="Credenciales PJN activas (habilitadas y válidas)"
+														/>
+													)}
+												</>
+											);
+										})()
+									) : (
+										<Typography variant="body2" color="text.secondary" textAlign="center">
+											No se pudieron cargar las estadísticas
+										</Typography>
+									)}
+								</Paper>
+							</Grid>
+
+							{/* Card: salud por credencial — credenciales sanas con causas en problema.
+					    Cubre el caso "credencial verde pero 100% de sus causas rotas", invisible
+					    en el agregado global. Datos del cron credential-health-monitor. */}
+							{healthAnomalies.length > 0 && (
+								<Grid item xs={12}>
+									<Paper
+										elevation={0}
+										sx={{
+											p: { xs: 1.5, sm: 2.5 },
+											borderRadius: 2,
+											bgcolor: theme.palette.background.paper,
+											border: `1px solid ${alpha(theme.palette.warning.main, 0.5)}`,
+										}}
+									>
+										<Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+											<Box
+												sx={{
+													width: 28,
+													height: 28,
+													borderRadius: 1,
+													display: "flex",
+													alignItems: "center",
+													justifyContent: "center",
+													flexShrink: 0,
+													bgcolor: alpha(theme.palette.warning.main, isDark ? 0.18 : 0.1),
+													border: `1px solid ${alpha(theme.palette.warning.main, isDark ? 0.32 : 0.18)}`,
+													color: theme.palette.warning.main,
+												}}
+											>
+												<Warning2 size={15} />
+											</Box>
+											<Typography variant="subtitle1" fontWeight={600} sx={{ letterSpacing: "-0.005em" }}>
+												Credenciales con causas en problema
+											</Typography>
+											<Box sx={{ ml: "auto" }}>
+												<Typography variant="caption" color="text.secondary">
+													{healthAnomaliesMeta?.lastEvaluatedAt
+														? `Último chequeo: ${new Date(healthAnomaliesMeta.lastEvaluatedAt).toLocaleString("es-AR")}`
+														: ""}
+												</Typography>
+											</Box>
+										</Box>
+										<Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+											Credenciales habilitadas y válidas con ≥50% de sus causas con error o sin captura. Clic para ver sus causas.
+										</Typography>
+										{healthAnomalies.map((a) => (
+											<Box
+												key={a.credentialId}
+												component={RouterLink}
+												to={`/admin/causas/synced-credentials?credentialId=${a.credentialId}&conErrores=1`}
+												sx={{
+													textDecoration: "none",
+													color: "inherit",
+													display: "flex",
+													alignItems: "center",
+													justifyContent: "space-between",
+													gap: 1,
+													py: 0.75,
+													px: 1,
+													borderRadius: 1,
+													cursor: "pointer",
+													transition: "background-color 0.15s ease",
+													"&:hover": { bgcolor: theme.palette.action.hover },
+												}}
+											>
+												<Typography variant="body2" fontWeight={500} noWrap sx={{ minWidth: 0 }}>
+													{a.userEmail || a.userName || a.credentialId}
+												</Typography>
+												<Box sx={{ display: "flex", alignItems: "center", gap: 2, flexShrink: 0 }}>
+													<Typography variant="caption" color="error.main">
+														{a.problem}/{a.total} con problema
+														{a.sinCaptura > 0 ? ` · ${a.sinCaptura} sin captura` : ""}
+													</Typography>
+													<Typography variant="caption" color="text.secondary">
+														cobertura {a.coveragePercent ?? "—"}%
+													</Typography>
+												</Box>
+											</Box>
+										))}
+									</Paper>
+								</Grid>
 							)}
-						</Paper>
-					</Grid>
-				</Grid>
-				</Box>
+
+							{/* SCBA Update Coverage Widget */}
+							<Grid item xs={12} sm={6} md={4}>
+								<Paper
+									elevation={0}
+									onClick={() => navigate("/admin/mev/causes-by-credential")}
+									sx={{
+										p: { xs: 1.5, sm: 2.5 },
+										borderRadius: 2,
+										bgcolor: theme.palette.background.paper,
+										border: `1px solid ${theme.palette.divider}`,
+										cursor: "pointer",
+										transition: "transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease",
+										height: "100%",
+										"&:hover": {
+											boxShadow: headerShadow(isDark),
+											borderColor: alpha(BRAND_BLUE, isDark ? 0.32 : 0.22),
+											transform: "translateY(-2px)",
+										},
+									}}
+								>
+									<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
+										<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+											<Box
+												sx={{
+													width: 28,
+													height: 28,
+													borderRadius: 1,
+													display: "flex",
+													alignItems: "center",
+													justifyContent: "center",
+													flexShrink: 0,
+													bgcolor: alpha(BRAND_BLUE, isDark ? 0.18 : 0.1),
+													border: `1px solid ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
+													color: BRAND_BLUE,
+												}}
+											>
+												<Refresh size={15} />
+											</Box>
+											<Typography
+												variant="subtitle1"
+												fontWeight={600}
+												sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" }, letterSpacing: "-0.005em" }}
+											>
+												Credenciales SCBA
+											</Typography>
+											<Tooltip
+												arrow
+												title={
+													scbaCoverage?.updatePolicyMode === "unified"
+														? `Política de update UNIFICADA: activas y archivadas se refrescan juntas en la ventana del update (${
+																scbaCoverage?.active?.schedule ?? "ver SCBA manager"
+														  }). El desglose se mantiene para ver cada segmento por separado. Configurable en Workers → SCBA manager.`
+														: `Política de update DIVIDIDA: las causas con carpeta activa se refrescan en la ventana del update (${
+																scbaCoverage?.active?.schedule ?? "ver SCBA manager"
+														  }). Las de carpeta archivada se actualizan en su ventana propia (${
+																scbaCoverage?.archived?.schedule ?? "madrugada"
+														  }) y solo si pasaron +24 h, por eso no suman a la cobertura del día hasta esa ventana — no es un error. Configurable en Workers → SCBA manager.`
+												}
+											>
+												<Box
+													component="span"
+													onClick={(e) => e.stopPropagation()}
+													sx={{ display: "inline-flex", alignItems: "center", cursor: "help", color: COLORS.neutral.light }}
+												>
+													<InfoCircle size={15} />
+												</Box>
+											</Tooltip>
+										</Box>
+										<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+											<Chip
+												label="SCBA"
+												size="small"
+												sx={{
+													bgcolor: alpha(BRAND_BLUE, isDark ? 0.15 : 0.09),
+													color: BRAND_BLUE,
+													fontWeight: 600,
+													fontSize: "0.65rem",
+													height: 20,
+													border: `1px solid ${alpha(BRAND_BLUE, isDark ? 0.32 : 0.18)}`,
+												}}
+											/>
+											<ArrowRight2 size={16} style={{ color: COLORS.neutral.light }} />
+										</Box>
+									</Box>
+
+									{loadingScbaCoverage ? (
+										<Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
+											<Skeleton variant="rectangular" width="100%" height={60} sx={{ borderRadius: 1 }} />
+										</Box>
+									) : scbaCoverage ? (
+										(() => {
+											const unified = scbaCoverage.updatePolicyMode === "unified";
+											const active = scbaCoverage.active ?? {
+												coveragePercent: scbaCoverage.coveragePercent,
+												updatedToday: scbaCoverage.updatedToday,
+												total: scbaCoverage.total,
+												pending: scbaCoverage.pending,
+												withErrors: scbaCoverage.withErrors,
+												schedule: "ventana del update (ver SCBA manager)",
+											};
+											const archived = scbaCoverage.archived ?? {
+												coveragePercent: 0,
+												updatedToday: 0,
+												total: 0,
+												pending: 0,
+												withErrors: 0,
+												schedule: unified ? "ventana del update (unificado)" : "madrugada (4-6 h)",
+											};
+											const barColor = (p: number) => (p >= 99 ? COLORS.success.main : p > 70 ? COLORS.warning.main : COLORS.error.main);
+											const renderLine = (label: string, b: typeof active, big: boolean, accent: string) => (
+												<Box sx={{ mb: big ? 1.5 : 0 }}>
+													<Box sx={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", mb: 0.25, gap: 1 }}>
+														<Box sx={{ display: "flex", alignItems: "baseline", gap: 0.75, minWidth: 0 }}>
+															<Typography variant="body2" fontWeight={600}>
+																{label}
+															</Typography>
+															<Typography variant="caption" color="text.secondary" noWrap>
+																{b.schedule}
+															</Typography>
+														</Box>
+														<Typography variant={big ? "h6" : "subtitle2"} fontWeight="bold" sx={{ color: accent, flexShrink: 0 }}>
+															{b.coveragePercent}%
+														</Typography>
+													</Box>
+													<LinearProgress
+														variant="determinate"
+														value={b.coveragePercent || 0}
+														sx={{
+															height: big ? 8 : 6,
+															borderRadius: 4,
+															backgroundColor: alpha(COLORS.neutral.light, 0.3),
+															"& .MuiLinearProgress-bar": { borderRadius: 4, backgroundColor: accent },
+														}}
+													/>
+													<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.25 }}>
+														{b.updatedToday.toLocaleString("es-AR")}/{b.total.toLocaleString("es-AR")} actualizadas hoy
+														{b.withErrors > 0 ? ` · ${b.withErrors} con errores` : ""}
+													</Typography>
+												</Box>
+											);
+											return (
+												<>
+													{renderLine("Activas", active, true, barColor(active.coveragePercent || 0))}
+													{/* En modo unificado las archivadas se refrescan en el día: aplica el mismo semáforo. En split, color neutro (su ventana es nocturna). */}
+													{renderLine(
+														"Archivadas",
+														archived,
+														false,
+														unified ? barColor(archived.coveragePercent || 0) : COLORS.primary.light,
+													)}
+													{scbaCoverage.activeCredentials !== undefined && (
+														<CredentialsStat
+															count={scbaCoverage.activeCredentials}
+															tooltip="Credenciales SCBA activas (habilitadas y válidas)"
+														/>
+													)}
+												</>
+											);
+										})()
+									) : (
+										<Typography variant="body2" color="text.secondary" textAlign="center">
+											No se pudieron cargar las estadísticas
+										</Typography>
+									)}
+								</Paper>
+							</Grid>
+						</Grid>
+					</Box>
 				</CollapsibleSection>
 
 				{/* Detailed Sections with Charts */}
@@ -3652,80 +4041,80 @@ const AdminDashboard = () => {
 							subtitle="Estadísticas de usuarios registrados"
 							icon={<UserSquare size={22} variant="Bold" />}
 						>
-						<Grid container spacing={{ xs: 1.5, sm: 2 }}>
-							{/* User Status Donut Chart */}
-							<Grid item xs={12} sm={6}>
-								<ChartCard title="Estado de Usuarios" icon={<TickCircle size={18} />} linkTo="/admin/users" height={200}>
-									{loading ? (
-										<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
-											<Skeleton variant="circular" width={150} height={150} />
-										</Box>
-									) : (
-										<Grid container sx={{ height: "100%" }}>
-											<Grid item xs={7}>
-												<DonutChart
-													data={userStatusData}
-													centerValue={pctOf(data?.users.active, data?.users.total)}
-													centerLabel="activos"
-												/>
+							<Grid container spacing={{ xs: 1.5, sm: 2 }}>
+								{/* User Status Donut Chart */}
+								<Grid item xs={12} sm={6}>
+									<ChartCard title="Estado de Usuarios" icon={<TickCircle size={18} />} linkTo="/admin/users" height={200}>
+										{loading ? (
+											<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
+												<Skeleton variant="circular" width={150} height={150} />
+											</Box>
+										) : (
+											<Grid container sx={{ height: "100%" }}>
+												<Grid item xs={7}>
+													<DonutChart
+														data={userStatusData}
+														centerValue={pctOf(data?.users.active, data?.users.total)}
+														centerLabel="activos"
+													/>
+												</Grid>
+												<Grid item xs={5}>
+													<StatsLegend
+														items={[
+															{ label: "Activos", value: data?.users.active || 0, color: COLORS.success.main, infoKey: "activeUsers" },
+															{
+																label: "Inactivos",
+																value: (data?.users.total || 0) - (data?.users.active || 0),
+																color: COLORS.neutral.light,
+															},
+														]}
+														loading={loading}
+													/>
+												</Grid>
 											</Grid>
-											<Grid item xs={5}>
-												<StatsLegend
-													items={[
-														{ label: "Activos", value: data?.users.active || 0, color: COLORS.success.main, infoKey: "activeUsers" },
-														{
-															label: "Inactivos",
-															value: (data?.users.total || 0) - (data?.users.active || 0),
-															color: COLORS.neutral.light,
-														},
-													]}
-													loading={loading}
-												/>
-											</Grid>
-										</Grid>
-									)}
-								</ChartCard>
-							</Grid>
+										)}
+									</ChartCard>
+								</Grid>
 
-							{/* User Verification Donut Chart */}
-							<Grid item xs={12} sm={6}>
-								<ChartCard title="Verificación de Email" icon={<TickCircle size={18} />} linkTo="/admin/users" height={200}>
-									{loading ? (
-										<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
-											<Skeleton variant="circular" width={150} height={150} />
-										</Box>
-									) : (
-										<Grid container sx={{ height: "100%" }}>
-											<Grid item xs={7}>
-												<DonutChart
-													data={userVerificationData}
-													centerValue={pctOf(data?.users.verified, data?.users.total)}
-													centerLabel="verificados"
-												/>
+								{/* User Verification Donut Chart */}
+								<Grid item xs={12} sm={6}>
+									<ChartCard title="Verificación de Email" icon={<TickCircle size={18} />} linkTo="/admin/users" height={200}>
+										{loading ? (
+											<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
+												<Skeleton variant="circular" width={150} height={150} />
+											</Box>
+										) : (
+											<Grid container sx={{ height: "100%" }}>
+												<Grid item xs={7}>
+													<DonutChart
+														data={userVerificationData}
+														centerValue={pctOf(data?.users.verified, data?.users.total)}
+														centerLabel="verificados"
+													/>
+												</Grid>
+												<Grid item xs={5}>
+													<StatsLegend
+														items={[
+															{
+																label: "Verificados",
+																value: data?.users.verified || 0,
+																color: COLORS.success.main,
+																infoKey: "verifiedUsers",
+															},
+															{
+																label: "Sin verificar",
+																value: (data?.users.total || 0) - (data?.users.verified || 0),
+																color: COLORS.neutral.light,
+															},
+														]}
+														loading={loading}
+													/>
+												</Grid>
 											</Grid>
-											<Grid item xs={5}>
-												<StatsLegend
-													items={[
-														{
-															label: "Verificados",
-															value: data?.users.verified || 0,
-															color: COLORS.success.main,
-															infoKey: "verifiedUsers",
-														},
-														{
-															label: "Sin verificar",
-															value: (data?.users.total || 0) - (data?.users.verified || 0),
-															color: COLORS.neutral.light,
-														},
-													]}
-													loading={loading}
-												/>
-											</Grid>
-										</Grid>
-									)}
-								</ChartCard>
+										)}
+									</ChartCard>
+								</Grid>
 							</Grid>
-						</Grid>
 						</CollapsibleSection>
 					</Grid>
 
@@ -3737,255 +4126,257 @@ const AdminDashboard = () => {
 							subtitle="Distribución por planes y modo"
 							icon={<ReceiptItem size={22} variant="Bold" />}
 						>
-						<Grid container spacing={{ xs: 1.5, sm: 2 }}>
-							{/* Plan Distribution Pie Chart - Live Mode */}
-							<Grid item xs={12} sm={6}>
-								<ChartCard
-									title="Distribución por Plan (Live)"
-									mobileHeight={250}
-									icon={<TickCircle size={18} />}
-									linkTo="/admin/usuarios/suscripciones"
-									height={200}
-								>
-									{loading ? (
-										<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
-											<Skeleton variant="circular" width={150} height={150} />
-										</Box>
-									) : subscriptionPlanData.length > 0 ? (
-										<Grid container sx={{ height: "100%" }}>
-											<Grid item xs={7}>
-												<DonutChart
-													data={subscriptionPlanData}
-													centerValue={(data?.subscriptions.live?.total || 0).toLocaleString("es-AR")}
-													centerLabel="live"
-												/>
+							<Grid container spacing={{ xs: 1.5, sm: 2 }}>
+								{/* Plan Distribution Pie Chart - Live Mode */}
+								<Grid item xs={12} sm={6}>
+									<ChartCard
+										title="Distribución por Plan (Live)"
+										mobileHeight={250}
+										icon={<TickCircle size={18} />}
+										linkTo="/admin/usuarios/suscripciones"
+										height={200}
+									>
+										{loading ? (
+											<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
+												<Skeleton variant="circular" width={150} height={150} />
+											</Box>
+										) : subscriptionPlanData.length > 0 ? (
+											<Grid container sx={{ height: "100%" }}>
+												<Grid item xs={7}>
+													<DonutChart
+														data={subscriptionPlanData}
+														centerValue={(data?.subscriptions.live?.total || 0).toLocaleString("es-AR")}
+														centerLabel="live"
+													/>
+												</Grid>
+												<Grid item xs={5}>
+													<StatsLegend
+														items={[
+															{
+																label: "Free",
+																value: data?.subscriptions.live?.byPlan?.free || 0,
+																color: chartMuted,
+																infoKey: "freePlan",
+															},
+															{
+																label: "Standard",
+																value: data?.subscriptions.live?.byPlan?.standard || 0,
+																color: BRAND_BLUE,
+																infoKey: "standardPlan",
+															},
+															{
+																label: "Pro",
+																value: data?.subscriptions.live?.byPlan?.pro || 0,
+																color: PRO_TEAL,
+																infoKey: "proPlan",
+															},
+															{
+																label: "Premium",
+																value: data?.subscriptions.live?.byPlan?.premium || 0,
+																color: PREMIUM_GOLD,
+																infoKey: "premiumPlan",
+															},
+														]}
+														loading={loading}
+													/>
+												</Grid>
 											</Grid>
-											<Grid item xs={5}>
-												<StatsLegend
-													items={[
-														{
-															label: "Free",
-															value: data?.subscriptions.live?.byPlan?.free || 0,
-															color: chartMuted,
-															infoKey: "freePlan",
-														},
-														{
-															label: "Standard",
-															value: data?.subscriptions.live?.byPlan?.standard || 0,
-															color: BRAND_BLUE,
-															infoKey: "standardPlan",
-														},
-														{
-															label: "Pro",
-															value: data?.subscriptions.live?.byPlan?.pro || 0,
-															color: PRO_TEAL,
-															infoKey: "proPlan",
-														},
-														{
-															label: "Premium",
-															value: data?.subscriptions.live?.byPlan?.premium || 0,
-															color: PREMIUM_GOLD,
-															infoKey: "premiumPlan",
-														},
-													]}
-													loading={loading}
-												/>
-											</Grid>
-										</Grid>
-									) : (
-										<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
-											<Typography variant="body2" color="textSecondary">
-												Sin datos
-											</Typography>
-										</Box>
-									)}
-								</ChartCard>
-							</Grid>
+										) : (
+											<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
+												<Typography variant="body2" color="textSecondary">
+													Sin datos
+												</Typography>
+											</Box>
+										)}
+									</ChartCard>
+								</Grid>
 
-							{/* Test Mode Stats */}
-							<Grid item xs={12} sm={6}>
-								<Paper
-									elevation={0}
-									sx={{
-										p: { xs: 1.5, sm: 2.5 },
-										borderRadius: 2,
-										bgcolor: alpha(COLORS.warning.main, 0.04),
-										border: `1px dashed ${alpha(COLORS.warning.main, 0.3)}`,
-										height: "100%",
-									}}
-								>
-									<Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: { xs: 1.5, sm: 2 } }}>
-										<Chip
-											size="small"
-											label="TEST MODE"
-											sx={{
-												bgcolor: alpha(COLORS.warning.main, 0.15),
-												color: COLORS.warning.main,
-												fontWeight: 600,
-												fontSize: { xs: "0.6rem", sm: "0.65rem" },
-												borderRadius: 1,
-												border: `1px solid ${alpha(COLORS.warning.main, 0.3)}`,
-											}}
-										/>
-										<InfoTooltip metricKey="testSubscriptions" />
-									</Box>
-									<Grid container spacing={{ xs: 1, sm: 2 }}>
-										<Grid item xs={3}>
-											<Box sx={{ textAlign: "center" }}>
-												{loading ? (
-													<Skeleton variant="text" width={30} height={32} sx={{ mx: "auto" }} />
-												) : (
-													<Typography
-														variant="h5"
-														sx={{ fontWeight: 600, color: COLORS.neutral.main, fontSize: { xs: "1rem", sm: "1.25rem" } }}
-													>
-														{(data?.subscriptions.test?.byPlan?.free || 0).toLocaleString("es-AR")}
-													</Typography>
-												)}
-												<Typography variant="caption" color="textSecondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" } }}>
-													Free
-												</Typography>
-											</Box>
-										</Grid>
-										<Grid item xs={3}>
-											<Box sx={{ textAlign: "center" }}>
-												{loading ? (
-													<Skeleton variant="text" width={30} height={32} sx={{ mx: "auto" }} />
-												) : (
-													<Typography
-														variant="h5"
-														sx={{ fontWeight: 600, color: COLORS.neutral.main, fontSize: { xs: "1rem", sm: "1.25rem" } }}
-													>
-														{(data?.subscriptions.test?.byPlan?.standard || 0).toLocaleString("es-AR")}
-													</Typography>
-												)}
-												<Typography variant="caption" color="textSecondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" } }}>
-													Standard
-												</Typography>
-											</Box>
-										</Grid>
-										<Grid item xs={3}>
-											<Box sx={{ textAlign: "center" }}>
-												{loading ? (
-													<Skeleton variant="text" width={30} height={32} sx={{ mx: "auto" }} />
-												) : (
-													<Typography
-														variant="h5"
-														sx={{ fontWeight: 600, color: COLORS.neutral.main, fontSize: { xs: "1rem", sm: "1.25rem" } }}
-													>
-														{(data?.subscriptions.test?.byPlan?.pro || 0).toLocaleString("es-AR")}
-													</Typography>
-												)}
-												<Typography variant="caption" color="textSecondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" } }}>
-													Pro
-												</Typography>
-											</Box>
-										</Grid>
-										<Grid item xs={3}>
-											<Box sx={{ textAlign: "center" }}>
-												{loading ? (
-													<Skeleton variant="text" width={30} height={32} sx={{ mx: "auto" }} />
-												) : (
-													<Typography
-														variant="h5"
-														sx={{ fontWeight: 600, color: COLORS.neutral.main, fontSize: { xs: "1rem", sm: "1.25rem" } }}
-													>
-														{(data?.subscriptions.test?.byPlan?.premium || 0).toLocaleString("es-AR")}
-													</Typography>
-												)}
-												<Typography variant="caption" color="textSecondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" } }}>
-													Premium
-												</Typography>
-											</Box>
-										</Grid>
-									</Grid>
-									<Box
+								{/* Test Mode Stats */}
+								<Grid item xs={12} sm={6}>
+									<Paper
+										elevation={0}
 										sx={{
-											mt: { xs: 1.5, sm: 2 },
-											pt: { xs: 1.5, sm: 2 },
-											borderTop: `1px dashed ${theme.palette.divider}`,
-											display: "flex",
-											justifyContent: "space-between",
-											flexWrap: "wrap",
-											gap: 1,
+											p: { xs: 1.5, sm: 2.5 },
+											borderRadius: 2,
+											bgcolor: alpha(COLORS.warning.main, 0.04),
+											border: `1px dashed ${alpha(COLORS.warning.main, 0.3)}`,
+											height: "100%",
 										}}
 									>
-										<Typography variant="body2" color="textSecondary" sx={{ fontSize: { xs: "0.7rem", sm: "0.875rem" } }}>
-											Total: <strong>{(data?.subscriptions.test?.total || 0).toLocaleString("es-AR")}</strong>
-										</Typography>
-										<Typography variant="body2" color="textSecondary" sx={{ fontSize: { xs: "0.7rem", sm: "0.875rem" } }}>
-											Activas:{" "}
-											<strong style={{ color: COLORS.warning.main }}>{(data?.subscriptions.test?.active || 0).toLocaleString("es-AR")}</strong>
-										</Typography>
-									</Box>
-								</Paper>
-							</Grid>
+										<Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: { xs: 1.5, sm: 2 } }}>
+											<Chip
+												size="small"
+												label="TEST MODE"
+												sx={{
+													bgcolor: alpha(COLORS.warning.main, 0.15),
+													color: COLORS.warning.main,
+													fontWeight: 600,
+													fontSize: { xs: "0.6rem", sm: "0.65rem" },
+													borderRadius: 1,
+													border: `1px solid ${alpha(COLORS.warning.main, 0.3)}`,
+												}}
+											/>
+											<InfoTooltip metricKey="testSubscriptions" />
+										</Box>
+										<Grid container spacing={{ xs: 1, sm: 2 }}>
+											<Grid item xs={3}>
+												<Box sx={{ textAlign: "center" }}>
+													{loading ? (
+														<Skeleton variant="text" width={30} height={32} sx={{ mx: "auto" }} />
+													) : (
+														<Typography
+															variant="h5"
+															sx={{ fontWeight: 600, color: COLORS.neutral.main, fontSize: { xs: "1rem", sm: "1.25rem" } }}
+														>
+															{(data?.subscriptions.test?.byPlan?.free || 0).toLocaleString("es-AR")}
+														</Typography>
+													)}
+													<Typography variant="caption" color="textSecondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" } }}>
+														Free
+													</Typography>
+												</Box>
+											</Grid>
+											<Grid item xs={3}>
+												<Box sx={{ textAlign: "center" }}>
+													{loading ? (
+														<Skeleton variant="text" width={30} height={32} sx={{ mx: "auto" }} />
+													) : (
+														<Typography
+															variant="h5"
+															sx={{ fontWeight: 600, color: COLORS.neutral.main, fontSize: { xs: "1rem", sm: "1.25rem" } }}
+														>
+															{(data?.subscriptions.test?.byPlan?.standard || 0).toLocaleString("es-AR")}
+														</Typography>
+													)}
+													<Typography variant="caption" color="textSecondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" } }}>
+														Standard
+													</Typography>
+												</Box>
+											</Grid>
+											<Grid item xs={3}>
+												<Box sx={{ textAlign: "center" }}>
+													{loading ? (
+														<Skeleton variant="text" width={30} height={32} sx={{ mx: "auto" }} />
+													) : (
+														<Typography
+															variant="h5"
+															sx={{ fontWeight: 600, color: COLORS.neutral.main, fontSize: { xs: "1rem", sm: "1.25rem" } }}
+														>
+															{(data?.subscriptions.test?.byPlan?.pro || 0).toLocaleString("es-AR")}
+														</Typography>
+													)}
+													<Typography variant="caption" color="textSecondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" } }}>
+														Pro
+													</Typography>
+												</Box>
+											</Grid>
+											<Grid item xs={3}>
+												<Box sx={{ textAlign: "center" }}>
+													{loading ? (
+														<Skeleton variant="text" width={30} height={32} sx={{ mx: "auto" }} />
+													) : (
+														<Typography
+															variant="h5"
+															sx={{ fontWeight: 600, color: COLORS.neutral.main, fontSize: { xs: "1rem", sm: "1.25rem" } }}
+														>
+															{(data?.subscriptions.test?.byPlan?.premium || 0).toLocaleString("es-AR")}
+														</Typography>
+													)}
+													<Typography variant="caption" color="textSecondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" } }}>
+														Premium
+													</Typography>
+												</Box>
+											</Grid>
+										</Grid>
+										<Box
+											sx={{
+												mt: { xs: 1.5, sm: 2 },
+												pt: { xs: 1.5, sm: 2 },
+												borderTop: `1px dashed ${theme.palette.divider}`,
+												display: "flex",
+												justifyContent: "space-between",
+												flexWrap: "wrap",
+												gap: 1,
+											}}
+										>
+											<Typography variant="body2" color="textSecondary" sx={{ fontSize: { xs: "0.7rem", sm: "0.875rem" } }}>
+												Total: <strong>{(data?.subscriptions.test?.total || 0).toLocaleString("es-AR")}</strong>
+											</Typography>
+											<Typography variant="body2" color="textSecondary" sx={{ fontSize: { xs: "0.7rem", sm: "0.875rem" } }}>
+												Activas:{" "}
+												<strong style={{ color: COLORS.warning.main }}>
+													{(data?.subscriptions.test?.active || 0).toLocaleString("es-AR")}
+												</strong>
+											</Typography>
+										</Box>
+									</Paper>
+								</Grid>
 
-							{/* Live Mode Summary */}
-							<Grid item xs={12}>
-								<Paper
-									elevation={0}
-									sx={{
-										p: { xs: 1.5, sm: 2 },
-										borderRadius: 2,
-										bgcolor: alpha(COLORS.success.main, 0.05),
-										border: `1px solid ${alpha(COLORS.success.main, 0.2)}`,
-									}}
-								>
-									<Grid container spacing={{ xs: 1, sm: 2 }} alignItems="center">
-										<Grid item xs={12} sm={6}>
-											<Box sx={{ display: "flex", alignItems: "center", gap: 1, justifyContent: { xs: "center", sm: "flex-start" } }}>
-												<Chip
-													size="small"
-													label="LIVE MODE"
-													sx={{
-														bgcolor: alpha(COLORS.success.main, 0.15),
-														color: COLORS.success.main,
-														fontWeight: 600,
-														fontSize: { xs: "0.6rem", sm: "0.65rem" },
-													}}
-												/>
-												<InfoTooltip metricKey="liveSubscriptions" />
-											</Box>
-										</Grid>
-										<Grid item xs={6} sm={3}>
-											<Box sx={{ textAlign: "center" }}>
-												{loading ? (
-													<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
-												) : (
-													<Typography
-														variant="h4"
-														sx={{ fontWeight: 600, fontSize: { xs: "1.25rem", sm: "1.5rem" }, fontVariantNumeric: "tabular-nums" }}
-													>
-														{(data?.subscriptions.live?.total || 0).toLocaleString("es-AR")}
+								{/* Live Mode Summary */}
+								<Grid item xs={12}>
+									<Paper
+										elevation={0}
+										sx={{
+											p: { xs: 1.5, sm: 2 },
+											borderRadius: 2,
+											bgcolor: alpha(COLORS.success.main, 0.05),
+											border: `1px solid ${alpha(COLORS.success.main, 0.2)}`,
+										}}
+									>
+										<Grid container spacing={{ xs: 1, sm: 2 }} alignItems="center">
+											<Grid item xs={12} sm={6}>
+												<Box sx={{ display: "flex", alignItems: "center", gap: 1, justifyContent: { xs: "center", sm: "flex-start" } }}>
+													<Chip
+														size="small"
+														label="LIVE MODE"
+														sx={{
+															bgcolor: alpha(COLORS.success.main, 0.15),
+															color: COLORS.success.main,
+															fontWeight: 600,
+															fontSize: { xs: "0.6rem", sm: "0.65rem" },
+														}}
+													/>
+													<InfoTooltip metricKey="liveSubscriptions" />
+												</Box>
+											</Grid>
+											<Grid item xs={6} sm={3}>
+												<Box sx={{ textAlign: "center" }}>
+													{loading ? (
+														<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
+													) : (
+														<Typography
+															variant="h4"
+															sx={{ fontWeight: 600, fontSize: { xs: "1.25rem", sm: "1.5rem" }, fontVariantNumeric: "tabular-nums" }}
+														>
+															{(data?.subscriptions.live?.total || 0).toLocaleString("es-AR")}
+														</Typography>
+													)}
+													<Typography variant="caption" color="textSecondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" } }}>
+														Total
 													</Typography>
-												)}
-												<Typography variant="caption" color="textSecondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" } }}>
-													Total
-												</Typography>
-											</Box>
-										</Grid>
-										<Grid item xs={6} sm={3}>
-											<Box sx={{ textAlign: "center" }}>
-												{loading ? (
-													<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
-												) : (
-													<Typography
-														variant="h4"
-														sx={{ fontWeight: 600, color: COLORS.success.main, fontSize: { xs: "1.25rem", sm: "1.5rem" } }}
-													>
-														{(data?.subscriptions.live?.active || 0).toLocaleString("es-AR")}
+												</Box>
+											</Grid>
+											<Grid item xs={6} sm={3}>
+												<Box sx={{ textAlign: "center" }}>
+													{loading ? (
+														<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
+													) : (
+														<Typography
+															variant="h4"
+															sx={{ fontWeight: 600, color: COLORS.success.main, fontSize: { xs: "1.25rem", sm: "1.5rem" } }}
+														>
+															{(data?.subscriptions.live?.active || 0).toLocaleString("es-AR")}
+														</Typography>
+													)}
+													<Typography variant="caption" color="textSecondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" } }}>
+														Activas
 													</Typography>
-												)}
-												<Typography variant="caption" color="textSecondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" } }}>
-													Activas
-												</Typography>
-											</Box>
+												</Box>
+											</Grid>
 										</Grid>
-									</Grid>
-								</Paper>
+									</Paper>
+								</Grid>
 							</Grid>
-						</Grid>
 						</CollapsibleSection>
 					</Grid>
 
@@ -3997,166 +4388,166 @@ const AdminDashboard = () => {
 							subtitle="Comparación PJN vs MEV"
 							icon={<Folder size={22} variant="Bold" />}
 						>
-						<Grid container spacing={{ xs: 1.5, sm: 2 }}>
-							{/* Bar Chart comparing PJN vs MEV */}
-							<Grid item xs={12} md={8}>
-								<ChartCard title="Comparación por Fuente" icon={<Folder size={18} />} height={220}>
-									{loading ? (
-										<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
-											<Skeleton variant="rectangular" width="100%" height="100%" sx={{ borderRadius: 1 }} />
-										</Box>
-									) : (
-										<ResponsiveContainer width="100%" height="100%">
-											<BarChart data={foldersComparisonData} margin={{ top: 10, right: 30, left: 0, bottom: 5 }}>
-												<CartesianGrid strokeDasharray="3 3" vertical={false} stroke={alpha(theme.palette.divider, 0.6)} />
-												<XAxis
-													dataKey="name"
-													tick={{ fill: theme.palette.text.secondary, fontSize: 12 }}
-													axisLine={false}
-													tickLine={false}
-												/>
-												<YAxis tick={{ fill: theme.palette.text.secondary, fontSize: 12 }} axisLine={false} tickLine={false} width={40} />
-												<RechartsTooltip
-													cursor={{ fill: alpha(theme.palette.text.secondary, 0.06) }}
-													contentStyle={{
-														backgroundColor: theme.palette.background.paper,
-														border: `1px solid ${headerBorder(isDark)}`,
-														borderRadius: 8,
-														boxShadow: headerShadow(isDark),
-													}}
-												/>
-												<Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
-												<Bar dataKey="verificadas" name="Verificadas" fill={LIVE_GREEN} barSize={22} radius={[4, 4, 0, 0]} />
-												<Bar dataKey="noVerificadas" name="No Verificadas" fill={chartMuted} barSize={22} radius={[4, 4, 0, 0]} />
-												<Bar dataKey="pendientes" name="Pendientes" fill={STALE_AMBER} barSize={22} radius={[4, 4, 0, 0]} />
-											</BarChart>
-										</ResponsiveContainer>
-									)}
-								</ChartCard>
-							</Grid>
+							<Grid container spacing={{ xs: 1.5, sm: 2 }}>
+								{/* Bar Chart comparing PJN vs MEV */}
+								<Grid item xs={12} md={8}>
+									<ChartCard title="Comparación por Fuente" icon={<Folder size={18} />} height={220}>
+										{loading ? (
+											<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
+												<Skeleton variant="rectangular" width="100%" height="100%" sx={{ borderRadius: 1 }} />
+											</Box>
+										) : (
+											<ResponsiveContainer width="100%" height="100%">
+												<BarChart data={foldersComparisonData} margin={{ top: 10, right: 30, left: 0, bottom: 5 }}>
+													<CartesianGrid strokeDasharray="3 3" vertical={false} stroke={alpha(theme.palette.divider, 0.6)} />
+													<XAxis
+														dataKey="name"
+														tick={{ fill: theme.palette.text.secondary, fontSize: 12 }}
+														axisLine={false}
+														tickLine={false}
+													/>
+													<YAxis tick={{ fill: theme.palette.text.secondary, fontSize: 12 }} axisLine={false} tickLine={false} width={40} />
+													<RechartsTooltip
+														cursor={{ fill: alpha(theme.palette.text.secondary, 0.06) }}
+														contentStyle={{
+															backgroundColor: theme.palette.background.paper,
+															border: `1px solid ${headerBorder(isDark)}`,
+															borderRadius: 8,
+															boxShadow: headerShadow(isDark),
+														}}
+													/>
+													<Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
+													<Bar dataKey="verificadas" name="Verificadas" fill={LIVE_GREEN} barSize={22} radius={[4, 4, 0, 0]} />
+													<Bar dataKey="noVerificadas" name="No Verificadas" fill={chartMuted} barSize={22} radius={[4, 4, 0, 0]} />
+													<Bar dataKey="pendientes" name="Pendientes" fill={STALE_AMBER} barSize={22} radius={[4, 4, 0, 0]} />
+												</BarChart>
+											</ResponsiveContainer>
+										)}
+									</ChartCard>
+								</Grid>
 
-							{/* Quick Stats Row */}
-							<Grid item xs={6} md={2}>
-								<Paper
-									elevation={0}
-									component={RouterLink}
-									to="/admin/causas/verified-app"
-									sx={{
-										textDecoration: "none",
-										color: "inherit",
-										p: { xs: 1.5, sm: 2 },
-										height: "100%",
-										display: "flex",
-										flexDirection: "column",
-										justifyContent: "center",
-										borderRadius: 2,
-										bgcolor: alpha(COLORS.primary.main, 0.05),
-										border: `1px solid ${alpha(COLORS.primary.main, 0.15)}`,
-										cursor: "pointer",
-										transition: "transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease",
-										"&:hover": {
-											boxShadow: headerShadow(isDark),
-											transform: "translateY(-2px)",
-										},
-									}}
-								>
-									<Typography variant="overline" color="textSecondary" sx={{ fontSize: { xs: "0.6rem", sm: "0.75rem" } }}>
-										PJN
-									</Typography>
-									<Box sx={{ display: "flex", alignItems: "baseline", gap: { xs: 0.5, sm: 1 }, flexWrap: "wrap" }}>
-										{loading ? (
-											<Skeleton variant="text" width={60} height={40} />
-										) : (
-											<Typography
-												variant="h3"
-												sx={{
-													fontWeight: 700,
-													fontSize: { xs: "1.5rem", sm: "2rem" },
-													letterSpacing: "-0.02em",
-													fontVariantNumeric: "tabular-nums",
-												}}
-											>
-												{(data?.folders.pjn?.total || 0).toLocaleString("es-AR")}
+								{/* Quick Stats Row */}
+								<Grid item xs={6} md={2}>
+									<Paper
+										elevation={0}
+										component={RouterLink}
+										to="/admin/causas/verified-app"
+										sx={{
+											textDecoration: "none",
+											color: "inherit",
+											p: { xs: 1.5, sm: 2 },
+											height: "100%",
+											display: "flex",
+											flexDirection: "column",
+											justifyContent: "center",
+											borderRadius: 2,
+											bgcolor: alpha(COLORS.primary.main, 0.05),
+											border: `1px solid ${alpha(COLORS.primary.main, 0.15)}`,
+											cursor: "pointer",
+											transition: "transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease",
+											"&:hover": {
+												boxShadow: headerShadow(isDark),
+												transform: "translateY(-2px)",
+											},
+										}}
+									>
+										<Typography variant="overline" color="textSecondary" sx={{ fontSize: { xs: "0.6rem", sm: "0.75rem" } }}>
+											PJN
+										</Typography>
+										<Box sx={{ display: "flex", alignItems: "baseline", gap: { xs: 0.5, sm: 1 }, flexWrap: "wrap" }}>
+											{loading ? (
+												<Skeleton variant="text" width={60} height={40} />
+											) : (
+												<Typography
+													variant="h3"
+													sx={{
+														fontWeight: 700,
+														fontSize: { xs: "1.5rem", sm: "2rem" },
+														letterSpacing: "-0.02em",
+														fontVariantNumeric: "tabular-nums",
+													}}
+												>
+													{(data?.folders.pjn?.total || 0).toLocaleString("es-AR")}
+												</Typography>
+											)}
+											<Typography variant="body2" color="textSecondary" sx={{ fontSize: { xs: "0.7rem", sm: "0.875rem" } }}>
+												total
 											</Typography>
-										)}
-										<Typography variant="body2" color="textSecondary" sx={{ fontSize: { xs: "0.7rem", sm: "0.875rem" } }}>
-											total
-										</Typography>
-									</Box>
-									<Box sx={{ display: "flex", gap: { xs: 1, sm: 2 }, mt: 1, flexWrap: "wrap" }}>
-										<Typography variant="caption" sx={{ color: COLORS.success.main, fontSize: { xs: "0.65rem", sm: "0.75rem" } }}>
-											✓ {(data?.folders.pjn?.verified || 0).toLocaleString("es-AR")}
-										</Typography>
-										<Typography variant="caption" sx={{ color: COLORS.neutral.main, fontSize: { xs: "0.65rem", sm: "0.75rem" } }}>
-											○ {(data?.folders.pjn?.nonVerified || 0).toLocaleString("es-AR")}
-										</Typography>
-										<Typography variant="caption" sx={{ color: COLORS.warning.main, fontSize: { xs: "0.65rem", sm: "0.75rem" } }}>
-											◇ {(data?.folders.pjn?.pending || 0).toLocaleString("es-AR")}
-										</Typography>
-									</Box>
-								</Paper>
-							</Grid>
-							<Grid item xs={6} md={2}>
-								<Paper
-									elevation={0}
-									component={RouterLink}
-									to="/admin/mev/verified-app"
-									sx={{
-										textDecoration: "none",
-										color: "inherit",
-										p: { xs: 1.5, sm: 2 },
-										height: "100%",
-										display: "flex",
-										flexDirection: "column",
-										justifyContent: "center",
-										borderRadius: 2,
-										bgcolor: alpha(COLORS.primary.main, 0.05),
-										border: `1px solid ${alpha(COLORS.primary.main, 0.15)}`,
-										cursor: "pointer",
-										transition: "transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease",
-										"&:hover": {
-											boxShadow: headerShadow(isDark),
-											transform: "translateY(-2px)",
-										},
-									}}
-								>
-									<Typography variant="overline" color="textSecondary" sx={{ fontSize: { xs: "0.6rem", sm: "0.75rem" } }}>
-										MEV
-									</Typography>
-									<Box sx={{ display: "flex", alignItems: "baseline", gap: { xs: 0.5, sm: 1 }, flexWrap: "wrap" }}>
-										{loading ? (
-											<Skeleton variant="text" width={60} height={40} />
-										) : (
-											<Typography
-												variant="h3"
-												sx={{
-													fontWeight: 700,
-													fontSize: { xs: "1.5rem", sm: "2rem" },
-													letterSpacing: "-0.02em",
-													fontVariantNumeric: "tabular-nums",
-												}}
-											>
-												{(data?.folders.mev?.total || 0).toLocaleString("es-AR")}
+										</Box>
+										<Box sx={{ display: "flex", gap: { xs: 1, sm: 2 }, mt: 1, flexWrap: "wrap" }}>
+											<Typography variant="caption" sx={{ color: COLORS.success.main, fontSize: { xs: "0.65rem", sm: "0.75rem" } }}>
+												✓ {(data?.folders.pjn?.verified || 0).toLocaleString("es-AR")}
 											</Typography>
-										)}
-										<Typography variant="body2" color="textSecondary" sx={{ fontSize: { xs: "0.7rem", sm: "0.875rem" } }}>
-											total
+											<Typography variant="caption" sx={{ color: COLORS.neutral.main, fontSize: { xs: "0.65rem", sm: "0.75rem" } }}>
+												○ {(data?.folders.pjn?.nonVerified || 0).toLocaleString("es-AR")}
+											</Typography>
+											<Typography variant="caption" sx={{ color: COLORS.warning.main, fontSize: { xs: "0.65rem", sm: "0.75rem" } }}>
+												◇ {(data?.folders.pjn?.pending || 0).toLocaleString("es-AR")}
+											</Typography>
+										</Box>
+									</Paper>
+								</Grid>
+								<Grid item xs={6} md={2}>
+									<Paper
+										elevation={0}
+										component={RouterLink}
+										to="/admin/mev/verified-app"
+										sx={{
+											textDecoration: "none",
+											color: "inherit",
+											p: { xs: 1.5, sm: 2 },
+											height: "100%",
+											display: "flex",
+											flexDirection: "column",
+											justifyContent: "center",
+											borderRadius: 2,
+											bgcolor: alpha(COLORS.primary.main, 0.05),
+											border: `1px solid ${alpha(COLORS.primary.main, 0.15)}`,
+											cursor: "pointer",
+											transition: "transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease",
+											"&:hover": {
+												boxShadow: headerShadow(isDark),
+												transform: "translateY(-2px)",
+											},
+										}}
+									>
+										<Typography variant="overline" color="textSecondary" sx={{ fontSize: { xs: "0.6rem", sm: "0.75rem" } }}>
+											MEV
 										</Typography>
-									</Box>
-									<Box sx={{ display: "flex", gap: { xs: 1, sm: 2 }, mt: 1, flexWrap: "wrap" }}>
-										<Typography variant="caption" sx={{ color: COLORS.success.main, fontSize: { xs: "0.65rem", sm: "0.75rem" } }}>
-											✓ {(data?.folders.mev?.verified || 0).toLocaleString("es-AR")}
-										</Typography>
-										<Typography variant="caption" sx={{ color: COLORS.neutral.main, fontSize: { xs: "0.65rem", sm: "0.75rem" } }}>
-											○ {(data?.folders.mev?.nonVerified || 0).toLocaleString("es-AR")}
-										</Typography>
-										<Typography variant="caption" sx={{ color: COLORS.warning.main, fontSize: { xs: "0.65rem", sm: "0.75rem" } }}>
-											◇ {(data?.folders.mev?.pending || 0).toLocaleString("es-AR")}
-										</Typography>
-									</Box>
-								</Paper>
+										<Box sx={{ display: "flex", alignItems: "baseline", gap: { xs: 0.5, sm: 1 }, flexWrap: "wrap" }}>
+											{loading ? (
+												<Skeleton variant="text" width={60} height={40} />
+											) : (
+												<Typography
+													variant="h3"
+													sx={{
+														fontWeight: 700,
+														fontSize: { xs: "1.5rem", sm: "2rem" },
+														letterSpacing: "-0.02em",
+														fontVariantNumeric: "tabular-nums",
+													}}
+												>
+													{(data?.folders.mev?.total || 0).toLocaleString("es-AR")}
+												</Typography>
+											)}
+											<Typography variant="body2" color="textSecondary" sx={{ fontSize: { xs: "0.7rem", sm: "0.875rem" } }}>
+												total
+											</Typography>
+										</Box>
+										<Box sx={{ display: "flex", gap: { xs: 1, sm: 2 }, mt: 1, flexWrap: "wrap" }}>
+											<Typography variant="caption" sx={{ color: COLORS.success.main, fontSize: { xs: "0.65rem", sm: "0.75rem" } }}>
+												✓ {(data?.folders.mev?.verified || 0).toLocaleString("es-AR")}
+											</Typography>
+											<Typography variant="caption" sx={{ color: COLORS.neutral.main, fontSize: { xs: "0.65rem", sm: "0.75rem" } }}>
+												○ {(data?.folders.mev?.nonVerified || 0).toLocaleString("es-AR")}
+											</Typography>
+											<Typography variant="caption" sx={{ color: COLORS.warning.main, fontSize: { xs: "0.65rem", sm: "0.75rem" } }}>
+												◇ {(data?.folders.mev?.pending || 0).toLocaleString("es-AR")}
+											</Typography>
+										</Box>
+									</Paper>
+								</Grid>
 							</Grid>
-						</Grid>
 						</CollapsibleSection>
 					</Grid>
 
@@ -4168,257 +4559,263 @@ const AdminDashboard = () => {
 							subtitle="Email marketing y segmentación"
 							icon={<Sms size={22} variant="Bold" />}
 						>
-						<Grid container spacing={{ xs: 1.5, sm: 2 }}>
-							{/* Campaigns Stats */}
-							<Grid item xs={12}>
-								<GroupedCard title="Campañas" icon={<Sms size={18} />} linkTo="/admin/marketing/mailing">
-									<Grid container spacing={2}>
-										<Grid item xs={4}>
-											<Box sx={{ textAlign: "center" }}>
-												{loading ? (
-													<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
-												) : (
-													<Typography variant="h4" sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
-														{(data?.marketing.campaigns.total || 0).toLocaleString("es-AR")}
-													</Typography>
-												)}
-												<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.25 }}>
-													<Typography variant="caption" color="textSecondary">
-														Total
-													</Typography>
-													<InfoTooltip metricKey="totalCampaigns" />
-												</Box>
-											</Box>
-										</Grid>
-										<Grid item xs={4}>
-											<Box sx={{ textAlign: "center" }}>
-												{loading ? (
-													<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
-												) : (
-													<Typography variant="h4" sx={{ fontWeight: 600, color: COLORS.success.main }}>
-														{(data?.marketing.campaigns.active || 0).toLocaleString("es-AR")}
-													</Typography>
-												)}
-												<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.25 }}>
-													<Typography variant="caption" color="textSecondary">
-														Activas
-													</Typography>
-													<InfoTooltip metricKey="activeCampaigns" />
-												</Box>
-											</Box>
-										</Grid>
-										<Grid item xs={4}>
-											<Box sx={{ textAlign: "center" }}>
-												{loading ? (
-													<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
-												) : (
-													<Typography variant="h4" sx={{ fontWeight: 600, color: COLORS.primary.light }}>
-														{(data?.marketing.campaigns.scheduled || 0).toLocaleString("es-AR")}
-													</Typography>
-												)}
-												<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.25 }}>
-													<Typography variant="caption" color="textSecondary">
-														Programadas
-													</Typography>
-													<InfoTooltip metricKey="scheduledCampaigns" />
-												</Box>
-											</Box>
-										</Grid>
-									</Grid>
-								</GroupedCard>
-							</Grid>
-
-							{/* Contacts Pie Chart */}
-							<Grid item xs={12} sm={6} md={3}>
-								<ChartCard title="Contactos" icon={<Profile2User size={18} />} linkTo="/admin/marketing/contacts" height={180}>
-									{loading ? (
-										<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
-											<Skeleton variant="circular" width={120} height={120} />
-										</Box>
-									) : (
-										<Grid container sx={{ height: "100%" }}>
-											<Grid item xs={6}>
-												<DonutChart
-													data={marketingContactsData}
-													centerValue={pctOf(data?.marketing.contacts.active, data?.marketing.contacts.total)}
-													centerLabel="activos"
-												/>
-											</Grid>
-											<Grid item xs={6}>
-												<StatsLegend
-													items={[
-														{
-															label: "Activos",
-															value: data?.marketing.contacts.active || 0,
-															color: COLORS.success.main,
-															infoKey: "activeContacts",
-														},
-														{
-															label: "Inactivos",
-															value: (data?.marketing.contacts.total || 0) - (data?.marketing.contacts.active || 0),
-															color: COLORS.neutral.light,
-														},
-													]}
-													loading={loading}
-												/>
-											</Grid>
-										</Grid>
-									)}
-								</ChartCard>
-							</Grid>
-
-							{/* Segments Pie Chart */}
-							<Grid item xs={12} sm={6} md={3}>
-								<ChartCard title="Segmentos" icon={<MessageProgramming size={18} />} linkTo="/admin/marketing/contacts" height={180}>
-									{loading ? (
-										<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
-											<Skeleton variant="circular" width={120} height={120} />
-										</Box>
-									) : segmentsData.length > 0 ? (
-										<Grid container sx={{ height: "100%" }}>
-											<Grid item xs={6}>
-												<DonutChart
-													data={segmentsData}
-													centerValue={(data?.marketing.segments.total || 0).toLocaleString("es-AR")}
-													centerLabel="segmentos"
-												/>
-											</Grid>
-											<Grid item xs={6}>
-												<StatsLegend
-													items={[
-														{
-															label: "Dinámicos",
-															value: data?.marketing.segments.dynamic || 0,
-															color: COLORS.primary.main,
-															infoKey: "dynamicSegments",
-														},
-														{
-															label: "Estáticos",
-															value: data?.marketing.segments.static || 0,
-															color: COLORS.primary.light,
-															infoKey: "staticSegments",
-														},
-													]}
-													loading={loading}
-												/>
-											</Grid>
-										</Grid>
-									) : (
-										<Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%" }}>
-											<Typography variant="h4" sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
-												{(data?.marketing.segments.total || 0).toLocaleString("es-AR")}
-											</Typography>
-											<Typography variant="body2" color="textSecondary">
-												Total segmentos
-											</Typography>
-										</Box>
-									)}
-								</ChartCard>
-							</Grid>
-
-							{/* Email Verification Pie Chart (isEmailVerified) */}
-							<Grid item xs={12} sm={6} md={3}>
-								<ChartCard title="Verificación de Email" icon={<TickCircle size={18} />} linkTo="/admin/marketing/contacts" height={180}>
-									{loading ? (
-										<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
-											<Skeleton variant="circular" width={120} height={120} />
-										</Box>
-									) : emailVerificationData.some((item) => item.value > 0) ? (
-										<Grid container sx={{ height: "100%" }}>
-											<Grid item xs={6}>
-												<DonutChart
-													data={emailVerificationData}
-													centerValue={pctOf(
-														data?.marketing.contacts.emailVerified,
-														(data?.marketing.contacts.emailVerified || 0) + (data?.marketing.contacts.emailNotVerified || 0),
+							<Grid container spacing={{ xs: 1.5, sm: 2 }}>
+								{/* Campaigns Stats */}
+								<Grid item xs={12}>
+									<GroupedCard title="Campañas" icon={<Sms size={18} />} linkTo="/admin/marketing/mailing">
+										<Grid container spacing={2}>
+											<Grid item xs={4}>
+												<Box sx={{ textAlign: "center" }}>
+													{loading ? (
+														<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
+													) : (
+														<Typography variant="h4" sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
+															{(data?.marketing.campaigns.total || 0).toLocaleString("es-AR")}
+														</Typography>
 													)}
-													centerLabel="verificados"
-												/>
+													<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.25 }}>
+														<Typography variant="caption" color="textSecondary">
+															Total
+														</Typography>
+														<InfoTooltip metricKey="totalCampaigns" />
+													</Box>
+												</Box>
 											</Grid>
-											<Grid item xs={6}>
-												<StatsLegend
-													items={[
-														{
-															label: "Verificados",
-															value: data?.marketing.contacts.emailVerified || 0,
-															color: COLORS.success.main,
-															infoKey: "emailVerifiedContacts",
-														},
-														{
-															label: "No Verificados",
-															value: data?.marketing.contacts.emailNotVerified || 0,
-															color: COLORS.neutral.light,
-															infoKey: "emailNotVerifiedContacts",
-														},
-													]}
-													loading={loading}
-												/>
-											</Grid>
-										</Grid>
-									) : (
-										<Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%" }}>
-											<Typography variant="body2" color="textSecondary">
-												Sin datos de verificación
-											</Typography>
-										</Box>
-									)}
-								</ChartCard>
-							</Grid>
-
-							{/* Verification Result Pie Chart (emailVerification.verified - within verified emails) */}
-							<Grid item xs={12} sm={6} md={3}>
-								<ChartCard
-									title="Resultado de Verificación"
-									icon={<TickCircle size={18} />}
-									linkTo="/admin/marketing/contacts"
-									height={180}
-								>
-									{loading ? (
-										<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
-											<Skeleton variant="circular" width={120} height={120} />
-										</Box>
-									) : verificationResultData.some((item) => item.value > 0) ? (
-										<Grid container sx={{ height: "100%" }}>
-											<Grid item xs={6}>
-												<DonutChart
-													data={verificationResultData}
-													centerValue={pctOf(
-														data?.marketing.contacts.verificationValid,
-														(data?.marketing.contacts.verificationValid || 0) + (data?.marketing.contacts.verificationNotValid || 0),
+											<Grid item xs={4}>
+												<Box sx={{ textAlign: "center" }}>
+													{loading ? (
+														<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
+													) : (
+														<Typography variant="h4" sx={{ fontWeight: 600, color: COLORS.success.main }}>
+															{(data?.marketing.campaigns.active || 0).toLocaleString("es-AR")}
+														</Typography>
 													)}
-													centerLabel="válidos"
-												/>
+													<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.25 }}>
+														<Typography variant="caption" color="textSecondary">
+															Activas
+														</Typography>
+														<InfoTooltip metricKey="activeCampaigns" />
+													</Box>
+												</Box>
 											</Grid>
-											<Grid item xs={6}>
-												<StatsLegend
-													items={[
-														{
-															label: "Válidos",
-															value: data?.marketing.contacts.verificationValid || 0,
-															color: COLORS.success.main,
-															infoKey: "verificationValidContacts",
-														},
-														{
-															label: "No Válidos",
-															value: data?.marketing.contacts.verificationNotValid || 0,
-															color: COLORS.neutral.light,
-															infoKey: "verificationNotValidContacts",
-														},
-													]}
-													loading={loading}
-												/>
+											<Grid item xs={4}>
+												<Box sx={{ textAlign: "center" }}>
+													{loading ? (
+														<Skeleton variant="text" width={40} height={36} sx={{ mx: "auto" }} />
+													) : (
+														<Typography variant="h4" sx={{ fontWeight: 600, color: COLORS.primary.light }}>
+															{(data?.marketing.campaigns.scheduled || 0).toLocaleString("es-AR")}
+														</Typography>
+													)}
+													<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.25 }}>
+														<Typography variant="caption" color="textSecondary">
+															Programadas
+														</Typography>
+														<InfoTooltip metricKey="scheduledCampaigns" />
+													</Box>
+												</Box>
 											</Grid>
 										</Grid>
-									) : (
-										<Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%" }}>
-											<Typography variant="body2" color="textSecondary">
-												Sin datos de resultado
-											</Typography>
-										</Box>
-									)}
-								</ChartCard>
+									</GroupedCard>
+								</Grid>
+
+								{/* Contacts Pie Chart */}
+								<Grid item xs={12} sm={6} md={3}>
+									<ChartCard title="Contactos" icon={<Profile2User size={18} />} linkTo="/admin/marketing/contacts" height={180}>
+										{loading ? (
+											<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
+												<Skeleton variant="circular" width={120} height={120} />
+											</Box>
+										) : (
+											<Grid container sx={{ height: "100%" }}>
+												<Grid item xs={6}>
+													<DonutChart
+														data={marketingContactsData}
+														centerValue={pctOf(data?.marketing.contacts.active, data?.marketing.contacts.total)}
+														centerLabel="activos"
+													/>
+												</Grid>
+												<Grid item xs={6}>
+													<StatsLegend
+														items={[
+															{
+																label: "Activos",
+																value: data?.marketing.contacts.active || 0,
+																color: COLORS.success.main,
+																infoKey: "activeContacts",
+															},
+															{
+																label: "Inactivos",
+																value: (data?.marketing.contacts.total || 0) - (data?.marketing.contacts.active || 0),
+																color: COLORS.neutral.light,
+															},
+														]}
+														loading={loading}
+													/>
+												</Grid>
+											</Grid>
+										)}
+									</ChartCard>
+								</Grid>
+
+								{/* Segments Pie Chart */}
+								<Grid item xs={12} sm={6} md={3}>
+									<ChartCard title="Segmentos" icon={<MessageProgramming size={18} />} linkTo="/admin/marketing/contacts" height={180}>
+										{loading ? (
+											<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
+												<Skeleton variant="circular" width={120} height={120} />
+											</Box>
+										) : segmentsData.length > 0 ? (
+											<Grid container sx={{ height: "100%" }}>
+												<Grid item xs={6}>
+													<DonutChart
+														data={segmentsData}
+														centerValue={(data?.marketing.segments.total || 0).toLocaleString("es-AR")}
+														centerLabel="segmentos"
+													/>
+												</Grid>
+												<Grid item xs={6}>
+													<StatsLegend
+														items={[
+															{
+																label: "Dinámicos",
+																value: data?.marketing.segments.dynamic || 0,
+																color: COLORS.primary.main,
+																infoKey: "dynamicSegments",
+															},
+															{
+																label: "Estáticos",
+																value: data?.marketing.segments.static || 0,
+																color: COLORS.primary.light,
+																infoKey: "staticSegments",
+															},
+														]}
+														loading={loading}
+													/>
+												</Grid>
+											</Grid>
+										) : (
+											<Box
+												sx={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%" }}
+											>
+												<Typography variant="h4" sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
+													{(data?.marketing.segments.total || 0).toLocaleString("es-AR")}
+												</Typography>
+												<Typography variant="body2" color="textSecondary">
+													Total segmentos
+												</Typography>
+											</Box>
+										)}
+									</ChartCard>
+								</Grid>
+
+								{/* Email Verification Pie Chart (isEmailVerified) */}
+								<Grid item xs={12} sm={6} md={3}>
+									<ChartCard title="Verificación de Email" icon={<TickCircle size={18} />} linkTo="/admin/marketing/contacts" height={180}>
+										{loading ? (
+											<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
+												<Skeleton variant="circular" width={120} height={120} />
+											</Box>
+										) : emailVerificationData.some((item) => item.value > 0) ? (
+											<Grid container sx={{ height: "100%" }}>
+												<Grid item xs={6}>
+													<DonutChart
+														data={emailVerificationData}
+														centerValue={pctOf(
+															data?.marketing.contacts.emailVerified,
+															(data?.marketing.contacts.emailVerified || 0) + (data?.marketing.contacts.emailNotVerified || 0),
+														)}
+														centerLabel="verificados"
+													/>
+												</Grid>
+												<Grid item xs={6}>
+													<StatsLegend
+														items={[
+															{
+																label: "Verificados",
+																value: data?.marketing.contacts.emailVerified || 0,
+																color: COLORS.success.main,
+																infoKey: "emailVerifiedContacts",
+															},
+															{
+																label: "No Verificados",
+																value: data?.marketing.contacts.emailNotVerified || 0,
+																color: COLORS.neutral.light,
+																infoKey: "emailNotVerifiedContacts",
+															},
+														]}
+														loading={loading}
+													/>
+												</Grid>
+											</Grid>
+										) : (
+											<Box
+												sx={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%" }}
+											>
+												<Typography variant="body2" color="textSecondary">
+													Sin datos de verificación
+												</Typography>
+											</Box>
+										)}
+									</ChartCard>
+								</Grid>
+
+								{/* Verification Result Pie Chart (emailVerification.verified - within verified emails) */}
+								<Grid item xs={12} sm={6} md={3}>
+									<ChartCard
+										title="Resultado de Verificación"
+										icon={<TickCircle size={18} />}
+										linkTo="/admin/marketing/contacts"
+										height={180}
+									>
+										{loading ? (
+											<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
+												<Skeleton variant="circular" width={120} height={120} />
+											</Box>
+										) : verificationResultData.some((item) => item.value > 0) ? (
+											<Grid container sx={{ height: "100%" }}>
+												<Grid item xs={6}>
+													<DonutChart
+														data={verificationResultData}
+														centerValue={pctOf(
+															data?.marketing.contacts.verificationValid,
+															(data?.marketing.contacts.verificationValid || 0) + (data?.marketing.contacts.verificationNotValid || 0),
+														)}
+														centerLabel="válidos"
+													/>
+												</Grid>
+												<Grid item xs={6}>
+													<StatsLegend
+														items={[
+															{
+																label: "Válidos",
+																value: data?.marketing.contacts.verificationValid || 0,
+																color: COLORS.success.main,
+																infoKey: "verificationValidContacts",
+															},
+															{
+																label: "No Válidos",
+																value: data?.marketing.contacts.verificationNotValid || 0,
+																color: COLORS.neutral.light,
+																infoKey: "verificationNotValidContacts",
+															},
+														]}
+														loading={loading}
+													/>
+												</Grid>
+											</Grid>
+										) : (
+											<Box
+												sx={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%" }}
+											>
+												<Typography variant="body2" color="textSecondary">
+													Sin datos de resultado
+												</Typography>
+											</Box>
+										)}
+									</ChartCard>
+								</Grid>
 							</Grid>
-						</Grid>
 						</CollapsibleSection>
 					</Grid>
 				</Grid>
