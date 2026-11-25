@@ -103,7 +103,7 @@ export async function misCausasLiveMetrics(): Promise<FlowMetrics> {
 		const cc = c.credencialCaida;
 		const lineaCaida =
 			cc && cc.total + cc.privateNoAccess > 0
-				? `Credencial caída (pjn-workers): ${nf(cc.updatedLast24h)}/${nf(cc.total)} leídas en 24 h${
+				? `Credencial caída (pjn-workers): ${nf(cc.updatedLast24h)}/${nf(cc.total)} al día${
 						cc.late ? ` · ${nf(cc.late)} atrasadas` : ""
 				  }${cc.privateNoAccess ? ` · ${nf(cc.privateNoAccess)} privadas sin acceso` : ""}`
 				: null;
