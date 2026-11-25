@@ -3448,7 +3448,7 @@ const AdminDashboard = () => {
 											{caida && caida.total + caida.privateNoAccess + caida.withoutFolder > 0 && (
 												<Tooltip
 													arrow
-													title="Causas cuya credencial está apagada o inválida. Las públicas con carpeta las sigue pjn-workers por la consulta pública (al día = leída en las últimas 24 h). Las privadas no se pueden leer hasta que el usuario renueve la contraseña. Las públicas sin carpeta no se siguen."
+													title="Causas cuya credencial está apagada o inválida. Las públicas con carpeta las sigue pjn-workers por la consulta pública (al día = leída en las últimas 30 h: las lee una vez por día desde las 18:00). Las privadas no se pueden leer hasta que el usuario renueve la contraseña. «Sin acceso público»: pjn-workers las intentó y la consulta pública no las abre (reintenta solo). Las públicas sin carpeta no se siguen."
 												>
 													<Box sx={{ mb: 1.5 }}>
 														<Box sx={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", mb: 0.25, gap: 1 }}>
@@ -3457,7 +3457,7 @@ const AdminDashboard = () => {
 																	Credencial caída
 																</Typography>
 																<Typography variant="caption" color="text.secondary" noWrap>
-																	pjn-workers · 24 h
+																	pjn-workers · diario
 																</Typography>
 															</Box>
 															<Typography
@@ -3479,12 +3479,13 @@ const AdminDashboard = () => {
 															}}
 														/>
 														<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.25 }}>
-															{`${nfAR(caida.updatedLast24h)}/${nfAR(caida.total)} públicas leídas en 24 h`}
+															{`${nfAR(caida.updatedLast24h)}/${nfAR(caida.total)} públicas al día`}
 															{!!caida.late && (
 																<Box component="span" sx={{ color: COLORS.error.main, fontWeight: 600 }}>
 																	{` · ${nfAR(caida.late)} atrasadas`}
 																</Box>
 															)}
+															{caida.publicNoAccess ? ` · ${nfAR(caida.publicNoAccess)} sin acceso público` : ""}
 															{caida.privateNoAccess > 0 ? ` · ${nfAR(caida.privateNoAccess)} privadas sin acceso` : ""}
 															{caida.withoutFolder > 0 ? ` · ${nfAR(caida.withoutFolder)} sin carpeta` : ""}
 														</Typography>

@@ -846,6 +846,7 @@ export interface MisCausasCoverageCaida {
 	coveragePercent: number;
 	withoutFolder: number;
 	privateNoAccess: number;
+	publicNoAccess?: number;
 }
 
 /** Franja del ciclo: la que trabaja ahora, o la última y cómo cerró. */
